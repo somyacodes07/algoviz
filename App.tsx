@@ -6,7 +6,10 @@ import ConsolePanel from './frontend/components/ConsolePanel';
 import Controls from './frontend/components/Controls';
 import HomePage from './frontend/components/HomePage';
 import { useExecutionEngine } from './frontend/hooks/useExecutionEngine';
-import { Code, Layers, Terminal as TerminalIcon, Cpu, Sun, Moon, ArrowLeft, Play } from 'lucide-react';
+import { Code, Layers, Terminal as TerminalIcon, Sun, Moon, ArrowLeft, Play } from 'lucide-react';
+
+import logoLight from './assets/logo-light.png';
+import logoDark from './assets/logo-dark.png';
 
 const JS_DEFAULT_CODE = `// Welcome to AlgoViz!
 // Edit this code and click the Play button below.
@@ -180,8 +183,12 @@ const App: React.FC = () => {
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="bg-white/20 dark:bg-slate-800 p-2 rounded-lg backdrop-blur-sm">
-                        <Cpu size={24} className="text-white dark:text-saffron-500" />
+                    <div className="bg-white/20 dark:bg-slate-800 p-1.5 rounded-lg backdrop-blur-sm">
+                        <img
+                            src={theme === 'dark' ? logoDark : logoLight}
+                            alt="AlgoViz Logo"
+                            className="w-6 h-6 object-contain"
+                        />
                     </div>
                     <div>
                         <h1 className="font-bold text-xl tracking-tight leading-none text-white">
