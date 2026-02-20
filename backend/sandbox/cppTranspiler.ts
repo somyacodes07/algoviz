@@ -116,19 +116,25 @@ export function transpileCppToJs(cppCode: string): string {
     // PHASE 1: Preprocessor & Boilerplate Removal
     // ═══════════════════════════════════════════════════════════════════════
 
+    // Helper to preserve exact line numbers by replacing stripped content with equivalent newlines
+    const preserveLines = (match: string, replacer = '') => {
+        const newlines = (match.match(/\n/g) || []).length;
+        return replacer + '\n'.repeat(newlines);
+    };
+
     // Remove #include <...> and #include "..."
-    js = js.replace(/#include\s*<[^>]*>/g, '');
-    js = js.replace(/#include\s*"[^"]*"/g, '');
+    js = js.replace(/#include\s*<[^>]*>/g, (m) => preserveLines(m, '// include placeholder'));
+    js = js.replace(/#include\s*"[^"]*"/g, (m) => preserveLines(m, '// include placeholder'));
 
     // Convert #define NAME VALUE → const NAME = VALUE;
     js = js.replace(/#define\s+(\w+)\s+(.+)/g, 'const $1 = $2;');
 
     // Remove using namespace std;
-    js = js.replace(/using\s+namespace\s+std\s*;/g, '');
+    js = js.replace(/using\s+namespace\s+std\s*;/g, (m) => preserveLines(m, '// namespace placeholder'));
 
     // Remove typedef / using aliases (e.g., typedef long long ll;)
-    js = js.replace(/typedef\s+[\w\s]+\s+(\w+)\s*;/g, '');
-    js = js.replace(/using\s+\w+\s*=\s*[^;]+;/g, '');
+    js = js.replace(/typedef\s+[\w\s]+\s+(\w+)\s*;/g, (m) => preserveLines(m, '// typedef placeholder'));
+    js = js.replace(/using\s+\w+\s*=\s*[^;]+;/g, (m) => preserveLines(m, '// using alias placeholder'));
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 2: Extract Functions & Main
@@ -194,16 +200,16 @@ export function transpileCppToJs(cppCode: string): string {
 
         if (mainFunc) {
             let body = mainFunc.body;
-            // Remove 'return 0;' from main 
-            body = body.replace(/return\s+0\s*;/g, '');
+            // Replace 'return 0;' with a comment to strictly preserve lines
+            body = body.replace(/return\s+0\s*;/g, '// return 0;');
             parts.push(body);
         }
 
         js = parts.join('\n\n');
     } else {
         // No functions found — just use the code as-is (might be a snippet)
-        // Remove 'return 0;' if present
-        js = js.replace(/return\s+0\s*;/g, '');
+        // Remove 'return 0;' if present, while preserving lines
+        js = js.replace(/return\s+0\s*;/g, '// return 0;');
     }
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -58,11 +58,11 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
 
                     {/* Python Card (Disabled) */}
                     <div className="relative flex flex-col items-center p-8 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 opacity-70 cursor-not-allowed">
-                        <div className="bg-gray-200 dark:bg-slate-800 p-4 rounded-xl mb-4 text-slate-400">
+                        <div className="bg-gray-200 dark:bg-slate-800 p-4 rounded-xl mb-4 text-slate-500 dark:text-slate-400">
                             <Terminal size={32} />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-400 dark:text-slate-500 mb-2">Python</h3>
-                        <p className="text-sm text-slate-400 dark:text-slate-600 text-center">
+                        <h3 className="text-xl font-bold text-slate-500 mb-2">Python</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
                             Visualizer for Python 3.10+ execution and data structures.
                         </p>
                         <div className="mt-6 flex items-center gap-1 px-4 py-1.5 bg-gray-200 dark:bg-slate-800 text-slate-500 text-xs font-bold rounded-full">

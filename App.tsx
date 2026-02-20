@@ -195,7 +195,7 @@ const App: React.FC = () => {
 
     // Theme Helper Classes
     const headerClass = themeColor === 'saffron' ? 'bg-saffron-500' : 'bg-blue-600';
-    const tagClass = themeColor === 'saffron' ? 'bg-saffron-600/50' : 'bg-blue-800/50';
+    const tagClass = themeColor === 'saffron' ? 'bg-white/20' : 'bg-white/20';
     const iconTextClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
     const runBtnClass = themeColor === 'saffron'
         ? 'bg-saffron-500 hover:bg-saffron-600 shadow-saffron-500/20'
@@ -239,10 +239,10 @@ const App: React.FC = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex overflow-hidden">
+            <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
 
                 {/* Left Panel: Editor */}
-                <div className="flex-1 flex flex-col min-w-[400px] border-r border-gray-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950 transition-colors">
+                <div className="flex flex-col min-h-[50vh] md:min-h-0 md:flex-1 w-full md:min-w-[400px] border-b md:border-b-0 md:border-r border-gray-200 dark:border-slate-800 p-4 md:p-6 bg-white dark:bg-slate-950 transition-colors">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm font-bold uppercase tracking-wide">
                             <Code size={18} className={iconTextClass} />
@@ -281,7 +281,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Right Panel: Visualization */}
-                <div className="w-[450px] flex flex-col bg-gray-50 dark:bg-slate-900 shadow-xl z-10 border-l border-gray-200 dark:border-slate-800 transition-colors">
+                <div className="w-full md:w-[450px] min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-gray-50 dark:bg-slate-900 shadow-xl z-10 md:border-l border-gray-200 dark:border-slate-800 transition-colors">
 
                     {/* Top Half: Variables & Stack */}
                     <div className="flex-1 flex flex-col min-h-0">
