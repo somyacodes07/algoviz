@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import CodeEditor from './frontend/components/CodeEditor';
 import VariablesPanel from './frontend/components/VariablesPanel';
 import CallStackPanel from './frontend/components/CallStackPanel';
 import ConsolePanel from './frontend/components/ConsolePanel';
 import Controls from './frontend/components/Controls';
 import HomePage from './frontend/components/HomePage';
-import { executeCode } from './backend/sandbox/executor';
-import { Timeline } from './types';
+import { useExecutionEngine } from './frontend/hooks/useExecutionEngine';
 import { Code, Layers, Terminal as TerminalIcon, Cpu, Sun, Moon, ArrowLeft, Play } from 'lucide-react';
 
 const JS_DEFAULT_CODE = `// Welcome to AlgoViz!
@@ -83,14 +82,11 @@ const App: React.FC = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
     const [code, setCode] = useState<string>(JS_DEFAULT_CODE);
-    const [timeline, setTimeline] = useState<Timeline>([]);
-    const [currentStepIndex, setCurrentStepIndex] = useState<number>(-1);
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
-    const [speed, setSpeed] = useState<number>(800); // ms per step
     const [activeTab, setActiveTab] = useState<'variables' | 'stack'>('variables');
-    const [executionError, setExecutionError] = useState<string | null>(null);
 
-    const timerRef = useRef<number | null>(null);
+    const { state, controls } = useExecutionEngine();
+    const { timeline, currentStepIndex, isPlaying, speed, executionError } = state;
+    const { handleRun, setIsPlaying, setSpeed, togglePlayPause, reset, nextStep, prevStep: prevStepControl } = controls;
 
     // Derived Theme Color
     const themeColor = language === 'c++' ? 'blue' : 'saffron';
@@ -105,43 +101,12 @@ const App: React.FC = () => {
         }
     }, [theme]);
 
-    const handleRun = useCallback(async () => {
-        setExecutionError(null);
-        const result = await executeCode(code, language);
-        setTimeline(result);
-        // If error exists in result
-        if (result.length > 0 && result[result.length - 1].isError) {
-            setExecutionError(result[result.length - 1].errorMessage || "Error");
-        }
-        setCurrentStepIndex(0);
-    }, [code, language]);
-
     useEffect(() => {
         // Only run if in editor mode and timeline is empty (initial load)
         if (page === 'editor' && timeline.length === 0) {
-            handleRun();
+            handleRun(code, language);
         }
     }, [page]);
-
-    useEffect(() => {
-        if (isPlaying) {
-            timerRef.current = window.setInterval(() => {
-                setCurrentStepIndex(prev => {
-                    if (prev < timeline.length - 1) {
-                        return prev + 1;
-                    } else {
-                        setIsPlaying(false);
-                        return prev;
-                    }
-                });
-            }, speed);
-        } else {
-            if (timerRef.current) clearInterval(timerRef.current);
-        }
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, [isPlaying, timeline.length, speed]);
 
     const handleCodeChange = (newCode: string | undefined) => {
         if (newCode !== undefined) {
@@ -157,7 +122,7 @@ const App: React.FC = () => {
         } else {
             setCode(JS_DEFAULT_CODE);
         }
-        setTimeline([]);
+        // Timeline resetting is handled implicitly since the hook resets on handleRun
         setPage('editor');
     };
 
@@ -172,7 +137,7 @@ const App: React.FC = () => {
         consoleOutput: []
     };
 
-    const prevStep = timeline[currentStepIndex - 1] || { variables: {} };
+    const prevStepVariables = timeline[currentStepIndex - 1] || { variables: {} };
     const progress = timeline.length > 1 ? (currentStepIndex / (timeline.length - 1)) * 100 : 0;
 
     if (page === 'home') {
@@ -258,7 +223,7 @@ const App: React.FC = () => {
                             <button
                                 onClick={() => {
                                     setIsPlaying(false);
-                                    handleRun();
+                                    handleRun(code, language);
                                 }}
                                 className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 ${runBtnClass}`}
                             >
@@ -304,9 +269,9 @@ const App: React.FC = () => {
                         {/* Content Area */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-slate-900 p-2 transition-colors">
                             {activeTab === 'variables' ? (
-                                <VariablesPanel variables={currentStep.variables} prevVariables={prevStep.variables} themeColor={themeColor} />
+                                <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} />
                             ) : (
-                                <CallStackPanel stack={currentStep.callStack} themeColor={themeColor} />
+                                <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
                             )}
                         </div>
                     </div>
@@ -330,14 +295,10 @@ const App: React.FC = () => {
             {/* Footer Controls */}
             <Controls
                 isPlaying={isPlaying}
-                onPlayPause={() => setIsPlaying(!isPlaying)}
-                onNext={() => setCurrentStepIndex(i => Math.min(timeline.length - 1, i + 1))}
-                onPrev={() => setCurrentStepIndex(i => Math.max(0, i - 1))}
-                onReset={() => {
-                    setIsPlaying(false);
-                    setCurrentStepIndex(0);
-                    handleRun();
-                }}
+                onPlayPause={togglePlayPause}
+                onNext={nextStep}
+                onPrev={prevStepControl}
+                onReset={() => reset(code, language)}
                 canNext={currentStepIndex < timeline.length - 1}
                 canPrev={currentStepIndex > 0}
                 speed={speed}
