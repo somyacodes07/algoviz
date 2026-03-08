@@ -319,7 +319,7 @@ const App: React.FC = () => {
                         <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-2 md:p-4 gap-4">
 
                             {/* Left Panel: Editor */}
-                            <div className={`flex flex-col min-h-[50vh] md:min-h-0 w-full md:min-w-[300px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-500 ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}>
+                            <div className={`flex flex-col min-h-[50vh] md:min-h-0 w-full md:min-w-[300px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-[400ms] ease-in-out ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}>
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider">
                                         <Code size={18} className={iconTextClass} />
@@ -413,7 +413,7 @@ const App: React.FC = () => {
                             </div>
 
                             {/* Right Panel: Visualization */}
-                            <div className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-500 overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}>
+                            <div className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-[400ms] ease-in-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}>
                                 {/* Visualizer Mode Toggle */}
                                 <div className="flex items-center justify-end px-3 py-1.5 bg-white/10 dark:bg-slate-900/20">
                                     <button
@@ -432,7 +432,7 @@ const App: React.FC = () => {
                                     </button>
                                 </div>
                                 {/* Top half: Variables / Call Stack */}
-                                <div className={`flex flex-col min-h-0 transition-all duration-300 ${consoleExpanded ? 'flex-[3]' : 'flex-1'}`}>
+                                <div className={`flex flex-col min-h-0 transition-all duration-[400ms] ease-in-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}>
                                     {/* Tabs */}
                                     <div className="flex border-b border-gray-200/50 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/30 backdrop-blur-md">
                                         <button
@@ -462,8 +462,8 @@ const App: React.FC = () => {
                                 </div>
 
                                 {/* Bottom half: Console */}
-                                <div className={`flex flex-col border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
-                                    consoleExpanded ? 'flex-[2] min-h-[150px]' : 'h-10'
+                                <div className={`flex flex-col border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-[400ms] ease-in-out ${
+                                    consoleExpanded ? 'flex-[3] min-h-[150px]' : 'h-10'
                                 }`}>
                                     <button 
                                         className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer w-full"

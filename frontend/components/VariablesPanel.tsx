@@ -51,9 +51,9 @@ const ArrayVisualizer: React.FC<{
             )}
 
             {/* Array cells */}
-            <div className="flex items-end gap-1 px-1">
+            <div className="flex items-end gap-1.5 px-2 h-24">
                 {value.map((v, i) => {
-                    const height = Math.max(20, (Math.abs(v) / maxVal) * 100);
+                    const height = Math.max(15, (Math.abs(v) / maxVal) * 100);
                     const isChanged = changedIndices.has(i);
                     const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
 
@@ -69,9 +69,9 @@ const ArrayVisualizer: React.FC<{
                     }
 
                     const cellBorder = isSwapped
-                        ? 'ring-2 ring-amber-400 dark:ring-amber-500'
+                        ? 'ring-2 ring-amber-400 dark:ring-amber-500 shadow-md'
                         : isChanged
-                            ? 'ring-1 ring-orange-300 dark:ring-orange-500/50'
+                            ? 'ring-1 ring-orange-400 dark:ring-orange-500 shadow-sm'
                             : '';
 
                     return (
@@ -81,31 +81,31 @@ const ArrayVisualizer: React.FC<{
                             layout
                         >
                             {/* Bar */}
-                            <div className={`w-full rounded-t-md ${barBg} ${cellBorder} transition-all relative`}
-                                style={{ minHeight: '8px' }}
+                            <div className={`w-full rounded-t-lg ${barBg} ${cellBorder} transition-all relative flex flex-col justify-end`}
+                                style={{ height: '100%' }}
                             >
                                 <motion.div
-                                    className="w-full rounded-t-md"
+                                    className="w-full rounded-t-lg"
                                     initial={false}
                                     animate={{ height: `${height}%` }}
-                                    transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-                                    style={{ height: `${height}%`, minHeight: '8px' }}
+                                    transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+                                    style={{ height: `${height}%`, minHeight: '12px' }}
                                 />
                             </div>
 
                             {/* Value cell */}
-                            <div className={`w-full text-center py-1 rounded-b-md border text-[11px] font-mono font-bold transition-all ${
+                            <div className={`w-full text-center py-2 rounded-b-lg border text-sm font-mono font-bold transition-all ${
                                 isSwapped
-                                    ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-300'
+                                    ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 text-amber-800 dark:text-amber-200 shadow-md'
                                     : isChanged
-                                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300'
-                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                        ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-600 text-orange-800 dark:text-orange-200 shadow-sm'
+                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100'
                             }`}>
                                 {v}
                             </div>
 
                             {/* Index label */}
-                            <span className={`text-[8px] mt-0.5 font-mono ${isChanged ? 'text-amber-500 font-bold' : 'text-slate-400 dark:text-slate-600'}`}>
+                            <span className={`text-[10px] mt-1 font-mono tracking-wider ${isChanged ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-slate-500'}`}>
                                 [{i}]
                             </span>
                         </motion.div>
@@ -152,12 +152,12 @@ const VariableCard: React.FC<{
         if (isFunction) return <span className="text-purple-500 dark:text-purple-400 italic font-medium text-xs">ƒ()</span>;
         if (value === null) return <span className="text-slate-400 italic text-sm">null</span>;
         if (value === undefined) return <span className="text-slate-400 italic text-sm">undefined</span>;
-        if (typeof value === 'string') return <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">"{value}"</span>;
-        if (typeof value === 'boolean') return <span className="text-purple-600 dark:text-purple-400 font-bold text-sm uppercase">{String(value)}</span>;
-        if (typeof value === 'number') return <span className="text-blue-700 dark:text-blue-300 font-black text-lg tabular-nums">{value}</span>;
-        if (isNumericArray) return <span className="text-slate-400 text-xs">[{value.length} items]</span>;
-        if (isObject) return <span className="text-slate-400 text-xs">{Array.isArray(value) ? `[${value.length}]` : '{...}'}</span>;
-        return <span className="text-slate-500 text-sm">{String(value)}</span>;
+        if (typeof value === 'string') return <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">"{value}"</span>;
+        if (typeof value === 'boolean') return <span className="text-purple-600 dark:text-purple-400 font-bold text-lg uppercase">{String(value)}</span>;
+        if (typeof value === 'number') return <span className="text-blue-700 dark:text-blue-300 font-black text-3xl tabular-nums">{value}</span>;
+        if (isNumericArray) return <span className="text-slate-400 text-sm font-semibold">[{value.length} items]</span>;
+        if (isObject) return <span className="text-slate-400 text-sm font-semibold">{Array.isArray(value) ? `[${value.length}]` : '{...}'}</span>;
+        return <span className="text-slate-500 text-lg">{String(value)}</span>;
     };
 
     const cardBorder = isNew
@@ -188,7 +188,7 @@ const VariableCard: React.FC<{
                 onClick={() => isObject && !isEmpty && setIsExpanded(!isExpanded)}
             >
                 {/* Card Header */}
-                <div className="flex items-center justify-between px-3 py-2">
+                <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2 min-w-0">
                         {/* Expand arrow for objects */}
                         {isObject && !isEmpty && (
@@ -251,12 +251,12 @@ const VariableCard: React.FC<{
                 </div>
 
                 {/* Card Body — Value */}
-                <div className="px-3 pb-2.5 flex items-baseline justify-between gap-2">
+                <div className="px-4 pb-3 flex items-baseline justify-between gap-2">
                     <div className="text-right flex-1">
                         {renderValue()}
                     </div>
                     {hasChanged && typeof prevValue !== 'object' && (
-                        <span className="text-[10px] text-slate-400 line-through opacity-60 flex-shrink-0">
+                        <span className="text-[14px] text-slate-400 line-through opacity-60 flex-shrink-0 font-bold">
                             {typeof prevValue === 'string' ? `"${prevValue}"` : String(prevValue)}
                         </span>
                     )}
@@ -264,7 +264,7 @@ const VariableCard: React.FC<{
 
                 {/* Array Visualization */}
                 {isNumericArray && (
-                    <div className="px-2 pb-2">
+                    <div className="px-3 pb-3">
                         <ArrayVisualizer
                             value={value as number[]}
                             prevValue={Array.isArray(prevValue) ? prevValue as number[] : undefined}

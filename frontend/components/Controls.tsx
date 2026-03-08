@@ -41,10 +41,10 @@ const Controls: React.FC<ControlsProps> = ({
     : "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40";
 
   return (
-    <div className="h-auto min-h-[5rem] px-4 py-4 md:px-8 mb-4 mx-4 md:mx-0 flex-wrap md:flex-nowrap gap-y-6 flex flex-col md:flex-row items-center justify-between shrink-0 z-20 glass-panel rounded-2xl transition-all duration-300">
+    <div className="h-auto px-4 py-4 md:px-6 mb-4 flex flex-col md:flex-row items-center gap-4 md:gap-6 shrink-0 z-20 glass-panel rounded-2xl transition-all duration-[400ms] ease-in-out">
 
       {/* Playback Buttons Group */}
-      <div className="flex items-center justify-center gap-3 w-full md:w-auto">
+      <div className="flex items-center justify-center gap-2.5 shrink-0">
         <div className="flex flex-col items-center gap-0.5">
           <button
             onClick={onReset}
@@ -89,21 +89,21 @@ const Controls: React.FC<ControlsProps> = ({
         </div>
       </div>
 
-      {/* Step Counter + Progress Bar Container */}
-      <div className="flex-1 w-full md:w-auto mx-0 md:mx-8 flex flex-col gap-1">
-        {/* Step counter */}
-        {totalSteps > 0 && (
-          <div className="flex items-center justify-between px-1">
+      {/* Progress & Info Container */}
+      <div className="flex-1 w-full flex flex-col justify-center gap-1.5 px-2 md:px-6">
+        {/* Top row: Step Counter */}
+        <div className="flex justify-between items-center h-5">
+          {totalSteps > 0 && (
             <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border ${stepBadgeClass}`}>
               Step {currentStep + 1} / {totalSteps}
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Progress bar */}
-        <div className="relative group flex items-center h-6">
+        {/* Bottom row: Progress bar */}
+        <div className="relative group flex items-center h-6 cursor-pointer">
           {/* Track background */}
-          <div className="absolute left-0 right-0 h-2 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm border border-black/5 dark:border-white/5 pointer-events-none">
+          <div className="absolute left-0 right-0 h-2.5 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm border border-black/5 dark:border-white/5 pointer-events-none">
             <div
               className={`absolute top-0 left-0 h-full transition-all duration-300 ease-out ${progressFillClass}`}
               style={{ width: `${progress}%` }}
@@ -112,7 +112,7 @@ const Controls: React.FC<ControlsProps> = ({
 
           {/* Interactive thumb (visible on hover) */}
           <div
-            className={`absolute h-4 w-4 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 border border-slate-200 dark:border-slate-700 z-10`}
+            className={`absolute h-4 w-4 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.3)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 border border-slate-200 dark:border-slate-700 z-10`}
             style={{ left: `${progress}%` }}
           ></div>
 
@@ -130,14 +130,14 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Speed Control */}
-      <div className="flex items-center gap-3 w-full md:w-auto bg-white/50 dark:bg-slate-900/50 px-4 py-2.5 rounded-xl border border-white/40 dark:border-slate-700/50 shadow-inner backdrop-blur-md">
-        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Speed</span>
+      <div className="shrink-0 flex items-center gap-3 bg-white/50 dark:bg-slate-900/50 px-4 py-2 rounded-xl border border-white/40 dark:border-slate-700/50 shadow-sm backdrop-blur-md">
+        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest hidden xl:block">Speed</span>
         <input
           type="range"
           min="100" max="2000" step="100"
           value={2100 - speed}
           onChange={(e) => setSpeed(2100 - Number(e.target.value))}
-          className={`w-20 md:w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer ${accentClass}`}
+          className={`w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer ${accentClass}`}
         />
         <span className="text-[11px] text-slate-600 dark:text-slate-300 w-8 text-right font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
           {(1000 / speed).toFixed(1)}x
