@@ -8,7 +8,7 @@ import Controls from './frontend/components/Controls';
 import HomePage from './frontend/components/HomePage';
 import { useExecutionEngine } from './frontend/hooks/useExecutionEngine';
 import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from './frontend/codeTemplates';
-import { Play, RotateCcw, Box, Layers, Terminal as TerminalIcon, Info, Sparkles, Moon, Sun, ArrowLeft, Code, Link2, Check, ChevronDown, BookOpen } from 'lucide-react';
+import { Play, RotateCcw, Box, Layers, Terminal as TerminalIcon, Info, Sparkles, Moon, Sun, ArrowLeft, Code, Link2, Check, ChevronDown, ChevronUp, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 
 import logoLight from './assets/logo-light.png';
 import logoDark from './assets/logo-dark.png';
@@ -113,6 +113,8 @@ const App: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'variables' | 'stack'>('variables');
     const [linkCopied, setLinkCopied] = useState(false);
     const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+    const [visualizerMode, setVisualizerMode] = useState(false);
+    const [consoleExpanded, setConsoleExpanded] = useState(false);
 
     const { state, controls } = useExecutionEngine();
     const { timeline, currentStepIndex, isPlaying, speed, executionError, breakpoints } = state;
@@ -120,6 +122,7 @@ const App: React.FC = () => {
 
     // Derived Theme Color
     const themeColor = language === 'c++' ? 'blue' : 'saffron';
+    const isSaffron = themeColor === 'saffron';
     const templates = language === 'c++' ? CPP_TEMPLATES : JS_TEMPLATES;
 
     // Apply Theme class to Body for Tailwind Dark Mode
@@ -316,7 +319,7 @@ const App: React.FC = () => {
                         <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-2 md:p-4 gap-4">
 
                             {/* Left Panel: Editor */}
-                            <div className="flex flex-col min-h-[50vh] md:min-h-0 md:flex-1 w-full md:min-w-[400px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-300">
+                            <div className={`flex flex-col min-h-[50vh] md:min-h-0 w-full md:min-w-[300px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-500 ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}>
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider">
                                         <Code size={18} className={iconTextClass} />
@@ -410,9 +413,26 @@ const App: React.FC = () => {
                             </div>
 
                             {/* Right Panel: Visualization */}
-                            <div className="w-full md:w-[480px] min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-300 overflow-hidden">
+                            <div className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-500 overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}>
+                                {/* Visualizer Mode Toggle */}
+                                <div className="flex items-center justify-end px-3 py-1.5 bg-white/10 dark:bg-slate-900/20">
+                                    <button
+                                        onClick={() => setVisualizerMode(!visualizerMode)}
+                                        className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all border ${
+                                            visualizerMode
+                                                ? isSaffron
+                                                    ? 'bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-300 dark:border-saffron-700'
+                                                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                        }`}
+                                        title={visualizerMode ? 'Exit focus mode' : 'Enter focus mode (60/40 split)'}
+                                    >
+                                        {visualizerMode ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
+                                        {visualizerMode ? 'Focus' : 'Expand'}
+                                    </button>
+                                </div>
                                 {/* Top half: Variables / Call Stack */}
-                                <div className="flex-[3] flex flex-col min-h-0">
+                                <div className={`flex flex-col min-h-0 transition-all duration-300 ${consoleExpanded ? 'flex-[3]' : 'flex-1'}`}>
                                     {/* Tabs */}
                                     <div className="flex border-b border-gray-200/50 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/30 backdrop-blur-md">
                                         <button
@@ -442,16 +462,39 @@ const App: React.FC = () => {
                                 </div>
 
                                 {/* Bottom half: Console */}
-                                <div className="flex-[2] flex flex-col min-h-[150px] border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-                                    <div className="h-10 flex flex-shrink-0 items-center justify-between px-4 border-b border-gray-200/50 dark:border-slate-800/80">
+                                <div className={`flex flex-col border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
+                                    consoleExpanded ? 'flex-[2] min-h-[150px]' : 'h-10'
+                                }`}>
+                                    <button 
+                                        className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer w-full"
+                                        onClick={() => setConsoleExpanded(!consoleExpanded)}
+                                    >
                                         <div className="flex items-center gap-2">
                                             <TerminalIcon size={16} className={iconTextClass} />
                                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Console Output</span>
+                                            {!consoleExpanded && currentStep.consoleOutput && currentStep.consoleOutput.length > 0 && (
+                                                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                                                    {currentStep.consoleOutput.length}
+                                                </span>
+                                            )}
                                         </div>
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <ConsolePanel logs={currentStep.consoleOutput || []} />
-                                    </div>
+                                        <div className="text-slate-400">
+                                            {consoleExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                                        </div>
+                                    </button>
+                                    
+                                    <AnimatePresence>
+                                        {consoleExpanded && (
+                                            <motion.div 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="flex-1 overflow-y-auto custom-scrollbar"
+                                            >
+                                                <ConsolePanel logs={currentStep.consoleOutput || []} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
 
                             </div>

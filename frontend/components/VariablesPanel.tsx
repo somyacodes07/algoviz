@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../types';
-import { ChevronRight, ChevronDown, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
+import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
 
 interface VariablesPanelProps {
     variables: VariableMap;
@@ -9,272 +9,303 @@ interface VariablesPanelProps {
     themeColor: 'saffron' | 'blue';
 }
 
-// Compact inline array bar chart
+// Bigger array visualization with index labels and swap highlighting
 const ArrayVisualizer: React.FC<{
     value: number[];
     prevValue?: number[];
     themeColor: 'saffron' | 'blue';
 }> = ({ value, prevValue, themeColor }) => {
-    if (!value || value.length === 0 || value.length > 20) return null;
+    if (!value || value.length === 0 || value.length > 30) return null;
 
     const maxVal = Math.max(...value.map(Math.abs), 1);
     const isSaffron = themeColor === 'saffron';
-    const barColor = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
-    const barChangedColor = isSaffron ? 'bg-amber-500 dark:bg-amber-400' : 'bg-cyan-400 dark:bg-cyan-300';
+
+    // Detect which indices changed
+    const changedIndices = new Set<number>();
+    if (prevValue && prevValue.length === value.length) {
+        for (let i = 0; i < value.length; i++) {
+            if (prevValue[i] !== value[i]) changedIndices.add(i);
+        }
+    }
+
+    // Detect swap pattern: exactly 2 indices changed and values swapped
+    let swapIndices: [number, number] | null = null;
+    if (changedIndices.size === 2 && prevValue) {
+        const [a, b] = Array.from(changedIndices);
+        if (prevValue[a] === value[b] && prevValue[b] === value[a]) {
+            swapIndices = [a, b];
+        }
+    }
 
     return (
-        <div className="flex items-end gap-px mt-2 px-1 h-10">
-            {value.map((v, i) => {
-                const height = Math.max(4, (Math.abs(v) / maxVal) * 100);
-                const changed = prevValue && prevValue[i] !== undefined && prevValue[i] !== v;
-                return (
-                    <motion.div
-                        key={i}
-                        className="flex flex-col items-center gap-0.5 flex-1 min-w-0"
-                        initial={false}
-                        animate={{ opacity: 1 }}
-                    >
+        <div className="mt-3 mb-2">
+            {/* Swap indicator */}
+            {swapIndices && (
+                <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`text-center text-[10px] font-bold uppercase tracking-widest mb-2 ${isSaffron ? 'text-amber-600 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}`}
+                >
+                    ↔ swapped [{swapIndices[0]}] ⟷ [{swapIndices[1]}]
+                </motion.div>
+            )}
+
+            {/* Array cells */}
+            <div className="flex items-end gap-1 px-1">
+                {value.map((v, i) => {
+                    const height = Math.max(20, (Math.abs(v) / maxVal) * 100);
+                    const isChanged = changedIndices.has(i);
+                    const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
+
+                    let barBg = isSaffron
+                        ? 'bg-gradient-to-t from-saffron-500 to-saffron-300 dark:from-saffron-600 dark:to-saffron-400'
+                        : 'bg-gradient-to-t from-blue-500 to-blue-300 dark:from-blue-600 dark:to-blue-400';
+                    if (isSwapped) {
+                        barBg = 'bg-gradient-to-t from-amber-500 to-yellow-300 dark:from-amber-500 dark:to-yellow-400';
+                    } else if (isChanged) {
+                        barBg = isSaffron
+                            ? 'bg-gradient-to-t from-orange-500 to-amber-300 dark:from-orange-600 dark:to-amber-400'
+                            : 'bg-gradient-to-t from-cyan-500 to-sky-300 dark:from-cyan-600 dark:to-sky-400';
+                    }
+
+                    const cellBorder = isSwapped
+                        ? 'ring-2 ring-amber-400 dark:ring-amber-500'
+                        : isChanged
+                            ? 'ring-1 ring-orange-300 dark:ring-orange-500/50'
+                            : '';
+
+                    return (
                         <motion.div
-                            className={`w-full rounded-sm ${changed ? barChangedColor : barColor} transition-all duration-300`}
-                            style={{ height: `${height}%`, minHeight: '3px' }}
-                            initial={false}
-                            animate={{ height: `${height}%` }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                        />
-                        <span className={`text-[8px] font-mono leading-none ${changed ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400 dark:text-slate-500'}`}>
-                            {v}
-                        </span>
-                    </motion.div>
-                );
-            })}
+                            key={i}
+                            className="flex flex-col items-center flex-1 min-w-0"
+                            layout
+                        >
+                            {/* Bar */}
+                            <div className={`w-full rounded-t-md ${barBg} ${cellBorder} transition-all relative`}
+                                style={{ minHeight: '8px' }}
+                            >
+                                <motion.div
+                                    className="w-full rounded-t-md"
+                                    initial={false}
+                                    animate={{ height: `${height}%` }}
+                                    transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+                                    style={{ height: `${height}%`, minHeight: '8px' }}
+                                />
+                            </div>
+
+                            {/* Value cell */}
+                            <div className={`w-full text-center py-1 rounded-b-md border text-[11px] font-mono font-bold transition-all ${
+                                isSwapped
+                                    ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-300'
+                                    : isChanged
+                                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300'
+                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                            }`}>
+                                {v}
+                            </div>
+
+                            {/* Index label */}
+                            <span className={`text-[8px] mt-0.5 font-mono ${isChanged ? 'text-amber-500 font-bold' : 'text-slate-400 dark:text-slate-600'}`}>
+                                [{i}]
+                            </span>
+                        </motion.div>
+                    );
+                })}
+            </div>
         </div>
     );
 };
 
-const RenderPrimitive: React.FC<{ value: any }> = ({ value }) => {
-    if (value === null) return <span className="text-slate-400/80 font-medium italic">null</span>;
-    if (value === undefined) return <span className="text-slate-400/80 font-medium italic">undefined</span>;
-    if (typeof value === 'string') return <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 font-semibold tracking-wide">"{value}"</span>;
-    if (typeof value === 'number') return <span className="text-gradient-blue font-black tracking-tight">{value}</span>;
-    if (typeof value === 'boolean') return <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-300 font-extrabold uppercase text-[11px] tracking-widest">{String(value)}</span>;
-    return <span className="text-slate-500 italic">Complex</span>;
-};
-
-const ValueNode: React.FC<{
+// Card-style variable display
+const VariableCard: React.FC<{
     name: string;
     value: any;
     prevValue?: any;
     wasPresent: boolean;
-    depth?: number;
     themeColor: 'saffron' | 'blue';
-}> = ({ name, value, prevValue, wasPresent, depth = 0, themeColor }) => {
+}> = ({ name, value, prevValue, wasPresent, themeColor }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const isObject = value !== null && typeof value === 'object';
     const isEmpty = isObject && Object.keys(value).length === 0;
     const isNumericArray = Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'number');
-    const typeLabel = Array.isArray(value) ? `Array(${value.length})` : 'Object';
+    const isFunction = typeof value === 'string' && value === '[Function]';
+    const typeLabel = Array.isArray(value) ? `Array(${value.length})` : isFunction ? 'Function' : typeof value === 'object' && value !== null ? 'Object' : typeof value;
 
-    // Change Detection Logic
     const isNew = !wasPresent;
     const hasChanged = !isNew && JSON.stringify(value) !== JSON.stringify(prevValue);
 
-    let changeType: 'none' | 'inc' | 'dec' | 'mod' = 'none';
-    let delta = 0;
-
-    // Heuristic: Small integer changes often indicate loops
-    const isLoopVar = hasChanged && typeof value === 'number' && typeof prevValue === 'number' && Math.abs(value - prevValue) === 1;
-
+    let delta: number | null = null;
+    let changeDir: 'up' | 'down' | 'mod' | null = null;
     if (hasChanged && typeof value === 'number' && typeof prevValue === 'number') {
         delta = value - prevValue;
-        if (delta > 0) changeType = 'inc';
-        else if (delta < 0) changeType = 'dec';
-        else changeType = 'mod';
+        changeDir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'mod';
     } else if (hasChanged) {
-        changeType = 'mod';
+        changeDir = 'mod';
     }
 
-    // Theme Configuration
-    const styles = {
-        saffron: {
-            modBg: 'rgba(255, 237, 213, 0.6)', // saffron-100
-            border: 'border-saffron-200 dark:border-saffron-900/50',
-            modIcon: 'text-saffron-500',
-            bgSoft: 'bg-saffron-50/50 dark:bg-saffron-900/10',
-            borderSoft: 'border-saffron-100 dark:border-saffron-900/30'
-        },
-        blue: {
-            modBg: 'rgba(219, 234, 254, 0.6)', // blue-100
-            border: 'border-blue-200 dark:border-blue-900/50',
-            modIcon: 'text-blue-500',
-            bgSoft: 'bg-blue-50/50 dark:bg-blue-900/10',
-            borderSoft: 'border-blue-100 dark:border-blue-900/30'
-        }
+    const isLoopVar = hasChanged && typeof value === 'number' && typeof prevValue === 'number' && Math.abs(value - prevValue) === 1;
+    const isSaffron = themeColor === 'saffron';
+
+    // Formatted value display
+    const renderValue = () => {
+        if (isFunction) return <span className="text-purple-500 dark:text-purple-400 italic font-medium text-xs">ƒ()</span>;
+        if (value === null) return <span className="text-slate-400 italic text-sm">null</span>;
+        if (value === undefined) return <span className="text-slate-400 italic text-sm">undefined</span>;
+        if (typeof value === 'string') return <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">"{value}"</span>;
+        if (typeof value === 'boolean') return <span className="text-purple-600 dark:text-purple-400 font-bold text-sm uppercase">{String(value)}</span>;
+        if (typeof value === 'number') return <span className="text-blue-700 dark:text-blue-300 font-black text-lg tabular-nums">{value}</span>;
+        if (isNumericArray) return <span className="text-slate-400 text-xs">[{value.length} items]</span>;
+        if (isObject) return <span className="text-slate-400 text-xs">{Array.isArray(value) ? `[${value.length}]` : '{...}'}</span>;
+        return <span className="text-slate-500 text-sm">{String(value)}</span>;
     };
-    const currentTheme = styles[themeColor];
 
-    const bgColorStart = isNew
-        ? 'rgba(254, 240, 138, 0.4)' // yellow-200 always for new
+    const cardBorder = isNew
+        ? 'border-yellow-300 dark:border-yellow-600 shadow-yellow-100 dark:shadow-yellow-900/20'
         : hasChanged
-            ? currentTheme.modBg
-            : 'rgba(0,0,0,0)';
+            ? isSaffron
+                ? 'border-saffron-300 dark:border-saffron-700 shadow-saffron-100 dark:shadow-saffron-900/20'
+                : 'border-blue-300 dark:border-blue-700 shadow-blue-100 dark:shadow-blue-900/20'
+            : 'border-slate-200/80 dark:border-slate-700/60';
 
-    if (!isObject) {
-        return (
-            <motion.div
-                layout
-                initial={isNew ? { x: -20, opacity: 0 } : false}
-                animate={{
-                    x: 0,
-                    opacity: 1,
-                    backgroundColor: [bgColorStart, 'rgba(0,0,0,0)'],
-                }}
-                transition={{ duration: 0.5 }}
-                className={`flex justify-between items-center py-2 px-3 rounded-xl font-mono text-sm border mb-2 transition-colors duration-300 ${hasChanged || isNew
-                    ? currentTheme.border
-                    : 'border-white/20 dark:border-slate-700/30 bg-white/40 dark:bg-slate-800/20 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white/60 dark:hover:bg-slate-800/40'
-                    }`}
-                style={{ marginLeft: depth * 16 }}
+    const cardBg = isNew
+        ? 'bg-gradient-to-br from-yellow-50/80 to-amber-50/50 dark:from-yellow-900/15 dark:to-amber-900/10'
+        : hasChanged
+            ? isSaffron
+                ? 'bg-gradient-to-br from-saffron-50/60 to-orange-50/40 dark:from-saffron-900/10 dark:to-orange-900/10'
+                : 'bg-gradient-to-br from-blue-50/60 to-cyan-50/40 dark:from-blue-900/10 dark:to-cyan-900/10'
+            : 'bg-white/70 dark:bg-slate-800/50';
+
+    return (
+        <motion.div
+            layout
+            initial={isNew ? { scale: 0.9, opacity: 0 } : false}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        >
+            <div
+                className={`rounded-xl border-2 ${cardBorder} ${cardBg} backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isObject && !isEmpty ? 'cursor-pointer' : ''}`}
+                onClick={() => isObject && !isEmpty && setIsExpanded(!isExpanded)}
             >
-                <div className="flex items-center gap-2">
-                    {/* New Badge */}
-                    {isNew && (
-                        <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm"
-                        >
-                            <Sparkles size={10} /> New
-                        </motion.span>
-                    )}
+                {/* Card Header */}
+                <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {/* Expand arrow for objects */}
+                        {isObject && !isEmpty && (
+                            <ChevronRight
+                                size={12}
+                                className={`text-slate-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`}
+                            />
+                        )}
 
-                    {/* Loop Indicator */}
-                    {isLoopVar && (
-                        <motion.span
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className={`flex items-center gap-1 ${themeColor === 'saffron' ? 'bg-orange-100 text-orange-700 dark:text-orange-400' : 'bg-indigo-100 text-indigo-700 dark:text-indigo-400'} dark:bg-opacity-20 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm`}
-                            title="Loop Variable"
-                        >
-                            <Repeat size={10} />
-                        </motion.span>
-                    )}
+                        {/* Variable name */}
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                            {name}
+                        </span>
 
-                    <span className="text-slate-700 dark:text-slate-300 font-bold">{name}</span>
-                </div>
+                        {/* Badges */}
+                        {isNew && (
+                            <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="flex items-center gap-0.5 text-[9px] font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            >
+                                <Sparkles size={8} /> NEW
+                            </motion.span>
+                        )}
 
-                <div className="flex items-center gap-3">
-                    {/* Change Indicators with Deltas */}
-                    {changeType === 'inc' && (
-                        <motion.div
-                            initial={{ y: 5, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-bold bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded"
-                        >
-                            <ArrowUp size={12} strokeWidth={3} />
-                            <span>+{delta}</span>
-                        </motion.div>
-                    )}
-                    {changeType === 'dec' && (
-                        <motion.div
-                            initial={{ y: -5, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="flex items-center gap-1 text-red-500 dark:text-red-400 text-xs font-bold bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded"
-                        >
-                            <ArrowDown size={12} strokeWidth={3} />
-                            <span>{delta}</span>
-                        </motion.div>
-                    )}
-                    {changeType === 'mod' && (
-                        <div className={`${currentTheme.modIcon} dark:text-opacity-80 animate-pulse`} title="Modified">
-                            <RefreshCw size={12} />
-                        </div>
-                    )}
-
-                    <div className="flex flex-col items-end leading-none">
-                        <RenderPrimitive value={value} />
-                        {hasChanged && (
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through decoration-slate-300 dark:decoration-slate-600 decoration-1 opacity-75 mt-0.5">
-                                {JSON.stringify(prevValue)}
+                        {isLoopVar && (
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${isSaffron ? 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20' : 'text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-900/20'}`}>
+                                <Repeat size={8} />
                             </span>
                         )}
+
+                        {/* Type label */}
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 italic flex-shrink-0">
+                            {typeLabel}
+                        </span>
                     </div>
+
+                    {/* Change indicator */}
+                    {changeDir && (
+                        <div className="flex-shrink-0 ml-2">
+                            {changeDir === 'up' && (
+                                <motion.span initial={{ y: 3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                                    className="flex items-center gap-0.5 text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded-full">
+                                    <ArrowUp size={10} strokeWidth={3} />+{delta}
+                                </motion.span>
+                            )}
+                            {changeDir === 'down' && (
+                                <motion.span initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                                    className="flex items-center gap-0.5 text-[10px] font-bold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded-full">
+                                    <ArrowDown size={10} strokeWidth={3} />{delta}
+                                </motion.span>
+                            )}
+                            {changeDir === 'mod' && (
+                                <span className={`${isSaffron ? 'text-saffron-500' : 'text-blue-500'} animate-pulse`}>
+                                    <RefreshCw size={10} />
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
-            </motion.div>
-        );
-    }
 
-    // Complex Object/Array
-    return (
-        <div className="font-mono text-sm mb-1" style={{ marginLeft: depth * 16 }}>
-            <motion.div
-                className={`flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all border ${hasChanged || isNew ? `${currentTheme.bgSoft} ${currentTheme.borderSoft}` : 'border-white/20 dark:border-slate-700/30 bg-white/40 dark:bg-slate-800/20 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-slate-800/40 shadow-sm'
-                    }`}
-                animate={hasChanged ? { backgroundColor: [currentTheme.modBg, 'rgba(0,0,0,0)'] } : {}}
-                onClick={() => !isEmpty && setIsExpanded(!isExpanded)}
-            >
-                <button
-                    disabled={isEmpty}
-                    className={`p-0.5 rounded text-slate-400 ${isEmpty ? 'opacity-30' : 'hover:text-slate-600 dark:hover:text-slate-200'} transition-transform duration-200 ${isExpanded ? 'rotate-90' : 'rotate-0'}`}
-                >
-                    {isEmpty ? <div className="w-4" /> : <ChevronRight size={14} />}
-                </button>
+                {/* Card Body — Value */}
+                <div className="px-3 pb-2.5 flex items-baseline justify-between gap-2">
+                    <div className="text-right flex-1">
+                        {renderValue()}
+                    </div>
+                    {hasChanged && typeof prevValue !== 'object' && (
+                        <span className="text-[10px] text-slate-400 line-through opacity-60 flex-shrink-0">
+                            {typeof prevValue === 'string' ? `"${prevValue}"` : String(prevValue)}
+                        </span>
+                    )}
+                </div>
 
-                <span className="text-slate-700 dark:text-slate-300 font-bold tracking-tight">{name}:</span>
-                <span className="text-slate-400/80 dark:text-slate-500/80 italic text-[11px] ml-1">{typeLabel}</span>
-
-                {isNew && (
-                    <span className="ml-2 flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
-                        <Sparkles size={10} />
-                    </span>
-                )}
-
-                {hasChanged && !isNew && (
-                    <div className={`ml-1 ${currentTheme.modIcon} dark:text-opacity-80`} title="Modified">
-                        <RefreshCw size={10} />
+                {/* Array Visualization */}
+                {isNumericArray && (
+                    <div className="px-2 pb-2">
+                        <ArrayVisualizer
+                            value={value as number[]}
+                            prevValue={Array.isArray(prevValue) ? prevValue as number[] : undefined}
+                            themeColor={themeColor}
+                        />
                     </div>
                 )}
 
-                {!isExpanded && !isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[...]' : '{...}'}</span>}
-                {isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[]' : '{}'}</span>}
-            </motion.div>
-
-            {/* Array bar visualization - always visible for numeric arrays */}
-            {isNumericArray && (
-                <ArrayVisualizer
-                    value={value as number[]}
-                    prevValue={Array.isArray(prevValue) ? prevValue as number[] : undefined}
-                    themeColor={themeColor}
-                />
-            )}
-
-            <AnimatePresence>
-                {isExpanded && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden border-l border-slate-200/50 dark:border-slate-700/50 ml-4 pl-2 mt-1"
-                    >
-                        {Object.keys(value).map(key => {
-                            const indexChanged = prevValue && JSON.stringify(value[key]) !== JSON.stringify(prevValue?.[key]);
-                            return (
-                                <div key={key} className={`${indexChanged ? 'ring-1 ring-amber-300/50 dark:ring-amber-500/30 rounded-lg' : ''}`}>
-                                    <ValueNode
-                                        name={key}
-                                        value={value[key]}
-                                        prevValue={prevValue?.[key]}
-                                        wasPresent={prevValue && key in prevValue}
-                                        depth={0}
-                                        themeColor={themeColor}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div >
+                {/* Expanded children for objects/arrays */}
+                <AnimatePresence>
+                    {isExpanded && isObject && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden border-t border-slate-200/60 dark:border-slate-700/40"
+                        >
+                            <div className="p-2 space-y-1 bg-slate-50/50 dark:bg-slate-900/30">
+                                {Object.keys(value).map(key => {
+                                    const indexChanged = prevValue && JSON.stringify(value[key]) !== JSON.stringify(prevValue?.[key]);
+                                    return (
+                                        <div key={key}
+                                            className={`flex justify-between items-center px-2.5 py-1.5 rounded-lg text-xs font-mono ${
+                                                indexChanged
+                                                    ? 'bg-amber-50 dark:bg-amber-900/15 ring-1 ring-amber-200 dark:ring-amber-700/40'
+                                                    : 'bg-white/50 dark:bg-slate-800/30'
+                                            }`}
+                                        >
+                                            <span className="text-slate-500 dark:text-slate-400 font-bold">[{key}]</span>
+                                            <span className={`font-semibold ${indexChanged ? 'text-amber-700 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                {JSON.stringify(value[key])}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </motion.div>
     );
 };
 
@@ -290,10 +321,10 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({ variables, prevVariable
     }
 
     return (
-        <div className="flex flex-col gap-1 p-2">
+        <div className="grid grid-cols-1 gap-2 p-2">
             <AnimatePresence mode='popLayout'>
                 {keys.map(key => (
-                    <ValueNode
+                    <VariableCard
                         key={key}
                         name={key}
                         value={variables[key]}
