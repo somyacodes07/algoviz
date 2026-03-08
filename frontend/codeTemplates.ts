@@ -1,4 +1,3 @@
-import { Breakpoint } from './types';
 
 export interface CodeTemplate {
   name: string;
