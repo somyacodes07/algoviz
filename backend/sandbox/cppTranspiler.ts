@@ -146,20 +146,21 @@ export function transpileCppToJs(cppCode: string): string {
     let mainBody = '';
 
     // Regex to find function signatures
-    const funcRegex = /(?:^|\n)\s*(?:(?:void|int|float|double|string|bool|char|long|auto|long\s+long|unsigned\s+int|short)\s+)(\w+)\s*\(([^)]*)\)\s*\{/g;
+    const funcRegex = /(?:^|\n)(\s*)(?:(?:(?:inline|constexpr|static|virtual)\s+)?(?:void|int|float|double|string|bool|char|long|auto|long\s+long|unsigned\s+int|short)\s+)(\w+)\s*\(([^)]*)\)\s*\{/g;
 
     let match: RegExpExecArray | null;
     const processedCode = js;
 
     // Collect all functions
-    const functions: Array<{ name: string; params: string; body: string; fullMatch: string }> = [];
+    const functions: Array<{ name: string; params: string; body: string; fullMatch: string; startIndex: number; openBraceIndex: number; closeBraceIndex: number; indent: string }> = [];
 
     // Reset regex
     funcRegex.lastIndex = 0;
 
     while ((match = funcRegex.exec(processedCode)) !== null) {
-        const funcName = match[1];
-        const params = match[2];
+        const indent = match[1];
+        const funcName = match[2];
+        const params = match[3];
         const openBraceIndex = processedCode.indexOf('{', match.index + match[0].length - 1);
 
         if (openBraceIndex === -1) continue;
@@ -170,20 +171,44 @@ export function transpileCppToJs(cppCode: string): string {
         const body = processedCode.substring(openBraceIndex + 1, closeBraceIndex);
         const fullMatch = processedCode.substring(match.index, closeBraceIndex + 1);
 
-        functions.push({ name: funcName, params, body, fullMatch });
+        functions.push({ 
+            name: funcName, 
+            params, 
+            body, 
+            fullMatch, 
+            startIndex: match.index, 
+            openBraceIndex, 
+            closeBraceIndex,
+            indent
+        });
     }
 
-    // Separate main from helper functions
-    const mainFunc = functions.find(f => f.name === 'main');
-    const helperFuncs = functions.filter(f => f.name !== 'main');
+    // Sort functions from bottom to top so replacements don't invalidate indices
+    functions.sort((a, b) => b.startIndex - a.startIndex);
 
-    if (mainFunc || helperFuncs.length > 0) {
-        // Build the output: helper functions first, then main's body
-        const parts: string[] = [];
-
-        for (const func of helperFuncs) {
+    for (const func of functions) {
+        const { name, params, startIndex, openBraceIndex, closeBraceIndex, indent } = func;
+        
+        if (name === 'main') {
+            // Replaces: "int main() {"  → "// int main() {"
+            // Replaces: "}" (at closeBrace) → "// }"
+            const beforeSig = js.substring(0, startIndex);
+            const signature = js.substring(startIndex, openBraceIndex + 1);
+            const insideBody = js.substring(openBraceIndex + 1, closeBraceIndex);
+            const afterBody = js.substring(closeBraceIndex + 1);
+            
+            // Comment out signature but preserve its newlines, handle the beginning of string matching correctly
+            // We'll just replace the first non-whitespace character with // 
+            const commentedSignature = signature.replace(/([\w\\]+.*)/s, '// $1');
+            
+            // Also nullify `return 0;` inside main
+            const modifiedBody = insideBody.replace(/return\s+0\s*;/g, '// return 0;');
+            
+            js = beforeSig + commentedSignature + modifiedBody + '// }' + afterBody;
+        } else {
+            // Helper function: "void swap(int a, int b) {" → "function swap(a, b) {"
             // Transpile parameters: remove C++ types from params
-            const jsParams = func.params
+            const jsParams = params
                 .split(',')
                 .map(p => {
                     const trimmed = p.trim();
@@ -195,21 +220,17 @@ export function transpileCppToJs(cppCode: string): string {
                 .filter(Boolean)
                 .join(', ');
 
-            parts.push(`function ${func.name}(${jsParams}) {${func.body}}`);
+            const beforeSig = js.substring(0, startIndex);
+            const signature = js.substring(startIndex, openBraceIndex + 1);
+            const afterSig = js.substring(openBraceIndex + 1);
+            
+            // We want to replace the C++ signature with "function name(params) {"
+            // Keep the exact same number of newlines if possible, but standard definition is fine
+            const sigNewlines = (signature.match(/\n/g) || []).join('');
+            const jsSignature = `${sigNewlines}${indent}function ${name}(${jsParams}) {`;
+            
+            js = beforeSig + jsSignature + afterSig;
         }
-
-        if (mainFunc) {
-            let body = mainFunc.body;
-            // Replace 'return 0;' with a comment to strictly preserve lines
-            body = body.replace(/return\s+0\s*;/g, '// return 0;');
-            parts.push(body);
-        }
-
-        js = parts.join('\n\n');
-    } else {
-        // No functions found — just use the code as-is (might be a snippet)
-        // Remove 'return 0;' if present, while preserving lines
-        js = js.replace(/return\s+0\s*;/g, '// return 0;');
     }
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -81,15 +81,15 @@ const ArrayVisualizer: React.FC<{
                             layout
                         >
                             {/* Bar */}
-                            <div className={`w-full rounded-t-lg ${barBg} ${cellBorder} transition-all relative flex flex-col justify-end`}
+                            <div className="w-full relative flex flex-col justify-end"
                                 style={{ height: '100%' }}
                             >
                                 <motion.div
-                                    className="w-full rounded-t-lg"
+                                    className={`w-full rounded-t-lg ${barBg} ${cellBorder}`}
                                     initial={false}
                                     animate={{ height: `${height}%` }}
                                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                                    style={{ height: `${height}%`, minHeight: '12px' }}
+                                    style={{ minHeight: '12px' }}
                                 />
                             </div>
 
@@ -187,79 +187,80 @@ const VariableCard: React.FC<{
                 className={`rounded-xl border-2 ${cardBorder} ${cardBg} backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isObject && !isEmpty ? 'cursor-pointer' : ''}`}
                 onClick={() => isObject && !isEmpty && setIsExpanded(!isExpanded)}
             >
-                {/* Card Header */}
-                <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                        {/* Expand arrow for objects */}
-                        {isObject && !isEmpty && (
-                            <ChevronRight
-                                size={12}
-                                className={`text-slate-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`}
-                            />
-                        )}
-
-                        {/* Variable name */}
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                            {name}
-                        </span>
-
-                        {/* Badges */}
-                        {isNew && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="flex items-center gap-0.5 text-[9px] font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full flex-shrink-0"
-                            >
-                                <Sparkles size={8} /> NEW
-                            </motion.span>
-                        )}
-
-                        {isLoopVar && (
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${isSaffron ? 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20' : 'text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-900/20'}`}>
-                                <Repeat size={8} />
+                {/* Main Card Content */}
+                <div className={`px-4 py-3 flex ${isNumericArray || (isObject && !isEmpty) ? 'flex-col gap-3' : 'items-center justify-between gap-4'}`}>
+                    
+                    {/* Left: Name & Type */}
+                    <div className="flex flex-col gap-1 min-w-0 shrink-0">
+                        <div className="flex items-center gap-2">
+                            {isObject && !isEmpty && (
+                                <ChevronRight
+                                    size={14}
+                                    className={`text-slate-400 transition-transform flex-shrink-0 cursor-pointer ${isExpanded ? 'rotate-90' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                                />
+                            )}
+                            <span className="text-base font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 truncate">
+                                {name}
                             </span>
-                        )}
-
-                        {/* Type label */}
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 italic flex-shrink-0">
-                            {typeLabel}
-                        </span>
-                    </div>
-
-                    {/* Change indicator */}
-                    {changeDir && (
-                        <div className="flex-shrink-0 ml-2">
-                            {changeDir === 'up' && (
-                                <motion.span initial={{ y: 3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                                    className="flex items-center gap-0.5 text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded-full">
-                                    <ArrowUp size={10} strokeWidth={3} />+{delta}
+                            
+                            {/* Badges */}
+                            {isNew && (
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="flex items-center gap-0.5 text-[9px] font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                >
+                                    <Sparkles size={10} /> NEW
                                 </motion.span>
                             )}
-                            {changeDir === 'down' && (
-                                <motion.span initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                                    className="flex items-center gap-0.5 text-[10px] font-bold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded-full">
-                                    <ArrowDown size={10} strokeWidth={3} />{delta}
-                                </motion.span>
-                            )}
-                            {changeDir === 'mod' && (
-                                <span className={`${isSaffron ? 'text-saffron-500' : 'text-blue-500'} animate-pulse`}>
-                                    <RefreshCw size={10} />
+
+                            {isLoopVar && (
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${isSaffron ? 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20' : 'text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-900/20'}`}>
+                                    <Repeat size={10} />
                                 </span>
                             )}
                         </div>
-                    )}
-                </div>
+                        
+                        {/* Type & Change Indicator */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic uppercase tracking-wider opacity-80">
+                                {typeLabel}
+                            </span>
+                            
+                            {changeDir && !isNumericArray && (
+                                <div className="flex items-center">
+                                    {changeDir === 'up' && (
+                                        <motion.span initial={{ y: 3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                                            className="flex items-center gap-0.5 text-[9px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1 py-0.5 rounded-sm">
+                                            <ArrowUp size={10} strokeWidth={3} />+{delta}
+                                        </motion.span>
+                                    )}
+                                    {changeDir === 'down' && (
+                                        <motion.span initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                                            className="flex items-center gap-0.5 text-[9px] font-bold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1 py-0.5 rounded-sm">
+                                            <ArrowDown size={10} strokeWidth={3} />{delta}
+                                        </motion.span>
+                                    )}
+                                    {changeDir === 'mod' && (
+                                        <span className={`${isSaffron ? 'text-saffron-500' : 'text-blue-500'} animate-pulse px-1`}>
+                                            <RefreshCw size={10} />
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                {/* Card Body — Value */}
-                <div className="px-4 pb-3 flex items-baseline justify-between gap-2">
-                    <div className="text-right flex-1">
+                    {/* Right: Value */}
+                    <div className={`flex items-baseline gap-4 ${isNumericArray || (isObject && !isEmpty) ? 'justify-start' : 'justify-end text-right flex-1'}`}>
+                        {hasChanged && typeof prevValue !== 'object' && (
+                            <span className="text-[16px] text-slate-400 line-through opacity-50 flex-shrink-0 font-bold decoration-2">
+                                {typeof prevValue === 'string' ? `"${prevValue}"` : String(prevValue)}
+                            </span>
+                        )}
                         {renderValue()}
                     </div>
-                    {hasChanged && typeof prevValue !== 'object' && (
-                        <span className="text-[14px] text-slate-400 line-through opacity-60 flex-shrink-0 font-bold">
-                            {typeof prevValue === 'string' ? `"${prevValue}"` : String(prevValue)}
-                        </span>
-                    )}
                 </div>
 
                 {/* Array Visualization */}

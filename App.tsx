@@ -107,7 +107,12 @@ const App: React.FC = () => {
 
     const [page, setPage] = useState<'home' | 'editor'>(shared ? 'editor' : 'home');
     const [language, setLanguage] = useState(shared?.lang || 'javascript');
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
+    });
 
     const [code, setCode] = useState<string>(shared?.code || JS_DEFAULT_CODE);
     const [activeTab, setActiveTab] = useState<'variables' | 'stack'>('variables');
@@ -134,6 +139,24 @@ const App: React.FC = () => {
             root.classList.remove('dark');
         }
     }, [theme]);
+
+    // Listen to System Theme Changes
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e: MediaQueryListEvent) => {
+            setTheme(e.matches ? 'dark' : 'light');
+        };
+        // Use modern addEventListener if available, fallback for older Safari
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        } else if ('addListener' in mediaQuery) {
+            // @ts-ignore
+            mediaQuery.addListener(handleChange);
+            // @ts-ignore
+            return () => mediaQuery.removeListener(handleChange);
+        }
+    }, []);
 
     useEffect(() => {
         // Only run if in editor mode and timeline is empty (initial load)
