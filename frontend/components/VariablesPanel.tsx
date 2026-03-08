@@ -10,11 +10,11 @@ interface VariablesPanelProps {
 }
 
 const RenderPrimitive: React.FC<{ value: any }> = ({ value }) => {
-    if (value === null) return <span className="text-slate-500 font-medium">null</span>;
-    if (value === undefined) return <span className="text-slate-500 font-medium">undefined</span>;
-    if (typeof value === 'string') return <span className="text-green-600 dark:text-green-400 font-medium">"{value}"</span>;
-    if (typeof value === 'number') return <span className="text-blue-600 dark:text-blue-400 font-bold">{value}</span>;
-    if (typeof value === 'boolean') return <span className="text-purple-600 dark:text-purple-400 font-bold">{String(value)}</span>;
+    if (value === null) return <span className="text-slate-400/80 font-medium italic">null</span>;
+    if (value === undefined) return <span className="text-slate-400/80 font-medium italic">undefined</span>;
+    if (typeof value === 'string') return <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 font-semibold tracking-wide">"{value}"</span>;
+    if (typeof value === 'number') return <span className="text-gradient-blue font-black tracking-tight">{value}</span>;
+    if (typeof value === 'boolean') return <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-300 font-extrabold uppercase text-[11px] tracking-widest">{String(value)}</span>;
     return <span className="text-slate-500 italic">Complex</span>;
 };
 
@@ -87,9 +87,9 @@ const ValueNode: React.FC<{
                     backgroundColor: [bgColorStart, 'rgba(0,0,0,0)'],
                 }}
                 transition={{ duration: 0.5 }}
-                className={`flex justify-between items-center py-2 px-3 rounded-lg font-mono text-sm border mb-1 transition-colors ${hasChanged || isNew
-                        ? currentTheme.border
-                        : 'border-transparent hover:bg-gray-50 dark:hover:bg-slate-800/30'
+                className={`flex justify-between items-center py-2 px-3 rounded-xl font-mono text-sm border mb-2 transition-colors duration-300 ${hasChanged || isNew
+                    ? currentTheme.border
+                    : 'border-white/20 dark:border-slate-700/30 bg-white/40 dark:bg-slate-800/20 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white/60 dark:hover:bg-slate-800/40'
                     }`}
                 style={{ marginLeft: depth * 16 }}
             >
@@ -163,22 +163,22 @@ const ValueNode: React.FC<{
 
     // Complex Object/Array
     return (
-        <div className="font-mono text-sm" style={{ marginLeft: depth * 16 }}>
+        <div className="font-mono text-sm mb-1" style={{ marginLeft: depth * 16 }}>
             <motion.div
-                className={`flex items-center gap-1 py-1.5 px-2 rounded-lg cursor-pointer transition-colors border border-transparent ${hasChanged || isNew ? `${currentTheme.bgSoft} ${currentTheme.borderSoft}` : 'hover:bg-gray-100 dark:hover:bg-slate-800'
+                className={`flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all border ${hasChanged || isNew ? `${currentTheme.bgSoft} ${currentTheme.borderSoft}` : 'border-white/20 dark:border-slate-700/30 bg-white/40 dark:bg-slate-800/20 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-slate-800/40 shadow-sm'
                     }`}
                 animate={hasChanged ? { backgroundColor: [currentTheme.modBg, 'rgba(0,0,0,0)'] } : {}}
                 onClick={() => !isEmpty && setIsExpanded(!isExpanded)}
             >
                 <button
                     disabled={isEmpty}
-                    className={`p-0.5 rounded text-slate-400 ${isEmpty ? 'opacity-30' : 'hover:text-slate-600 dark:hover:text-slate-200'}`}
+                    className={`p-0.5 rounded text-slate-400 ${isEmpty ? 'opacity-30' : 'hover:text-slate-600 dark:hover:text-slate-200'} transition-transform duration-200 ${isExpanded ? 'rotate-90' : 'rotate-0'}`}
                 >
-                    {isEmpty ? <div className="w-4" /> : (isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+                    {isEmpty ? <div className="w-4" /> : <ChevronRight size={14} />}
                 </button>
 
-                <span className="text-slate-700 dark:text-slate-300 font-bold">{name}:</span>
-                <span className="text-slate-500 dark:text-slate-400 italic text-xs ml-1">{typeLabel}</span>
+                <span className="text-slate-700 dark:text-slate-300 font-bold tracking-tight">{name}:</span>
+                <span className="text-slate-400/80 dark:text-slate-500/80 italic text-[11px] ml-1">{typeLabel}</span>
 
                 {isNew && (
                     <span className="ml-2 flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold">
@@ -186,8 +186,8 @@ const ValueNode: React.FC<{
                     </span>
                 )}
 
-                {!isExpanded && !isEmpty && <span className="text-slate-400 text-xs ml-1">{Array.isArray(value) ? '[...]' : '{...}'}</span>}
-                {isEmpty && <span className="text-slate-400 text-xs ml-1">{Array.isArray(value) ? '[]' : '{}'}</span>}
+                {!isExpanded && !isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[...]' : '{...}'}</span>}
+                {isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[]' : '{}'}</span>}
             </motion.div>
 
             <AnimatePresence>
@@ -196,7 +196,7 @@ const ValueNode: React.FC<{
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden border-l-2 border-gray-100 dark:border-slate-800 ml-3 pl-1"
+                        className="overflow-hidden border-l border-slate-200/50 dark:border-slate-700/50 ml-4 pl-2 mt-1"
                     >
                         {Object.keys(value).map(key => (
                             <ValueNode
@@ -212,7 +212,7 @@ const ValueNode: React.FC<{
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 
@@ -221,8 +221,8 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({ variables, prevVariable
 
     if (keys.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-40 text-slate-400 dark:text-slate-500 italic bg-white dark:bg-slate-900 rounded-xl border-2 border-dashed border-gray-200 dark:border-slate-800 m-2 transition-colors">
-                <span className="text-sm">No variables in scope</span>
+            <div className="flex flex-col items-center justify-center h-40 text-slate-400 dark:text-slate-500 italic glass-panel rounded-2xl border-2 border-dashed border-gray-200/50 dark:border-slate-700/50 m-2 transition-all duration-300">
+                <span className="text-sm font-medium">No variables in scope</span>
             </div>
         );
     }

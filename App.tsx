@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CodeEditor from './frontend/components/CodeEditor';
 import VariablesPanel from './frontend/components/VariablesPanel';
 import CallStackPanel from './frontend/components/CallStackPanel';
@@ -6,7 +7,7 @@ import ConsolePanel from './frontend/components/ConsolePanel';
 import Controls from './frontend/components/Controls';
 import HomePage from './frontend/components/HomePage';
 import { useExecutionEngine } from './frontend/hooks/useExecutionEngine';
-import { Code, Layers, Terminal as TerminalIcon, Sun, Moon, ArrowLeft, Play } from 'lucide-react';
+import { Play, RotateCcw, Box, Layers, Terminal as TerminalIcon, Info, Sparkles, Moon, Sun, ArrowLeft, Code } from 'lucide-react';
 
 import logoLight from './assets/logo-light.png';
 import logoDark from './assets/logo-dark.png';
@@ -40,6 +41,7 @@ const CPP_DEFAULT_CODE = `// C++ Visualizer (Beta)
 #include <algorithm>
 
 using namespace std;
+
 
 int findMax(vector<int> arr) {
     int maxVal = arr[0];
@@ -89,7 +91,7 @@ const App: React.FC = () => {
 
     const { state, controls } = useExecutionEngine();
     const { timeline, currentStepIndex, isPlaying, speed, executionError } = state;
-    const { handleRun, setIsPlaying, setSpeed, togglePlayPause, reset, nextStep, prevStep: prevStepControl } = controls;
+    const { handleRun, setIsPlaying, setSpeed, togglePlayPause, reset, nextStep, prevStep } = controls;
 
     // Derived Theme Color
     const themeColor = language === 'c++' ? 'blue' : 'saffron';
@@ -109,7 +111,43 @@ const App: React.FC = () => {
         if (page === 'editor' && timeline.length === 0) {
             handleRun(code, language);
         }
-    }, [page]);
+    }, [page, handleRun, code, language, timeline.length]);
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Do not trigger shortcuts if user is typing in an input, textarea, or Monaco editor
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('.monaco-editor')) {
+                return;
+            }
+
+            if (page !== 'editor') return;
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextStep();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    prevStep();
+                    break;
+                case 'KeyR':
+                    if (e.metaKey || e.ctrlKey) return; // Don't block browser refresh
+                    e.preventDefault();
+                    reset(code, language);
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [page, togglePlayPause, nextStep, prevStep, reset, code, language]);
 
     const handleCodeChange = (newCode: string | undefined) => {
         if (newCode !== undefined) {
@@ -143,22 +181,6 @@ const App: React.FC = () => {
     const prevStepVariables = timeline[currentStepIndex - 1] || { variables: {} };
     const progress = timeline.length > 1 ? (currentStepIndex / (timeline.length - 1)) * 100 : 0;
 
-    if (page === 'home') {
-        return (
-            <div className="relative">
-                <div className="absolute top-4 right-4 z-50">
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 shadow-md border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
-                </div>
-                <HomePage onSelectLanguage={handleLanguageSelect} />
-            </div>
-        );
-    }
-
     const langLabel = language === 'javascript' ? 'JavaScript (ES6)' : 'C++ (Beta)';
 
     // Theme Helper Classes
@@ -173,146 +195,185 @@ const App: React.FC = () => {
     const tabActiveBg = themeColor === 'saffron' ? 'bg-saffron-50/50' : 'bg-blue-50/50';
 
     return (
-        <div className="flex flex-col h-screen w-screen bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 overflow-hidden transition-colors duration-300">
-            {/* Header */}
-            <header className={`h-16 flex items-center px-6 justify-between ${headerClass} dark:bg-slate-900 border-b border-transparent dark:border-slate-800 shadow-md z-20 text-white transition-colors duration-300`}>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setPage('home')}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors"
+        <div className={`flex flex-col h-screen w-screen text-slate-800 dark:text-slate-200 overflow-hidden transition-colors duration-500 ${theme === 'dark' ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+            <AnimatePresence mode="wait">
+                {page === 'home' ? (
+                    <motion.div
+                        key="home"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, filter: 'blur(5px)' }}
+                        transition={{ duration: 0.4 }}
+                        className="relative h-full w-full"
                     >
-                        <ArrowLeft size={20} />
-                    </button>
-                    <div className="bg-white/20 dark:bg-slate-800 p-1.5 rounded-lg backdrop-blur-sm">
-                        <img
-                            src={theme === 'dark' ? logoDark : logoLight}
-                            alt="AlgoViz Logo"
-                            className="w-6 h-6 object-contain"
-                        />
-                    </div>
-                    <div>
-                        <h1 className="font-bold text-xl tracking-tight leading-none text-white">
-                            AlgoViz
-                        </h1>
-                        <span className="text-saffron-100 dark:text-slate-500 text-xs font-medium opacity-90">Editor Mode</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className={`flex gap-4 text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent dark:border-slate-700 ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400`}>
-                        <span>{langLabel}</span>
-                    </div>
-                    <button
-                        onClick={toggleTheme}
-                        className={`p-2 rounded-full ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400 hover:bg-white/20 dark:hover:bg-slate-700 transition-colors`}
-                    >
-                        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                    </button>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-
-                {/* Left Panel: Editor */}
-                <div className="flex flex-col min-h-[50vh] md:min-h-0 md:flex-1 w-full md:min-w-[400px] border-b md:border-b-0 md:border-r border-gray-200 dark:border-slate-800 p-4 md:p-6 bg-white dark:bg-slate-950 transition-colors">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm font-bold uppercase tracking-wide">
-                            <Code size={18} className={iconTextClass} />
-                            <span>Source Code</span>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            {executionError && (
-                                <span className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-200 dark:border-red-900/30 font-medium">
-                                    {executionError}
-                                </span>
-                            )}
+                        <div className="absolute top-4 right-4 z-50">
                             <button
-                                onClick={() => {
-                                    setIsPlaying(false);
-                                    handleRun(code, language);
-                                }}
-                                className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 ${runBtnClass}`}
+                                onClick={toggleTheme}
+                                className="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 shadow-md border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                             >
-                                <Play size={16} fill="currentColor" />
-                                Run
+                                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                             </button>
                         </div>
-                    </div>
-                    <div className="flex-1 relative rounded-xl overflow-hidden shadow-inner border border-gray-200 dark:border-slate-800">
-                        <CodeEditor
-                            code={code}
-                            language={language}
-                            onChange={handleCodeChange}
-                            activeLine={currentStep.line}
-                            isError={currentStep.isError}
-                            theme={theme}
+                        <HomePage onSelectLanguage={handleLanguageSelect} />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="editor"
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.4 }}
+                        className="flex flex-col h-full w-full"
+                    >
+                        {/* Header */}
+                        <header className={`h-16 flex items-center px-6 justify-between ${theme === 'dark' ? 'bg-slate-900/80' : headerClass + '/90'} backdrop-blur-xl border-b border-transparent dark:border-slate-800 shadow-md z-30 text-white transition-all duration-300 relative`}>
+                            <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 dark:via-saffron-500/20 to-transparent"></div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setPage('home')}
+                                    className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors"
+                                >
+                                    <ArrowLeft size={20} />
+                                </button>
+                                <div className="bg-white/20 dark:bg-slate-800 p-1.5 rounded-lg backdrop-blur-sm">
+                                    <img
+                                        src={theme === 'dark' ? logoDark : logoLight}
+                                        alt="AlgoViz Logo"
+                                        className="w-6 h-6 object-contain"
+                                    />
+                                </div>
+                                <div>
+                                    <h1 className="font-bold text-xl tracking-tight leading-none text-white">
+                                        AlgoViz
+                                    </h1>
+                                    <span className="text-saffron-100 dark:text-slate-500 text-xs font-medium opacity-90">Editor Mode</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className={`flex gap-4 text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent dark:border-slate-700 ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400`}>
+                                    <span>{langLabel}</span>
+                                </div>
+                                <button
+                                    onClick={toggleTheme}
+                                    className={`p-2 rounded-full ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400 hover:bg-white/20 dark:hover:bg-slate-700 transition-colors`}
+                                >
+                                    {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* Main Content */}
+                        <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-2 md:p-4 gap-4">
+
+                            {/* Left Panel: Editor */}
+                            <div className="flex flex-col min-h-[50vh] md:min-h-0 md:flex-1 w-full md:min-w-[400px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-300">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider">
+                                        <Code size={18} className={iconTextClass} />
+                                        <span>Source Code</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        {executionError && (
+                                            <span className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-200 dark:border-red-900/30 font-medium">
+                                                {executionError}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setIsPlaying(false);
+                                                handleRun(code, language);
+                                            }}
+                                            className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 ${runBtnClass}`}
+                                        >
+                                            <Play size={16} fill="currentColor" />
+                                            Run
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 relative rounded-xl overflow-hidden shadow-inner border border-gray-200/50 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+                                    <CodeEditor
+                                        code={code}
+                                        language={language}
+                                        theme={theme}
+                                        readOnly={isPlaying}
+                                        onChange={handleCodeChange}
+                                        currentLine={currentStep.line}
+                                        isError={!!executionError}
+                                        themeColor={themeColor}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Right Panel: Visualization */}
+                            <div className="w-full md:w-[480px] min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-300 overflow-hidden">
+                                {/* Top half: Variables / Call Stack */}
+                                <div className="flex-[3] flex flex-col min-h-0">
+                                    {/* Tabs */}
+                                    <div className="flex border-b border-gray-200/50 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/30 backdrop-blur-md">
+                                        <button
+                                            onClick={() => setActiveTab('variables')}
+                                            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'variables' ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+                                        >
+                                            <Layers size={16} /> Variables
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('stack')}
+                                            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'stack' ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+                                        >
+                                            <Layers size={16} className="rotate-180" /> Call Stack
+                                        </button>
+                                    </div>
+
+                                    {/* Content Area */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/40 dark:bg-slate-900/40 p-2 transition-colors relative">
+                                        {/* Inner subtle glow for depth */}
+                                        <div className="absolute inset-0 pointer-events-none rounded-b-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]"></div>
+                                        {activeTab === 'variables' ? (
+                                            <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} />
+                                        ) : (
+                                            <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Bottom half: Console */}
+                                <div className="flex-[2] flex flex-col min-h-[150px] border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
+                                    <div className="h-10 flex flex-shrink-0 items-center justify-between px-4 border-b border-gray-200/50 dark:border-slate-800/80">
+                                        <div className="flex items-center gap-2">
+                                            <TerminalIcon size={16} className={iconTextClass} />
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Console Output</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                        <ConsolePanel logs={currentStep.consoleOutput || []} />
+                                    </div>
+                                </div>
+
+                            </div>
+                        </main>
+
+                        <Controls
+                            isPlaying={isPlaying}
+                            onPlayPause={togglePlayPause}
+                            onNext={nextStep}
+                            onPrev={prevStep}
+                            onReset={() => reset(code, language)}
+                            canNext={currentStepIndex < timeline.length - 1}
+                            canPrev={currentStepIndex > 0}
+                            speed={speed}
+                            setSpeed={setSpeed}
+                            progress={progress}
+                            onSeek={(p) => {
+                                const targetIndex = Math.floor((p / 100) * (timeline.length - 1));
+                                controls.jumpToStep(targetIndex);
+                            }}
                             themeColor={themeColor}
                         />
-                    </div>
-                </div>
-
-                {/* Right Panel: Visualization */}
-                <div className="w-full md:w-[450px] min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-gray-50 dark:bg-slate-900 shadow-xl z-10 md:border-l border-gray-200 dark:border-slate-800 transition-colors">
-
-                    {/* Top Half: Variables & Stack */}
-                    <div className="flex-1 flex flex-col min-h-0">
-                        {/* Tabs */}
-                        <div className="flex border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
-                            <button
-                                onClick={() => setActiveTab('variables')}
-                                className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'variables' ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
-                            >
-                                <Layers size={16} /> Variables
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('stack')}
-                                className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'stack' ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
-                            >
-                                <Layers size={16} className="rotate-180" /> Call Stack
-                            </button>
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-slate-900 p-2 transition-colors">
-                            {activeTab === 'variables' ? (
-                                <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} />
-                            ) : (
-                                <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Bottom Half: Console */}
-                    <div className="h-[35%] flex flex-col min-h-[150px] bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-                        <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
-                            <div className="flex items-center gap-2">
-                                <TerminalIcon size={16} className={iconTextClass} />
-                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Console Output</span>
-                            </div>
-                        </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-gray-50/50 dark:bg-slate-950/50 transition-colors">
-                            <ConsolePanel logs={currentStep.consoleOutput} />
-                        </div>
-                    </div>
-
-                </div>
-            </main>
-
-            {/* Footer Controls */}
-            <Controls
-                isPlaying={isPlaying}
-                onPlayPause={togglePlayPause}
-                onNext={nextStep}
-                onPrev={prevStepControl}
-                onReset={() => reset(code, language)}
-                canNext={currentStepIndex < timeline.length - 1}
-                canPrev={currentStepIndex > 0}
-                speed={speed}
-                setSpeed={setSpeed}
-                progress={progress}
-                themeColor={themeColor}
-            />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

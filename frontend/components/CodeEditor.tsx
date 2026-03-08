@@ -5,13 +5,14 @@ interface CodeEditorProps {
   code: string;
   language?: string;
   onChange: (value: string | undefined) => void;
-  activeLine?: number;
+  currentLine?: number;
+  readOnly?: boolean;
   isError?: boolean;
   theme?: 'light' | 'dark';
   themeColor?: 'saffron' | 'blue';
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', onChange, activeLine, isError, theme = 'light', themeColor = 'saffron' }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', onChange, currentLine, readOnly = false, isError, theme = 'light', themeColor = 'saffron' }) => {
   const monaco = useMonaco();
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
@@ -24,12 +25,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
     // Ensure editor, monaco instance, and model are available before attempting updates
     if (!editorRef.current || !monaco || !editorRef.current.getModel()) return;
 
-    if (!activeLine) {
+    if (!currentLine) {
         decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
         return;
     }
 
-    const lineToHighlight = activeLine;
+    const lineToHighlight = currentLine;
     
     // Determine classes based on themeColor and dark/light mode
     let className = '';
@@ -66,7 +67,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
         console.warn("Monaco Editor error:", e);
     }
 
-  }, [activeLine, monaco, isError, theme, themeColor]);
+  }, [currentLine, monaco, isError, theme, themeColor]);
 
   // Map our language IDs to Monaco's
   const monacoLanguage = language === 'c++' ? 'cpp' : 'javascript';
@@ -93,6 +94,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
           overviewRulerLanes: 0,
           hideCursorInOverviewRuler: true,
           overviewRulerBorder: false,
+          readOnly: readOnly,
         }}
       />
     </div>

@@ -19,6 +19,7 @@ interface ExecutionControls {
     reset: (code: string, language: string) => void;
     nextStep: () => void;
     prevStep: () => void;
+    jumpToStep: (index: number) => void;
 }
 
 export const useExecutionEngine = (): { state: ExecutionState, controls: ExecutionControls } => {
@@ -86,8 +87,12 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         setCurrentStepIndex(i => Math.max(0, i - 1));
     }, []);
 
+    const jumpToStep = useCallback((index: number) => {
+        setCurrentStepIndex(Math.max(0, Math.min(timeline.length - 1, index)));
+    }, [timeline.length]);
+
     return {
         state: { timeline, currentStepIndex, isPlaying, speed, executionError },
-        controls: { handleRun, setIsPlaying, setSpeed, setCurrentStepIndex, togglePlayPause, reset, nextStep, prevStep }
+        controls: { handleRun, setIsPlaying, setSpeed, setCurrentStepIndex, togglePlayPause, reset, nextStep, prevStep, jumpToStep }
     };
 };

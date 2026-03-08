@@ -16,23 +16,47 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
     : 'border-blue-500 dark:border-blue-400';
 
   return (
-    <div className="flex flex-col gap-2 p-4 min-h-[100px]">
+    <div className="flex flex-col p-4 min-h-[100px] pb-10">
       <AnimatePresence>
         {displayStack.length === 0 ? (
-          <div className="text-slate-500 italic text-center">Stack empty</div>
+          <div className="text-slate-500 italic text-center text-sm font-medium mt-8">Stack is empty</div>
         ) : (
-          displayStack.map((frame, index) => (
-            <motion.div
-              key={`${frame}-${index}`}
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className={`p-3 bg-white dark:bg-slate-800 border-l-4 rounded shadow-sm dark:shadow-none font-mono text-sm text-slate-700 dark:text-slate-200 flex items-center border border-gray-200 dark:border-slate-700 transition-colors ${borderClass}`}
-            >
-              <span className="text-slate-400 dark:text-slate-500 mr-3 text-xs font-bold uppercase tracking-wider">Frame {stack.length - 1 - index}</span>
-              <span className="font-semibold">{frame}</span>
-            </motion.div>
-          ))
+          displayStack.map((frame, index) => {
+            const isTop = index === 0;
+            // Calculate a scale and y-offset based on depth (max 3 visible depth effects)
+            const depth = Math.min(index, 3);
+            const scale = 1 - (depth * 0.05);
+            const translateY = isTop ? 0 : -(depth * 15);
+            const zIndex = displayStack.length - index;
+
+            return (
+              <motion.div
+                key={`${frame}-${displayStack.length - index}`}
+                layout
+                initial={{ opacity: 0, y: -40, scale: 1.05 }}
+                animate={{ opacity: 1 - (depth * 0.15), y: translateY, scale }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className={`relative w-full p-4 glass-panel rounded-xl shadow-lg border-t-4 mb-2 flex flex-col font-mono text-sm transition-colors ${borderClass} ${!isTop && 'border-t-transparent dark:border-t-transparent shadow-none bg-white/40 dark:bg-slate-800/40'}`}
+                style={{ zIndex, marginTop: index > 0 ? -24 : 0 }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isSaffron ? 'text-saffron-500/70' : 'text-blue-500/70'}`}>
+                    Frame {stack.length - 1 - index}
+                  </span>
+                  {isTop && (
+                    <span className="flex h-2 w-2 relative">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isSaffron ? 'bg-saffron-400' : 'bg-blue-400'}`}></span>
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isSaffron ? 'bg-saffron-500' : 'bg-blue-500'}`}></span>
+                    </span>
+                  )}
+                </div>
+                <span className={`font-bold ${isTop ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                  {frame}()
+                </span>
+              </motion.div>
+            );
+          })
         )}
       </AnimatePresence>
     </div>
