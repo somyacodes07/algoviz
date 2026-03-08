@@ -6,7 +6,7 @@
   .glass {
     @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/20 dark:border-slate-800/50 shadow-xl;
   }
-  
+
   .glass-panel {
     @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border border-white/30 dark:border-slate-700/50 shadow-2xl;
   }
@@ -14,11 +14,11 @@
   .glass-button {
     @apply bg-white/20 dark:bg-slate-800/40 hover:bg-white/30 dark:hover:bg-slate-700/50 backdrop-blur-md border border-white/10 dark:border-slate-700/50 transition-all duration-300 shadow-sm hover:shadow-md;
   }
-  
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-saffron-500 to-amber-500 dark:from-saffron-400 dark:to-amber-300;
   }
-  
+
   .text-gradient-blue {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300;
   }
@@ -26,19 +26,51 @@
   /* Vibrant mesh background pattern */
   .bg-mesh-light {
     background-color: #f8fafc;
-    background-image: 
-      radial-gradient(at 40% 20%, hsla(28,100%,74%,0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(189,100%,56%,0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(355,100%,93%,0.1) 0px, transparent 50%);
+    background-image:
+      radial-gradient(
+        at 40% 20%,
+        hsla(28, 100%, 74%, 0.15) 0px,
+        transparent 50%
+      ),
+      radial-gradient(
+        at 80% 0%,
+        hsla(189, 100%, 56%, 0.15) 0px,
+        transparent 50%
+      ),
+      radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.1) 0px, transparent 50%);
   }
 
   .bg-mesh-dark {
     background-color: #020617;
-    background-image: 
-      radial-gradient(at 40% 20%, hsla(28,100%,74%,0.05) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(189,100%,56%,0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(355,100%,93%,0.02) 0px, transparent 50%);
+    background-image:
+      radial-gradient(
+        at 40% 20%,
+        hsla(28, 100%, 74%, 0.05) 0px,
+        transparent 50%
+      ),
+      radial-gradient(
+        at 80% 0%,
+        hsla(189, 100%, 56%, 0.05) 0px,
+        transparent 50%
+      ),
+      radial-gradient(
+        at 0% 50%,
+        hsla(355, 100%, 93%, 0.02) 0px,
+        transparent 50%
+      );
   }
+}
+
+/* Breakpoint red dot in Monaco gutter */
+.breakpoint-glyph {
+  background: #ef4444;
+  border-radius: 50%;
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 5px;
+  margin-top: 7px;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+  cursor: pointer;
 }
 
 /* Custom scrollbar adjustments for absolute premium feel */

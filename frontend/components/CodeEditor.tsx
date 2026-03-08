@@ -10,19 +10,33 @@ interface CodeEditorProps {
   isError?: boolean;
   theme?: 'light' | 'dark';
   themeColor?: 'saffron' | 'blue';
+  breakpoints?: Set<number>;
+  onToggleBreakpoint?: (line: number) => void;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', onChange, currentLine, readOnly = false, isError, theme = 'light', themeColor = 'saffron' }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', onChange, currentLine, readOnly = false, isError, theme = 'light', themeColor = 'saffron', breakpoints, onToggleBreakpoint }) => {
   const monaco = useMonaco();
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
+  const breakpointDecorationsRef = useRef<string[]>([]);
 
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
+
+    // Listen for gutter clicks to toggle breakpoints
+    editor.onMouseDown((e: any) => {
+      if (e.target?.type === 2 || e.target?.type === 3 || e.target?.type === 4) {
+        // Types 2, 3, 4 = gutter margin, line numbers, glyph margin
+        const line = e.target.position?.lineNumber;
+        if (line && onToggleBreakpoint) {
+          onToggleBreakpoint(line);
+        }
+      }
+    });
   };
 
+  // Line highlight decorations
   useEffect(() => {
-    // Ensure editor, monaco instance, and model are available before attempting updates
     if (!editorRef.current || !monaco || !editorRef.current.getModel()) return;
 
     if (!currentLine) {
@@ -32,7 +46,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
 
     const lineToHighlight = currentLine;
     
-    // Determine classes based on themeColor and dark/light mode
     let className = '';
     let glyphClass = '';
 
@@ -44,7 +57,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
              className = theme === 'dark' ? 'bg-saffron-900/30 border-l-4 border-saffron-500' : 'bg-saffron-100 border-l-4 border-saffron-500';
              glyphClass = 'bg-saffron-500 w-2';
         } else {
-             // Blue theme
              className = theme === 'dark' ? 'bg-blue-900/30 border-l-4 border-blue-500' : 'bg-blue-100 border-l-4 border-blue-500';
              glyphClass = 'bg-blue-500 w-2';
         }
@@ -68,6 +80,25 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
     }
 
   }, [currentLine, monaco, isError, theme, themeColor]);
+
+  // Breakpoint decorations
+  useEffect(() => {
+    if (!editorRef.current || !monaco || !editorRef.current.getModel()) return;
+
+    const bpDecorations = Array.from(breakpoints || []).map(line => ({
+      range: new monaco.Range(line, 1, line, 1),
+      options: {
+        isWholeLine: false,
+        glyphMarginClassName: 'breakpoint-glyph',
+        stickiness: 1 // AlwaysGrowsWhenTypingAtEdges
+      }
+    }));
+
+    breakpointDecorationsRef.current = editorRef.current.deltaDecorations(
+      breakpointDecorationsRef.current,
+      bpDecorations
+    );
+  }, [breakpoints, monaco]);
 
   // Map our language IDs to Monaco's
   const monacoLanguage = language === 'c++' ? 'cpp' : 'javascript';
@@ -95,6 +126,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
           hideCursorInOverviewRuler: true,
           overviewRulerBorder: false,
           readOnly: readOnly,
+          glyphMargin: true,
         }}
       />
     </div>

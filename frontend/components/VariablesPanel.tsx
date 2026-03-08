@@ -9,6 +9,48 @@ interface VariablesPanelProps {
     themeColor: 'saffron' | 'blue';
 }
 
+// Compact inline array bar chart
+const ArrayVisualizer: React.FC<{
+    value: number[];
+    prevValue?: number[];
+    themeColor: 'saffron' | 'blue';
+}> = ({ value, prevValue, themeColor }) => {
+    if (!value || value.length === 0 || value.length > 20) return null;
+
+    const maxVal = Math.max(...value.map(Math.abs), 1);
+    const isSaffron = themeColor === 'saffron';
+    const barColor = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
+    const barChangedColor = isSaffron ? 'bg-amber-500 dark:bg-amber-400' : 'bg-cyan-400 dark:bg-cyan-300';
+
+    return (
+        <div className="flex items-end gap-px mt-2 px-1 h-10">
+            {value.map((v, i) => {
+                const height = Math.max(4, (Math.abs(v) / maxVal) * 100);
+                const changed = prevValue && prevValue[i] !== undefined && prevValue[i] !== v;
+                return (
+                    <motion.div
+                        key={i}
+                        className="flex flex-col items-center gap-0.5 flex-1 min-w-0"
+                        initial={false}
+                        animate={{ opacity: 1 }}
+                    >
+                        <motion.div
+                            className={`w-full rounded-sm ${changed ? barChangedColor : barColor} transition-all duration-300`}
+                            style={{ height: `${height}%`, minHeight: '3px' }}
+                            initial={false}
+                            animate={{ height: `${height}%` }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                        />
+                        <span className={`text-[8px] font-mono leading-none ${changed ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {v}
+                        </span>
+                    </motion.div>
+                );
+            })}
+        </div>
+    );
+};
+
 const RenderPrimitive: React.FC<{ value: any }> = ({ value }) => {
     if (value === null) return <span className="text-slate-400/80 font-medium italic">null</span>;
     if (value === undefined) return <span className="text-slate-400/80 font-medium italic">undefined</span>;
@@ -30,6 +72,7 @@ const ValueNode: React.FC<{
 
     const isObject = value !== null && typeof value === 'object';
     const isEmpty = isObject && Object.keys(value).length === 0;
+    const isNumericArray = Array.isArray(value) && value.length > 0 && value.every(v => typeof v === 'number');
     const typeLabel = Array.isArray(value) ? `Array(${value.length})` : 'Object';
 
     // Change Detection Logic
@@ -186,9 +229,24 @@ const ValueNode: React.FC<{
                     </span>
                 )}
 
+                {hasChanged && !isNew && (
+                    <div className={`ml-1 ${currentTheme.modIcon} dark:text-opacity-80`} title="Modified">
+                        <RefreshCw size={10} />
+                    </div>
+                )}
+
                 {!isExpanded && !isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[...]' : '{...}'}</span>}
                 {isEmpty && <span className="text-slate-400 text-xs ml-auto opacity-60 font-medium tracking-widest">{Array.isArray(value) ? '[]' : '{}'}</span>}
             </motion.div>
+
+            {/* Array bar visualization - always visible for numeric arrays */}
+            {isNumericArray && (
+                <ArrayVisualizer
+                    value={value as number[]}
+                    prevValue={Array.isArray(prevValue) ? prevValue as number[] : undefined}
+                    themeColor={themeColor}
+                />
+            )}
 
             <AnimatePresence>
                 {isExpanded && (
@@ -198,17 +256,21 @@ const ValueNode: React.FC<{
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden border-l border-slate-200/50 dark:border-slate-700/50 ml-4 pl-2 mt-1"
                     >
-                        {Object.keys(value).map(key => (
-                            <ValueNode
-                                key={key}
-                                name={key}
-                                value={value[key]}
-                                prevValue={prevValue?.[key]}
-                                wasPresent={prevValue && key in prevValue}
-                                depth={0}
-                                themeColor={themeColor}
-                            />
-                        ))}
+                        {Object.keys(value).map(key => {
+                            const indexChanged = prevValue && JSON.stringify(value[key]) !== JSON.stringify(prevValue?.[key]);
+                            return (
+                                <div key={key} className={`${indexChanged ? 'ring-1 ring-amber-300/50 dark:ring-amber-500/30 rounded-lg' : ''}`}>
+                                    <ValueNode
+                                        name={key}
+                                        value={value[key]}
+                                        prevValue={prevValue?.[key]}
+                                        wasPresent={prevValue && key in prevValue}
+                                        depth={0}
+                                        themeColor={themeColor}
+                                    />
+                                </div>
+                            );
+                        })}
                     </motion.div>
                 )}
             </AnimatePresence>

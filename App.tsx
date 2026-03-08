@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CodeEditor from './frontend/components/CodeEditor';
 import VariablesPanel from './frontend/components/VariablesPanel';
@@ -7,7 +7,8 @@ import ConsolePanel from './frontend/components/ConsolePanel';
 import Controls from './frontend/components/Controls';
 import HomePage from './frontend/components/HomePage';
 import { useExecutionEngine } from './frontend/hooks/useExecutionEngine';
-import { Play, RotateCcw, Box, Layers, Terminal as TerminalIcon, Info, Sparkles, Moon, Sun, ArrowLeft, Code } from 'lucide-react';
+import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from './frontend/codeTemplates';
+import { Play, RotateCcw, Box, Layers, Terminal as TerminalIcon, Info, Sparkles, Moon, Sun, ArrowLeft, Code, Link2, Check, ChevronDown, BookOpen } from 'lucide-react';
 
 import logoLight from './assets/logo-light.png';
 import logoDark from './assets/logo-dark.png';
@@ -80,21 +81,46 @@ int main() {
 }
 `;
 
+// --- Shareable Link Helpers ---
+function encodeShareLink(code: string, lang: string): string {
+    const payload = JSON.stringify({ code, lang });
+    const encoded = btoa(unescape(encodeURIComponent(payload)));
+    return `${window.location.origin}${window.location.pathname}#share=${encoded}`;
+}
+
+function decodeShareLink(): { code: string; lang: string } | null {
+    try {
+        const hash = window.location.hash;
+        if (!hash.startsWith('#share=')) return null;
+        const encoded = hash.slice(7);
+        const payload = decodeURIComponent(escape(atob(encoded)));
+        return JSON.parse(payload);
+    } catch {
+        return null;
+    }
+}
+
 
 const App: React.FC = () => {
-    const [page, setPage] = useState<'home' | 'editor'>('home');
-    const [language, setLanguage] = useState('javascript');
+    // Check for shared link on load
+    const shared = decodeShareLink();
+
+    const [page, setPage] = useState<'home' | 'editor'>(shared ? 'editor' : 'home');
+    const [language, setLanguage] = useState(shared?.lang || 'javascript');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-    const [code, setCode] = useState<string>(JS_DEFAULT_CODE);
+    const [code, setCode] = useState<string>(shared?.code || JS_DEFAULT_CODE);
     const [activeTab, setActiveTab] = useState<'variables' | 'stack'>('variables');
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
 
     const { state, controls } = useExecutionEngine();
-    const { timeline, currentStepIndex, isPlaying, speed, executionError } = state;
-    const { handleRun, setIsPlaying, setSpeed, togglePlayPause, reset, nextStep, prevStep } = controls;
+    const { timeline, currentStepIndex, isPlaying, speed, executionError, breakpoints } = state;
+    const { handleRun, setIsPlaying, setSpeed, togglePlayPause, reset, nextStep, prevStep, toggleBreakpoint } = controls;
 
     // Derived Theme Color
     const themeColor = language === 'c++' ? 'blue' : 'saffron';
+    const templates = language === 'c++' ? CPP_TEMPLATES : JS_TEMPLATES;
 
     // Apply Theme class to Body for Tailwind Dark Mode
     useEffect(() => {
@@ -149,6 +175,14 @@ const App: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [page, togglePlayPause, nextStep, prevStep, reset, code, language]);
 
+    // Close template menu on outside click
+    useEffect(() => {
+        if (!templateMenuOpen) return;
+        const handleClick = () => setTemplateMenuOpen(false);
+        window.addEventListener('click', handleClick);
+        return () => window.removeEventListener('click', handleClick);
+    }, [templateMenuOpen]);
+
     const handleCodeChange = (newCode: string | undefined) => {
         if (newCode !== undefined) {
             setCode(newCode);
@@ -163,9 +197,24 @@ const App: React.FC = () => {
         } else {
             setCode(JS_DEFAULT_CODE);
         }
-        // Timeline resetting is handled implicitly since the hook resets on handleRun
         setPage('editor');
     };
+
+    const handleTemplateSelect = (template: CodeTemplate) => {
+        setCode(template.code);
+        setIsPlaying(false);
+        setTemplateMenuOpen(false);
+        // Auto-run after loading template
+        setTimeout(() => handleRun(template.code, language), 100);
+    };
+
+    const handleCopyLink = useCallback(() => {
+        const url = encodeShareLink(code, language);
+        navigator.clipboard.writeText(url).then(() => {
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 2000);
+        });
+    }, [code, language]);
 
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -231,7 +280,7 @@ const App: React.FC = () => {
 
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setPage('home')}
+                                    onClick={() => { setPage('home'); window.location.hash = ''; }}
                                     className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors"
                                 >
                                     <ArrowLeft size={20} />
@@ -272,14 +321,66 @@ const App: React.FC = () => {
                                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider">
                                         <Code size={18} className={iconTextClass} />
                                         <span>Source Code</span>
+
+                                        {/* Template Selector */}
+                                        <div className="relative ml-2">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
+                                                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all normal-case tracking-normal"
+                                                title="Load a template"
+                                            >
+                                                <BookOpen size={12} />
+                                                Templates
+                                                <ChevronDown size={12} className={`transition-transform ${templateMenuOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+
+                                            <AnimatePresence>
+                                                {templateMenuOpen && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        {templates.map((tpl, i) => (
+                                                            <button
+                                                                key={i}
+                                                                onClick={() => handleTemplateSelect(tpl)}
+                                                                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/50 last:border-0"
+                                                            >
+                                                                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{tpl.name}</div>
+                                                                <div className="text-[10px] text-slate-400 dark:text-slate-500">{tpl.description}</div>
+                                                            </button>
+                                                        ))}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
                                         {executionError && (
                                             <span className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-200 dark:border-red-900/30 font-medium">
                                                 {executionError}
                                             </span>
                                         )}
+
+                                        {/* Copy Share Link */}
+                                        <button
+                                            onClick={handleCopyLink}
+                                            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
+                                                linkCopied
+                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            }`}
+                                            title="Copy shareable link"
+                                        >
+                                            {linkCopied ? <Check size={14} /> : <Link2 size={14} />}
+                                            {linkCopied ? 'Copied!' : 'Share'}
+                                        </button>
+
                                         <button
                                             onClick={() => {
                                                 setIsPlaying(false);
@@ -302,6 +403,8 @@ const App: React.FC = () => {
                                         currentLine={currentStep.line}
                                         isError={!!executionError}
                                         themeColor={themeColor}
+                                        breakpoints={breakpoints}
+                                        onToggleBreakpoint={toggleBreakpoint}
                                     />
                                 </div>
                             </div>
@@ -370,6 +473,8 @@ const App: React.FC = () => {
                                 controls.jumpToStep(targetIndex);
                             }}
                             themeColor={themeColor}
+                            currentStep={currentStepIndex}
+                            totalSteps={timeline.length}
                         />
                     </motion.div>
                 )}

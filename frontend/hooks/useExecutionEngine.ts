@@ -8,6 +8,7 @@ interface ExecutionState {
     isPlaying: boolean;
     speed: number;
     executionError: string | null;
+    breakpoints: Set<number>;
 }
 
 interface ExecutionControls {
@@ -20,6 +21,7 @@ interface ExecutionControls {
     nextStep: () => void;
     prevStep: () => void;
     jumpToStep: (index: number) => void;
+    toggleBreakpoint: (line: number) => void;
 }
 
 export const useExecutionEngine = (): { state: ExecutionState, controls: ExecutionControls } => {
@@ -28,8 +30,15 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [speed, setSpeed] = useState<number>(800); // ms per step
     const [executionError, setExecutionError] = useState<string | null>(null);
+    const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
 
     const timerRef = useRef<number | null>(null);
+    const breakpointsRef = useRef<Set<number>>(breakpoints);
+
+    // Keep ref in sync with state for use inside interval callback
+    useEffect(() => {
+        breakpointsRef.current = breakpoints;
+    }, [breakpoints]);
 
     const handleRun = useCallback(async (code: string, language: string) => {
         setExecutionError(null);
@@ -54,7 +63,17 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
             timerRef.current = window.setInterval(() => {
                 setCurrentStepIndex(prev => {
                     if (prev < timeline.length - 1) {
-                        return prev + 1;
+                        const next = prev + 1;
+                        // If breakpoints exist and the next step's line hits one, pause
+                        if (breakpointsRef.current.size > 0 && next > prev) {
+                            const nextLine = timeline[next]?.line;
+                            if (nextLine && breakpointsRef.current.has(nextLine) && next !== prev + 1 - 1) {
+                                // We still advance to the breakpoint line, then pause
+                                setTimeout(() => setIsPlaying(false), 0);
+                                return next;
+                            }
+                        }
+                        return next;
                     } else {
                         setIsPlaying(false);
                         return prev;
@@ -67,7 +86,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isPlaying, timeline.length, speed]);
+    }, [isPlaying, timeline, speed]);
 
     const togglePlayPause = useCallback(() => {
         setIsPlaying(prev => !prev);
@@ -91,8 +110,20 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         setCurrentStepIndex(Math.max(0, Math.min(timeline.length - 1, index)));
     }, [timeline.length]);
 
+    const toggleBreakpoint = useCallback((line: number) => {
+        setBreakpoints(prev => {
+            const next = new Set(prev);
+            if (next.has(line)) {
+                next.delete(line);
+            } else {
+                next.add(line);
+            }
+            return next;
+        });
+    }, []);
+
     return {
-        state: { timeline, currentStepIndex, isPlaying, speed, executionError },
-        controls: { handleRun, setIsPlaying, setSpeed, setCurrentStepIndex, togglePlayPause, reset, nextStep, prevStep, jumpToStep }
+        state: { timeline, currentStepIndex, isPlaying, speed, executionError, breakpoints },
+        controls: { handleRun, setIsPlaying, setSpeed, setCurrentStepIndex, togglePlayPause, reset, nextStep, prevStep, jumpToStep, toggleBreakpoint }
     };
 };
