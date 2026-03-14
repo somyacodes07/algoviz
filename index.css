@@ -94,3 +94,14 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
 }
+
+@layer utilities {
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+  
+  .dark .bg-dot-pattern {
+    background-image: radial-gradient(circle, #334155 1.5px, transparent 1.5px);
+  }
+}
