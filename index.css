@@ -23,6 +23,18 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300;
   }
 
+  @keyframes pulseMesh {
+    0%,
+    100% {
+      background-size: 100% 100%;
+      background-position: 0% 0%;
+    }
+    50% {
+      background-size: 120% 120%;
+      background-position: center;
+    }
+  }
+
   /* Vibrant mesh background pattern */
   .bg-mesh-light {
     background-color: #f8fafc;
@@ -38,6 +50,7 @@
         transparent 50%
       ),
       radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.1) 0px, transparent 50%);
+    animation: pulseMesh 20s ease-in-out infinite alternate;
   }
 
   .bg-mesh-dark {
@@ -58,6 +71,7 @@
         hsla(355, 100%, 93%, 0.02) 0px,
         transparent 50%
       );
+    animation: pulseMesh 20s ease-in-out infinite alternate;
   }
 }
 
@@ -100,7 +114,7 @@
     background-image: radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
     background-size: 24px 24px;
   }
-  
+
   .dark .bg-dot-pattern {
     background-image: radial-gradient(circle, #334155 1.5px, transparent 1.5px);
   }

@@ -8,7 +8,9 @@ import {
   Activity,
   ChevronRight,
   Play,
-  Star
+  Star,
+  Eye,
+  Layers,
 } from "lucide-react";
 
 interface HomePageProps {
@@ -20,11 +22,48 @@ const EXECUTION_STEPS = [
   { line: 1, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
   { line: 2, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
   { line: 4, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
-  { line: 1, n: 5, callStack: [{ id: 1, call: "fibonacci(5)" }, { id: 0, call: "fibonacci(6)" }] },
-  { line: 2, n: 5, callStack: [{ id: 1, call: "fibonacci(5)" }, { id: 0, call: "fibonacci(6)" }] },
-  { line: 4, n: 5, callStack: [{ id: 1, call: "fibonacci(5)" }, { id: 0, call: "fibonacci(6)" }] },
-  { line: 1, n: 4, callStack: [{ id: 2, call: "fibonacci(4)" }, { id: 1, call: "fibonacci(5)" }, { id: 0, call: "fibonacci(6)" }] },
-  { line: 2, n: 4, callStack: [{ id: 2, call: "fibonacci(4)" }, { id: 1, call: "fibonacci(5)" }, { id: 0, call: "fibonacci(6)" }] },
+  {
+    line: 1,
+    n: 5,
+    callStack: [
+      { id: 1, call: "fibonacci(5)" },
+      { id: 0, call: "fibonacci(6)" },
+    ],
+  },
+  {
+    line: 2,
+    n: 5,
+    callStack: [
+      { id: 1, call: "fibonacci(5)" },
+      { id: 0, call: "fibonacci(6)" },
+    ],
+  },
+  {
+    line: 4,
+    n: 5,
+    callStack: [
+      { id: 1, call: "fibonacci(5)" },
+      { id: 0, call: "fibonacci(6)" },
+    ],
+  },
+  {
+    line: 1,
+    n: 4,
+    callStack: [
+      { id: 2, call: "fibonacci(4)" },
+      { id: 1, call: "fibonacci(5)" },
+      { id: 0, call: "fibonacci(6)" },
+    ],
+  },
+  {
+    line: 2,
+    n: 4,
+    callStack: [
+      { id: 2, call: "fibonacci(4)" },
+      { id: 1, call: "fibonacci(5)" },
+      { id: 0, call: "fibonacci(6)" },
+    ],
+  },
 ];
 
 const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
@@ -60,10 +99,16 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
             Docs
           </a>
           <a
-            href="#"
-            className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            href="https://github.com/ssgamingop/AlgoViz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors group cursor-pointer"
           >
-            GitHub
+            <Star
+              size={14}
+              className="group-hover:text-amber-500 transition-colors"
+            />
+            <span>Star us on GitHub</span>
           </a>
         </div>
       </header>
@@ -79,22 +124,43 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
             <div className="inline-block px-3 py-1 mb-6 border-2 border-slate-900 dark:border-white/20 rounded-full font-mono text-xs font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300">
               Interactive Code Visualizer
             </div>
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
               className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-6 flex flex-wrap gap-x-4 items-center"
             >
-              <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>See</motion.span>
-              <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>how</motion.span>
-              <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>your</motion.span>
-              
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                See
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                how
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                your
+              </motion.span>
               <div className="w-full h-0"></div> {/* Break to next line */}
-
-              <motion.span 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                transition={{ duration: 0.5, delay: 0.4, type: "spring", stiffness: 200 }}
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.4,
+                  type: "spring",
+                  stiffness: 200,
+                }}
                 whileHover={{ scale: 1.05, rotate: -2 }}
                 className="relative inline-block mt-2 mb-2 cursor-pointer group"
               >
@@ -103,11 +169,21 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
                 </span>
                 <span className="absolute inset-0 bg-amber-400 dark:bg-amber-500 transform skew-x-6 translate-x-2 translate-y-2 -z-10 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform"></span>
               </motion.span>
-              
               <div className="w-full h-0"></div> {/* Break to next line */}
-
-              <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.5 }}>really</motion.span>
-              <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.6 }}>works.</motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 }}
+              >
+                really
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
+              >
+                works.
+              </motion.span>
             </motion.h1>
 
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-md mb-10 font-medium leading-relaxed">
@@ -177,14 +253,18 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
             <div className="flex-1 flex bg-white dark:bg-[#1e1e1e]">
               {/* Lines */}
               <div className="w-12 bg-slate-50 dark:bg-[#1e1e1e] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
-                <motion.div 
+                <motion.div
                   className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
                   initial={false}
-                  animate={{ top: 16 + ((currentStep.line - 1) * 32) }}
+                  animate={{ top: 16 + (currentStep.line - 1) * 32 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-                  <ChevronRight size={14} strokeWidth={3} className="absolute left-1" />
+                  <ChevronRight
+                    size={14}
+                    strokeWidth={3}
+                    className="absolute left-1"
+                  />
                 </motion.div>
                 <div className="relative z-10 w-full text-center">1</div>
                 <div className="relative z-10 w-full text-center">2</div>
@@ -198,15 +278,15 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
               {/* Dummy Code */}
               <div className="flex-1 py-4 px-5 font-mono text-[14px] leading-8 overflow-hidden text-slate-700 dark:text-slate-300 relative">
                 {/* Highlight Background that moves */}
-                <motion.div 
+                <motion.div
                   className="absolute left-0 right-0 h-[32px] bg-amber-100/50 dark:bg-amber-900/20 border-y border-amber-300/50 dark:border-amber-700/30 z-0"
                   initial={false}
-                  animate={{ top: 16 + ((currentStep.line - 1) * 32) }}
+                  animate={{ top: 16 + (currentStep.line - 1) * 32 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
 
                 <motion.div
-                  className={`opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 1 ? 'font-bold text-slate-900 dark:text-white' : ''}`}
+                  className={`opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 1 ? "font-bold text-slate-900 dark:text-white" : ""}`}
                   animate={{
                     opacity:
                       hoverLang === "js" ? 1 : hoverLang === "cpp" ? 0.3 : 0.8,
@@ -220,7 +300,9 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
                   </span>
                   (n) {"{"}
                 </motion.div>
-                <motion.div className={`pl-4 opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 2 ? 'font-bold text-slate-900 dark:text-white' : ''}`}>
+                <motion.div
+                  className={`pl-4 opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 2 ? "font-bold text-slate-900 dark:text-white" : ""}`}
+                >
                   <span className="text-blue-600 dark:text-blue-400 font-semibold">
                     if
                   </span>{" "}
@@ -230,7 +312,9 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
                   </span>{" "}
                   n;
                 </motion.div>
-                <motion.div className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? 'font-bold text-slate-900 dark:text-white' : 'opacity-80'}`}>
+                <motion.div
+                  className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? "font-bold text-slate-900 dark:text-white" : "opacity-80"}`}
+                >
                   <span>
                     <span className="text-blue-700 dark:text-blue-400">
                       return
@@ -275,7 +359,8 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
               <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-slate-700 flex justify-between items-center text-slate-700 dark:text-slate-300">
                 <span>Variables / Watch</span>
                 <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
+                  <Play size={10} fill="currentColor" /> PAUSED on line{" "}
+                  {currentStep.line}
                 </span>
               </div>
               <div className="flex-1 p-3 font-mono text-xs overflow-hidden flex flex-col gap-2">
@@ -283,10 +368,16 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
                   <span className="text-blue-600 dark:text-blue-400 font-semibold">
                     n
                   </span>
-                  <motion.span 
+                  <motion.span
                     key={currentStep.n}
-                    initial={{ backgroundColor: "rgb(254, 240, 138)", color: "rgb(161, 98, 7)" }}
-                    animate={{ backgroundColor: "rgba(220, 252, 231, 0)", color: "rgb(22, 163, 74)" }}
+                    initial={{
+                      backgroundColor: "rgb(254, 240, 138)",
+                      color: "rgb(161, 98, 7)",
+                    }}
+                    animate={{
+                      backgroundColor: "rgba(220, 252, 231, 0)",
+                      color: "rgb(22, 163, 74)",
+                    }}
                     className="text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 rounded"
                   >
                     {currentStep.n}
@@ -297,20 +388,22 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
                     Call Stack
                   </span>
                   <div className="flex-1 overflow-hidden relative">
-                      <AnimatePresence initial={false}>
-                        {currentStep.callStack.map((frame, idx) => (
-                            <motion.div 
-                              key={frame.id}
-                              initial={{ opacity: 0, x: -10, height: 0 }}
-                              animate={{ opacity: 1, x: 0, height: 'auto' }}
-                              exit={{ opacity: 0, x: 10, height: 0 }}
-                              className={`flex gap-2 ${idx === 0 ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
-                            >
-                              <span className="opacity-50 w-3 text-right">{currentStep.callStack.length - 1 - idx}</span>
-                              <span>{frame.call}</span>
-                            </motion.div>
-                        ))}
-                      </AnimatePresence>
+                    <AnimatePresence initial={false}>
+                      {currentStep.callStack.map((frame, idx) => (
+                        <motion.div
+                          key={frame.id}
+                          initial={{ opacity: 0, x: -10, height: 0 }}
+                          animate={{ opacity: 1, x: 0, height: "auto" }}
+                          exit={{ opacity: 0, x: 10, height: 0 }}
+                          className={`flex gap-2 ${idx === 0 ? "font-bold text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"}`}
+                        >
+                          <span className="opacity-50 w-3 text-right">
+                            {currentStep.callStack.length - 1 - idx}
+                          </span>
+                          <span>{frame.call}</span>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -318,6 +411,78 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
           </motion.div>
         </div>
       </main>
+
+      {/* Features Section */}
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[#0f111a]/80 backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
+              Why use AlgoViz?
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto">
+              Built for students and educators to strip away the magic and show
+              exactly how algorithms compute data in memory.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+            >
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 border-2 border-blue-200 dark:border-blue-800/50">
+                <Terminal strokeWidth={2.5} size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Multi-Language Support</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                Whether you're learning web paradigms in JavaScript or digging
+                into memory management in C++, AlgoViz speaks your language.
+              </p>
+            </motion.div>
+
+            {/* Feature 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+            >
+              <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6 border-2 border-amber-200 dark:border-amber-800/50">
+                <Eye strokeWidth={2.5} size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Step-by-Step Debugging</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                Control the flow of time. Pause execution, step forwards, trace
+                backwards, and watch variables mutate exactly when lines
+                evaluate.
+              </p>
+            </motion.div>
+
+            {/* Feature 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+            >
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-6 border-2 border-green-200 dark:border-green-800/50">
+                <Layers strokeWidth={2.5} size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Visual Call Stack</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                Demystify recursion and nested function calls. See the stack
+                grow and shrink in real-time as frames are pushed and popped.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
