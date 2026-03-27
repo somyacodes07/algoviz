@@ -14,11 +14,25 @@ const ArrayVisualizer: React.FC<{
     value: number[];
     prevValue?: number[];
     themeColor: 'saffron' | 'blue';
-}> = ({ value, prevValue, themeColor }) => {
+    variables?: VariableMap;
+}> = ({ value, prevValue, themeColor, variables = {} }) => {
     if (!value || value.length === 0 || value.length > 30) return null;
 
     const maxVal = Math.max(...value.map(Math.abs), 1);
     const isSaffron = themeColor === 'saffron';
+
+    // Extract potential pointers (values that are integers and correspond to valid indices)
+    const activePointers = new Map<number, string[]>(); // index -> pointer names
+    Object.entries(variables).forEach(([key, val]) => {
+        if (typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < value.length) {
+            // Ignore large common loop boundaries/values 
+            const ignored = new Set(['n', 'limit', 'target', 'sum', 'maxVal', 'currentMax', 'globalMax']);
+            if (!ignored.has(key)) {
+                if (!activePointers.has(val)) activePointers.set(val, []);
+                activePointers.get(val)!.push(key);
+            }
+        }
+    });
 
     // Detect which indices changed
     const changedIndices = new Set<number>();
@@ -44,68 +58,85 @@ const ArrayVisualizer: React.FC<{
                 <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`text-center text-[10px] font-bold uppercase tracking-widest mb-2 ${isSaffron ? 'text-amber-600 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}`}
+                    className={`text-center text-[10px] font-bold uppercase tracking-widest mb-3 ${isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400'}`}
                 >
                     ↔ swapped [{swapIndices[0]}] ⟷ [{swapIndices[1]}]
                 </motion.div>
             )}
 
             {/* Array cells */}
-            <div className="flex items-end gap-1.5 px-2 h-24">
+            <div className="flex items-end gap-[6px] px-2 h-24">
                 {value.map((v, i) => {
                     const height = Math.max(15, (Math.abs(v) / maxVal) * 100);
                     const isChanged = changedIndices.has(i);
                     const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
 
-                    let barBg = isSaffron
-                        ? 'bg-gradient-to-t from-saffron-500 to-saffron-300 dark:from-saffron-600 dark:to-saffron-400'
-                        : 'bg-gradient-to-t from-blue-500 to-blue-300 dark:from-blue-600 dark:to-blue-400';
-                    if (isSwapped) {
-                        barBg = 'bg-gradient-to-t from-amber-500 to-yellow-300 dark:from-amber-500 dark:to-yellow-400';
-                    } else if (isChanged) {
-                        barBg = isSaffron
-                            ? 'bg-gradient-to-t from-orange-500 to-amber-300 dark:from-orange-600 dark:to-amber-400'
-                            : 'bg-gradient-to-t from-cyan-500 to-sky-300 dark:from-cyan-600 dark:to-sky-400';
-                    }
+                    // Structural Neo-brutalist colors
+                    let barBg = 'bg-slate-300 dark:bg-[#333]';
+                    let cellBg = 'bg-white dark:bg-[#111113]';
+                    let cellText = 'text-slate-800 dark:text-slate-200';
+                    let borderColor = 'border-slate-900 dark:border-[#444]';
 
-                    const cellBorder = isSwapped
-                        ? 'ring-2 ring-amber-400 dark:ring-amber-500 shadow-md'
-                        : isChanged
-                            ? 'ring-1 ring-orange-400 dark:ring-orange-500 shadow-sm'
-                            : '';
+                    const pointers = activePointers.get(i) || [];
+                    const isPointer = pointers.length > 0;
+
+                    if (isSwapped) {
+                        barBg = 'bg-yellow-400 dark:bg-yellow-500';
+                        cellBg = 'bg-yellow-50 dark:bg-[#2a2400]';
+                        cellText = 'text-yellow-900 dark:text-yellow-200';
+                        borderColor = 'border-yellow-500 dark:border-yellow-600';
+                    } else if (isChanged) {
+                        barBg = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
+                        cellBg = isSaffron ? 'bg-saffron-50 dark:bg-[#1e1300]' : 'bg-blue-50 dark:bg-[#00132a]';
+                        cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-200' : 'text-blue-900 dark:text-blue-200';
+                        borderColor = isSaffron ? 'border-saffron-500 dark:border-saffron-600' : 'border-blue-500 dark:border-blue-600';
+                    } else if (isPointer) {
+                        barBg = 'bg-emerald-300 dark:bg-emerald-700';
+                        borderColor = 'border-emerald-500 dark:border-emerald-600';
+                        cellBg = 'bg-emerald-50 dark:bg-emerald-900/30';
+                        cellText = 'text-emerald-900 dark:text-emerald-300';
+                    }
 
                     return (
                         <motion.div
                             key={i}
-                            className="flex flex-col items-center flex-1 min-w-0"
+                            className={`flex flex-col items-center flex-1 min-w-0 group relative`}
                             layout
                         >
+                            {/* Pointer Flags */}
+                            {isPointer && (
+                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
+                                    <div className="flex gap-0.5 pointer-events-none">
+                                        {pointers.map(p => (
+                                            <span key={p} className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-[1px_1px_0_rgba(0,0,0,1)] dark:shadow-none">
+                                                {p}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <div className="w-0.5 h-1.5 bg-emerald-500 mt-0.5"></div>
+                                </div>
+                            )}
+
                             {/* Bar */}
-                            <div className="w-full relative flex flex-col justify-end"
-                                style={{ height: '100%' }}
+                            <div className="w-full relative flex flex-col justify-end mt-[18px]"
+                                style={{ height: 'calc(100% - 18px)' }}
                             >
                                 <motion.div
-                                    className={`w-full rounded-t-lg ${barBg} ${cellBorder}`}
+                                    className={`w-full border-[2px] border-b-0 ${barBg} ${borderColor}`}
                                     initial={false}
                                     animate={{ height: `${height}%` }}
                                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                                    style={{ minHeight: '12px' }}
+                                    style={{ minHeight: '8px' }}
                                 />
                             </div>
 
                             {/* Value cell */}
-                            <div className={`w-full text-center py-2 rounded-b-lg border text-sm font-mono font-bold transition-all ${
-                                isSwapped
-                                    ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 text-amber-800 dark:text-amber-200 shadow-md'
-                                    : isChanged
-                                        ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-600 text-orange-800 dark:text-orange-200 shadow-sm'
-                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100'
-                            }`}>
+                            <div className={`w-full text-center py-2 border-[2px] text-sm font-mono font-black transition-all ${cellBg} ${borderColor} ${cellText} drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] group-hover:-translate-y-[1px] relative z-10`}>
                                 {v}
                             </div>
 
                             {/* Index label */}
-                            <span className={`text-[10px] mt-1 font-mono tracking-wider ${isChanged ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-slate-500'}`}>
+                            <span className={`text-[10px] mt-2 font-mono tracking-wider ${isChanged ? (isSaffron ? 'text-saffron-600 dark:text-saffron-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold') : (isPointer ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-500')}`}>
                                 [{i}]
                             </span>
                         </motion.div>
@@ -123,7 +154,8 @@ const VariableCard: React.FC<{
     prevValue?: any;
     wasPresent: boolean;
     themeColor: 'saffron' | 'blue';
-}> = ({ name, value, prevValue, wasPresent, themeColor }) => {
+    variables: VariableMap;
+}> = ({ name, value, prevValue, wasPresent, themeColor, variables }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const isObject = value !== null && typeof value === 'object';
@@ -161,20 +193,20 @@ const VariableCard: React.FC<{
     };
 
     const cardBorder = isNew
-        ? 'border-yellow-300 dark:border-yellow-600 shadow-yellow-100 dark:shadow-yellow-900/20'
+        ? 'border-[2px] border-yellow-400 dark:border-yellow-600 shadow-[2px_2px_0_#fef08a] dark:shadow-[2px_2px_0_#854d0e]'
         : hasChanged
             ? isSaffron
-                ? 'border-saffron-300 dark:border-saffron-700 shadow-saffron-100 dark:shadow-saffron-900/20'
-                : 'border-blue-300 dark:border-blue-700 shadow-blue-100 dark:shadow-blue-900/20'
-            : 'border-slate-200/80 dark:border-slate-700/60';
+                ? 'border-[2px] border-saffron-400 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221]'
+                : 'border-[2px] border-blue-400 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a]'
+            : 'border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000]';
 
     const cardBg = isNew
-        ? 'bg-gradient-to-br from-yellow-50/80 to-amber-50/50 dark:from-yellow-900/15 dark:to-amber-900/10'
+        ? 'bg-yellow-50 dark:bg-[#1a1c11]'
         : hasChanged
             ? isSaffron
-                ? 'bg-gradient-to-br from-saffron-50/60 to-orange-50/40 dark:from-saffron-900/10 dark:to-orange-900/10'
-                : 'bg-gradient-to-br from-blue-50/60 to-cyan-50/40 dark:from-blue-900/10 dark:to-cyan-900/10'
-            : 'bg-white/70 dark:bg-slate-800/50';
+                ? 'bg-orange-50 dark:bg-[#1c1411]'
+                : 'bg-blue-50 dark:bg-[#11151c]'
+            : 'bg-white dark:bg-[#161618]';
 
     return (
         <motion.div
@@ -184,7 +216,7 @@ const VariableCard: React.FC<{
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         >
             <div
-                className={`rounded-xl border-2 ${cardBorder} ${cardBg} backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isObject && !isEmpty ? 'cursor-pointer' : ''}`}
+                className={`rounded border-2 ${cardBorder} ${cardBg} transition-all duration-200 ease-out overflow-hidden ${isObject && !isEmpty ? 'cursor-pointer active:translate-y-[1px]' : ''}`}
                 onClick={() => isObject && !isEmpty && setIsExpanded(!isExpanded)}
             >
                 {/* Main Card Content */}
@@ -265,11 +297,12 @@ const VariableCard: React.FC<{
 
                 {/* Array Visualization */}
                 {isNumericArray && (
-                    <div className="px-3 pb-3">
+                    <div className="px-3 pb-3 mt-4">
                         <ArrayVisualizer
                             value={value as number[]}
                             prevValue={Array.isArray(prevValue) ? prevValue as number[] : undefined}
                             themeColor={themeColor}
+                            variables={variables}
                         />
                     </div>
                 )}
@@ -332,6 +365,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({ variables, prevVariable
                         prevValue={prevVariables[key]}
                         wasPresent={key in prevVariables}
                         themeColor={themeColor}
+                        variables={variables}
                     />
                 ))}
             </AnimatePresence>

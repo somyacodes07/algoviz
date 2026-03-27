@@ -239,7 +239,7 @@ export function transpileCppToJs(cppCode: string): string {
 
     // --- Nested vectors: vector<vector<int>> ---
     // vector<vector<int>> vv = {{1,2},{3,4}}; → let vv = [[1,2],[3,4]];
-    js = js.replace(/(?:std::)?vector\s*<\s*(?:std::)?vector\s*<[^>]+>\s*>\s+(\w+)\s*=\s*\{(\{[^}]*\}(?:\s*,\s*\{[^}]*\})*)\}\s*;/g, (_, name, init) => {
+    js = js.replace(/(?:std::)?vector\s*<\s*(?:std::)?vector\s*<[^>]+>\s*>\s+(\w+)\s*=\s*\{([\s\S]*?)\}\s*;/g, (_, name, init) => {
         const converted = init.replace(/\{/g, '[').replace(/\}/g, ']');
         return `let ${name} = [${converted}];`;
     });
@@ -248,7 +248,10 @@ export function transpileCppToJs(cppCode: string): string {
 
     // --- Single vectors ---
     // vector<int> v = {1, 2, 3}; → let v = [1, 2, 3];
-    js = js.replace(/(?:std::)?vector\s*<[^>]+>\s+(\w+)\s*=\s*\{([^}]*)\}\s*;/g, 'let $1 = [$2];');
+    js = js.replace(/(?:std::)?vector\s*<[^>]+>\s+(\w+)\s*=\s*\{([\s\S]*?)\}\s*;/g, (_, name, init) => {
+        const converted = init.replace(/\{/g, '[').replace(/\}/g, ']');
+        return `let ${name} = [${converted}];`;
+    });
     // vector<int> v; → let v = [];
     js = js.replace(/(?:std::)?vector\s*<[^>]+>\s+(\w+)\s*;/g, 'let $1 = [];');
     // vector<int> v(n, val); → let v = Array(n).fill(val);
@@ -324,16 +327,20 @@ export function transpileCppToJs(cppCode: string): string {
         'let $1 = Array($2).fill(null).map(() => Array($3).fill(0));');
 
     // 2D Arrays with init: let arr[2][2] = {{1,2},{3,4}}; → let arr = [[1,2],[3,4]];
-    js = js.replace(/let\s+(\w+)\[\d+\]\[\d+\]\s*=\s*\{(\{[^}]*\}(?:\s*,\s*\{[^}]*\})*)\}\s*;/g, (_, name, init) => {
+    js = js.replace(/let\s+(\w+)\[\d+\]\[\d+\]\s*=\s*\{([\s\S]*?)\}\s*;/g, (_, name, init) => {
         const converted = init.replace(/\{/g, '[').replace(/\}/g, ']');
         return `let ${name} = [${converted}];`;
     });
 
     // 1D Arrays: let arr[] = {1, 2, 3}; → let arr = [1, 2, 3];
-    js = js.replace(/let\s+(\w+)\[\]\s*=\s*\{([^}]*)\}\s*;/g, 'let $1 = [$2];');
+    js = js.replace(/let\s+(\w+)\[\]\s*=\s*\{([\s\S]*?)\}\s*;/g, (_, name, init) => {
+        return `let ${name} = [${init.replace(/\{/g, '[').replace(/\}/g, ']')}];`;
+    });
 
     // Sized arrays with init: let arr[3] = {1, 2, 3}; → let arr = [1, 2, 3];
-    js = js.replace(/let\s+(\w+)\[\d+\]\s*=\s*\{([^}]*)\}\s*;/g, 'let $1 = [$2];');
+    js = js.replace(/let\s+(\w+)\[\d+\]\s*=\s*\{([\s\S]*?)\}\s*;/g, (_, name, init) => {
+        return `let ${name} = [${init.replace(/\{/g, '[').replace(/\}/g, ']')}];`;
+    });
 
     // Sized arrays without init: let arr[5]; → let arr = Array(5).fill(0);
     js = js.replace(/let\s+(\w+)\[(\d+)\]\s*;/g, 'let $1 = Array($2).fill(0);');

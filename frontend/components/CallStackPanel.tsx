@@ -10,10 +10,11 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
   const displayStack = [...stack].reverse();
   const isSaffron = themeColor === 'saffron';
 
-  // Define border color based on theme
-  const borderClass = isSaffron
-    ? 'border-saffron-500 dark:border-saffron-400'
-    : 'border-blue-500 dark:border-blue-400';
+  // Define active border and shadow based on theme
+  const activeClass = isSaffron
+    ? 'border-saffron-400 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221] bg-white dark:bg-[#161618]'
+    : 'border-blue-400 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a] bg-white dark:bg-[#161618]';
+  const inactiveClass = 'border-slate-300 dark:border-[#333] shadow-none bg-slate-100 dark:bg-[#111113]';
 
   return (
     <div className="flex flex-col p-4 min-h-[100px] pb-10">
@@ -37,11 +38,11 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                 animate={{ opacity: 1 - (depth * 0.15), y: translateY, scale }}
                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className={`relative w-full p-4 glass-panel rounded-xl shadow-lg border-t-4 mb-2 flex flex-col font-mono text-sm transition-colors ${borderClass} ${!isTop && 'border-t-transparent dark:border-t-transparent shadow-none bg-white/40 dark:bg-slate-800/40'}`}
+                className={`relative w-full p-4 rounded border-[2px] mb-2 flex flex-col font-mono text-sm transition-colors ${isTop ? activeClass : inactiveClass}`}
                 style={{ zIndex, marginTop: index > 0 ? -24 : 0 }}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isSaffron ? 'text-saffron-500/70' : 'text-blue-500/70'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isTop ? (isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400') : 'text-slate-500'}`}>
                     Frame {stack.length - 1 - index}
                   </span>
                   {isTop && (

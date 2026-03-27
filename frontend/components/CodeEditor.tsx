@@ -85,7 +85,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, language = 'javascript', 
   useEffect(() => {
     if (!editorRef.current || !monaco || !editorRef.current.getModel()) return;
 
-    const bpDecorations = Array.from(breakpoints || []).map(line => ({
+    const bpDecorations = (Array.from(breakpoints || []) as number[]).map((line: number) => ({
       range: new monaco.Range(line, 1, line, 1),
       options: {
         isWholeLine: false,

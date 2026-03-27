@@ -6,6 +6,7 @@ import CallStackPanel from "./frontend/components/CallStackPanel";
 import ConsolePanel from "./frontend/components/ConsolePanel";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
+import TemplatePalette from "./frontend/components/TemplatePalette";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
 import {
   JS_TEMPLATES,
@@ -365,45 +366,43 @@ const App: React.FC = () => {
           >
             {/* Header */}
             <header
-              className={`h-16 flex items-center px-4 md:px-6 justify-between ${theme === "dark" ? "bg-slate-900/80" : headerClass + "/90"} backdrop-blur-xl border-b border-transparent dark:border-slate-800 shadow-md z-30 text-white transition-all duration-300 relative`}
+              className={`h-14 flex items-center px-6 justify-between bg-white dark:bg-[#0A0A0B] border-b border-slate-900 dark:border-[#222] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0`}
             >
-              <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 dark:via-saffron-500/20 to-transparent"></div>
-
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
                     setPage("home");
                     window.location.hash = "";
                   }}
-                  className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors"
+                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-500 dark:text-slate-400 transition-colors active:translate-y-[1px]"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={18} />
                 </button>
-                <div className="bg-white/20 dark:bg-slate-800 p-1.5 rounded-lg backdrop-blur-sm">
+                <div className="bg-slate-100 dark:bg-[#111113] p-1.5 rounded-md border border-slate-200 dark:border-[#222]">
                   <img
                     src={theme === "dark" ? logoDark : logoLight}
                     alt="AlgoViz Logo"
-                    className="w-6 h-6 object-contain"
+                    className="w-5 h-5 object-contain"
                   />
                 </div>
-                <div>
-                  <h1 className="font-bold text-xl tracking-tight leading-none text-white">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
                     AlgoViz
                   </h1>
-                  <span className="text-saffron-100 dark:text-slate-500 text-xs font-medium opacity-90">
-                    Editor Mode
+                  <span className="text-slate-500 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">
+                    Workbench
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div
-                  className={`flex gap-4 text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent dark:border-slate-700 ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400`}
+                  className="hidden sm:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded border border-slate-200 dark:border-[#222] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400"
                 >
                   <span>{langLabel}</span>
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className={`p-2 rounded-full ${tagClass} dark:bg-slate-800 text-white dark:text-slate-400 hover:bg-white/20 dark:hover:bg-slate-700 transition-colors`}
+                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-600 dark:text-slate-400 transition-colors active:translate-y-[1px]"
                 >
                   {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
@@ -411,61 +410,32 @@ const App: React.FC = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-2 md:p-4 gap-4">
+            <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[#0A0A0B] z-10 relative">
               {/* Left Panel: Editor */}
               <div
-                className={`flex flex-col min-h-[50vh] md:min-h-0 w-full md:min-w-[300px] glass-panel rounded-2xl p-4 md:p-5 transition-all duration-[400ms] ease-in-out ${visualizerMode ? "md:w-[40%]" : "md:flex-1"}`}
+                className={`flex flex-col h-full w-full md:min-w-[300px] bg-white dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_#000] p-4 md:p-5 transition-all duration-200 ease-out ${visualizerMode ? "md:w-[40%]" : "md:flex-1"}`}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider">
-                    <Code size={18} className={iconTextClass} />
-                    <span>Source Code</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Code size={16} className={iconTextClass} />
+                      Source Code
+                    </span>
 
-                    {/* Template Selector */}
+                    {/* Start Command Palette Trigger */}
                     <div className="relative ml-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setTemplateMenuOpen(!templateMenuOpen);
+                          setTemplateMenuOpen(true);
                         }}
-                        className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200/60 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all normal-case tracking-normal"
-                        title="Load a template"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-[#111113] border border-slate-200 dark:border-[#222] hover:bg-slate-200 dark:hover:bg-[#1a1a1c] hover:text-slate-900 dark:hover:text-slate-200 transition-colors uppercase tracking-widest active:translate-y-[1px]"
+                        title="Open Template Palette (Cmd+K)"
                       >
                         <BookOpen size={12} />
                         Templates
-                        <ChevronDown
-                          size={12}
-                          className={`transition-transform ${templateMenuOpen ? "rotate-180" : ""}`}
-                        />
+                        <span className="ml-1 opacity-50 px-1 border border-slate-300 dark:border-[#333] rounded text-[9px]">⌘K</span>
                       </button>
-
-                      <AnimatePresence>
-                        {templateMenuOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -5, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {templates.map((tpl, i) => (
-                              <button
-                                key={i}
-                                onClick={() => handleTemplateSelect(tpl)}
-                                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/50 last:border-0"
-                              >
-                                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                  {tpl.name}
-                                </div>
-                                <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                                  {tpl.description}
-                                </div>
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </div>
 
@@ -479,15 +449,15 @@ const App: React.FC = () => {
                     {/* Copy Share Link */}
                     <button
                       onClick={handleCopyLink}
-                      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest rounded border transition-all active:translate-y-[1px] ${
                         linkCopied
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                          ? "bg-green-100 dark:bg-[#111113] text-green-700 dark:text-green-400 border-green-300 dark:border-green-800"
+                          : "bg-slate-100 dark:bg-[#111113] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#222] hover:bg-slate-200 dark:hover:bg-[#1a1a1c]"
                       }`}
                       title="Copy shareable link"
                     >
                       {linkCopied ? <Check size={14} /> : <Link2 size={14} />}
-                      {linkCopied ? "Copied!" : "Share"}
+                      {linkCopied ? "Copied" : "Share"}
                     </button>
 
                     <button
@@ -495,14 +465,14 @@ const App: React.FC = () => {
                         setIsPlaying(false);
                         handleRun(code, language);
                       }}
-                      className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 ${runBtnClass}`}
+                      className={`flex items-center gap-2 px-6 py-1.5 text-[11px] font-black uppercase tracking-widest text-white rounded shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000] border border-transparent transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${runBtnClass}`}
                     >
-                      <Play size={16} fill="currentColor" />
+                      <Play size={14} fill="currentColor" />
                       Run
                     </button>
                   </div>
                 </div>
-                <div className="flex-1 relative rounded-xl overflow-hidden shadow-inner border border-gray-200/50 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+                <div className="flex-1 relative rounded border-[2px] border-slate-200 dark:border-[#222] overflow-hidden bg-white dark:bg-transparent">
                   <CodeEditor
                     code={code}
                     language={language}
@@ -520,18 +490,18 @@ const App: React.FC = () => {
 
               {/* Right Panel: Visualization */}
               <div
-                className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 glass-panel rounded-2xl z-10 transition-all duration-[400ms] ease-in-out overflow-hidden ${visualizerMode ? "w-full md:flex-1" : "w-full md:w-[480px]"}`}
+                className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#222] shadow-[2px_2px_0_#1e293b] dark:shadow-[2px_2px_0_#000] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? "w-full md:flex-1" : "w-full md:w-[480px]"}`}
               >
                 {/* Visualizer Mode Toggle */}
-                <div className="flex items-center justify-end px-3 py-1.5 bg-white/10 dark:bg-slate-900/20">
+                <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[#161618] border-b-[2px] border-slate-900 dark:border-[#222]">
                   <button
                     onClick={() => setVisualizerMode(!visualizerMode)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all border ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all active:translate-y-[1px] border ${
                       visualizerMode
                         ? isSaffron
                           ? "bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-300 dark:border-saffron-700"
                           : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        : "bg-slate-100 dark:bg-[#1a1a1c] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222]"
                     }`}
                     title={
                       visualizerMode
@@ -549,28 +519,26 @@ const App: React.FC = () => {
                 </div>
                 {/* Top half: Variables / Call Stack */}
                 <div
-                  className={`flex flex-col min-h-0 transition-all duration-[400ms] ease-in-out ${consoleExpanded ? "flex-[3]" : "flex-[4]"}`}
+                  className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? "flex-[3]" : "flex-[4]"}`}
                 >
                   {/* Tabs */}
-                  <div className="flex border-b border-gray-200/50 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/30 backdrop-blur-md">
+                  <div className="flex border-b-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#111113]">
                     <button
                       onClick={() => setActiveTab("variables")}
-                      className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === "variables" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800"}`}
+                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "variables" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
                     >
                       <Layers size={16} /> Variables
                     </button>
                     <button
                       onClick={() => setActiveTab("stack")}
-                      className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === "stack" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-slate-800` : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800"}`}
+                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "stack" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
                     >
                       <Layers size={16} className="rotate-180" /> Call Stack
                     </button>
                   </div>
 
                   {/* Content Area */}
-                  <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/40 dark:bg-slate-900/40 p-2 transition-colors relative">
-                    {/* Inner subtle glow for depth */}
-                    <div className="absolute inset-0 pointer-events-none rounded-b-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]"></div>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
                     {activeTab === "variables" ? (
                       <VariablesPanel
                         variables={currentStep.variables || {}}
@@ -586,34 +554,34 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Bottom half: Console */}
+                  {/* Bottom half: Console */}
                 <div
-                  className={`flex flex-col border-t border-gray-200/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-[400ms] ease-in-out ${
+                  className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#0A0A0B] transition-all duration-200 ease-out ${
                     consoleExpanded ? "flex-[3] min-h-[150px]" : "h-10"
                   }`}
                 >
                   <button
-                    className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer w-full"
+                    className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[#161618] transition-colors cursor-pointer w-full"
                     onClick={() => setConsoleExpanded(!consoleExpanded)}
                   >
                     <div className="flex items-center gap-2">
                       <TerminalIcon size={16} className={iconTextClass} />
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-400 uppercase tracking-wider">
                         Console Output
                       </span>
                       {!consoleExpanded &&
                         currentStep.consoleOutput &&
                         currentStep.consoleOutput.length > 0 && (
-                          <span className="ml-2 px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                          <span className="ml-2 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#222] text-[9px] font-bold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#333]">
                             {currentStep.consoleOutput.length}
                           </span>
                         )}
                     </div>
-                    <div className="text-slate-400">
+                    <div className="text-slate-500 dark:text-slate-600">
                       {consoleExpanded ? (
-                        <ChevronDown size={16} />
+                        <ChevronDown size={14} strokeWidth={3} />
                       ) : (
-                        <ChevronUp size={16} />
+                        <ChevronUp size={14} strokeWidth={3} />
                       )}
                     </div>
                   </button>
@@ -655,6 +623,16 @@ const App: React.FC = () => {
               currentStep={currentStepIndex}
               totalSteps={timeline.length}
             />
+
+            {/* Template Command Palette */}
+            <TemplatePalette
+              isOpen={templateMenuOpen}
+              onClose={() => setTemplateMenuOpen(false)}
+              templates={templates}
+              onSelect={handleTemplateSelect}
+              language={language}
+            />
+
           </motion.div>
         )}
       </AnimatePresence>

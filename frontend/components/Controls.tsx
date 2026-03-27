@@ -33,59 +33,59 @@ const Controls: React.FC<ControlsProps> = ({
     ? "hover:bg-saffron-100 dark:hover:bg-saffron-900/30 hover:text-saffron-600 dark:hover:text-saffron-400"
     : "hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400";
   const hoverStepClass = isSaffron
-    ? "hover:bg-saffron-50"
-    : "hover:bg-blue-50";
+    ? "hover:bg-saffron-50 dark:hover:bg-[#1a1a1c] hover:border-saffron-200 dark:hover:border-[#333]"
+    : "hover:bg-blue-50 dark:hover:bg-[#1a1a1c] hover:border-blue-200 dark:hover:border-[#333]";
 
   const stepBadgeClass = isSaffron
-    ? "text-saffron-600 dark:text-saffron-400 bg-saffron-50 dark:bg-saffron-900/20 border-saffron-200 dark:border-saffron-800/40"
-    : "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40";
+    ? "text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[#161618] border-saffron-200 dark:border-[#333]"
+    : "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-[#161618] border-blue-200 dark:border-[#333]";
 
   return (
-    <div className="h-auto px-4 py-4 md:px-6 mb-4 flex flex-col md:flex-row items-center gap-4 md:gap-6 shrink-0 z-20 glass-panel rounded-2xl transition-all duration-[400ms] ease-in-out">
+    <div className="h-auto px-6 py-4 flex flex-col md:flex-row items-center gap-6 shrink-0 z-20 bg-white dark:bg-[#0A0A0B] border-t-[2px] border-slate-900 dark:border-[#222] transition-colors duration-200 ease-out">
 
       {/* Playback Buttons Group */}
-      <div className="flex items-center justify-center gap-2.5 shrink-0">
-        <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center justify-center gap-3 shrink-0">
+        <div className="flex flex-col items-center gap-1">
           <button
             onClick={onReset}
-            className={`p-2.5 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 transition-all border border-transparent hover:border-slate-300 dark:hover:border-slate-600 ${hoverResetClass} backdrop-blur-sm`}
+            className={`p-2 rounded bg-slate-100 dark:bg-[#161618] text-slate-600 dark:text-slate-400 transition-all border border-slate-200 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222] active:translate-y-[1px]`}
             title="Reset (R)"
           >
             <RotateCcw size={18} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono opacity-60">R</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Reset</span>
         </div>
 
-        <div className="w-px h-6 bg-slate-300/50 dark:bg-slate-700/50 mx-1"></div>
+        <div className="w-px h-8 bg-slate-300 dark:bg-[#222] mx-2"></div>
 
-        <div className="flex flex-col items-center gap-0.5">
+        <div className="flex flex-col items-center gap-1">
           <button
             onClick={onPrev} disabled={!canPrev}
-            className={`p-2 rounded-full ${hoverStepClass} dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-transparent text-slate-600 dark:text-slate-300 transition-all active:scale-95`}
+            className={`p-2 rounded border border-transparent ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent text-slate-700 dark:text-slate-300 transition-all active:translate-y-[1px]`}
           >
             <StepBack size={20} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono opacity-60">←</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Prev</span>
         </div>
 
-        <div className="flex flex-col items-center gap-0.5">
+        <div className="flex flex-col items-center gap-1">
           <button
             onClick={onPlayPause}
-            className={`p-3.5 rounded-full text-white shadow-xl transition-all hover:scale-110 active:scale-95 border border-white/20 ${playBtnClass}`}
+            className={`p-3 rounded text-white shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000] border-2 border-transparent transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${playBtnClass}`}
           >
-            {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+            {isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-1" />}
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono opacity-60">Space</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Play/Pause</span>
         </div>
 
-        <div className="flex flex-col items-center gap-0.5">
+        <div className="flex flex-col items-center gap-1">
           <button
             onClick={onNext} disabled={!canNext}
-            className={`p-2 rounded-full ${hoverStepClass} dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-transparent text-slate-600 dark:text-slate-300 transition-all active:scale-95`}
+            className={`p-2 rounded border border-transparent ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent text-slate-700 dark:text-slate-300 transition-all active:translate-y-[1px]`}
           >
             <StepForward size={20} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono opacity-60">→</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Next</span>
         </div>
       </div>
 
@@ -103,16 +103,16 @@ const Controls: React.FC<ControlsProps> = ({
         {/* Bottom row: Progress bar */}
         <div className="relative group flex items-center h-6 cursor-pointer">
           {/* Track background */}
-          <div className="absolute left-0 right-0 h-2.5 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden backdrop-blur-sm border border-black/5 dark:border-white/5 pointer-events-none">
+          <div className="absolute left-0 right-0 h-2.5 bg-slate-200 dark:bg-[#161618] border border-slate-300 dark:border-[#333] rounded-full overflow-hidden pointer-events-none">
             <div
-              className={`absolute top-0 left-0 h-full transition-all duration-300 ease-out ${progressFillClass}`}
+              className={`absolute top-0 left-0 h-full transition-all duration-200 ease-out border-r border-slate-900/10 dark:border-white/10 ${progressFillClass}`}
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Interactive thumb (visible on hover) */}
           <div
-            className={`absolute h-4 w-4 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.3)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 border border-slate-200 dark:border-slate-700 z-10`}
+            className={`absolute h-4 w-4 bg-white border-2 border-slate-900 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 z-10`}
             style={{ left: `${progress}%` }}
           ></div>
 
@@ -130,16 +130,16 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Speed Control */}
-      <div className="shrink-0 flex items-center gap-3 bg-white/50 dark:bg-slate-900/50 px-4 py-2 rounded-xl border border-white/40 dark:border-slate-700/50 shadow-sm backdrop-blur-md">
-        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest hidden xl:block">Speed</span>
+      <div className="shrink-0 flex items-center gap-3 bg-slate-50 dark:bg-[#111113] px-3 py-2 rounded-lg border border-slate-200 dark:border-[#222]">
+        <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest hidden xl:block">Speed</span>
         <input
           type="range"
           min="100" max="2000" step="100"
           value={2100 - speed}
           onChange={(e) => setSpeed(2100 - Number(e.target.value))}
-          className={`w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer ${accentClass}`}
+          className={`w-20 h-1.5 bg-slate-200 dark:bg-[#333] rounded-full appearance-none cursor-pointer ${accentClass}`}
         />
-        <span className="text-[11px] text-slate-600 dark:text-slate-300 w-8 text-right font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+        <span className="text-[11px] text-slate-700 dark:text-slate-300 w-8 text-right font-mono font-bold">
           {(1000 / speed).toFixed(1)}x
         </span>
       </div>
