@@ -7,6 +7,7 @@ import ConsolePanel from "./frontend/components/ConsolePanel";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
 import TemplatePalette from "./frontend/components/TemplatePalette";
+import DocsPage from "./frontend/components/DocsPage";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
 import {
   JS_TEMPLATES,
@@ -128,7 +129,7 @@ const App: React.FC = () => {
   // Check for shared link on load
   const shared = decodeShareLink();
 
-  const [page, setPage] = useState<"home" | "editor">(
+  const [page, setPage] = useState<"home" | "editor" | "docs">(
     shared ? "editor" : "home",
   );
   const [language, setLanguage] = useState(shared?.lang || "javascript");
@@ -353,7 +354,18 @@ const App: React.FC = () => {
                 {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
               </button>
             </div>
-            <HomePage onSelectLanguage={handleLanguageSelect} />
+            <HomePage onSelectLanguage={handleLanguageSelect} onOpenDocs={() => setPage("docs")} />
+          </motion.div>
+        ) : page === "docs" ? (
+          <motion.div
+            key="docs"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="h-full w-full"
+          >
+            <DocsPage onBack={() => setPage("home")} theme={theme} />
           </motion.div>
         ) : (
           <motion.div
@@ -378,12 +390,10 @@ const App: React.FC = () => {
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <div className="bg-slate-100 dark:bg-[#111113] p-1.5 rounded-md border border-slate-200 dark:border-[#222]">
-                  <img
-                    src={theme === "dark" ? logoDark : logoLight}
-                    alt="AlgoViz Logo"
-                    className="w-5 h-5 object-contain"
-                  />
+                <div className="flex items-center justify-center w-7 h-7 bg-white dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#444] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] rounded-sm transform -rotate-3 transition-transform hover:rotate-0">
+                  <span className="text-slate-900 dark:text-slate-100 font-black text-[11px] tracking-tighter">
+                    AV<span className="text-blue-600 dark:text-saffron-500">.</span>
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">

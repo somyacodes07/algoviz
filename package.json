@@ -9,14 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.4",
-    "framer-motion": "^12.34.0",
-    "react": "^19.2.4",
-    "lucide-react": "^0.563.0",
     "@monaco-editor/react": "^4.7.0",
-    "acorn": "^8.15.0"
+    "acorn": "^8.15.0",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.563.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",

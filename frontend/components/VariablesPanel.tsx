@@ -184,12 +184,15 @@ const VariableCard: React.FC<{
         if (isFunction) return <span className="text-purple-500 dark:text-purple-400 italic font-medium text-xs">ƒ()</span>;
         if (value === null) return <span className="text-slate-400 italic text-sm">null</span>;
         if (value === undefined) return <span className="text-slate-400 italic text-sm">undefined</span>;
-        if (typeof value === 'string') return <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">"{value}"</span>;
+        if (typeof value === 'string') return <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg truncate max-w-full inline-block" title={value}>"{value}"</span>;
         if (typeof value === 'boolean') return <span className="text-purple-600 dark:text-purple-400 font-bold text-lg uppercase">{String(value)}</span>;
-        if (typeof value === 'number') return <span className="text-blue-700 dark:text-blue-300 font-black text-3xl tabular-nums">{value}</span>;
+        if (typeof value === 'number') {
+            const displayValue = Number.isInteger(value) ? value : Number.parseFloat(value.toPrecision(7));
+            return <span className="text-blue-700 dark:text-blue-300 font-black text-3xl tabular-nums truncate max-w-full inline-block" title={String(value)}>{displayValue}</span>;
+        }
         if (isNumericArray) return <span className="text-slate-400 text-sm font-semibold">[{value.length} items]</span>;
         if (isObject) return <span className="text-slate-400 text-sm font-semibold">{Array.isArray(value) ? `[${value.length}]` : '{...}'}</span>;
-        return <span className="text-slate-500 text-lg">{String(value)}</span>;
+        return <span className="text-slate-500 text-lg truncate max-w-full inline-block">{String(value)}</span>;
     };
 
     const cardBorder = isNew

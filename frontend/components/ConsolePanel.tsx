@@ -37,7 +37,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               key={index}
-              className={`flex items-start gap-2.5 p-2.5 rounded border-[2px] transition-all shadow-sm dark:shadow-[2px_2px_0_#000] overflow-hidden ${isError
+              className={`flex items-start gap-2.5 p-2.5 rounded border-[2px] transition-all shadow-sm dark:shadow-[2px_2px_0_#000] ${isError
                 ? 'bg-red-50 dark:bg-[#201010] text-red-800 dark:text-red-300 border-red-300 dark:border-[#3a1a1a]'
                 : isWarn
                   ? 'bg-yellow-50 dark:bg-[#201c10] text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-[#3a301a]'
@@ -52,7 +52,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
                 <ChevronRight size={15} className="mt-0.5 flex-shrink-0 text-blue-500 opacity-70" />
               )}
 
-              <div className="flex-1 overflow-hidden break-words leading-relaxed select-text">
+              <div className="flex-1 break-words leading-normal select-text">
                 {isError && log.message.startsWith('Line ') ? (
                   <span>
                     <span className="font-extrabold text-red-600 dark:text-red-400 underline decoration-red-500/50 cursor-help" title="Error Location">

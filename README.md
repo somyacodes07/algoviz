@@ -24,6 +24,19 @@ It's the perfect companion for:
 - 🎓 **Teaching programming** — Show students exactly what happens under the hood
 - 🐛 **Debugging logic** — Step forward and backward to find where things go wrong
 
+---
+
+## 📖 Comprehensive Documentation
+
+AlgoViz features a highly detailed, multi-page architectural documentation site:
+- **[Introduction & Philosophy](docs/introduction.md)**
+- **[Setup & Installation Guide](docs/setup-guide.md)**
+- **[Features & UI Layouts](docs/features-and-ui.md)**
+- **[C++ Transpiler Engine](docs/cpp-engine.md)**
+- **[Instrumentation Sandbox](docs/instrumentation-sandbox.md)**
+
+Explore these pages to learn exactly how AlgoViz safely executes dynamic languages and visualizes massive execution stacks in the browser.
+
 <div align="center">
 
 ### 🏠 Home Page
@@ -42,10 +55,11 @@ It's the perfect companion for:
 |---|---|
 | 🔬 **Step-by-step execution** | Play, pause, step forward/backward through every line |
 | 📊 **Live variable panel** | See all variables update in real-time with change indicators (↑↓), new badges, and loop detection |
+| 🎯 **Algorithmic Pointers** | Automatically tracks array variables like \`i\`, \`j\`, \`mid\` with green graphical floating tags |
 | 📚 **Call stack visualization** | Watch functions push and pop from the call stack |
 | 💻 **Console output** | See `console.log` / `cout` output appear at each step |
 | 🎨 **Monaco Editor** | Full-featured code editor with syntax highlighting (same editor as VS Code) |
-| 🌙 **Dark mode** | Toggle between light and dark themes |
+| 🏛️ **Neo-Brutalist Themes** | Toggle between striking dark and light "Developer's Workbench" visual palettes |
 | ⏩ **Speed control** | Adjust execution speed from slow-motion to fast |
 | 🟧 **JavaScript (ES6+)** | Full support for modern JavaScript with functions, closures, arrays, objects |
 | 🔵 **C++ (Beta)** | Transpiles C++ to JS for visualization — supports loops, vectors, cout, and more |
@@ -97,7 +111,7 @@ The **Executor** (`executor.ts`) runs the instrumented code inside a sandboxed `
 - Console output up to that point
 
 ### Stage 4: Visualization
-The React frontend steps through the Timeline, highlighting the active line in the Monaco editor, animating variable changes in the **Variables Panel**, showing the **Call Stack**, and streaming **Console Output**.
+The React frontend steps through the Timeline, highlighting the active line in the Monaco editor, animating variable changes in the **Variables Panel**, tracking floating tags for algorithmic pointer indices, showing the **Call Stack**, and streaming truncated **Console Output**.
 
 ---
 

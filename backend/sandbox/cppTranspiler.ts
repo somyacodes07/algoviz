@@ -302,10 +302,27 @@ export function transpileCppToJs(cppCode: string): string {
 
     // Range-based for loops MUST be handled before generic type replacement
     // for (int x : vec) → for (let x of vec)
-    // for (auto x : vec) → for (let x of vec)
-    // for (auto& x : vec) → for (let x of vec)
-    // for (const auto& x : vec) → for (const x of vec)  
     js = js.replace(/for\s*\(\s*(?:const\s+)?(?:auto|int|float|double|string|char|long|long\s+long|unsigned\s+int|short|bool)\s*&?\s+(\w+)\s*:\s*/g, 'for (let $1 of ');
+
+    // --- Integer Math Emulation ---
+    // C++ strictly truncates float math assigned to integer variables. JS converts them to float.
+    // Wrap assignments to int/long variables in Math.trunc() to save C++ semantics.
+    js = js.replace(/\b(int|long\s+long|long|short|unsigned\s+int)\s+(\w+)\s*=\s*([^;{]+?)\s*;/g, (match, type, varName, expr) => {
+        // Exclude string/array initializers that somehow got caught
+        if (expr.includes('"') || expr.includes("'") || expr.includes('[')) return `let ${varName} = ${expr};`;
+        return `let ${varName} = Math.trunc(${expr});`;
+    });
+
+    // Handle `/=` truncations logically: `num /= 10;` -> `num = Math.trunc(num / 10);`
+    js = js.replace(/(\w+(?:\[[^\]]*\])?)\s*\/\=\s*([^;]+);/g, '$1 = Math.trunc($1 / ($2));');
+
+    // Handle integer division re-assignments strictly where division occurs, e.g. `mid = (l + r) / 2;`
+    // We target `var = ... / ... ;` patterns heuristically.
+    js = js.replace(/^(\s*)(\w+)\s*=\s*([^;]*\/[^;]+);/gm, (match, space, varName, expr) => {
+        // Ignore math that already has trunc/floor, or float specific casting
+        if (expr.includes('Math.') || expr.includes('.0')) return match;
+        return `${space}${varName} = Math.trunc(${expr});`;
+    });
 
     // const TYPE → const
     js = js.replace(/\bconst\s+(?:int|float|double|string|bool|char|auto|long|short|long\s+long|unsigned\s+int)\s+/g, 'const ');

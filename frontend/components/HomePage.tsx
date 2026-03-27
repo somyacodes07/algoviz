@@ -11,10 +11,12 @@ import {
   Star,
   Eye,
   Layers,
+  BookOpen,
 } from "lucide-react";
 
 interface HomePageProps {
   onSelectLanguage: (lang: string) => void;
+  onOpenDocs: () => void;
 }
 
 // Animation Data for fake execution tracking
@@ -66,7 +68,7 @@ const EXECUTION_STEPS = [
   },
 ];
 
-const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
+const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage, onOpenDocs }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
 
@@ -92,12 +94,12 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
           <span className="font-bold text-xl tracking-tight">AlgoViz.</span>
         </div>
         <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-500 dark:text-slate-400 mr-12">
-          <a
-            href="#"
+          <button
+            onClick={onOpenDocs}
             className="hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             Docs
-          </a>
+          </button>
           <a
             href="https://github.com/ssgamingop/AlgoViz"
             target="_blank"
@@ -219,7 +221,16 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectLanguage }) => {
               </button>
             </div>
 
-            <div className="mt-8 flex items-center gap-2 text-sm font-mono text-slate-500">
+            <div className="flex items-center gap-4 mt-8 mb-4">
+              <button
+                onClick={onOpenDocs}
+                className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors uppercase tracking-widest border border-slate-300 dark:border-slate-800 rounded-full px-4 py-1.5 active:translate-y-[1px]"
+              >
+                <BookOpen size={14} /> Read Documentation
+              </button>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2 text-sm font-mono text-slate-500">
               <Terminal size={14} />
               <span>Select a file to begin execution session.</span>
             </div>
