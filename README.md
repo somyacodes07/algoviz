@@ -32,8 +32,9 @@ AlgoViz features a highly detailed, multi-page architectural documentation site:
 - **[Introduction & Philosophy](docs/introduction.md)**
 - **[Setup & Installation Guide](docs/setup-guide.md)**
 - **[Features & UI Layouts](docs/features-and-ui.md)**
-- **[C++ Transpiler Engine](docs/cpp-engine.md)**
-- **[Instrumentation Sandbox](docs/instrumentation-sandbox.md)**
+- **[Educational Template Library & Palette](docs/templates-and-palette.md)**
+- **[WebAssembly C++ AST Engine](docs/cpp-engine.md)**
+- **[Instrumentation Sandbox (JS VM)](docs/instrumentation-sandbox.md)**
 
 Explore these pages to learn exactly how AlgoViz safely executes dynamic languages and visualizes massive execution stacks in the browser.
 
@@ -61,8 +62,9 @@ Explore these pages to learn exactly how AlgoViz safely executes dynamic languag
 | 🎨 **Monaco Editor** | Full-featured code editor with syntax highlighting (same editor as VS Code) |
 | 🏛️ **Neo-Brutalist Themes** | Toggle between striking dark and light "Developer's Workbench" visual palettes |
 | ⏩ **Speed control** | Adjust execution speed from slow-motion to fast |
+| 🗂️ **Template Library** | Built-in library of 35+ fully-commented JS & C++ DSA templates with searchable tags |
 | 🟧 **JavaScript (ES6+)** | Full support for modern JavaScript with functions, closures, arrays, objects |
-| 🔵 **C++ (Beta)** | Transpiles C++ to JS for visualization — supports loops, vectors, cout, and more |
+| 🔵 **C++ (Beta)** | Powered by a custom **Tree-sitter AST Transpiler** to flawlessly map vector math, queues, & structs to JS |
 
 ---
 
@@ -72,8 +74,8 @@ AlgoViz uses a clever **3-stage pipeline** to turn your code into an interactive
 
 ```
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌──────────────┐
-│  Your Code   │────▶│  C++ Transpiler   │────▶│  JS Instrumenter │────▶│  Sandbox     │
-│  (JS or C++) │     │  (if C++ mode)    │     │  (AST via Acorn) │     │  Executor    │
+│  Your Code   │────▶│ Tree-Sitter C++  │────▶│ Sandbox AST      │────▶│ Execution    │
+│  (JS or C++) │     │ AST Transpiler   │     │ Instrumenter     │     │ Engine (VM)  │
 └──────────────┘     └──────────────────┘     └──────────────────┘     └──────────────┘
                                                                              │
                                                                              ▼
@@ -89,29 +91,26 @@ AlgoViz uses a clever **3-stage pipeline** to turn your code into an interactive
                                                                        └──────────────┘
 ```
 
-### Stage 1: Transpilation (C++ only)
-If you're writing C++, the **C++ Transpiler** (`cppTranspiler.ts`) converts your C++ code into equivalent JavaScript using regex-based pattern matching. It handles:
-- `#include` removal, `using namespace std` cleanup
-- Type declarations (`int`, `float`, `string`, etc.) → `let`/`const`
-- `vector<int>` → JavaScript arrays
+### Stage 1: AST Transpilation (C++ only)
+If you're writing C++, the custom **WebAssembly Tree-Sitter Transpiler** (`backend/sandbox/transpiler/`) deeply parses the C++ code into an Abstract Syntax Tree (AST). The `transformer.ts` logically maps:
+- `std::vector`, `std::map`, `std::priority_queue` → optimized JavaScript Arrays/Objects
+- Variable assignments, declarations, and scope → safe ES6 JS blocks
 - `cout << x << endl` → `console.log(x)`
-- `push_back()`, `.size()`, `.empty()` → JS equivalents
 
 ### Stage 2: Instrumentation
-The **Instrumenter** (`instrumenter.ts`) parses the JavaScript code into an AST using [Acorn](https://github.com/acornjs/acorn) and injects tracing calls:
-- `__tracer.step(line, variables)` after every statement
-- `__tracer.enter(name)` / `__tracer.exit()` for function calls
-- `__tracer.checkLoop()` for infinite loop protection (max 2000 steps)
+The **Instrumenter** parses the JavaScript code and injects trace closures directly into the execution path:
+- `__tracer.step(line, variables)` after every physical statement.
+- `__tracer.enter(name)` / `__tracer.exit()` for granular stack framing.
 
 ### Stage 3: Sandboxed Execution
-The **Executor** (`executor.ts`) runs the instrumented code inside a sandboxed `Function()` and collects a **Timeline** — an array of snapshots, each containing:
-- Current line number
-- All variable values (deep-cloned)
-- The call stack
-- Console output up to that point
+The **Executor** (`executor.ts` + `executor.worker.ts`) spins up a parallel Web Worker to run the instrumented code asynchronously, fully isolating it from the UI thread. It collects a **Timeline**:
+- Current active line number
+- Fully deep-cloned variable state objects
+- The function call stack
+- I/O console output
 
 ### Stage 4: Visualization
-The React frontend steps through the Timeline, highlighting the active line in the Monaco editor, animating variable changes in the **Variables Panel**, tracking floating tags for algorithmic pointer indices, showing the **Call Stack**, and streaming truncated **Console Output**.
+The React frontend steps through the newly structured Timeline data. It seamlessly shifts the active line in the Monaco editor, animates variable mutations in the **Variables Panel**, highlights `i` / `j` indices, and updates the **Call Stack**.
 
 ---
 
@@ -119,30 +118,25 @@ The React frontend steps through the Timeline, highlighting the active line in t
 
 ```
 algoviz/
-├── App.tsx                          # Main React app (home  + editor views)
-├── index.tsx                        # React entry point
+├── App.tsx                          # Main React app router
 ├── index.html                       # HTML shell with Tailwind config
-├── types.ts                         # TypeScript interfaces
-├── vite.config.ts                   # Vite build configuration
-├── package.json                     # Dependencies
 │
 ├── backend/
 │   ├── sandbox/
-│   │   ├── cppTranspiler.ts         # C++ → JavaScript transpiler
-│   │   └── executor.ts              # Sandboxed code execution engine
-│   └── tracer/
-│       └── instrumenter.ts          # AST-based JS code instrumenter
+│   │   ├── transpiler/              # Tree-Sitter WASM AST C++ Engine
+│   │   ├── executor.worker.ts       # Isolated parallel execution runner
+│   │   └── executor.ts              # Timeline generation & timeline orchestration
 │
 ├── frontend/
-│   └── components/
-│       ├── HomePage.tsx             # Landing page with language selection
-│       ├── CodeEditor.tsx           # Monaco editor wrapper
-│       ├── VariablesPanel.tsx       # Live variable visualization
-│       ├── CallStackPanel.tsx       # Call stack display
-│       ├── ConsolePanel.tsx         # Console output panel
-│       └── Controls.tsx             # Playback controls (play/pause/step)
+│   ├── templates/                   # 35+ C++ & JS interactive templates
+│   ├── components/
+│   │   ├── CodeEditor.tsx           # Monaco editor & floating widgets
+│   │   ├── VariablesPanel.tsx       # State matrix / variables GUI
+│   │   ├── TemplatePalette.tsx      # Command-K template search component
+│   │   └── Controls.tsx             # Playback slider mechanics
 │
-└── assets/                          # Screenshots for README
+└── public/
+    └── web-tree-sitter.wasm         # Compiled grammar definitions
 ```
 
 ---

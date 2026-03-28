@@ -18,6 +18,12 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      worker: {
+        format: 'es',
+      },
+      optimizeDeps: {
+        exclude: ['web-tree-sitter'],
       }
     };
 });

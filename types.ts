@@ -18,12 +18,26 @@ export interface ExecutionStep {
 
 export type Timeline = ExecutionStep[];
 
+/** Categorized error types for better UI feedback */
+export type ErrorType = 'transpile' | 'instrument' | 'runtime' | 'timeout' | 'worker';
+
 export interface ExecutionResult {
   timeline: Timeline;
   error?: string;
+  errorType?: ErrorType;
 }
 
 export interface Breakpoint {
   line: number;
   enabled: boolean;
+}
+
+/** Configuration passed to the executor worker */
+export interface ExecutionConfig {
+  /** Maximum execution steps before infinite-loop detection (default: 2000) */
+  maxSteps?: number;
+  /** Maximum execution time in ms before timeout (default: 5000) */
+  timeoutMs?: number;
+  /** Input values for cin simulation */
+  inputValues?: number[];
 }

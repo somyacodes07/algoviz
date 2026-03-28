@@ -23,6 +23,48 @@ interface Patch {
   text: string;
 }
 
+/**
+ * Recursively extract all bound variable names from a binding pattern.
+ * Handles: Identifier, ArrayPattern, ObjectPattern, AssignmentPattern, RestElement.
+ *
+ * Examples:
+ *   const [a, b] = [1, 2]           → collects a, b
+ *   const { x, y: z } = obj         → collects x, z
+ *   const [a, ...rest] = arr        → collects a, rest
+ *   const { x = 10 } = obj          → collects x
+ */
+function collectBindingNames(node: any, target: Set<string>): void {
+  if (!node) return;
+  switch (node.type) {
+    case 'Identifier':
+      target.add(node.name);
+      break;
+    case 'ArrayPattern':
+      node.elements?.forEach((el: any) => {
+        if (el) collectBindingNames(el, target);
+      });
+      break;
+    case 'ObjectPattern':
+      node.properties?.forEach((prop: any) => {
+        // { key: value } — the bound name is in value, not key
+        if (prop.type === 'Property') {
+          collectBindingNames(prop.value, target);
+        } else if (prop.type === 'RestElement') {
+          collectBindingNames(prop.argument, target);
+        }
+      });
+      break;
+    case 'AssignmentPattern':
+      // const { x = 10 } or const [a = 5]
+      collectBindingNames(node.left, target);
+      break;
+    case 'RestElement':
+      // const [...rest]
+      collectBindingNames(node.argument, target);
+      break;
+  }
+}
+
 export function instrumentCode(code: string): string {
   try {
     const comments: any[] = [];
@@ -70,12 +112,10 @@ export function instrumentCode(code: string): string {
         scopeStack.push(new Set());
       }
 
-      // Variable Collection
+      // Variable Collection — supports destructuring (ArrayPattern, ObjectPattern)
       if (node.type === 'VariableDeclaration') {
         node.declarations?.forEach(decl => {
-          if (decl.id?.type === 'Identifier') {
-            scopeStack[scopeStack.length - 1].add(decl.id.name);
-          }
+          collectBindingNames(decl.id, scopeStack[scopeStack.length - 1]);
         });
       }
       if (isFunction && node.id?.type === 'Identifier') {
@@ -83,12 +123,12 @@ export function instrumentCode(code: string): string {
       }
       if (isFunction && node.params) {
         node.params.forEach(param => {
-          if (param.type === 'Identifier') scopeStack[scopeStack.length - 1].add(param.name);
+          collectBindingNames(param, scopeStack[scopeStack.length - 1]);
         });
       }
 
       // Loop Protection
-      if (['ForStatement', 'WhileStatement', 'DoWhileStatement'].includes(node.type)) {
+      if (['ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'].includes(node.type)) {
          const body = node.body as Node;
          if (body.type === 'BlockStatement') {
              addPatch(body.start + 1, ` if (__tracer.checkLoop()) break; `);

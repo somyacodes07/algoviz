@@ -1,0 +1,636 @@
+import { CodeTemplate } from '../codeTemplates';
+
+export const CPP_TEMPLATES: CodeTemplate[] = [
+  // ==============================
+  // ARRAYS & STRINGS
+  // ==============================
+  {
+    name: 'Find Maximum',
+    category: 'Arrays & Strings',
+    description: 'Find the largest element in a vector',
+    language: 'c++',
+    tags: ['array', 'vector', 'max', 'search', 'linear'],
+    code: `// C++ Visualizer (Beta): Find Maximum
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> arr = {12, 45, 7, 23, 56, 89, 34};
+    int maxVal = arr[0];
+    int maxIndex = 0;
+
+    for (int i = 1; i < arr.size(); i++) {
+        if (arr[i] > maxVal) {
+            maxVal = arr[i];
+            maxIndex = i;
+        }
+    }
+
+    cout << "Maximum value is " << maxVal << " at index " << maxIndex << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: 'Reverse Array',
+    category: 'Arrays & Strings',
+    description: 'Reverse an array in-place using two pointers',
+    language: 'c++',
+    tags: ['array', 'vector', 'two-pointers', 'swap', 'in-place', 'reverse'],
+    code: `// C++ Reverse Array In-Place
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> arr = {10, 20, 30, 40, 50, 60, 70};
+    int left = 0;
+    int right = arr.size() - 1;
+
+    while (left < right) {
+        // Swap elements
+        int temp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = temp;
+        
+        // Move pointers
+        left++;
+        right--;
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: 'Two Sum',
+    category: 'Arrays & Strings',
+    description: 'Find pair that sums to target',
+    language: 'c++',
+    tags: ['array', 'vector', 'math', 'two-sum', 'brute-force', 'combinations'],
+    code: `// Two Sum Problem (O(n²) approach for visibility)
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> nums = {2, 7, 11, 15, 3, 6};
+    int target = 9;
+    bool found = false;
+
+    for (int i = 0; i < nums.size(); i++) {
+        for (int j = i + 1; j < nums.size(); j++) {
+            int sum = nums[i] + nums[j];
+            if (sum == target) {
+                found = true;
+            }
+        }
+    }
+    return 0;
+}
+`
+  },
+  {
+    name: 'Max Subarray',
+    category: 'Arrays & Strings',
+    description: 'Find contiguous subarray with largest sum (Kadane’s Algo)',
+    language: 'c++',
+    tags: ['array', 'vector', 'sliding-window', 'kadane', 'dynamic-programming', 'max'],
+    code: `// Kadane's Algorithm for Maximum Subarray
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    vector<int> nums = {-2, 1, -3, 4, -1, 2, 1, -5, 4};
+    int currentMax = nums[0];
+    int globalMax = nums[0];
+
+    for (int i = 1; i < nums.size(); i++) {
+        currentMax = max(nums[i], currentMax + nums[i]);
+        if (currentMax > globalMax) {
+            globalMax = currentMax;
+        }
+    }
+
+    cout << "Maximum Subarray Sum is: " << globalMax << endl;
+    return 0;
+}
+`
+  },
+
+  // ==============================
+  // DATA STRUCTURES
+  // ==============================
+  {
+    name: 'Valid Parentheses',
+    category: 'Data Structures',
+    description: 'Check if string has valid bracket sequences using a stack',
+    language: 'c++',
+    tags: ['stack', 'string', 'validation', 'parentheses', 'LIFO'],
+    code: `// Valid Parentheses using std::stack
+#include <iostream>
+#include <stack>
+#include <string>
+using namespace std;
+
+int main() {
+    string s = "{[()]}";
+    stack<char> st;
+    bool isValid = true;
+
+    for (int i = 0; i < s.length(); i++) {
+        char c = s[i];
+        
+        if (c == '(' || c == '{' || c == '[') {
+            st.push(c);
+        } else {
+            if (st.empty()) {
+                isValid = false;
+                break;
+            }
+            
+            char top = st.top();
+            st.pop();
+            
+            if ((c == ')' && top != '(') ||
+                (c == '}' && top != '{') ||
+                (c == ']' && top != '[')) {
+                isValid = false;
+                break;
+            }
+        }
+    }
+
+    if (!st.empty()) isValid = false;
+    
+    cout << "Is Valid? " << isValid << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: 'Frequency Counter',
+    category: 'Data Structures',
+    description: 'Count occurrences of numbers in an array',
+    language: 'c++',
+    tags: ['map', 'hash', 'frequency', 'counting', 'dictionary'],
+    code: `// Array Frequency Counter using std::map
+#include <iostream>
+#include <vector>
+#include <map>
+using namespace std;
+
+int main() {
+    vector<int> arr = {4, 0, 4, 8, 3, 0, 1, 4, 8};
+    // Count frequencies using an array to guarantee compatibility
+    vector<int> freq(10, 0); // Assuming elements are < 10 for simplicity
+    
+    // Count frequencies
+    for (int num : arr) {
+        freq[num] = freq[num] + 1;
+    }
+    
+    // Loop through keys logically
+    for (int i = 0; i < freq.size(); i++) {
+        if (freq[i] > 0) {
+            int count = freq[i];
+            cout << "Element " << i << " occurs " << count << " times" << endl;
+        }
+    }
+    
+    return 0;
+}
+`
+  },
+
+  // ==============================
+  // SEARCH & SORT
+  // ==============================
+  {
+    name: 'Binary Search',
+    category: 'Search & Sort',
+    description: 'O(log n) search in sorted array/vector',
+    language: 'c++',
+    tags: ['search', 'binary-search', 'array', 'vector', 'logarithmic', 'divide-conquer'],
+    code: `// Binary Search Algorithm
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> arr = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+    int target = 23;
+    
+    int low = 0;
+    int high = arr.size() - 1;
+    int result = -1;
+
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        
+        if (arr[mid] == target) {
+            result = mid;
+            break;
+        }
+        
+        if (arr[mid] < target) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    cout << "Binary Search Result Index: " << result << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: 'Selection Sort',
+    category: 'Search & Sort',
+    description: 'Simple O(n²) sorting algorithm finding min repeatedly',
+    language: 'c++',
+    tags: ['sort', 'selection-sort', 'array', 'vector', 'loops', 'O(n2)'],
+    code: `// Selection Sort in C++
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> arr = {64, 25, 12, 22, 11};
+
+    for (int i = 0; i < arr.size() - 1; i++) {
+        int minIdx = i;
+        for (int j = i + 1; j < arr.size(); j++) {
+            if (arr[j] < arr[minIdx]) {
+                minIdx = j;
+            }
+        }
+        
+        // Swap
+        int temp = arr[minIdx];
+        arr[minIdx] = arr[i];
+        arr[i] = temp;
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: 'Bubble Sort',
+    category: 'Search & Sort',
+    description: 'Repeatedly swap adjacent elements if they are in wrong order',
+    language: 'c++',
+    tags: ['sort', 'bubble-sort', 'array', 'vector', 'swaps', 'O(n2)'],
+    code: `// Bubble Sort
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<int> arr = {5, 1, 4, 2, 8};
+    bool swapped = true;
+    
+    for (int i = 0; i < arr.size() - 1; i++) {
+        swapped = false;
+        for (int j = 0; j < arr.size() - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // Swap
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: 'Merge Sort Array Output',
+    category: 'Search & Sort',
+    description: 'Merge Sort implementation that uses vectors to merge cleanly',
+    language: 'c++',
+    tags: ['sort', 'merge-sort', 'recursion', 'divide-conquer', 'O(nlogn)', 'vector'],
+    code: `// Merge Sort Simulation (returns merged arrays)
+#include <iostream>
+#include <vector>
+using namespace std;
+
+vector<int> merge(vector<int> left, vector<int> right) {
+    vector<int> result;
+    int i = 0, j = 0;
+    
+    while (i < left.size() && j < right.size()) {
+        if (left[i] < right[j]) {
+            result.push_back(left[i]);
+            i++;
+        } else {
+            result.push_back(right[j]);
+            j++;
+        }
+    }
+    
+    while (i < left.size()) {
+        result.push_back(left[i]);
+        i++;
+    }
+    
+    while (j < right.size()) {
+        result.push_back(right[j]);
+        j++;
+    }
+    
+    return result;
+}
+
+vector<int> mergeSort(vector<int> arr) {
+    if (arr.size() <= 1) return arr;
+    
+    int mid = arr.size() / 2;
+    vector<int> left;
+    for (int i = 0; i < mid; i++) left.push_back(arr[i]);
+    
+    vector<int> right;
+    for (int i = mid; i < arr.size(); i++) right.push_back(arr[i]);
+    
+    left = mergeSort(left);
+    right = mergeSort(right);
+    
+    return merge(left, right);
+}
+
+int main() {
+    vector<int> numbers = {38, 27, 43, 3, 9, 82, 10};
+    vector<int> sorted = mergeSort(numbers);
+    
+    return 0;
+}
+`
+  },
+
+  // ==============================
+  // GRAPHS & TREES
+  // ==============================
+  {
+    name: 'Breadth-First Search (BFS)',
+    category: 'Graphs & Trees',
+    description: 'Level-order graph traversal using std::queue',
+    language: 'c++',
+    tags: ['graph', 'bfs', 'breadth-first-search', 'queue', 'traversal', 'matrix'],
+    code: `// Graph BFS using std::queue
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+int main() {
+    // Adjacency Matrix representing a graph
+    // A=0, B=1, C=2, D=3, E=4, F=5
+    vector<vector<int>> graph = {
+        {1, 2},    // A connected to B, C
+        {0, 3, 4}, // B connected to A, D, E
+        {0, 5},    // C connected to A, F
+        {1},       // D connected to B
+        {1, 5},    // E connected to B, F
+        {2, 4}     // F connected to C, E
+    };
+
+    queue<int> q;
+    vector<int> visited(6, 0);
+    vector<int> result;
+
+    q.push(0); // Start at Node A (0)
+    visited[0] = 1;
+
+    while (!q.empty()) {
+        int current = q.front();
+        q.pop();
+        
+        result.push_back(current);
+        
+        for (int neighbor : graph[current]) {
+            if (visited[neighbor] == 0) {
+                visited[neighbor] = 1;
+                q.push(neighbor);
+            }
+        }
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: 'Depth-First Search (DFS)',
+    category: 'Graphs & Trees',
+    description: 'Recursive depth traversal using a graph matrix',
+    language: 'c++',
+    tags: ['graph', 'dfs', 'depth-first-search', 'recursion', 'traversal', 'matrix'],
+    code: `// Graph DFS Traversal (Recursive)
+#include <iostream>
+#include <vector>
+using namespace std;
+
+// Adjacency Matrix
+vector<vector<int>> graph = {
+    {1, 2},    // A=0
+    {0, 3, 4}, // B=1
+    {0, 5},    // C=2
+    {1},       // D=3
+    {1, 5},    // E=4
+    {2, 4}     // F=5
+};
+
+vector<int> visited(6, 0);
+vector<int> result;
+
+void dfs(int node) {
+    if (visited[node] == 1) return;
+    
+    visited[node] = 1;
+    result.push_back(node);
+    
+    for (int neighbor : graph[node]) {
+        dfs(neighbor);
+    }
+}
+
+int main() {
+    dfs(0); // Start at Node A (0)
+    return 0;
+}
+`
+  },
+  {
+    name: 'Dijkstra\'s Shortest Path',
+    category: 'Graphs & Trees',
+    description: 'Find shortest paths using priority queue (Min-Heap)',
+    language: 'c++',
+    tags: ['graph', 'dijkstra', 'shortest-path', 'greedy', 'weighted', 'priority-queue', 'heap'],
+    code: `// Dijkstra's Shortest Path using Priority Queue
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+// Helper to bypass transpilation ambiguity of C++ pairs
+vector<int> p(int a, int b) {
+    vector<int> pair; pair.push_back(a); pair.push_back(b); return pair;
+}
+
+int main() {
+    int V = 6;
+    // Graph: tuple of {neighbor, weight}
+    vector<vector<vector<int>>> adj;
+    for (int i = 0; i < V; i++) {
+        vector<vector<int>> row;
+        adj.push_back(row);
+    }
+    
+    adj[0].push_back(p(1, 4)); // A->B
+    adj[0].push_back(p(2, 2)); // A->C
+    adj[1].push_back(p(2, 5)); // B->C
+    adj[1].push_back(p(3, 10));// B->D
+    adj[2].push_back(p(4, 3)); // C->E
+    adj[3].push_back(p(5, 11));// D->F
+    adj[4].push_back(p(3, 4)); // E->D
+    
+    // priority_queue stores pairs of {distance, node}
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    
+    vector<int> dist(V, 9999);
+    
+    int source = 0;
+    pq.push(p(0, source));
+    dist[source] = 0;
+    
+    while (!pq.empty()) {
+        int d = pq.top()[0];
+        int u = pq.top()[1];
+        pq.pop();
+        
+        if (d > dist[u]) continue;
+        
+        for (auto edge : adj[u]) {
+            int v = edge[0];
+            int weight = edge[1];
+            
+            if (dist[u] + weight < dist[v]) {
+                dist[v] = dist[u] + weight;
+                pq.push(p(dist[v], v));
+            }
+        }
+    }
+    
+    return 0;
+}
+`
+  },
+
+  // ==============================
+  // DYNAMIC PROGRAMMING
+  // ==============================
+  {
+    name: 'Climbing Stairs',
+    category: 'Dynamic Programming',
+    description: 'Fibonacci-style tabulation using a vector',
+    language: 'c++',
+    tags: ['dp', 'dynamic-programming', 'fibonacci', 'tabulation', 'bottom-up'],
+    code: `// Climbing Stairs
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n = 7;
+    vector<int> dp(n + 1, 0);
+
+    dp[1] = 1;
+    dp[2] = 2;
+
+    for (int i = 3; i <= n; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+
+    cout << "Ways to climb " << n << " stairs: " << dp[n] << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: 'Factorial',
+    category: 'Dynamic Programming',
+    description: 'Compute factorial using recursion stack',
+    language: 'c++',
+    tags: ['recursion', 'math', 'factorial', 'call-stack', 'classic'],
+    code: `// Recursive Factorial
+#include <iostream>
+using namespace std;
+
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+int main() {
+    int result = factorial(5);
+    cout << "Factorial of 5 is: " << result << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: '0/1 Knapsack',
+    category: 'Dynamic Programming',
+    description: 'Classic 0/1 Knapsack optimization problem',
+    language: 'c++',
+    tags: ['dp', 'dynamic-programming', 'knapsack', 'tabulation', 'optimization', 'matrix'],
+    code: `// 0/1 Knapsack Problem in C++
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    vector<int> weights = {1, 2, 3};
+    vector<int> values = {6, 10, 12};
+    int W = 5;
+    int n = weights.size();
+    
+    vector<vector<int>> dp;
+    for (int i = 0; i <= n; i++) {
+        vector<int> row(W + 1, 0);
+        dp.push_back(row);
+    }
+    
+    for (int i = 1; i <= n; i++) {
+        for (int w = 1; w <= W; w++) {
+            if (weights[i - 1] <= w) {
+                dp[i][w] = max(
+                    dp[i - 1][w],
+                    dp[i - 1][w - weights[i - 1]] + values[i - 1]
+                );
+            } else {
+                dp[i][w] = dp[i - 1][w];
+            }
+        }
+    }
+    
+    int maxValue = dp[n][W];
+    cout << "Maximum value is " << maxValue << endl;
+    
+    return 0;
+}
+`
+  }
+];

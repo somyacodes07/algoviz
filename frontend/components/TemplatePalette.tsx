@@ -27,8 +27,9 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
   const categories = Array.from(new Set(templates.map(t => t.category)));
 
   const filteredTemplates = templates.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const searchString = [t.name, t.description, t.category, ...(t.tags || [])].join(' ').toLowerCase();
+    const matchesSearch = searchString.includes(q);
     const matchesCat = selectedCategory ? t.category === selectedCategory : true;
     return matchesSearch && matchesCat;
   });

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { executeCode } from '../../backend/sandbox/executor';
+import { executeCode } from '../../backend/sandbox/runtime/executor';
 import { Timeline } from '../../types';
 
 interface ExecutionState {
@@ -44,7 +44,15 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         setExecutionError(null);
         setIsPlaying(false);
         try {
-            const result = await executeCode(code, language);
+            const { timeline: rawTimeline, errorType } = await executeCode(code, language);
+            
+            // Reconstruct full console history from deltas to reduce worker memory bloat
+            let currentLogs: import('../../types').ConsoleLog[] = [];
+            const result = rawTimeline.map(step => {
+                currentLogs = [...currentLogs, ...(step.consoleOutput || [])];
+                return { ...step, consoleOutput: currentLogs };
+            });
+
             setTimeline(result);
             // If error exists in result
             if (result.length > 0 && result[result.length - 1].isError) {
