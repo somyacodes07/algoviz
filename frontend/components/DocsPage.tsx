@@ -10,6 +10,7 @@ import setupMd from "../../docs/setup-guide.md?raw";
 import featuresMd from "../../docs/features-and-ui.md?raw";
 import transpilerMd from "../../docs/cpp-engine.md?raw";
 import sandboxMd from "../../docs/instrumentation-sandbox.md?raw";
+import templateMd from "../../docs/templates-and-palette.md?raw";
 
 interface DocsPageProps {
   onBack: () => void;
@@ -22,6 +23,7 @@ const docsStructure = [
   { id: "features", title: "Features & UI Layouts", icon: <Sparkles size={16} />, content: featuresMd },
   { id: "cpp-engine", title: "C++ Transpiler Engine", icon: <Terminal size={16} />, content: transpilerMd },
   { id: "sandbox", title: "Instrumentation Sandbox", icon: <Binary size={16} />, content: sandboxMd },
+  { id: "template", title: "Template Library & Palette", icon: <Binary size={16} />, content: templateMd },
 ];
 
 const DocsPage: React.FC<DocsPageProps> = ({ onBack, theme }) => {
