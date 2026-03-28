@@ -89,24 +89,39 @@
 
 /* Custom scrollbar adjustments for absolute premium feel */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 12px;
+  height: 12px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #e8decb;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
-  border-radius: 10px;
+  background-color: rgba(100, 116, 139, 0.58);
+  border: 3px solid #e8decb;
+  border-radius: 999px;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background-color: rgba(71, 85, 105, 0.75);
+}
+.dark ::-webkit-scrollbar-track {
+  background: #08121f;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.4);
+  background-color: rgba(100, 116, 139, 0.75);
+  border-color: #08121f;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.6);
+  background-color: rgba(148, 163, 184, 0.9);
+}
+
+html {
+  scrollbar-color: rgba(100, 116, 139, 0.58) #e8decb;
+  scrollbar-width: thin;
+}
+
+.dark {
+  scrollbar-color: rgba(100, 116, 139, 0.75) #08121f;
 }
 
 @layer utilities {

@@ -22,6 +22,17 @@ export default defineConfig(({ mode }) => {
       worker: {
         format: 'es',
       },
+      build: {
+        rollupOptions: {
+          input: {
+            home: path.resolve(__dirname, 'index.html'),
+            docs: path.resolve(__dirname, 'docs/index.html'),
+            visualizer: path.resolve(__dirname, 'visualizer/index.html'),
+            visualizerJavascript: path.resolve(__dirname, 'visualizer/javascript/index.html'),
+            visualizerCpp: path.resolve(__dirname, 'visualizer/cpp/index.html'),
+          },
+        },
+      },
       optimizeDeps: {
         exclude: ['web-tree-sitter'],
       }

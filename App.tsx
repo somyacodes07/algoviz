@@ -9,11 +9,20 @@ import HomePage from "./frontend/components/HomePage";
 import TemplatePalette from "./frontend/components/TemplatePalette";
 import DocsPage from "./frontend/components/DocsPage";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
+import { useSeoMetadata } from "./frontend/hooks/useSeoMetadata";
 import {
   JS_TEMPLATES,
   CPP_TEMPLATES,
   CodeTemplate,
 } from "./frontend/codeTemplates";
+import { getSeoConfig } from "./frontend/seo";
+import {
+  AppLanguage,
+  AppPage,
+  getPathForState,
+  getStateFromPath,
+  ROUTES,
+} from "./frontend/routes";
 import {
   Play,
   RotateCcw,
@@ -125,14 +134,38 @@ function decodeShareLink(): { code: string; lang: string } | null {
   }
 }
 
-const App: React.FC = () => {
-  // Check for shared link on load
-  const shared = decodeShareLink();
+function getDefaultCode(language: AppLanguage): string {
+  return language === "c++" ? CPP_DEFAULT_CODE : JS_DEFAULT_CODE;
+}
 
-  const [page, setPage] = useState<"home" | "editor" | "docs">(
-    shared ? "editor" : "home",
+function normalizeLanguage(lang?: string): AppLanguage {
+  return lang === "c++" || lang === "cpp" ? "c++" : "javascript";
+}
+
+function getInitialAppState(): {
+  page: AppPage;
+  language: AppLanguage;
+  code: string;
+} {
+  const shared = decodeShareLink();
+  const routedState = getStateFromPath(window.location.pathname);
+  const language = shared
+    ? normalizeLanguage(shared.lang)
+    : routedState.language;
+
+  return {
+    page: shared ? "editor" : routedState.page,
+    language,
+    code: shared?.code || getDefaultCode(language),
+  };
+}
+
+const App: React.FC = () => {
+  const [initialAppState] = useState(getInitialAppState);
+  const [page, setPage] = useState<AppPage>(initialAppState.page);
+  const [language, setLanguage] = useState<AppLanguage>(
+    initialAppState.language,
   );
-  const [language, setLanguage] = useState(shared?.lang || "javascript");
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (
       typeof window !== "undefined" &&
@@ -144,7 +177,7 @@ const App: React.FC = () => {
     return "light";
   });
 
-  const [code, setCode] = useState<string>(shared?.code || JS_DEFAULT_CODE);
+  const [code, setCode] = useState<string>(initialAppState.code);
   const [activeTab, setActiveTab] = useState<"variables" | "stack">(
     "variables",
   );
@@ -177,6 +210,35 @@ const App: React.FC = () => {
   const themeColor = language === "c++" ? "blue" : "saffron";
   const isSaffron = themeColor === "saffron";
   const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
+  const seoConfig = getSeoConfig(window.location.origin, page, language);
+
+  useSeoMetadata(seoConfig);
+
+  const syncUrl = useCallback(
+    (
+      nextPage: AppPage,
+      nextLanguage: AppLanguage,
+      options?: { replace?: boolean; preserveShareHash?: boolean },
+    ) => {
+      const path = getPathForState(nextPage, nextLanguage);
+      const hash =
+        options?.preserveShareHash && window.location.hash.startsWith("#share=")
+          ? window.location.hash
+          : "";
+      const nextUrl = `${path}${hash}`;
+      const currentUrl = `${window.location.pathname}${window.location.hash}`;
+
+      if (currentUrl === nextUrl) return;
+
+      if (options?.replace) {
+        window.history.replaceState(null, "", nextUrl);
+        return;
+      }
+
+      window.history.pushState(null, "", nextUrl);
+    },
+    [],
+  );
 
   // Apply Theme class to Body for Tailwind Dark Mode
   useEffect(() => {
@@ -187,6 +249,19 @@ const App: React.FC = () => {
       root.classList.remove("dark");
     }
   }, [theme]);
+
+  useEffect(() => {
+    if (
+      page === "editor" &&
+      window.location.pathname === ROUTES.home &&
+      window.location.hash.startsWith("#share=")
+    ) {
+      syncUrl("editor", language, {
+        replace: true,
+        preserveShareHash: true,
+      });
+    }
+  }, [page, language, syncUrl]);
 
   // Listen to System Theme Changes
   useEffect(() => {
@@ -212,6 +287,34 @@ const App: React.FC = () => {
       handleRun(code, language);
     }
   }, [page, handleRun, code, language, timeline.length]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const shared = decodeShareLink();
+      const routedState = getStateFromPath(window.location.pathname);
+      const nextPage = shared ? "editor" : routedState.page;
+      const nextLanguage = shared
+        ? normalizeLanguage(shared.lang)
+        : routedState.language;
+
+      setPage(nextPage);
+      setIsPlaying(false);
+      setTemplateMenuOpen(false);
+      setLinkCopied(false);
+
+      if (nextPage === "editor") {
+        setLanguage(nextLanguage);
+        if (shared?.code) {
+          setCode(shared.code);
+        } else if (nextLanguage !== language) {
+          setCode(getDefaultCode(nextLanguage));
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [language, setIsPlaying]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -268,14 +371,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleOpenDocs = useCallback(() => {
+    setIsPlaying(false);
+    setPage("docs");
+    syncUrl("docs", language);
+  }, [language, setIsPlaying, syncUrl]);
+
+  const handleGoHome = useCallback(() => {
+    setIsPlaying(false);
+    setPage("home");
+    syncUrl("home", language);
+  }, [language, setIsPlaying, syncUrl]);
+
   const handleLanguageSelect = (lang: string) => {
-    setLanguage(lang);
-    if (lang === "c++") {
-      setCode(CPP_DEFAULT_CODE);
-    } else {
-      setCode(JS_DEFAULT_CODE);
-    }
+    const nextLanguage = normalizeLanguage(lang);
+
+    setIsPlaying(false);
+    setLanguage(nextLanguage);
+    setCode(getDefaultCode(nextLanguage));
     setPage("editor");
+    setTemplateMenuOpen(false);
+    syncUrl("editor", nextLanguage);
   };
 
   const handleTemplateSelect = (template: CodeTemplate) => {
@@ -292,7 +408,8 @@ const App: React.FC = () => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     });
-  }, [code, language]);
+    syncUrl("editor", language, { replace: true, preserveShareHash: true });
+  }, [code, language, syncUrl]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
@@ -330,20 +447,59 @@ const App: React.FC = () => {
     themeColor === "saffron" ? "border-saffron-500" : "border-blue-500";
   const tabActiveBg =
     themeColor === "saffron" ? "bg-saffron-50/50" : "bg-blue-50/50";
+  const routeTransition = {
+    duration: 0.52,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+  const routeVariants = {
+    initial: {
+      opacity: 0,
+      y: 24,
+      scale: 0.985,
+      filter: "blur(10px)",
+    },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      transition: routeTransition,
+    },
+    exit: {
+      opacity: 0,
+      y: -18,
+      scale: 1.01,
+      filter: "blur(8px)",
+      transition: {
+        duration: 0.28,
+        ease: [0.4, 0, 1, 1] as const,
+      },
+    },
+  };
 
   return (
     <div
-      className={`flex flex-col h-screen w-screen text-slate-800 dark:text-slate-200 overflow-hidden transition-colors duration-500 ${theme === "dark" ? "bg-mesh-dark" : "bg-mesh-light"}`}
+      className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
+        page === "home"
+          ? "min-h-screen overflow-x-hidden overflow-y-auto"
+          : "h-screen overflow-hidden"
+      } ${
+        page === "home"
+          ? "bg-[#f7f0e3] dark:bg-[#08121f]"
+          : theme === "dark"
+            ? "bg-mesh-dark"
+            : "bg-mesh-light"
+      }`}
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
           <motion.div
             key="home"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, filter: "blur(5px)" }}
-            transition={{ duration: 0.4 }}
-            className="relative h-full w-full"
+            variants={routeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="relative h-full w-full will-change-transform"
           >
             {/* We moved the theme toggle INTO the HomePage header or we can just adjust its absolute position here to not overlap */}
             <div className="absolute top-6 right-6 z-50">
@@ -354,42 +510,55 @@ const App: React.FC = () => {
                 {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
               </button>
             </div>
-            <HomePage onSelectLanguage={handleLanguageSelect} onOpenDocs={() => setPage("docs")} />
+            <HomePage
+              onSelectLanguage={handleLanguageSelect}
+              onOpenDocs={handleOpenDocs}
+              docsHref={ROUTES.docs}
+              javascriptHref={ROUTES.visualizerJavascript}
+              cppHref={ROUTES.visualizerCpp}
+            />
           </motion.div>
         ) : page === "docs" ? (
           <motion.div
             key="docs"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="h-full w-full"
+            variants={routeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="h-full w-full will-change-transform"
           >
-            <DocsPage onBack={() => setPage("home")} theme={theme} />
+            <DocsPage
+              onBack={handleGoHome}
+              theme={theme}
+              homeHref={ROUTES.home}
+              javascriptHref={ROUTES.visualizerJavascript}
+              cppHref={ROUTES.visualizerCpp}
+            />
           </motion.div>
         ) : (
           <motion.div
             key="editor"
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col h-full w-full"
+            variants={routeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="flex h-full w-full flex-col will-change-transform"
           >
             {/* Header */}
             <header
               className={`h-14 flex items-center px-6 justify-between bg-white dark:bg-[#0A0A0B] border-b border-slate-900 dark:border-[#222] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0`}
             >
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    setPage("home");
-                    window.location.hash = "";
+                <a
+                  href={ROUTES.home}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleGoHome();
                   }}
                   className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-500 dark:text-slate-400 transition-colors active:translate-y-[1px]"
                 >
                   <ArrowLeft size={18} />
-                </button>
+                </a>
                 <div className="flex items-center justify-center w-7 h-7 bg-white dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#444] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] rounded-sm transform -rotate-3 transition-transform hover:rotate-0">
                   <span className="text-slate-900 dark:text-slate-100 font-black text-[11px] tracking-tighter">
                     AV<span className="text-blue-600 dark:text-saffron-500">.</span>
@@ -410,6 +579,17 @@ const App: React.FC = () => {
                 >
                   <span>{langLabel}</span>
                 </div>
+                <a
+                  href={ROUTES.docs}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenDocs();
+                  }}
+                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded border border-slate-200 dark:border-[#222] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                >
+                  <BookOpen size={12} />
+                  Docs
+                </a>
                 <button
                   onClick={toggleTheme}
                   className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-600 dark:text-slate-400 transition-colors active:translate-y-[1px]"
