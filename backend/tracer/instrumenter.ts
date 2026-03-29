@@ -108,12 +108,12 @@ export function instrumentCode(code: string): string {
     function walk(node: Node, parent?: Node) {
       if (!node) return;
 
-      // Skip instrumentation of loop initializers
-      if (parent) {
-          if (parent.type === 'ForStatement' && parent.init === node) return;
-          if (parent.type === 'ForInStatement' && parent.left === node) return;
-          if (parent.type === 'ForOfStatement' && parent.left === node) return;
-      }
+      const isLoopInitializer =
+        !!parent && (
+          (parent.type === 'ForStatement' && parent.init === node) ||
+          (parent.type === 'ForInStatement' && parent.left === node) ||
+          (parent.type === 'ForOfStatement' && parent.left === node)
+        );
 
       // Scope Management
       const isBlock = node.type === 'BlockStatement' || node.type === 'Program';
@@ -167,7 +167,7 @@ export function instrumentCode(code: string): string {
       }
 
       // Statement Instrumentation
-      if (node.type === 'VariableDeclaration' || node.type === 'ExpressionStatement') {
+      if (!isLoopInitializer && (node.type === 'VariableDeclaration' || node.type === 'ExpressionStatement')) {
          const needsBlock = shouldWrapInSyntheticBlock(node, parent);
          const trace = generateTraceCall(line);
 
@@ -181,7 +181,7 @@ export function instrumentCode(code: string): string {
       }
 
       // Return Trace
-      if (node.type === 'ReturnStatement') {
+      if (!isLoopInitializer && node.type === 'ReturnStatement') {
          const needsBlock = shouldWrapInSyntheticBlock(node, parent);
          const trace = generateTraceCall(line);
          const traceExpr = trace.replace(/;$/, '');

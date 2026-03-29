@@ -111,6 +111,8 @@ function parseCoutArgs(argsStr: string): string {
 
 export function transpileCppToJs(cppCode: string): string {
     let js = cppCode;
+    const queueVars = new Set<string>();
+    const priorityQueueVars = new Map<string, boolean>();
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 1: Preprocessor & Boilerplate Removal
@@ -291,10 +293,17 @@ export function transpileCppToJs(cppCode: string): string {
 
     // --- Queue ---
     // queue<int> q; → let q = []; (with .push/.pop/.front → .push/.shift/[0])
-    js = js.replace(/(?:std::)?queue\s*<[^>]+>\s+(\w+)\s*;/g, 'let $1 = [];');
+    js = js.replace(/(?:std::)?queue\s*<[^>]+>\s+(\w+)\s*;/g, (_, name) => {
+        queueVars.add(name);
+        return `let ${name} = [];`;
+    });
 
     // --- Priority Queue ---
-    js = js.replace(/(?:std::)?priority_queue\s*<[^>]*>\s+(\w+)\s*;/g, 'let $1 = [];');
+    js = js.replace(/(?:std::)?priority_queue\s*<([^;]+)>\s+(\w+)\s*;/g, (_, typeSpec, name) => {
+        const normalizedType = String(typeSpec).replace(/std::/g, '');
+        priorityQueueVars.set(name, /(?:^|[<,\s])greater(?:\s*<|$)/.test(normalizedType));
+        return `let ${name} = [];`;
+    });
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 4: Type Replacement
@@ -440,6 +449,18 @@ export function transpileCppToJs(cppCode: string): string {
     // q.front() → q[0] (already handled by .front() above)
     // q.pop() for queue means shift, but for stack means pop
     // This is ambiguous — we'll leave .pop() as-is since it works for stack
+    queueVars.forEach((name) => {
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        js = js.replace(new RegExp(`\\b${escaped}\\.pop\\s*\\(\\s*\\)`, 'g'), `${name}.shift()`);
+    });
+
+    // --- Priority Queue methods ---
+    priorityQueueVars.forEach((isMinQueue, name) => {
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        js = js.replace(new RegExp(`\\b${escaped}\\.push\\s*\\(([^()]*(?:\\([^)]*\\)[^()]*)*)\\)`, 'g'), `__cppPriorityQueuePush(${name}, $1, ${isMinQueue})`);
+        js = js.replace(new RegExp(`\\b${escaped}\\.top\\s*\\(\\s*\\)`, 'g'), `__cppPriorityQueueTop(${name}, ${isMinQueue})`);
+        js = js.replace(new RegExp(`\\b${escaped}\\.pop\\s*\\(\\s*\\)`, 'g'), `__cppPriorityQueuePop(${name}, ${isMinQueue})`);
+    });
 
     // --- Pair methods ---
     // p.first → p[0], p.second → p[1]
@@ -560,6 +581,48 @@ export function transpileCppToJs(cppCode: string): string {
 
     // Trim leading/trailing whitespace
     js = js.trim();
+
+    if (priorityQueueVars.size > 0) {
+        js = `
+function __cppComparePriorityQueueValues(left, right) {
+    if (Array.isArray(left) && Array.isArray(right)) {
+        const length = Math.max(left.length, right.length);
+        for (let index = 0; index < length; index++) {
+            const leftValue = left[index];
+            const rightValue = right[index];
+            if (leftValue === rightValue) continue;
+            if (leftValue === undefined) return -1;
+            if (rightValue === undefined) return 1;
+            return leftValue < rightValue ? -1 : 1;
+        }
+        return 0;
+    }
+
+    if (left === right) return 0;
+    return left < right ? -1 : 1;
+}
+
+function __cppPriorityQueuePush(queue, value, isMinQueue) {
+    queue.push(value);
+    queue.sort((left, right) => {
+        const comparison = __cppComparePriorityQueueValues(left, right);
+        return isMinQueue ? comparison : -comparison;
+    });
+    return queue.length;
+}
+
+function __cppPriorityQueueTop(queue, isMinQueue) {
+    if (queue.length === 0) return undefined;
+    return isMinQueue ? queue[0] : queue[queue.length - 1];
+}
+
+function __cppPriorityQueuePop(queue, isMinQueue) {
+    if (queue.length === 0) return undefined;
+    return isMinQueue ? queue.shift() : queue.pop();
+}
+
+${js}`.trim();
+    }
 
     return js;
 }

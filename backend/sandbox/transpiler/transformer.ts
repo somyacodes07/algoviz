@@ -55,6 +55,7 @@ export class CppToJsTransformer {
   private symbols: SymbolTable;
   private warnings: WarningCollector;
   private helperFunctions: string[] = [];
+  private injectedHelpers = new Set<string>();
   private mainBody: string = '';
   private insideMain: boolean = false;
 
@@ -69,6 +70,7 @@ export class CppToJsTransformer {
    */
   transform(tree: Tree): { code: string; warnings: string[] } {
     this.helperFunctions = [];
+    this.injectedHelpers.clear();
     this.mainBody = '';
     this.insideMain = false;
 
@@ -90,6 +92,63 @@ export class CppToJsTransformer {
 
     const code = parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
     return { code, warnings: this.warnings.getWarningStrings() };
+  }
+
+  private ensureHelper(name: string, code: string): void {
+    if (this.injectedHelpers.has(name)) return;
+    this.injectedHelpers.add(name);
+    this.helperFunctions.push(code);
+  }
+
+  private ensurePriorityQueueHelpers(): void {
+    this.ensureHelper(
+      '__cppComparePriorityQueueValues',
+      `function __cppComparePriorityQueueValues(left, right) {
+  if (Array.isArray(left) && Array.isArray(right)) {
+    const length = Math.max(left.length, right.length);
+    for (let index = 0; index < length; index++) {
+      const leftValue = left[index];
+      const rightValue = right[index];
+      if (leftValue === rightValue) continue;
+      if (leftValue === undefined) return -1;
+      if (rightValue === undefined) return 1;
+      return leftValue < rightValue ? -1 : 1;
+    }
+    return 0;
+  }
+
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
+}`,
+    );
+
+    this.ensureHelper(
+      '__cppPriorityQueuePush',
+      `function __cppPriorityQueuePush(queue, value, isMinQueue) {
+  queue.push(value);
+  queue.sort((left, right) => {
+    const comparison = __cppComparePriorityQueueValues(left, right);
+    return isMinQueue ? comparison : -comparison;
+  });
+  return queue.length;
+}`,
+    );
+
+    this.ensureHelper(
+      '__cppPriorityQueueTop',
+      `function __cppPriorityQueueTop(queue, isMinQueue) {
+  if (queue.length === 0) return undefined;
+  return isMinQueue ? queue[0] : queue[queue.length - 1];
+}`,
+    );
+
+    this.ensureHelper(
+      '__cppPriorityQueuePop',
+      `function __cppPriorityQueuePop(queue, isMinQueue) {
+  if (queue.length === 0) return undefined;
+  return isMinQueue ? queue.shift() : queue.pop();
+}`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1090,15 +1149,36 @@ export class CppToJsTransformer {
         const obj = this.visitExpression(objNode);
         const method = methodNode.text;
         const args = argsNode ? this.visitArgumentList(argsNode) : [];
+        const containerKind = this.getContainerKindForExpression(objNode);
+        const isMinPriorityQueue = this.isMinPriorityQueueExpression(objNode);
 
         // Methods that become properties (no parens)
         if (method === 'size' || method === 'length') return `${obj}.length`;
         if (method === 'empty') return `(${obj}.length === 0)`;
         if (method === 'front') return `${obj}[0]`;
         if (method === 'back') return `${obj}[${obj}.length - 1]`;
-        if (method === 'top') return `${obj}[${obj}.length - 1]`;
+        if (method === 'top') {
+          if (containerKind === 'priority_queue') {
+            this.ensurePriorityQueueHelpers();
+            return `__cppPriorityQueueTop(${obj}, ${isMinPriorityQueue})`;
+          }
+          return `${obj}[${obj}.length - 1]`;
+        }
 
         // Methods with renamed equivalents
+        if (method === 'push' && containerKind === 'priority_queue') {
+          this.ensurePriorityQueueHelpers();
+          return `__cppPriorityQueuePush(${obj}, ${args[0]}, ${isMinPriorityQueue})`;
+        }
+        if (method === 'pop') {
+          if (containerKind === 'priority_queue') {
+            this.ensurePriorityQueueHelpers();
+            return `__cppPriorityQueuePop(${obj}, ${isMinPriorityQueue})`;
+          }
+          if (containerKind === 'queue') {
+            return `${obj}.shift()`;
+          }
+        }
         if (method === 'push_back' || method === 'emplace_back') return `${obj}.push(${args.join(', ')})`;
         if (method === 'pop_back') return `${obj}.pop()`;
         if (method === 'clear') return `${obj}.length = 0`;
@@ -1273,6 +1353,18 @@ export class CppToJsTransformer {
     return args;
   }
 
+  private getContainerKindForExpression(node: SyntaxNode | null): string | null {
+    if (!node || node.type !== 'identifier') return null;
+    return this.symbols.lookup(node.text)?.containerKind ?? null;
+  }
+
+  private isMinPriorityQueueExpression(node: SyntaxNode | null): boolean {
+    if (!node || node.type !== 'identifier') return false;
+    const symbol = this.symbols.lookup(node.text);
+    if (!symbol || symbol.containerKind !== 'priority_queue') return false;
+    return /(?:^|[<,\s])greater(?:\s*<|$)/.test(symbol.cppType.replace(/std::/g, ''));
+  }
+
   /** Try to match pattern: v.begin(), v.end() → returns "v" */
   private matchBeginEnd(argsNode: SyntaxNode): string | null {
     if (argsNode.namedChildCount < 2) return null;
@@ -1302,6 +1394,8 @@ export class CppToJsTransformer {
 
     const obj = this.visitExpression(argument);
     const member = field.text;
+    const containerKind = this.getContainerKindForExpression(argument);
+    const isMinPriorityQueue = this.isMinPriorityQueueExpression(argument);
 
     // STL method translations
     if (member in STL_METHOD_MAP) {
@@ -1328,8 +1422,12 @@ export class CppToJsTransformer {
       return `${obj}[${obj}.length - 1]`;
     }
 
-    // .top() → obj[obj.length - 1]  (for stack)
+    // .top() → stack/priority_queue peek
     if (member === 'top') {
+      if (containerKind === 'priority_queue') {
+        this.ensurePriorityQueueHelpers();
+        return `__cppPriorityQueueTop(${obj}, ${isMinPriorityQueue})`;
+      }
       return `${obj}[${obj}.length - 1]`;
     }
 
