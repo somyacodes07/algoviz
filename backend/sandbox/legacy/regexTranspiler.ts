@@ -113,6 +113,7 @@ export function transpileCppToJs(cppCode: string): string {
     let js = cppCode;
     const queueVars = new Set<string>();
     const priorityQueueVars = new Map<string, boolean>();
+    let usesMergeHelper = false;
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 1: Preprocessor & Boilerplate Removal
@@ -509,6 +510,15 @@ export function transpileCppToJs(cppCode: string): string {
     js = js.replace(/(?:std::)?reverse\s*\(\s*(\w+)\.begin\s*\(\s*\)\s*,\s*\1\.end\s*\(\s*\)\s*\)/g,
         '$1.reverse()');
 
+    // merge(a.begin(), a.end(), b.begin(), b.end(), out.begin()) → write merged result into out
+    js = js.replace(
+        /(?:std::)?merge\s*\(\s*(\w+)\.begin\s*\(\s*\)\s*,\s*\1\.end\s*\(\s*\)\s*,\s*(\w+)\.begin\s*\(\s*\)\s*,\s*\2\.end\s*\(\s*\)\s*,\s*(\w+)\.begin\s*\(\s*\)\s*\)/g,
+        (_, left, right, out) => {
+            usesMergeHelper = true;
+            return `${out}.splice(0, ${out}.length, ...__cppMergeSortedArrays(${left}, ${right}))`;
+        }
+    );
+
     // swap(a, b) → [a, b] = [b, a] (statement-level swap)
     js = js.replace(/(?:std::)?swap\s*\(\s*(\w+(?:\[[^\]]*\])?)\s*,\s*(\w+(?:\[[^\]]*\])?)\s*\)\s*;/g,
         '[$1, $2] = [$2, $1];');
@@ -582,8 +592,33 @@ export function transpileCppToJs(cppCode: string): string {
     // Trim leading/trailing whitespace
     js = js.trim();
 
+    const helperBlocks: string[] = [];
+
+    if (usesMergeHelper) {
+        helperBlocks.push(`
+function __cppMergeSortedArrays(left, right, comparator) {
+    const merged = [];
+    let leftIndex = 0;
+    let rightIndex = 0;
+    const compare = comparator || ((a, b) => a <= b);
+
+    while (leftIndex < left.length && rightIndex < right.length) {
+        if (compare(left[leftIndex], right[rightIndex])) {
+            merged.push(left[leftIndex++]);
+        } else {
+            merged.push(right[rightIndex++]);
+        }
+    }
+
+    while (leftIndex < left.length) merged.push(left[leftIndex++]);
+    while (rightIndex < right.length) merged.push(right[rightIndex++]);
+
+    return merged;
+}`.trim());
+    }
+
     if (priorityQueueVars.size > 0) {
-        js = `
+        helperBlocks.push(`
 function __cppComparePriorityQueueValues(left, right) {
     if (Array.isArray(left) && Array.isArray(right)) {
         const length = Math.max(left.length, right.length);
@@ -619,9 +654,11 @@ function __cppPriorityQueueTop(queue, isMinQueue) {
 function __cppPriorityQueuePop(queue, isMinQueue) {
     if (queue.length === 0) return undefined;
     return isMinQueue ? queue.shift() : queue.pop();
-}
+}`.trim());
+    }
 
-${js}`.trim();
+    if (helperBlocks.length > 0) {
+        js = `${helperBlocks.join('\n\n')}\n\n${js}`.trim();
     }
 
     return js;

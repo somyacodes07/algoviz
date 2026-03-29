@@ -36,9 +36,12 @@ const SUPPORTED_NODE_TYPES = new Set([
   'number_literal', 'string_literal', 'char_literal', 'concatenated_string',
   'true', 'false', 'null', 'identifier', 'comment',
   'template_type', 'primitive_type', 'sized_type_specifier',
+  'placeholder_type_specifier',
   'type_qualifier', 'storage_class_specifier',
   'preproc_include', 'preproc_def', 'preproc_call',
   'using_declaration', 'type_definition', 'alias_declaration',
+  'struct_specifier', 'field_declaration_list', 'field_declaration',
+  'field_initializer_list', 'field_initializer',
   'parameter_list', 'parameter_declaration', 'argument_list',
   'init_declarator', 'initializer_list',
   'array_declarator', 'pointer_declarator', 'reference_declarator',
@@ -49,6 +52,28 @@ const SUPPORTED_NODE_TYPES = new Set([
   'labeled_statement',
 ]);
 
+interface ContainerInfo {
+  kind: 'vector' | 'map' | 'set' | 'pair' | 'stack' | 'queue' | 'priority_queue';
+}
+
+interface StructFieldInfo {
+  name: string;
+  cppType: string;
+  isPointer: boolean;
+  defaultValue: string;
+}
+
+interface StructConstructorInfo {
+  params: { name: string; type: string }[];
+  assignments: string[];
+}
+
+interface StructDefinition {
+  name: string;
+  fields: StructFieldInfo[];
+  constructors: StructConstructorInfo[];
+}
+
 // ─── Transformer Class ───────────────────────────────────────────────────────
 
 export class CppToJsTransformer {
@@ -56,6 +81,9 @@ export class CppToJsTransformer {
   private warnings: WarningCollector;
   private helperFunctions: string[] = [];
   private injectedHelpers = new Set<string>();
+  private queueVariables = new Set<string>();
+  private priorityQueueModes = new Map<string, boolean>();
+  private structDefinitions = new Map<string, StructDefinition>();
   private mainBody: string = '';
   private insideMain: boolean = false;
 
@@ -71,6 +99,9 @@ export class CppToJsTransformer {
   transform(tree: Tree): { code: string; warnings: string[] } {
     this.helperFunctions = [];
     this.injectedHelpers.clear();
+    this.queueVariables.clear();
+    this.priorityQueueModes.clear();
+    this.structDefinitions.clear();
     this.mainBody = '';
     this.insideMain = false;
 
@@ -90,7 +121,9 @@ export class CppToJsTransformer {
       parts.push(this.mainBody);
     }
 
-    const code = parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+    const code = this.postProcessContainerSemantics(
+      parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim(),
+    );
     return { code, warnings: this.warnings.getWarningStrings() };
   }
 
@@ -151,6 +184,292 @@ export class CppToJsTransformer {
     );
   }
 
+  private ensureMergeHelper(): void {
+    this.ensureHelper(
+      '__cppMergeSortedArrays',
+      `function __cppMergeSortedArrays(left, right, comparator) {
+  const merged = [];
+  let leftIndex = 0;
+  let rightIndex = 0;
+  const compare = comparator || ((a, b) => a <= b);
+
+  while (leftIndex < left.length && rightIndex < right.length) {
+    if (compare(left[leftIndex], right[rightIndex])) {
+      merged.push(left[leftIndex++]);
+    } else {
+      merged.push(right[rightIndex++]);
+    }
+  }
+
+  while (leftIndex < left.length) merged.push(left[leftIndex++]);
+  while (rightIndex < right.length) merged.push(right[rightIndex++]);
+
+  return merged;
+}`,
+    );
+  }
+
+  private trackContainerVariable(
+    varName: string,
+    cppType: string,
+    containerInfo: ContainerInfo | null,
+  ): void {
+    if (!containerInfo) return;
+
+    if (containerInfo.kind === 'queue') {
+      this.queueVariables.add(varName);
+    }
+
+    if (containerInfo.kind === 'priority_queue') {
+      const normalizedType = cppType.replace(/std::/g, '');
+      const isMinQueue = /(?:^|[<,\s])greater(?:\s*<|$)/.test(normalizedType);
+      this.priorityQueueModes.set(varName, isMinQueue);
+      this.ensurePriorityQueueHelpers();
+    }
+  }
+
+  private postProcessContainerSemantics(code: string): string {
+    let result = code;
+
+    this.queueVariables.forEach((name) => {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      result = result.replace(
+        new RegExp(`\\b${escaped}\\.pop\\s*\\(\\s*\\)`, 'g'),
+        `${name}.shift()`,
+      );
+    });
+
+    this.priorityQueueModes.forEach((isMinQueue, name) => {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      result = result.replace(
+        new RegExp(`\\b${escaped}\\.top\\s*\\(\\s*\\)`, 'g'),
+        `__cppPriorityQueueTop(${name}, ${isMinQueue})`,
+      );
+      result = result.replace(
+        new RegExp(`\\b${escaped}\\.pop\\s*\\(\\s*\\)`, 'g'),
+        `__cppPriorityQueuePop(${name}, ${isMinQueue})`,
+      );
+    });
+
+    return result;
+  }
+
+  private isStructType(typeName: string): boolean {
+    return this.structDefinitions.has(typeName.replace(/std::/g, '').trim());
+  }
+
+  private handleStructSpecifier(node: SyntaxNode): void {
+    const nameNode = node.namedChild(0);
+    const bodyNode = node.namedChild(1);
+    const structName = nameNode?.text?.trim();
+
+    if (!structName || !bodyNode || bodyNode.type !== 'field_declaration_list') {
+      this.warnUnsupported(node);
+      return;
+    }
+
+    const fields = this.extractStructFields(structName, bodyNode);
+    const constructors = this.extractStructConstructors(structName, bodyNode, fields);
+
+    this.structDefinitions.set(structName, { name: structName, fields, constructors });
+    this.ensureHelper(`struct:${structName}`, this.buildStructFactory(structName, fields, constructors));
+  }
+
+  private extractStructFields(structName: string, bodyNode: SyntaxNode): StructFieldInfo[] {
+    const fields: StructFieldInfo[] = [];
+
+    for (let i = 0; i < bodyNode.namedChildCount; i++) {
+      const child = bodyNode.namedChild(i)!;
+      if (child.type !== 'field_declaration') continue;
+
+      const typeNode = child.childForFieldName('type') ?? child.namedChild(0);
+      const rawType = typeNode?.text?.replace(/std::/g, '').trim() ?? 'auto';
+
+      for (let childIndex = 1; childIndex < child.namedChildCount; childIndex++) {
+        const declarator = child.namedChild(childIndex)!;
+
+        const name = this.extractDeclaratorName(declarator);
+        if (!name || name === '_unnamed') continue;
+
+        fields.push({
+          name,
+          cppType: rawType,
+          isPointer: declarator.type === 'pointer_declarator' || declarator.type === 'reference_declarator',
+          defaultValue: this.getStructFieldDefaultValue(structName, rawType, declarator),
+        });
+      }
+    }
+
+    return fields;
+  }
+
+  private getStructFieldDefaultValue(
+    structName: string,
+    cppType: string,
+    declarator: SyntaxNode,
+  ): string {
+    if (declarator.type === 'pointer_declarator' || declarator.type === 'reference_declarator') {
+      return 'null';
+    }
+
+    const normalizedType = cppType.replace(/std::/g, '').trim();
+    if (normalizedType === structName) {
+      return 'null';
+    }
+
+    if (this.isStructType(normalizedType)) {
+      return `${normalizedType}()`;
+    }
+
+    return this.getDefaultValue(normalizedType, null);
+  }
+
+  private extractStructConstructors(
+    structName: string,
+    bodyNode: SyntaxNode,
+    fields: StructFieldInfo[],
+  ): StructConstructorInfo[] {
+    const constructors: StructConstructorInfo[] = [];
+    const fieldNames = new Set(fields.map((field) => field.name));
+
+    for (let i = 0; i < bodyNode.namedChildCount; i++) {
+      const child = bodyNode.namedChild(i)!;
+      if (child.type !== 'function_definition') continue;
+
+      const declarator = child.childForFieldName('declarator');
+      if (this.extractFunctionName(declarator) !== structName) continue;
+
+      const params = this.extractFunctionParams(declarator);
+      const assignments: string[] = [];
+      const initializerList = child.namedChildCount > 1 && child.namedChild(1)?.type === 'field_initializer_list'
+        ? child.namedChild(1)
+        : child.childForFieldName('declarator')?.nextNamedSibling?.type === 'field_initializer_list'
+          ? child.childForFieldName('declarator')?.nextNamedSibling
+          : null;
+      const body = child.childForFieldName('body');
+
+      if (initializerList) {
+        assignments.push(...this.extractStructInitializerAssignments(initializerList, fieldNames));
+      }
+
+      if (body) {
+        assignments.push(...this.extractStructBodyAssignments(body, fieldNames));
+      }
+
+      constructors.push({ params, assignments });
+    }
+
+    return constructors;
+  }
+
+  private extractStructInitializerAssignments(
+    initializerList: SyntaxNode,
+    fieldNames: Set<string>,
+  ): string[] {
+    const assignments: string[] = [];
+
+    for (let i = 0; i < initializerList.namedChildCount; i++) {
+      const initializer = initializerList.namedChild(i)!;
+      if (initializer.type !== 'field_initializer') continue;
+
+      const fieldNode = initializer.namedChild(0);
+      const argListNode = initializer.namedChild(1);
+      const fieldName = fieldNode?.text?.trim();
+      if (!fieldName || !fieldNames.has(fieldName) || !argListNode) continue;
+
+      const args = this.visitArgumentList(argListNode);
+      const expr = args[0] ?? 'undefined';
+      assignments.push(`instance.${fieldName} = ${expr};`);
+    }
+
+    return assignments;
+  }
+
+  private extractStructBodyAssignments(body: SyntaxNode, fieldNames: Set<string>): string[] {
+    const assignments: string[] = [];
+
+    for (let i = 0; i < body.namedChildCount; i++) {
+      const child = body.namedChild(i)!;
+      if (child.type !== 'expression_statement') continue;
+
+      const expr = child.namedChild(0);
+      if (!expr || expr.type !== 'assignment_expression') continue;
+
+      const left = expr.childForFieldName('left');
+      const right = expr.childForFieldName('right');
+      if (!left || !right) continue;
+
+      const fieldName = this.extractStructFieldTarget(left, fieldNames);
+      if (!fieldName) continue;
+
+      assignments.push(`instance.${fieldName} = ${this.visitExpression(right)};`);
+    }
+
+    return assignments;
+  }
+
+  private extractStructFieldTarget(node: SyntaxNode, fieldNames: Set<string>): string | null {
+    if (node.type === 'identifier' && fieldNames.has(node.text)) {
+      return node.text;
+    }
+
+    if (node.type === 'field_expression') {
+      const field = node.childForFieldName('field');
+      if (field?.text && fieldNames.has(field.text)) {
+        return field.text;
+      }
+    }
+
+    return null;
+  }
+
+  private buildStructFactory(
+    structName: string,
+    fields: StructFieldInfo[],
+    constructors: StructConstructorInfo[],
+  ): string {
+    const defaultAssignments = fields
+      .map((field) => `  instance.${field.name} = ${field.defaultValue};`)
+      .join('\n');
+
+    const constructorCases = constructors.map((ctor) => {
+      const lines = [`    case ${ctor.params.length}: {`];
+      ctor.params.forEach((param, index) => {
+        lines.push(`      const ${param.name} = args[${index}];`);
+      });
+      if (ctor.assignments.length > 0) {
+        ctor.assignments.forEach((assignment) => lines.push(`      ${assignment}`));
+      } else {
+        fields.forEach((field, index) => {
+          if (index < ctor.params.length) {
+            lines.push(`      instance.${field.name} = args[${index}];`);
+          }
+        });
+      }
+      lines.push('      return instance;');
+      lines.push('    }');
+      return lines.join('\n');
+    });
+
+    const positionalFallback = fields
+      .map((field, index) => `  if (args.length > ${index}) instance.${field.name} = args[${index}];`)
+      .join('\n');
+
+    const overloadBlock = constructorCases.length > 0
+      ? `  switch (args.length) {\n${constructorCases.join('\n')}\n  }\n`
+      : '';
+
+    const fallbackBlock = positionalFallback
+      ? `\n${positionalFallback}\n`
+      : '\n';
+
+    return `function ${structName}(...args) {
+  const instance = {};
+${defaultAssignments}
+${overloadBlock}${fallbackBlock}  return instance;
+}`;
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // TOP LEVEL
   // ═══════════════════════════════════════════════════════════════════════════
@@ -167,6 +486,9 @@ export class CppToJsTransformer {
           break;
         case 'using_declaration':
           // Skip "using namespace std;" etc
+          break;
+        case 'struct_specifier':
+          this.handleStructSpecifier(child);
           break;
         case 'function_definition':
           this.handleFunctionDefinition(child);
@@ -303,7 +625,7 @@ export class CppToJsTransformer {
         const paramDeclarator = param.childForFieldName('declarator');
         let paramName = paramDeclarator?.text ?? `_p${i}`;
         // Strip reference/pointer from name
-        paramName = paramName.replace(/^[&*]+/, '');
+        paramName = paramName.replace(/^[&*\s]+/, '').trim();
         params.push({ name: paramName, type: paramType });
       }
     }
@@ -340,6 +662,9 @@ export class CppToJsTransformer {
         return this.visitForStatement(node);
       case 'for_range_loop':
         return this.visitForRangeLoop(node);
+      case 'struct_specifier':
+        this.handleStructSpecifier(node);
+        return '';
       case 'while_statement':
         return this.visitWhileStatement(node);
       case 'do_statement':
@@ -434,6 +759,7 @@ export class CppToJsTransformer {
 
       // Register in symbol table
       this.symbols.declare(varName, cppType, isConst);
+      this.trackContainerVariable(varName, cppType, containerInfo);
 
       // Handle array declarator: int arr[5] = {1,2,3}
       if (declarator?.type === 'array_declarator') {
@@ -449,7 +775,10 @@ export class CppToJsTransformer {
         return `${keyword} ${varName} = ${jsValue};`;
       } else {
         // No initializer
-        const defaultVal = this.getDefaultValue(cppType, containerInfo);
+        const defaultVal =
+          this.isStructType(cppType) && this.isPointerLikeDeclarator(declarator)
+            ? 'null'
+            : this.getDefaultValue(cppType, containerInfo);
         return `${keyword} ${varName} = ${defaultVal};`;
       }
     }
@@ -457,12 +786,16 @@ export class CppToJsTransformer {
     // Plain declarator without initializer (e.g., "int x;")
     const varName = this.extractDeclaratorName(node);
     this.symbols.declare(varName, cppType, isConst);
+    this.trackContainerVariable(varName, cppType, containerInfo);
 
     if (node.type === 'array_declarator') {
       return this.handleArrayDeclarator(node, null, keyword, varName);
     }
 
-    const defaultVal = this.getDefaultValue(cppType, containerInfo);
+    const defaultVal =
+      this.isStructType(cppType) && this.isPointerLikeDeclarator(node)
+        ? 'null'
+        : this.getDefaultValue(cppType, containerInfo);
     return `${keyword} ${varName} = ${defaultVal};`;
   }
 
@@ -493,6 +826,11 @@ export class CppToJsTransformer {
       default:
         return node.text.replace(/[&*]/g, '').trim();
     }
+  }
+
+  private isPointerLikeDeclarator(node: SyntaxNode | null): boolean {
+    if (!node) return false;
+    return node.type === 'pointer_declarator' || node.type === 'reference_declarator';
   }
 
   private handleArrayDeclarator(
@@ -536,7 +874,12 @@ export class CppToJsTransformer {
     cppType: string,
     containerInfo: ContainerInfo | null
   ): string {
+    const normalizedType = cppType.replace(/std::/g, '').trim();
+
     if (node.type === 'initializer_list') {
+      if (this.isStructType(normalizedType)) {
+        return `${normalizedType}(${this.visitInitializerListElements(node)})`;
+      }
       // Container or array literal initialization
       if (containerInfo?.kind === 'set') {
         return `new Set([${this.visitInitializerListElements(node)}])`;
@@ -553,6 +896,10 @@ export class CppToJsTransformer {
     }
 
     if (node.type === 'argument_list') {
+      if (this.isStructType(normalizedType)) {
+        const args = this.visitArgumentList(node);
+        return `${normalizedType}(${args.join(', ')})`;
+      }
       // vector<int> v(n, val) → Array(n).fill(val)
       if (containerInfo?.kind === 'vector') {
         const args: string[] = [];
@@ -626,6 +973,8 @@ export class CppToJsTransformer {
   }
 
   private getDefaultValue(cppType: string, containerInfo: ContainerInfo | null): string {
+    const normalizedType = cppType.replace(/std::/g, '').trim();
+
     if (containerInfo) {
       switch (containerInfo.kind) {
         case 'vector': return '[]';
@@ -637,11 +986,12 @@ export class CppToJsTransformer {
         case 'priority_queue': return '[]';
       }
     }
-    if (cppType === 'string') return '""';
-    if (cppType === 'bool') return 'false';
-    if (cppType === 'char') return "''";
-    if (CPP_INTEGER_TYPES.has(cppType)) return '0';
-    if (cppType === 'float' || cppType === 'double') return '0.0';
+    if (this.isStructType(normalizedType)) return `${normalizedType}()`;
+    if (normalizedType === 'string') return '""';
+    if (normalizedType === 'bool') return 'false';
+    if (normalizedType === 'char') return "''";
+    if (CPP_INTEGER_TYPES.has(normalizedType)) return '0';
+    if (normalizedType === 'float' || normalizedType === 'double') return '0.0';
     return '0';
   }
 
@@ -1225,6 +1575,37 @@ export class CppToJsTransformer {
     const funcText = funcNode.text.replace(/std::/g, '');
     const args = argsNode ? this.visitArgumentList(argsNode) : [];
 
+    const memberCallMatch = funcText.match(/^([A-Za-z_]\w*)\.(\w+)$/);
+    if (memberCallMatch) {
+      const [, objName, method] = memberCallMatch;
+      const containerKind = this.symbols.lookup(objName)?.containerKind ?? null;
+      const symbol = this.symbols.lookup(objName);
+      const isMinPriorityQueue =
+        !!symbol &&
+        symbol.containerKind === 'priority_queue' &&
+        /(?:^|[<,\s])greater(?:\s*<|$)/.test(symbol.cppType.replace(/std::/g, ''));
+
+      if (method === 'top' && containerKind === 'priority_queue') {
+        this.ensurePriorityQueueHelpers();
+        return `__cppPriorityQueueTop(${objName}, ${isMinPriorityQueue})`;
+      }
+
+      if (method === 'push' && containerKind === 'priority_queue') {
+        this.ensurePriorityQueueHelpers();
+        return `__cppPriorityQueuePush(${objName}, ${args[0]}, ${isMinPriorityQueue})`;
+      }
+
+      if (method === 'pop') {
+        if (containerKind === 'priority_queue') {
+          this.ensurePriorityQueueHelpers();
+          return `__cppPriorityQueuePop(${objName}, ${isMinPriorityQueue})`;
+        }
+        if (containerKind === 'queue') {
+          return `${objName}.shift()`;
+        }
+      }
+    }
+
     // ── STL free functions ──
     // sort(v.begin(), v.end()) → v.sort((a,b) => a-b)
     if (funcText === 'sort' && args.length >= 2) {
@@ -1254,6 +1635,16 @@ export class CppToJsTransformer {
     if (funcText === 'reverse' && args.length >= 2) {
       const match = this.matchBeginEnd(argsNode!);
       if (match) return `${match}.reverse()`;
+    }
+
+    // merge(a.begin(), a.end(), b.begin(), b.end(), out.begin()) → write merged result into out
+    if (funcText === 'merge' && args.length >= 5) {
+      const match = this.matchMergeCall(argsNode!);
+      if (match) {
+        this.ensureMergeHelper();
+        const comparator = args.length >= 6 ? `, ${args[5]}` : '';
+        return `${match.out}.splice(0, ${match.out}.length, ...__cppMergeSortedArrays(${match.left}, ${match.right}${comparator}))`;
+      }
     }
 
     // swap(a, b) → [a, b] = [b, a]
@@ -1363,6 +1754,28 @@ export class CppToJsTransformer {
     const symbol = this.symbols.lookup(node.text);
     if (!symbol || symbol.containerKind !== 'priority_queue') return false;
     return /(?:^|[<,\s])greater(?:\s*<|$)/.test(symbol.cppType.replace(/std::/g, ''));
+  }
+
+  private matchBeginCall(node: SyntaxNode): string | null {
+    const text = node.text.replace(/std::/g, '');
+    const beginMatch = text.match(/^(\w+)\.begin\s*\(\s*\)$/);
+    return beginMatch ? beginMatch[1] : null;
+  }
+
+  private matchMergeCall(argsNode: SyntaxNode): { left: string; right: string; out: string } | null {
+    if (argsNode.namedChildCount < 5) return null;
+
+    const leftBegin = this.matchBeginCall(argsNode.namedChild(0)!);
+    const leftEnd = argsNode.namedChild(1)!.text.replace(/std::/g, '');
+    const rightBegin = this.matchBeginCall(argsNode.namedChild(2)!);
+    const rightEnd = argsNode.namedChild(3)!.text.replace(/std::/g, '');
+    const outBegin = this.matchBeginCall(argsNode.namedChild(4)!);
+
+    if (!leftBegin || !rightBegin || !outBegin) return null;
+    if (!new RegExp(`^${leftBegin}\\.end\\s*\\(\\s*\\)$`).test(leftEnd)) return null;
+    if (!new RegExp(`^${rightBegin}\\.end\\s*\\(\\s*\\)$`).test(rightEnd)) return null;
+
+    return { left: leftBegin, right: rightBegin, out: outBegin };
   }
 
   /** Try to match pattern: v.begin(), v.end() → returns "v" */
@@ -1503,10 +1916,4 @@ export class CppToJsTransformer {
       `Unsupported C++ construct: ${node.type} — "${node.text.substring(0, 40)}..."`
     );
   }
-}
-
-// ─── Internal Types ──────────────────────────────────────────────────────────
-
-interface ContainerInfo {
-  kind: 'vector' | 'map' | 'set' | 'pair' | 'stack' | 'queue' | 'priority_queue';
 }
