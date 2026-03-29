@@ -30,7 +30,10 @@ interface AstNode {
 interface TraversalContext {
   functionName: string | null;
   loopDepth: number;
+  loopTerms: GrowthTerm[];
 }
+
+type GrowthTerm = 'n' | 'log n';
 
 function isLoopNode(node: AstNode | null | undefined): boolean {
   return !!node && [
@@ -107,8 +110,15 @@ function updateLooksLogarithmic(node: AstNode | null | undefined): boolean {
   return false;
 }
 
-function bodyContainsGeometricMutation(node: AstNode | null | undefined): boolean {
+function bodyContainsGeometricMutation(
+  node: AstNode | null | undefined,
+  nested: boolean = false,
+): boolean {
   if (!node) return false;
+
+  if (nested && isLoopNode(node)) {
+    return false;
+  }
 
   if (
     node.type === 'AssignmentExpression' &&
@@ -137,7 +147,7 @@ function bodyContainsGeometricMutation(node: AstNode | null | undefined): boolea
             child &&
             typeof child === 'object' &&
             typeof (child as AstNode).type === 'string' &&
-            bodyContainsGeometricMutation(child as AstNode),
+            bodyContainsGeometricMutation(child as AstNode, true),
         )
       ) {
         return true;
@@ -146,7 +156,7 @@ function bodyContainsGeometricMutation(node: AstNode | null | undefined): boolea
       value &&
       typeof value === 'object' &&
       typeof (value as AstNode).type === 'string' &&
-      bodyContainsGeometricMutation(value as AstNode)
+      bodyContainsGeometricMutation(value as AstNode, true)
     ) {
       return true;
     }
@@ -217,18 +227,63 @@ function buildHotspots(timeline: Timeline) {
     .slice(0, 6);
 }
 
+function formatGrowthNotation(terms: GrowthTerm[]): string {
+  const nCount = terms.filter((term) => term === 'n').length;
+  const logCount = terms.filter((term) => term === 'log n').length;
+  const parts: string[] = [];
+
+  if (nCount === 1) {
+    parts.push('n');
+  } else if (nCount > 1) {
+    parts.push(`n^${nCount}`);
+  }
+
+  if (logCount === 1) {
+    parts.push('log n');
+  } else if (logCount > 1) {
+    parts.push(`(log n)^${logCount}`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : '1';
+}
+
+function rankNotation(notation: string): number {
+  if (notation === '2^n') return 1000;
+  if (notation === '1') return 0;
+
+  let score = 0;
+  const nPower = notation.match(/n\^(\d+)/);
+  const logPower = notation.match(/\(log n\)\^(\d+)/);
+
+  if (nPower) {
+    score += Number(nPower[1]) * 100;
+  } else if (notation.includes('n')) {
+    score += 100;
+  }
+
+  if (logPower) {
+    score += Number(logPower[1]) * 10;
+  } else if (notation.includes('log n')) {
+    score += 10;
+  }
+
+  return score;
+}
+
 function buildEstimate(input: {
   maxLoopDepth: number;
   hasLogarithmicLoop: boolean;
   hasBranchingRecursion: boolean;
   recursiveFunctions: string[];
   hasArraySort: boolean;
+  loopCandidates: string[];
   observedOperations: number;
   uniqueExecutedLines: number;
   peakStackDepth: number;
 }) {
   const rationale: string[] = [];
   const recursionDetected = input.recursiveFunctions.length > 0;
+  const candidates = new Set<string>(input.loopCandidates);
 
   if (input.hasBranchingRecursion) {
     rationale.push('Detected multiple self-recursive calls in the same execution branch.');
@@ -242,82 +297,77 @@ function buildEstimate(input: {
     };
   }
 
-  if (input.maxLoopDepth >= 3) {
-    rationale.push(`Detected ${input.maxLoopDepth} nested loop levels in the analyzed control flow.`);
-    rationale.push(`Observed ${input.observedOperations} traced operations across ${input.uniqueExecutedLines} executed lines.`);
-    return {
-      notation: input.maxLoopDepth === 3 ? 'O(n^3)' : `O(n^${input.maxLoopDepth})`,
-      confidence: 'medium' as const,
-      rationale,
-    };
+  if (input.hasArraySort) {
+    candidates.add('n log n');
   }
 
-  if (input.maxLoopDepth === 2) {
-    if (input.hasLogarithmicLoop) {
-      rationale.push('Detected nested iteration with at least one logarithmic-style update pattern.');
-      rationale.push('This prototype treats the dominant shape as a linearithmic-style traversal.');
-      return {
-        notation: 'O(n log n)',
-        confidence: 'low' as const,
-        rationale,
-      };
-    }
-
-    rationale.push('Detected two nested iterative regions.');
-    rationale.push(`Observed ${input.observedOperations} traced operations, which is consistent with a quadratic hotspot.`);
-    return {
-      notation: 'O(n^2)',
-      confidence: 'high' as const,
-      rationale,
-    };
+  if (recursionDetected) {
+    candidates.add('n');
   }
 
-  if (input.hasArraySort && !recursionDetected && input.maxLoopDepth <= 1) {
-    rationale.push('Detected a sort-style call, which is commonly implemented with linearithmic growth.');
-    rationale.push('Treat this as a prototype estimate because built-in sort cost can depend on engine behavior.');
+  if (candidates.size === 0) {
+    candidates.add('1');
+  }
+
+  const rankedCandidates = Array.from(candidates).sort(
+    (left, right) => rankNotation(right) - rankNotation(left),
+  );
+  const dominant = rankedCandidates[0];
+  const dominated = rankedCandidates.slice(1);
+
+  if (dominant === '1') {
+    rationale.push('No repeating loop or recursive structure dominated the analyzed source.');
+    rationale.push(`Observed ${input.observedOperations} traced operations in this run.`);
     return {
-      notation: 'O(n log n)',
+      notation: 'O(1)',
       confidence: 'low' as const,
       rationale,
     };
   }
 
-  if (input.hasLogarithmicLoop && !recursionDetected && input.maxLoopDepth <= 1) {
+  if (dominant === 'log n') {
     rationale.push('Detected a loop update that scales geometrically, such as multiplying or dividing by a constant.');
-    return {
-      notation: 'O(log n)',
-      confidence: 'medium' as const,
-      rationale,
-    };
-  }
-
-  if (recursionDetected && input.maxLoopDepth === 0) {
-    rationale.push(`Detected self-recursion in ${input.recursiveFunctions.join(', ')}.`);
-    if (input.peakStackDepth > 2) {
-      rationale.push(`Peak stack depth reached ${input.peakStackDepth}, suggesting a single recursive chain rather than branching recursion.`);
-    }
-    return {
-      notation: 'O(n)',
-      confidence: 'medium' as const,
-      rationale,
-    };
-  }
-
-  if (input.maxLoopDepth === 1 || recursionDetected) {
+  } else if (dominant === 'n') {
     rationale.push('Detected one dominant iterative or recursive pass.');
-    rationale.push(`Observed ${input.uniqueExecutedLines} active lines over ${input.observedOperations} traced steps.`);
-    return {
-      notation: 'O(n)',
-      confidence: 'medium' as const,
-      rationale,
-    };
+    rationale.push(`Detected self-recursion in ${input.recursiveFunctions.join(', ')}.`);
+    if (!recursionDetected) {
+      rationale.pop();
+      rationale.push('Detected one dominant linear traversal in the analyzed control flow.');
+    }
+  } else if (dominant === 'n log n') {
+    rationale.push('Detected a combined linear and logarithmic growth pattern.');
+  } else if (/^n\^\d+$/.test(dominant)) {
+    const power = dominant.split('^')[1];
+    rationale.push(`Detected a polynomial loop nest with dominant power ${power}.`);
+  } else if (dominant.includes('log n')) {
+    rationale.push(`Detected a mixed loop stack shaped like ${dominant}.`);
   }
 
-  rationale.push('No repeating loop or recursive structure dominated the analyzed source.');
-  rationale.push(`Observed ${input.observedOperations} traced operations in this run.`);
+  if (input.hasArraySort && dominant === 'n log n') {
+    rationale.push('A sort-style call was detected and contributes a linearithmic signal.');
+  }
+
+  if (input.maxLoopDepth >= 2 && rankNotation(dominant) >= rankNotation('n^2')) {
+    rationale.push(`Observed ${input.observedOperations} traced operations across ${input.uniqueExecutedLines} executed lines, with higher-order loop structure dominating weaker signals.`);
+  } else {
+    rationale.push(`Observed ${input.uniqueExecutedLines} active lines over ${input.observedOperations} traced steps.`);
+  }
+
+  if (dominated.length > 0) {
+    rationale.push(`Other weaker signals were also detected: ${dominated.join(', ')}.`);
+  }
+
+  if (recursionDetected && input.peakStackDepth > 2 && rankNotation(dominant) <= rankNotation('n')) {
+    rationale.push(`Peak stack depth reached ${input.peakStackDepth}, which is consistent with a recursive chain in this run.`);
+  }
+
   return {
-    notation: 'O(1)',
-    confidence: 'low' as const,
+    notation: `O(${dominant})`,
+    confidence: rankNotation(dominant) >= rankNotation('n^2')
+      ? 'high' as const
+      : dominant === 'n log n' || dominant === 'log n'
+        ? 'medium' as const
+        : 'medium' as const,
     rationale,
   };
 }
@@ -338,6 +388,7 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
   let hasBranchingRecursion = false;
   let hasArraySort = false;
   const recursiveFunctions = new Set<string>();
+  const loopCandidates = new Set<string>();
 
   try {
     const ast = acorn.parse(code, {
@@ -348,23 +399,29 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     function walk(node: AstNode | null | undefined, parent?: AstNode, context: TraversalContext = {
       functionName: null,
       loopDepth: 0,
+      loopTerms: [],
     }) {
       if (!node) return;
 
       let nextContext = context;
 
       if (isLoopNode(node)) {
+        const loopTerm: GrowthTerm = (
+          updateLooksLogarithmic(node.update as AstNode) ||
+          bodyContainsGeometricMutation(node.body as AstNode)
+        )
+          ? 'log n'
+          : 'n';
         const nextLoopDepth = context.loopDepth + 1;
         maxLoopDepth = Math.max(maxLoopDepth, nextLoopDepth);
         nextContext = {
           ...context,
           loopDepth: nextLoopDepth,
+          loopTerms: [...context.loopTerms, loopTerm],
         };
+        loopCandidates.add(formatGrowthNotation(nextContext.loopTerms));
 
-        if (
-          updateLooksLogarithmic(node.update as AstNode) ||
-          bodyContainsGeometricMutation(node.body as AstNode)
-        ) {
+        if (loopTerm === 'log n') {
           hasLogarithmicLoop = true;
         }
       }
@@ -374,6 +431,7 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
         nextContext = {
           functionName,
           loopDepth: 0,
+          loopTerms: [],
         };
       }
 
@@ -438,6 +496,7 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     hasBranchingRecursion,
     recursiveFunctions: Array.from(recursiveFunctions),
     hasArraySort,
+    loopCandidates: Array.from(loopCandidates),
     observedOperations,
     uniqueExecutedLines,
     peakStackDepth,

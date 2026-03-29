@@ -24,6 +24,45 @@ function ensureInit(): Promise<void> {
 const DEFAULT_MAX_STEPS = 2000;
 const DEFAULT_INPUT_VALUES = [5, 10, 3, 7, 1, 42, 100, 0, -1, 99];
 
+function serializeForDisplay(value: unknown, maxDepth: number = 4): string {
+    const seen = new WeakSet<object>();
+
+    const normalize = (current: unknown, depth: number): unknown => {
+        if (current === null || typeof current !== 'object') {
+            if (typeof current === 'function') return '[Function]';
+            if (current === undefined) return 'undefined';
+            if (Number.isNaN(current)) return 'NaN';
+            return current;
+        }
+
+        if (seen.has(current as object)) {
+            return '[Circular]';
+        }
+
+        if (depth >= maxDepth) {
+            return Array.isArray(current) ? `[Array(${current.length})]` : '[Object]';
+        }
+
+        seen.add(current as object);
+
+        if (Array.isArray(current)) {
+            return current.map((item) => normalize(item, depth + 1));
+        }
+
+        const normalized: Record<string, unknown> = {};
+        for (const [key, entryValue] of Object.entries(current as Record<string, unknown>)) {
+            normalized[key] = normalize(entryValue, depth + 1);
+        }
+        return normalized;
+    };
+
+    try {
+        return JSON.stringify(normalize(value, 0));
+    } catch {
+        return String(value);
+    }
+}
+
 // ─── Worker message handler ───────────────────────────────────────────────────
 
 self.onmessage = async (e: MessageEvent) => {
@@ -116,12 +155,7 @@ self.onmessage = async (e: MessageEvent) => {
                     safeVars = structuredClone(vars);
                 } catch {
                     // Fallback for non-cloneable values (functions, symbols)
-                    safeVars = JSON.parse(JSON.stringify(vars, (_key, value) => {
-                        if (typeof value === 'function') return '[Function]';
-                        if (value === undefined) return 'undefined';
-                        if (Number.isNaN(value)) return 'NaN';
-                        return value;
-                    }));
+                    safeVars = JSON.parse(serializeForDisplay(vars));
                 }
 
                 timeline.push({
@@ -139,7 +173,7 @@ self.onmessage = async (e: MessageEvent) => {
 
             log: (...args: any[]) => {
                 const message = args.map(a =>
-                    typeof a === 'object' ? JSON.stringify(a) : String(a)
+                    typeof a === 'object' ? serializeForDisplay(a) : String(a)
                 ).join(' ');
                 currentLogs.push({ type: 'log', message });
             },

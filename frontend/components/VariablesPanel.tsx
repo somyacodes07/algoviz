@@ -2,11 +2,60 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../types';
 import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
+import StructureVisualizer from './StructureVisualizer';
 
 interface VariablesPanelProps {
     variables: VariableMap;
     prevVariables: VariableMap;
     themeColor: 'saffron' | 'blue';
+}
+
+function safeSerialize(value: unknown, maxDepth: number = 3): string {
+    const seen = new WeakSet<object>();
+
+    const normalize = (current: unknown, depth: number): unknown => {
+        if (current === null || typeof current !== 'object') {
+            if (typeof current === 'function') return '[Function]';
+            if (current === undefined) return 'undefined';
+            if (Number.isNaN(current)) return 'NaN';
+            return current;
+        }
+
+        if (seen.has(current as object)) {
+            return '[Circular]';
+        }
+
+        if (depth >= maxDepth) {
+            if (Array.isArray(current)) {
+                return `[Array(${current.length})]`;
+            }
+            return '[Object]';
+        }
+
+        seen.add(current as object);
+
+        if (Array.isArray(current)) {
+            return current.map((item) => normalize(item, depth + 1));
+        }
+
+        const entries = Object.entries(current as Record<string, unknown>);
+        const normalized: Record<string, unknown> = {};
+        for (const [key, entryValue] of entries) {
+            normalized[key] = normalize(entryValue, depth + 1);
+        }
+
+        return normalized;
+    };
+
+    try {
+        return JSON.stringify(normalize(value, 0));
+    } catch {
+        return String(value);
+    }
+}
+
+function valuesAreEqual(left: unknown, right: unknown): boolean {
+    return safeSerialize(left) === safeSerialize(right);
 }
 
 // Bigger array visualization with index labels and swap highlighting
@@ -165,7 +214,7 @@ const VariableCard: React.FC<{
     const typeLabel = Array.isArray(value) ? `Array(${value.length})` : isFunction ? 'Function' : typeof value === 'object' && value !== null ? 'Object' : typeof value;
 
     const isNew = !wasPresent;
-    const hasChanged = !isNew && JSON.stringify(value) !== JSON.stringify(prevValue);
+    const hasChanged = !isNew && !valuesAreEqual(value, prevValue);
 
     let delta: number | null = null;
     let changeDir: 'up' | 'down' | 'mod' | null = null;
@@ -321,7 +370,7 @@ const VariableCard: React.FC<{
                         >
                             <div className="p-2 space-y-1 bg-slate-50/50 dark:bg-slate-900/30">
                                 {Object.keys(value).map(key => {
-                                    const indexChanged = prevValue && JSON.stringify(value[key]) !== JSON.stringify(prevValue?.[key]);
+                                    const indexChanged = prevValue && !valuesAreEqual(value[key], prevValue?.[key]);
                                     return (
                                         <div key={key}
                                             className={`flex justify-between items-center px-2.5 py-1.5 rounded-lg text-xs font-mono ${
@@ -332,7 +381,7 @@ const VariableCard: React.FC<{
                                         >
                                             <span className="text-slate-500 dark:text-slate-400 font-bold">[{key}]</span>
                                             <span className={`font-semibold ${indexChanged ? 'text-amber-700 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                                                {JSON.stringify(value[key])}
+                                                {safeSerialize(value[key], 2)}
                                             </span>
                                         </div>
                                     );
@@ -359,6 +408,10 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({ variables, prevVariable
 
     return (
         <div className="grid grid-cols-1 gap-2 p-2">
+            <StructureVisualizer
+                variables={variables}
+                themeColor={themeColor}
+            />
             <AnimatePresence mode='popLayout'>
                 {keys.map(key => (
                     <VariableCard
