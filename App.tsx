@@ -6,6 +6,7 @@ import CallStackPanel from "./frontend/components/CallStackPanel";
 import ConsolePanel from "./frontend/components/ConsolePanel";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
+import PerformancePanel from "./frontend/components/PerformancePanel";
 import TemplatePalette from "./frontend/components/TemplatePalette";
 import DocsPage from "./frontend/components/DocsPage";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
@@ -39,6 +40,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  BarChart3,
   BookOpen,
   Maximize2,
   Minimize2,
@@ -178,7 +180,7 @@ const App: React.FC = () => {
   });
 
   const [code, setCode] = useState<string>(initialAppState.code);
-  const [activeTab, setActiveTab] = useState<"variables" | "stack">(
+  const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance">(
     "variables",
   );
   const [linkCopied, setLinkCopied] = useState(false);
@@ -189,6 +191,7 @@ const App: React.FC = () => {
   const { state, controls } = useExecutionEngine();
   const {
     timeline,
+    complexityAnalysis,
     currentStepIndex,
     isPlaying,
     speed,
@@ -725,6 +728,12 @@ const App: React.FC = () => {
                     >
                       <Layers size={16} className="rotate-180" /> Call Stack
                     </button>
+                    <button
+                      onClick={() => setActiveTab("performance")}
+                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "performance" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
+                    >
+                      <BarChart3 size={16} /> Complexity
+                    </button>
                   </div>
 
                   {/* Content Area */}
@@ -735,9 +744,16 @@ const App: React.FC = () => {
                         prevVariables={prevStepVariables.variables || {}}
                         themeColor={themeColor}
                       />
-                    ) : (
+                    ) : activeTab === "stack" ? (
                       <CallStackPanel
                         stack={currentStep.callStack || []}
+                        themeColor={themeColor}
+                      />
+                    ) : (
+                      <PerformancePanel
+                        timeline={timeline}
+                        currentStepIndex={currentStepIndex}
+                        analysis={complexityAnalysis}
                         themeColor={themeColor}
                       />
                     )}

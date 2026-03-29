@@ -7,6 +7,31 @@ export interface ConsoleLog {
   message: string;
 }
 
+export interface ComplexityEstimate {
+  notation: string;
+  confidence: 'low' | 'medium' | 'high';
+  rationale: string[];
+}
+
+export interface ComplexityHotspot {
+  line: number;
+  hits: number;
+  share: number;
+}
+
+export interface ComplexityAnalysis {
+  estimate: ComplexityEstimate;
+  maxLoopDepth: number;
+  recursiveFunctions: string[];
+  hasLogarithmicLoop: boolean;
+  hasBranchingRecursion: boolean;
+  hasArraySort: boolean;
+  observedOperations: number;
+  uniqueExecutedLines: number;
+  peakStackDepth: number;
+  hotspots: ComplexityHotspot[];
+}
+
 export interface ExecutionStep {
   line: number;
   variables: VariableMap;
@@ -25,6 +50,7 @@ export interface ExecutionResult {
   timeline: Timeline;
   error?: string;
   errorType?: ErrorType;
+  analysis?: ComplexityAnalysis | null;
 }
 
 export interface Breakpoint {

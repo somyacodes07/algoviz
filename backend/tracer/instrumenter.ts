@@ -94,6 +94,17 @@ export function instrumentCode(code: string): string {
       return `__tracer.step(${line}, ${varObj});`; 
     }
 
+    function shouldWrapInSyntheticBlock(node: Node, parent?: Node): boolean {
+      if (!parent) return false;
+
+      if (parent.type === 'IfStatement') {
+        return parent.consequent === node || parent.alternate === node;
+      }
+
+      return ['ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'].includes(parent.type)
+        && parent.body === node;
+    }
+
     function walk(node: Node, parent?: Node) {
       if (!node) return;
 
@@ -157,34 +168,46 @@ export function instrumentCode(code: string): string {
 
       // Statement Instrumentation
       if (node.type === 'VariableDeclaration' || node.type === 'ExpressionStatement') {
-         // Track line before execution
-         addPatch(node.start, `__tracer.setLine(${line}); `);
-
+         const needsBlock = shouldWrapInSyntheticBlock(node, parent);
          const trace = generateTraceCall(line);
-         
-         const needsBlock = parent && ['IfStatement', 'ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'].includes(parent.type) && parent.body !== node && (parent.consequent === node || parent.alternate === node || parent.body === node);
-         
-         if (needsBlock) {
-             addPatch(node.start, `{ `);
-             addPatch(node.end, `; ${trace} }`);
-         } else {
-             addPatch(node.end, `; ${trace}`);
-         }
+
+         addPatch(
+            node.start,
+            needsBlock
+              ? `{ __tracer.setLine(${line}); `
+              : `__tracer.setLine(${line}); `,
+         );
+         addPatch(node.end, needsBlock ? `; ${trace} }` : `; ${trace}`);
       }
 
       // Return Trace
       if (node.type === 'ReturnStatement') {
-         addPatch(node.start, `__tracer.setLine(${line}); `);
+         const needsBlock = shouldWrapInSyntheticBlock(node, parent);
          const trace = generateTraceCall(line);
          const traceExpr = trace.replace(/;$/, '');
          
          if (node.argument) {
+             addPatch(
+                node.start,
+                needsBlock
+                  ? `{ __tracer.setLine(${line}); `
+                  : `__tracer.setLine(${line}); `,
+             );
              addPatch(node.argument.start, `(${traceExpr}, `);
              addPatch(node.argument.end, `)`);
+             if (needsBlock) {
+                addPatch(node.end, ` }`);
+             }
          } else {
-             addPatch(node.start, generateTraceCall(line)); 
-             addPatch(node.start, '{ '); 
-             addPatch(node.end, ' }'); 
+             addPatch(
+                node.start,
+                needsBlock
+                  ? `{ __tracer.setLine(${line}); ${trace} `
+                  : `__tracer.setLine(${line}); ${trace} `,
+             );
+             if (needsBlock) {
+                addPatch(node.end, ' }');
+             }
          }
       }
 

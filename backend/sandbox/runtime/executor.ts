@@ -1,4 +1,9 @@
-import { Timeline, ExecutionConfig, ErrorType } from '../../../types';
+import {
+  Timeline,
+  ExecutionConfig,
+  ErrorType,
+  ComplexityAnalysis,
+} from '../../../types';
 
 // We use Vite's ?worker feature to correctly bundle the worker and resolve its URL
 import ExecutorWorker from './executor.worker?worker';
@@ -9,6 +14,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 export interface ExecuteResult {
   timeline: Timeline;
   errorType?: ErrorType;
+  analysis?: ComplexityAnalysis | null;
 }
 
 /**
@@ -55,10 +61,11 @@ export const executeCode = (
       clearTimeout(timer);
       worker.terminate();
 
-      const { type, timeline, message, errorType } = e.data;
+      const { type, timeline, errorType, analysis } = e.data;
       resolve({
         timeline: timeline || [],
         errorType: type === 'error' ? (errorType || 'runtime') : undefined,
+        analysis: analysis || null,
       });
     };
 
@@ -78,6 +85,7 @@ export const executeCode = (
           errorMessage: e.message,
         }],
         errorType: 'worker',
+        analysis: null,
       });
     };
 

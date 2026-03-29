@@ -1,6 +1,13 @@
+import { analyzeComplexity } from '../../analysis/complexity';
 import { instrumentCode } from '../../tracer/instrumenter';
 import { initTranspiler, transpileCppToJs } from '../transpiler';
-import { Timeline, ConsoleLog, ErrorType, ExecutionConfig } from '../../../types';
+import {
+  Timeline,
+  ConsoleLog,
+  ErrorType,
+  ExecutionConfig,
+  ComplexityAnalysis,
+} from '../../../types';
 
 // ─── Tree-sitter WASM init (once) ─────────────────────────────────────────────
 
@@ -35,6 +42,8 @@ self.onmessage = async (e: MessageEvent) => {
     const currentLogs: ConsoleLog[] = [];
     let logSnapshotIndex = 0; // Track where we last snapshotted logs
     let lastLine = 0;
+    let analyzedCode = userCode;
+    let complexityAnalysis: ComplexityAnalysis | null = null;
 
     /** Helper: snapshot only NEW logs since last step */
     function getNewLogs(): ConsoleLog[] {
@@ -50,6 +59,7 @@ self.onmessage = async (e: MessageEvent) => {
         if (language === 'c++' || language === 'cpp') {
             try {
                 codeToInstrument = transpileCppToJs(userCode);
+                analyzedCode = codeToInstrument;
             } catch (transpileError: any) {
                 postError(`Transpilation Failed: ${transpileError.message}`, lastLine, 'transpile');
                 return;
@@ -64,6 +74,8 @@ self.onmessage = async (e: MessageEvent) => {
             postError(`Instrumentation Failed: ${instrumentError.message}`, lastLine, 'instrument');
             return;
         }
+
+        complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
 
         let stepCount = 0;
 
@@ -173,7 +185,8 @@ self.onmessage = async (e: MessageEvent) => {
 
         new Function(wrappedCode).call(null, tracer);
 
-        self.postMessage({ type: 'success', timeline });
+        complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+        self.postMessage({ type: 'success', timeline, analysis: complexityAnalysis });
 
     } catch (e: any) {
         postError(e.message, lastLine, 'runtime');
@@ -195,6 +208,17 @@ self.onmessage = async (e: MessageEvent) => {
                 errorMessage: message,
             }
         ];
-        self.postMessage({ type: 'error', timeline: errorTimeline, message, errorType });
+        try {
+            complexityAnalysis = analyzeComplexity(analyzedCode, errorTimeline);
+        } catch {
+            // Keep the last successful analysis if the fallback pass fails.
+        }
+        self.postMessage({
+            type: 'error',
+            timeline: errorTimeline,
+            message,
+            errorType,
+            analysis: complexityAnalysis,
+        });
     }
 };

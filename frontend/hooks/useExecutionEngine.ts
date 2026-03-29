@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { executeCode } from '../../backend/sandbox/runtime/executor';
-import { Timeline } from '../../types';
+import { Timeline, ComplexityAnalysis } from '../../types';
 
 interface ExecutionState {
     timeline: Timeline;
+    complexityAnalysis: ComplexityAnalysis | null;
     currentStepIndex: number;
     isPlaying: boolean;
     speed: number;
@@ -26,6 +27,7 @@ interface ExecutionControls {
 
 export const useExecutionEngine = (): { state: ExecutionState, controls: ExecutionControls } => {
     const [timeline, setTimeline] = useState<Timeline>([]);
+    const [complexityAnalysis, setComplexityAnalysis] = useState<ComplexityAnalysis | null>(null);
     const [currentStepIndex, setCurrentStepIndex] = useState<number>(-1);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [speed, setSpeed] = useState<number>(800); // ms per step
@@ -44,7 +46,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         setExecutionError(null);
         setIsPlaying(false);
         try {
-            const { timeline: rawTimeline, errorType } = await executeCode(code, language);
+            const { timeline: rawTimeline, analysis } = await executeCode(code, language);
             
             // Reconstruct full console history from deltas to reduce worker memory bloat
             let currentLogs: import('../../types').ConsoleLog[] = [];
@@ -54,6 +56,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
             });
 
             setTimeline(result);
+            setComplexityAnalysis(analysis || null);
             // If error exists in result
             if (result.length > 0 && result[result.length - 1].isError) {
                 setExecutionError(result[result.length - 1].errorMessage || "Error");
@@ -62,6 +65,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         } catch (e: any) {
             setExecutionError(e.message || "Execution Failed");
             setTimeline([]);
+            setComplexityAnalysis(null);
             setCurrentStepIndex(-1);
         }
     }, []);
@@ -131,7 +135,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
     }, []);
 
     return {
-        state: { timeline, currentStepIndex, isPlaying, speed, executionError, breakpoints },
+        state: { timeline, complexityAnalysis, currentStepIndex, isPlaying, speed, executionError, breakpoints },
         controls: { handleRun, setIsPlaying, setSpeed, setCurrentStepIndex, togglePlayPause, reset, nextStep, prevStep, jumpToStep, toggleBreakpoint }
     };
 };
