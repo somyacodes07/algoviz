@@ -319,11 +319,11 @@ const LinkedListPanel: React.FC<{
   const accentBorder = isSaffron ? 'border-saffron-300 dark:border-saffron-800' : 'border-blue-300 dark:border-blue-800';
 
   return (
-    <section className="rounded border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] p-4 shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]">
+    <section className="border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] p-4 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoft} ${accentText} ${accentBorder}`}>
+          <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoft} ${accentText} ${accentBorder}`}>
               <GitBranch size={12} />
               Linked List
             </span>
@@ -337,7 +337,7 @@ const LinkedListPanel: React.FC<{
         </div>
 
         {preview.cycleToIndex !== null && (
-          <span className="inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 border-[2px] border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
             <Repeat2 size={12} />
             Cycle
           </span>
@@ -349,11 +349,11 @@ const LinkedListPanel: React.FC<{
           <React.Fragment key={node.id}>
             <motion.div
               layout
-              className={`min-w-[96px] rounded border-[2px] px-3 py-3 ${accentBorder} ${accentSoft}`}
+              className={`min-w-[96px] border-[2px] px-3 py-3 ${accentBorder} ${accentSoft}`}
             >
               <div className="flex min-h-5 flex-wrap gap-1">
                 {node.pointerNames.map((pointer) => (
-                  <span key={pointer} className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${accentBg}`}>
+                  <span key={pointer} className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${accentBg}`}>
                     {pointer}
                   </span>
                 ))}
@@ -376,7 +376,7 @@ const LinkedListPanel: React.FC<{
       </div>
 
       {preview.cycleToIndex !== null && (
-        <div className="mt-4 rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div className="mt-4 border-[2px] border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
           Tail reconnects to node {preview.cycleToIndex + 1}, so this list contains a cycle.
         </div>
       )}
@@ -414,11 +414,11 @@ const GraphPanel: React.FC<{
   });
 
   return (
-    <section className="rounded border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] p-4 shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]">
+    <section className="border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] p-4 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoft} ${accentText} ${accentBorder}`}>
+            <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoft} ${accentText} ${accentBorder}`}>
               <Network size={12} />
               Graph
             </span>
@@ -430,13 +430,13 @@ const GraphPanel: React.FC<{
             Auto-detected from adjacency-style runtime data.
           </p>
         </div>
-        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
           {preview.directed ? 'Directed' : 'Undirected'}
         </span>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
-        <div className="rounded border border-slate-200 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113]">
+        <div className="border-[2px] border-slate-900 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113]">
           <svg viewBox={`0 0 ${size} ${size}`} className="h-[260px] w-full">
             {preview.edges.map((edge, index) => {
               const from = positions.get(edge.from);
@@ -503,7 +503,7 @@ const GraphPanel: React.FC<{
           {preview.nodes.map((node) => (
             <div
               key={node.id}
-              className={`rounded border px-3 py-2 ${node.visited ? `${accentSoft} ${accentBorder}` : 'border-slate-200 bg-white dark:border-[#333] dark:bg-[#111113]'}`}
+              className={`border-[2px] px-3 py-2 ${node.visited ? `${accentSoft} ${accentBorder}` : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#111113]'}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">
@@ -518,7 +518,7 @@ const GraphPanel: React.FC<{
               {node.pointerNames.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {node.pointerNames.map((pointer) => (
-                    <span key={pointer} className="rounded bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                    <span key={pointer} className="border border-emerald-700 bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white">
                       {pointer}
                     </span>
                   ))}

@@ -10,24 +10,46 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
   const displayStack = [...stack].reverse();
   const isSaffron = themeColor === 'saffron';
 
-  // Define active border and shadow based on theme
   const activeClass = isSaffron
-    ? 'border-saffron-400 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221] bg-white dark:bg-[#161618]'
-    : 'border-blue-400 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a] bg-white dark:bg-[#161618]';
-  const inactiveClass = 'border-slate-300 dark:border-[#333] shadow-none bg-slate-100 dark:bg-[#111113]';
+    ? 'border-saffron-500 dark:border-saffron-600 shadow-[3px_3px_0_#fbd38d] dark:shadow-[3px_3px_0_#9c4221] bg-saffron-50 dark:bg-[#1c1411]'
+    : 'border-blue-500 dark:border-blue-600 shadow-[3px_3px_0_#93c5fd] dark:shadow-[3px_3px_0_#1e3a8a] bg-blue-50 dark:bg-[#11151c]';
+  const inactiveClass = 'border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] bg-white dark:bg-[#111113]';
+  const accentBadge = isSaffron
+    ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400'
+    : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
 
   return (
     <div className="flex flex-col p-4 min-h-[100px] pb-10">
+      <div className="mb-4 flex items-center justify-between border-[2px] border-slate-900 bg-white px-3 py-2 shadow-[2px_2px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[2px_2px_0_#000]">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Active Stack
+          </div>
+          <div className="mt-1 font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
+            {stack.length > 0 ? `${stack.length} frame${stack.length > 1 ? 's' : ''}` : 'Idle'}
+          </div>
+        </div>
+        <span className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${accentBadge}`}>
+          {stack.length > 0 ? 'Top live' : 'Empty'}
+        </span>
+      </div>
+
       <AnimatePresence>
         {displayStack.length === 0 ? (
-          <div className="text-slate-500 italic text-center text-sm font-medium mt-8">Stack is empty</div>
+          <div className="mt-8 border-[2px] border-dashed border-slate-900 bg-slate-100 p-6 text-center shadow-[2px_2px_0_#0f172a] dark:border-[#333] dark:bg-[#111113] dark:shadow-[2px_2px_0_#000]">
+            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+              No active frames
+            </div>
+            <div className="mt-2 font-mono text-sm font-bold text-slate-700 dark:text-slate-300">
+              Run the code to build the stack.
+            </div>
+          </div>
         ) : (
           displayStack.map((frame, index) => {
             const isTop = index === 0;
-            // Calculate a scale and y-offset based on depth (max 3 visible depth effects)
             const depth = Math.min(index, 3);
             const scale = 1 - (depth * 0.05);
-            const translateY = isTop ? 0 : -(depth * 15);
+            const translateY = isTop ? 0 : -(depth * 14);
             const zIndex = displayStack.length - index;
 
             return (
@@ -38,21 +60,24 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                 animate={{ opacity: 1 - (depth * 0.15), y: translateY, scale }}
                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className={`relative w-full p-4 rounded border-[2px] mb-2 flex flex-col font-mono text-sm transition-colors ${isTop ? activeClass : inactiveClass}`}
-                style={{ zIndex, marginTop: index > 0 ? -24 : 0 }}
+                className={`relative w-full p-4 border-[2px] mb-2 flex flex-col font-mono text-sm transition-colors ${isTop ? activeClass : inactiveClass}`}
+                style={{ zIndex, marginTop: index > 0 ? -20 : 0 }}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isTop ? (isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400') : 'text-slate-500'}`}>
-                    Frame {stack.length - 1 - index}
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] ${
+                    isTop
+                      ? accentBadge
+                      : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400'
+                  }`}>
+                    {isTop ? 'Top frame' : `Frame ${stack.length - 1 - index}`}
                   </span>
                   {isTop && (
-                    <span className="flex h-2 w-2 relative">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isSaffron ? 'bg-saffron-400' : 'bg-blue-400'}`}></span>
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isSaffron ? 'bg-saffron-500' : 'bg-blue-500'}`}></span>
+                    <span className={`border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] ${accentBadge}`}>
+                      Live
                     </span>
                   )}
                 </div>
-                <span className={`font-bold ${isTop ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                <span className={`font-black tracking-wide ${isTop ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                   {frame}()
                 </span>
               </motion.div>

@@ -1,14 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConsoleLog } from '../../types';
-import { Terminal, AlertCircle, Info, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Terminal, AlertCircle, AlertTriangle, ChevronRight } from 'lucide-react';
 
 interface ConsolePanelProps {
   logs: ConsoleLog[];
+  themeColor: 'saffron' | 'blue';
 }
 
-const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
+const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const accentIconClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -16,9 +18,12 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
 
   if (logs.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-slate-500/80 font-mono">
-        <Terminal size={32} className="mb-3 opacity-20" />
-        <p className="text-[11px] tracking-widest uppercase opacity-70">Waiting for compiler output...</p>
+      <div className="h-full flex flex-col items-center justify-center p-4 text-slate-500/80 font-mono">
+        <div className="border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] px-6 py-5 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+          <Terminal size={28} className={`mx-auto mb-3 ${accentIconClass}`} />
+          <p className="text-[11px] font-bold tracking-[0.2em] uppercase opacity-80">Console idle</p>
+          <p className="mt-2 text-xs font-medium normal-case opacity-70">Run the code to populate output.</p>
+        </div>
       </div>
     );
   }
@@ -37,11 +42,11 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               key={index}
-              className={`flex items-start gap-2.5 p-2.5 rounded border-[2px] transition-all shadow-sm dark:shadow-[2px_2px_0_#000] ${isError
+              className={`flex items-start gap-2.5 p-2.5 border-[2px] transition-all shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] ${isError
                 ? 'bg-red-50 dark:bg-[#201010] text-red-800 dark:text-red-300 border-red-300 dark:border-[#3a1a1a]'
                 : isWarn
                   ? 'bg-yellow-50 dark:bg-[#201c10] text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-[#3a301a]'
-                  : 'bg-white dark:bg-[#111113] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#222]'
+                  : 'bg-white dark:bg-[#111113] text-slate-700 dark:text-slate-300 border-slate-900 dark:border-[#333]'
                 }`}
             >
               {isError ? (
@@ -49,7 +54,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs }) => {
               ) : isWarn ? (
                 <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-yellow-500 opacity-90" />
               ) : (
-                <ChevronRight size={15} className="mt-0.5 flex-shrink-0 text-blue-500 opacity-70" />
+                <ChevronRight size={15} className={`mt-0.5 flex-shrink-0 opacity-70 ${accentIconClass}`} />
               )}
 
               <div className="flex-1 break-words leading-normal select-text">

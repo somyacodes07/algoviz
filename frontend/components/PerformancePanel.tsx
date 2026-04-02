@@ -81,6 +81,23 @@ function buildSparklinePaths(
   return { linePath, areaPath };
 }
 
+function compactReason(reason: string): string {
+  const shortened = reason
+    .replace(/^Detected /, '')
+    .replace(/^Observed /, '')
+    .replace(/^A sort-style call was detected and contributes a linearithmic signal\.$/, 'Sort call adds an n log n signal')
+    .replace(/^No repeating loop or recursive structure dominated the analyzed source\.$/, 'No dominant loop or recursion signal')
+    .replace('the analyzed control flow', 'control flow')
+    .replace('current execution trace', 'trace')
+    .replace('traced operations across', 'ops across')
+    .replace('active lines over', 'lines over')
+    .replace('traced steps', 'steps')
+    .replace('stack frames, reinforcing a branching-recursion profile', 'stack frames; branching recursion fits')
+    .replace(/\.$/, '');
+
+  return shortened.length > 84 ? `${shortened.slice(0, 81).trim()}...` : shortened;
+}
+
 const PerformancePanel: React.FC<PerformancePanelProps> = ({
   timeline,
   currentStepIndex,
@@ -94,19 +111,21 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
   const accentBorder = isSaffron ? 'border-saffron-300 dark:border-saffron-800' : 'border-blue-300 dark:border-blue-800';
   const accentFill = isSaffron ? '#f97316' : '#3b82f6';
   const accentFillSoft = isSaffron ? 'rgba(249, 115, 22, 0.18)' : 'rgba(59, 130, 246, 0.18)';
+  const panelClass = 'border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]';
+  const subPanelClass = 'border-[2px] border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113]';
 
   if (timeline.length === 0 || currentStepIndex < 0) {
     return (
       <div className="h-full flex items-center justify-center p-6">
-        <div className="max-w-sm w-full rounded border-[2px] border-dashed border-slate-300 dark:border-[#333] bg-white/70 dark:bg-[#111113] p-6 text-center">
-          <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border ${accentBorder} ${accentSoftBg}`}>
-            <BarChart3 size={20} className={accentText} />
+        <div className="max-w-sm w-full border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] p-6 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+          <div className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${accentBorder} ${accentSoftBg}`}>
+            <BarChart3 size={18} className={accentText} />
           </div>
           <h3 className="text-sm font-black uppercase tracking-[0.24em] text-slate-700 dark:text-slate-300">
-            Complexity Prototype
+            Trace Complexity
           </h3>
-          <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            Run the code to generate an observed complexity estimate, hot-line chart, and stack-depth graph.
+          <p className="mt-3 text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+            Run the trace to unlock the estimate, hotspots, and stack graph.
           </p>
         </div>
       </div>
@@ -158,17 +177,17 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] p-4 shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]"
+        className={`${panelClass} p-4`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+              <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
                 <Activity size={12} />
-                Prototype Estimate
+                Trace Estimate
               </span>
               {analysis && (
-                <span className={`rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${confidenceClass}`}>
+                <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${confidenceClass}`}>
                   {analysis.estimate.confidence} confidence
                 </span>
               )}
@@ -180,15 +199,15 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                 {analysis?.estimate.notation || 'O(?)'}
               </span>
-              <span className="pb-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                based on control-flow signals plus the current execution trace
+              <span className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                trace + control flow
               </span>
             </div>
           </div>
 
-          <div className={`rounded border px-3 py-2 text-right ${accentBorder} ${accentSoftBg}`}>
+          <div className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${accentBorder} ${accentSoftBg}`}>
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Progress Slice
+              Trace Slice
             </div>
             <div className={`mt-1 text-2xl font-black ${accentText}`}>
               {Math.round(((currentStepIndex + 1) / timeline.length) * 100)}%
@@ -200,14 +219,14 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
         </div>
 
         {analysis?.estimate.rationale?.length ? (
-          <div className="mt-4 space-y-2">
-            {analysis.estimate.rationale.slice(0, 3).map((reason) => (
+          <div className="mt-4 grid gap-2 md:grid-cols-2">
+            {analysis.estimate.rationale.slice(0, 2).map((reason) => (
               <div
                 key={reason}
-                className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300"
+                className={`${subPanelClass} flex items-start gap-2 p-2 text-sm text-slate-600 dark:text-slate-300`}
               >
-                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${accentBg}`} />
-                <span className="leading-relaxed">{reason}</span>
+                <span className={`mt-1 h-2.5 w-2.5 shrink-0 ${accentBg}`} />
+                <span className="leading-relaxed font-medium">{compactReason(reason)}</span>
               </div>
             ))}
           </div>
@@ -215,26 +234,26 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
 
         {analysis ? (
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+            <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
               Loop Depth {analysis.maxLoopDepth}
             </span>
             {analysis.recursiveFunctions.length > 0 && (
-              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
                 Recursion {analysis.recursiveFunctions.join(', ')}
               </span>
             )}
             {analysis.hasLogarithmicLoop && (
-              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-                Log-Style Loop
+              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+                Log Loop
               </span>
             )}
             {analysis.hasBranchingRecursion && (
-              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
                 Branching Recursion
               </span>
             )}
             {analysis.hasArraySort && (
-              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
                 Sort Signal
               </span>
             )}
@@ -247,25 +266,25 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           {
             label: 'Operations Seen',
             value: formatCount(observedOperations),
-            hint: 'Traced execution events in the current playback slice',
+            hint: 'Trace events',
             icon: Hash,
           },
           {
             label: 'Unique Lines',
             value: formatCount(uniqueLines),
-            hint: 'Distinct source lines hit so far',
+            hint: 'Lines hit',
             icon: BarChart3,
           },
           {
             label: 'Peak Stack',
             value: formatCount(peakStackDepth),
-            hint: 'Maximum call-stack depth reached so far',
+            hint: 'Max depth',
             icon: GitBranch,
           },
           {
             label: 'Hot Line',
             value: hottestLine ? `L${hottestLine.line}` : 'None',
-            hint: hottestLine ? `${hottestLine.hits} hits in this slice` : 'No hotspot yet',
+            hint: hottestLine ? `${hottestLine.hits} hits` : 'No hotspot',
             icon: Activity,
           },
         ].map((card, index) => (
@@ -274,7 +293,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.04 }}
-            className="rounded border-[2px] border-slate-200 dark:border-[#333] bg-white dark:bg-[#161618] p-3"
+            className={`${panelClass} p-3`}
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
@@ -292,17 +311,17 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
         ))}
       </div>
 
-      <section className="rounded border-[2px] border-slate-200 dark:border-[#333] bg-white dark:bg-[#161618] p-4">
+      <section className={`${panelClass} p-4`}>
         <div className="flex items-center justify-between gap-3">
           <div>
             <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
               Hot Lines
             </h4>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              The bars below show where the runtime is spending the most steps.
+              Most-hit lines in this slice.
             </p>
           </div>
-          <span className={`rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+          <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
             Heat Map
           </span>
         </div>
@@ -313,7 +332,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               <span className="text-xs font-black text-slate-700 dark:text-slate-300">
                 Line {entry.line}
               </span>
-              <div className="h-4 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-[#333] dark:bg-[#111113]">
+              <div className="h-4 overflow-hidden border-[2px] border-slate-900 bg-slate-100 dark:border-[#333] dark:bg-[#111113]">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${entry.share * 100}%` }}
@@ -330,22 +349,22 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded border-[2px] border-slate-200 dark:border-[#333] bg-white dark:bg-[#161618] p-4">
+        <div className={`${panelClass} p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
                 Stack Depth
               </h4>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Depth rises and falls as recursion or nested calls expand.
+                Depth over time.
               </p>
             </div>
-            <span className={`rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
               Peak {peakStackDepth}
             </span>
           </div>
 
-          <div className="mt-4 rounded border border-slate-200 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113]">
+          <div className={`mt-4 p-3 ${subPanelClass}`}>
             <svg viewBox="0 0 320 110" className="h-28 w-full">
               <path d={stackChart.areaPath} fill={accentFillSoft} />
               <path
@@ -360,22 +379,22 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           </div>
         </div>
 
-        <div className="rounded border-[2px] border-slate-200 dark:border-[#333] bg-white dark:bg-[#161618] p-4">
+        <div className={`${panelClass} p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
                 Source Flow
               </h4>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                This sparkline tracks how execution jumps through the source lines.
+                Line hops over time.
               </p>
             </div>
-            <span className={`rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
               Line Path
             </span>
           </div>
 
-          <div className="mt-4 rounded border border-slate-200 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113]">
+          <div className={`mt-4 p-3 ${subPanelClass}`}>
             <svg viewBox="0 0 320 110" className="h-28 w-full">
               <path d={lineChart.areaPath} fill={accentFillSoft} />
               <path

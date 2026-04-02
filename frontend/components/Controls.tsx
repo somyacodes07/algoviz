@@ -24,21 +24,19 @@ const Controls: React.FC<ControlsProps> = ({
   const isSaffron = themeColor === 'saffron';
 
   const playBtnClass = isSaffron
-    ? "bg-saffron-500 hover:bg-saffron-400 shadow-saffron-500/30"
-    : "bg-blue-500 hover:bg-blue-400 shadow-blue-500/30";
+    ? "bg-saffron-500 hover:bg-saffron-400"
+    : "bg-blue-500 hover:bg-blue-400";
 
   const progressFillClass = isSaffron ? "bg-saffron-500" : "bg-blue-500";
   const accentClass = isSaffron ? "accent-saffron-500" : "accent-blue-500";
-  const hoverResetClass = isSaffron
-    ? "hover:bg-saffron-100 dark:hover:bg-saffron-900/30 hover:text-saffron-600 dark:hover:text-saffron-400"
-    : "hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400";
   const hoverStepClass = isSaffron
-    ? "hover:bg-saffron-50 dark:hover:bg-[#1a1a1c] hover:border-saffron-200 dark:hover:border-[#333]"
-    : "hover:bg-blue-50 dark:hover:bg-[#1a1a1c] hover:border-blue-200 dark:hover:border-[#333]";
+    ? "hover:bg-saffron-50 dark:hover:bg-[#1a1a1c] hover:border-saffron-500 dark:hover:border-saffron-600"
+    : "hover:bg-blue-50 dark:hover:bg-[#1a1a1c] hover:border-blue-500 dark:hover:border-blue-600";
 
   const stepBadgeClass = isSaffron
-    ? "text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[#161618] border-saffron-200 dark:border-[#333]"
-    : "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-[#161618] border-blue-200 dark:border-[#333]";
+    ? "text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[#161618] border-saffron-500 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221]"
+    : "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-[#161618] border-blue-500 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a]";
+  const toolButtonClass = "border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]";
 
   return (
     <div className="h-auto px-6 py-4 flex flex-col md:flex-row items-center gap-6 shrink-0 z-20 bg-white dark:bg-[#0A0A0B] border-t-[2px] border-slate-900 dark:border-[#222] transition-colors duration-200 ease-out">
@@ -48,7 +46,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={onReset}
-            className={`p-2 rounded bg-slate-100 dark:bg-[#161618] text-slate-600 dark:text-slate-400 transition-all border border-slate-200 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222] active:translate-y-[1px]`}
+            className={`p-2 text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-200 dark:hover:bg-[#222] active:translate-y-[2px] active:shadow-none ${toolButtonClass}`}
             title="Reset (R)"
           >
             <RotateCcw size={18} />
@@ -61,7 +59,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={onPrev} disabled={!canPrev}
-            className={`p-2 rounded border border-transparent ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent text-slate-700 dark:text-slate-300 transition-all active:translate-y-[1px]`}
+            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[#161618] dark:disabled:hover:border-[#333] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
           >
             <StepBack size={20} />
           </button>
@@ -71,7 +69,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={onPlayPause}
-            className={`p-3 rounded text-white shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000] border-2 border-transparent transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${playBtnClass}`}
+            className={`p-3 text-white shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] border-[2px] border-slate-900 dark:border-[#333] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${playBtnClass}`}
           >
             {isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-1" />}
           </button>
@@ -81,7 +79,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={onNext} disabled={!canNext}
-            className={`p-2 rounded border border-transparent ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent text-slate-700 dark:text-slate-300 transition-all active:translate-y-[1px]`}
+            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[#161618] dark:disabled:hover:border-[#333] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
           >
             <StepForward size={20} />
           </button>
@@ -94,7 +92,7 @@ const Controls: React.FC<ControlsProps> = ({
         {/* Top row: Step Counter */}
         <div className="flex justify-between items-center h-5">
           {totalSteps > 0 && (
-            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border ${stepBadgeClass}`}>
+            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 border-[2px] ${stepBadgeClass}`}>
               Step {currentStep + 1} / {totalSteps}
             </span>
           )}
@@ -103,16 +101,16 @@ const Controls: React.FC<ControlsProps> = ({
         {/* Bottom row: Progress bar */}
         <div className="relative group flex items-center h-6 cursor-pointer">
           {/* Track background */}
-          <div className="absolute left-0 right-0 h-2.5 bg-slate-200 dark:bg-[#161618] border border-slate-300 dark:border-[#333] rounded-full overflow-hidden pointer-events-none">
+          <div className="absolute left-0 right-0 h-3 bg-slate-200 dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] overflow-hidden pointer-events-none shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
             <div
-              className={`absolute top-0 left-0 h-full transition-all duration-200 ease-out border-r border-slate-900/10 dark:border-white/10 ${progressFillClass}`}
+              className={`absolute top-0 left-0 h-full transition-all duration-200 ease-out border-r-[2px] border-slate-900/20 dark:border-white/10 ${progressFillClass}`}
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Interactive thumb (visible on hover) */}
           <div
-            className={`absolute h-4 w-4 bg-white border-2 border-slate-900 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 z-10`}
+            className={`absolute h-4 w-4 bg-white border-[2px] border-slate-900 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:bg-[#161618] dark:border-[#333] dark:shadow-[2px_2px_0_#000] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none transform -translate-x-1/2 z-10`}
             style={{ left: `${progress}%` }}
           ></div>
 
@@ -130,14 +128,14 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Speed Control */}
-      <div className="shrink-0 flex items-center gap-3 bg-slate-50 dark:bg-[#111113] px-3 py-2 rounded-lg border border-slate-200 dark:border-[#222]">
+      <div className="shrink-0 flex items-center gap-3 bg-slate-50 dark:bg-[#111113] px-3 py-2 border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
         <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest hidden xl:block">Speed</span>
         <input
           type="range"
           min="100" max="2000" step="100"
           value={2100 - speed}
           onChange={(e) => setSpeed(2100 - Number(e.target.value))}
-          className={`w-20 h-1.5 bg-slate-200 dark:bg-[#333] rounded-full appearance-none cursor-pointer ${accentClass}`}
+          className={`w-20 h-1.5 bg-slate-200 dark:bg-[#333] appearance-none cursor-pointer ${accentClass}`}
         />
         <span className="text-[11px] text-slate-700 dark:text-slate-300 w-8 text-right font-mono font-bold">
           {(1000 / speed).toFixed(1)}x

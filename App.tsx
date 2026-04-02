@@ -433,15 +433,14 @@ const App: React.FC = () => {
     language === "javascript" ? "JavaScript (ES6)" : "C++ (Beta)";
 
   // Theme Helper Classes
-  const headerClass =
-    themeColor === "saffron" ? "bg-saffron-500" : "bg-blue-600";
-  const tagClass = themeColor === "saffron" ? "bg-white/20" : "bg-white/20";
   const iconTextClass =
     themeColor === "saffron" ? "text-saffron-500" : "text-blue-500";
+  const toolbarBtnClass =
+    "flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:bg-white dark:hover:bg-[#1a1a1c] active:translate-y-[2px] active:shadow-none";
   const runBtnClass =
     themeColor === "saffron"
-      ? "bg-saffron-500 hover:bg-saffron-600 shadow-saffron-500/20"
-      : "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20";
+      ? "bg-saffron-500 hover:bg-saffron-600"
+      : "bg-blue-500 hover:bg-blue-600";
   const tabActiveText =
     themeColor === "saffron"
       ? "text-saffron-600 dark:text-saffron-400"
@@ -450,6 +449,10 @@ const App: React.FC = () => {
     themeColor === "saffron" ? "border-saffron-500" : "border-blue-500";
   const tabActiveBg =
     themeColor === "saffron" ? "bg-saffron-50/50" : "bg-blue-50/50";
+  const tabActiveShadow =
+    themeColor === "saffron"
+      ? "shadow-[inset_0_-4px_0_#f97316]"
+      : "shadow-[inset_0_-4px_0_#3b82f6]";
   const routeTransition = {
     duration: 0.52,
     ease: [0.22, 1, 0.36, 1] as const,
@@ -558,7 +561,7 @@ const App: React.FC = () => {
                     e.preventDefault();
                     handleGoHome();
                   }}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-500 dark:text-slate-400 transition-colors active:translate-y-[1px]"
+                  className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-500 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
                 >
                   <ArrowLeft size={18} />
                 </a>
@@ -578,7 +581,7 @@ const App: React.FC = () => {
               </div>
               <div className="flex items-center gap-4">
                 <div
-                  className="hidden sm:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded border border-slate-200 dark:border-[#222] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400"
+                  className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]"
                 >
                   <span>{langLabel}</span>
                 </div>
@@ -588,14 +591,14 @@ const App: React.FC = () => {
                     e.preventDefault();
                     handleOpenDocs();
                   }}
-                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded border border-slate-200 dark:border-[#222] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] hover:text-slate-900 dark:hover:text-slate-200 active:translate-y-[2px] active:shadow-none"
                 >
                   <BookOpen size={12} />
                   Docs
                 </a>
                 <button
                   onClick={toggleTheme}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-600 dark:text-slate-400 transition-colors active:translate-y-[1px]"
+                  className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
                 >
                   {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
@@ -622,19 +625,19 @@ const App: React.FC = () => {
                           e.stopPropagation();
                           setTemplateMenuOpen(true);
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-[#111113] border border-slate-200 dark:border-[#222] hover:bg-slate-200 dark:hover:bg-[#1a1a1c] hover:text-slate-900 dark:hover:text-slate-200 transition-colors uppercase tracking-widest active:translate-y-[1px]"
+                        className={toolbarBtnClass}
                         title="Open Template Palette (Cmd+K)"
                       >
                         <BookOpen size={12} />
                         Templates
-                        <span className="ml-1 opacity-50 px-1 border border-slate-300 dark:border-[#333] rounded text-[9px]">⌘K</span>
+                        <span className="ml-1 border-[2px] border-slate-300 dark:border-[#333] bg-white dark:bg-[#161618] px-1 text-[9px] leading-4 text-slate-500 dark:text-slate-400">⌘K</span>
                       </button>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {executionError && (
-                      <span className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-200 dark:border-red-900/30 font-medium">
+                      <span className="border-[2px] border-red-300 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-red-700 shadow-[2px_2px_0_#fecaca] dark:border-red-700 dark:bg-[#201010] dark:text-red-300 dark:shadow-[2px_2px_0_#3a1a1a]">
                         {executionError}
                       </span>
                     )}
@@ -642,10 +645,10 @@ const App: React.FC = () => {
                     {/* Copy Share Link */}
                     <button
                       onClick={handleCopyLink}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest rounded border transition-all active:translate-y-[1px] ${
+                      className={`${toolbarBtnClass} ${
                         linkCopied
-                          ? "bg-green-100 dark:bg-[#111113] text-green-700 dark:text-green-400 border-green-300 dark:border-green-800"
-                          : "bg-slate-100 dark:bg-[#111113] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#222] hover:bg-slate-200 dark:hover:bg-[#1a1a1c]"
+                          ? "border-green-300 bg-green-100 text-green-700 shadow-[2px_2px_0_#bbf7d0] dark:border-green-700 dark:bg-[#111113] dark:text-green-400 dark:shadow-[2px_2px_0_#14532d]"
+                          : ""
                       }`}
                       title="Copy shareable link"
                     >
@@ -658,14 +661,14 @@ const App: React.FC = () => {
                         setIsPlaying(false);
                         handleRun(code, language);
                       }}
-                      className={`flex items-center gap-2 px-6 py-1.5 text-[11px] font-black uppercase tracking-widest text-white rounded shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000] border border-transparent transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${runBtnClass}`}
+                      className={`flex items-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${runBtnClass}`}
                     >
                       <Play size={14} fill="currentColor" />
                       Run
                     </button>
                   </div>
                 </div>
-                <div className="flex-1 relative rounded border-[2px] border-slate-200 dark:border-[#222] overflow-hidden bg-white dark:bg-transparent">
+                <div className="flex-1 relative border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] overflow-hidden bg-white dark:bg-transparent">
                   <CodeEditor
                     code={code}
                     language={language}
@@ -689,12 +692,12 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[#161618] border-b-[2px] border-slate-900 dark:border-[#222]">
                   <button
                     onClick={() => setVisualizerMode(!visualizerMode)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all active:translate-y-[1px] border ${
+                    className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all active:translate-y-[2px] active:shadow-none ${
                       visualizerMode
                         ? isSaffron
-                          ? "bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-300 dark:border-saffron-700"
-                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700"
-                        : "bg-slate-100 dark:bg-[#1a1a1c] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222]"
+                          ? "bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-500 dark:border-saffron-700"
+                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-500 dark:border-blue-700"
+                        : "bg-slate-100 dark:bg-[#1a1a1c] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222]"
                     }`}
                     title={
                       visualizerMode
@@ -718,19 +721,19 @@ const App: React.FC = () => {
                   <div className="flex border-b-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#111113]">
                     <button
                       onClick={() => setActiveTab("variables")}
-                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "variables" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
+                      className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === "variables" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
                     >
                       <Layers size={16} /> Variables
                     </button>
                     <button
                       onClick={() => setActiveTab("stack")}
-                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "stack" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
+                      className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === "stack" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
                     >
                       <Layers size={16} className="rotate-180" /> Call Stack
                     </button>
                     <button
                       onClick={() => setActiveTab("performance")}
-                      className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "performance" ? `${tabActiveText} border-b-2 ${tabActiveBorder} ${tabActiveBg} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
+                      className={`flex-1 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "performance" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
                     >
                       <BarChart3 size={16} /> Complexity
                     </button>
@@ -778,7 +781,7 @@ const App: React.FC = () => {
                       {!consoleExpanded &&
                         currentStep.consoleOutput &&
                         currentStep.consoleOutput.length > 0 && (
-                          <span className="ml-2 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#222] text-[9px] font-bold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#333]">
+                          <span className="ml-2 border-[2px] border-slate-900 dark:border-[#333] bg-slate-200 dark:bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
                             {currentStep.consoleOutput.length}
                           </span>
                         )}
@@ -800,7 +803,7 @@ const App: React.FC = () => {
                         exit={{ opacity: 0 }}
                         className="flex-1 overflow-y-auto custom-scrollbar"
                       >
-                        <ConsolePanel logs={currentStep.consoleOutput || []} />
+                        <ConsolePanel logs={currentStep.consoleOutput || []} themeColor={themeColor} />
                       </motion.div>
                     )}
                   </AnimatePresence>
