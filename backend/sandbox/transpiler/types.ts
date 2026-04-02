@@ -43,6 +43,7 @@ export const STL_METHOD_MAP: Record<string, string> = {
 export const STL_MATH_FUNCTIONS: Record<string, string> = {
   'abs': 'Math.abs',
   'pow': 'Math.pow',
+  'exp': 'Math.exp',
   'sqrt': 'Math.sqrt',
   'ceil': 'Math.ceil',
   'floor': 'Math.floor',

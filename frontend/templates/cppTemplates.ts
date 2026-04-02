@@ -632,5 +632,247 @@ int main() {
     return 0;
 }
 `
+  },
+  
+  // ==============================
+  // AARTI MAM TEMPLATES
+  // ==============================
+  {
+    name: '1. Pair Sum (Brute Force)',
+    category: 'Aarti Mam',
+    description: 'Find a pair in an array whose sum equals z',
+    language: 'c++',
+    tags: ['array', 'pair', 'sum', 'brute-force', 'aarti-mam'],
+    code: `// Pair Sum (Brute Force)
+#include <iostream>
+using namespace std;
+
+// Function to find a pair in the given array whose sum is equal to z
+bool findPair(int a[], int n, int z)
+{
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            if (i != j && a[i] + a[j] == z)
+                return true;
+
+    return false;
+}
+
+int main()
+{
+    int a[] = {1, -2, 1, 0, 5};
+    int z = 0;
+    int n = sizeof(a) / sizeof(a[0]);
+
+    if (findPair(a, n, z))
+        cout << "True" << endl;
+    else
+        cout << "False" << endl;
+
+    return 0;
+}
+`
+  },
+  {
+    name: '2. Frequency Count (Hash Map)',
+    category: 'Aarti Mam',
+    description: 'Count frequencies of array items using an unordered_map',
+    language: 'c++',
+    tags: ['array', 'frequency', 'map', 'hash', 'aarti-mam'],
+    code: `// Frequency Count using Hash Map
+#include <iostream>
+#include <unordered_map>
+using namespace std;
+
+// Function to count frequencies of array items
+void countFreq(int arr[], int n)
+{
+    unordered_map<int, int> freq;
+
+    for (int i = 0; i < n; i++)
+        freq[arr[i]]++;
+
+    for (auto x : freq)
+        cout << x.first << " occurs " << x.second << " times." << endl;
+}
+
+int main()
+{
+    int arr[] = {10, 20, 20, 10, 10, 20, 5, 20};
+    int n = sizeof(arr) / sizeof(arr[0]);
+
+    countFreq(arr, n);
+
+    return 0;
+}
+`
+  },
+  {
+    name: '3. Function Growth Table',
+    category: 'Aarti Mam',
+    description: 'Compare computational growth functions mathematically (log, linear, quadratic, exponential)',
+    language: 'c++',
+    tags: ['math', 'growth', 'complexity', 'table', 'aarti-mam'],
+    code: `// Function Growth Table (log, n, n², nⁿ, eⁿ)
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+int main() {
+    cout << setw(5) << "n"
+         << setw(10) << "log(n)"
+         << setw(10) << "n"
+         << setw(10) << "n^2"
+         << setw(15) << "n^n"
+         << setw(15) << "e^n" << endl;
+
+    cout << "---------------------------------------------------------------" << endl;
+
+    for (int n = 1; n <= 10; n++) {
+        double logn = log(n);
+        double square = pow(n, 2);
+        double nn = pow(n, n);
+        double en = exp(n);
+
+        cout << setw(5) << n
+             << setw(10) << fixed << setprecision(2) << logn
+             << setw(10) << n
+             << setw(10) << square
+             << setw(15) << nn
+             << setw(15) << en << endl;
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: '4. Frequency Count (Simulated Array)',
+    category: 'Aarti Mam',
+    description: 'Frequency count simulation expanding from class psuedo-code',
+    language: 'c++',
+    tags: ['array', 'frequency', 'pseudo-code', 'aarti-mam'],
+    code: `// Frequency Count (Pseudo-Code Array Translation)
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 7;
+    int a[] = {5, 2, 8, 5, 2, 2, 9};
+    
+    // Initializing frequency bucket array up to a safe magnitude (e.g. 15 for safety)
+    int freq[15] = {0};
+
+    cout << "Calculating frequencies for elements..." << endl;
+    for(int i = 0; i < n; i++) {
+        // Pseudo-code called for 'cin >> a[i]'
+        // We simulate reading inputs by incrementing from predefined array 'a'
+        freq[a[i]]++;
+    }
+
+    // Output the results
+    for(int i = 0; i < 15; i++) {
+        if(freq[i] > 0) {
+            cout << "Value " << i << " occurs " << freq[i] << " times." << endl;
+        }
+    }
+    
+    return 0;
+}
+`
+  },
+  {
+    name: '5. Pair Sum (Simulated Arrays)',
+    category: 'Aarti Mam',
+    description: 'Pair sum simulation evaluating from class pseudo-code',
+    language: 'c++',
+    tags: ['array', 'pair', 'sum', 'pseudo-code', 'aarti-mam'],
+    code: `// Pair Sum (Pseudo-Code Array Translation)
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 6;
+    int a[] = {3, 1, 4, 1, 5, 9};
+    int z = 10; // Target sum
+    bool foundPair = false;
+
+    // First pseudo-loop logic for reading constraints into memory
+    /* 
+    for(int i = 0; i < n; i++)
+        cin >> a[i];  (Pre-defined in 'a[]' above instead for visualizer simulation)
+    */
+
+    for(int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            if(i != j && a[i] + a[j] == z) {
+                foundPair = true;
+            }
+        }
+    }
+
+    if(foundPair) {
+        cout << "Pair evaluating to " << z << " was found!" << endl;
+    } else {
+        cout << "No pair computes to " << z << "!" << endl;
+    }
+
+    return 0;
+}
+`
+  },
+  {
+    name: '6. Loop Complexity (O(N*logN))',
+    category: 'Aarti Mam',
+    description: 'Visualizing geometric iteration progression demonstrating computational loops',
+    language: 'c++',
+    tags: ['complexity', 'loops', 'big-o', 'aarti-mam'],
+    code: `// Loop Complexity Example Simulation (O(N * log N))
+#include <iostream>
+using namespace std;
+
+int main() {
+    int N = 32;
+    int count = 0;
+
+    cout << "Analyzing exponential loop scaling for N=" << N << endl;
+    
+    for (int i = N; i > 0; i /= 2) {
+        int innerLoopsCount = 0;
+        for (int j = 0; j < i; j++) {
+            count++;
+            innerLoopsCount++;
+        }
+        cout << "- Inner bounded execute operations: " << innerLoopsCount << " (for i: " << i << ")" << endl;
+    }
+    
+    cout << "Total computation complexity evaluated to: " << count << " iterations." << endl;
+    return 0;
+}
+`
+  },
+  {
+    name: '7. Add Two Numbers',
+    category: 'Aarti Mam',
+    description: 'Simple arithmetic translating from pseudo-code assignments',
+    language: 'c++',
+    tags: ['arithmetic', 'sum', 'pseudo-code', 'aarti-mam'],
+    code: `// Add Two Numbers (Pseudo-Code Expansion)
+#include <iostream>
+using namespace std;
+
+int main() {
+    int A = 1450;
+    int B = 550;
+
+    cout << "Assigning pseudo values A=" << A << " & B=" << B << endl;
+
+    int C = A + B;
+
+    cout << "Final Calculation (C) = " << C << endl;
+    return 0;
+}
+`
   }
 ];

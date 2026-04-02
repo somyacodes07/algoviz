@@ -40,7 +40,8 @@ const SUPPORTED_NODE_TYPES = new Set([
   'type_qualifier', 'storage_class_specifier',
   'preproc_include', 'preproc_def', 'preproc_call',
   'using_declaration', 'type_definition', 'alias_declaration',
-  'struct_specifier', 'field_declaration_list', 'field_declaration',
+  'struct_specifier', 'class_specifier', 'access_specifier', 'sizeof_expression', 
+  'field_declaration_list', 'field_declaration',
   'field_initializer_list', 'field_initializer',
   'parameter_list', 'parameter_declaration', 'argument_list',
   'init_declarator', 'initializer_list',
@@ -488,6 +489,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
           // Skip "using namespace std;" etc
           break;
         case 'struct_specifier':
+        case 'class_specifier':
           this.handleStructSpecifier(child);
           break;
         case 'function_definition':
@@ -624,8 +626,8 @@ ${overloadBlock}${fallbackBlock}  return instance;
         const paramType = param.childForFieldName('type')?.text ?? 'auto';
         const paramDeclarator = param.childForFieldName('declarator');
         let paramName = paramDeclarator?.text ?? `_p${i}`;
-        // Strip reference/pointer from name
-        paramName = paramName.replace(/^[&*\s]+/, '').trim();
+        // Strip reference/pointer and array brackets from name
+        paramName = paramName.replace(/^[&*\s]+/, '').replace(/\s*\[.*\]\s*/g, '').trim();
         params.push({ name: paramName, type: paramType });
       }
     }
@@ -663,6 +665,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
       case 'for_range_loop':
         return this.visitForRangeLoop(node);
       case 'struct_specifier':
+      case 'class_specifier':
         this.handleStructSpecifier(node);
         return '';
       case 'while_statement':
@@ -1288,10 +1291,13 @@ ${overloadBlock}${fallbackBlock}  return instance;
         // (int)x → just the value, skip the cast
         return this.visitExpression(node.childForFieldName('value') ?? node.namedChild(node.namedChildCount - 1)!);
 
-      case 'sizeof_expression':
-        // sizeof(x) → not directly translatable, warn
-        this.warnUnsupported(node);
-        return '0 /* sizeof not supported */';
+      case 'sizeof_expression': {
+        const valueNode = node.childForFieldName('value') || node.namedChild(0);
+        if (valueNode && valueNode.type === 'identifier') {
+          return `(${valueNode.text}.length || 1)`;
+        }
+        return '1';
+      }
 
       case 'initializer_list':
         return this.visitInitializerList(node);
@@ -1383,8 +1389,12 @@ ${overloadBlock}${fallbackBlock}  return instance;
       const right = current.childForFieldName('right');
       if (right) {
         const rightText = right.text.replace(/std::/g, '').trim();
-        // Skip endl
-        if (rightText !== 'endl' && rightText !== '"\\n"') {
+        // Skip endl and <iomanip> manipulators
+        if (rightText !== 'endl' && 
+            rightText !== '"\\n"' && 
+            rightText !== 'fixed' && 
+            !rightText.startsWith('setw') && 
+            !rightText.startsWith('setprecision')) {
           parts.unshift(this.visitExpression(right));
         }
       }

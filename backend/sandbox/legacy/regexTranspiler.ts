@@ -100,8 +100,11 @@ function parseCoutArgs(argsStr: string): string {
 
     // Filter out endl / std::endl and "\n"
     const filtered = parts.filter(p => {
-        const clean = p.trim();
-        return clean !== 'endl' && clean !== 'std::endl';
+        const clean = p.trim().replace(/std::/g, '');
+        return clean !== 'endl' &&
+               clean !== 'fixed' &&
+               !clean.startsWith('setw') &&
+               !clean.startsWith('setprecision');
     });
 
     return filtered.join(', ');
@@ -193,21 +196,15 @@ export function transpileCppToJs(cppCode: string): string {
         const { name, params, startIndex, openBraceIndex, closeBraceIndex, indent } = func;
         
         if (name === 'main') {
-            // Replaces: "int main() {"  → "// int main() {"
-            // Replaces: "}" (at closeBrace) → "// }"
+            // Completely unwrap main() so its body executes at global scope
             const beforeSig = js.substring(0, startIndex);
-            const signature = js.substring(startIndex, openBraceIndex + 1);
             const insideBody = js.substring(openBraceIndex + 1, closeBraceIndex);
             const afterBody = js.substring(closeBraceIndex + 1);
             
-            // Comment out signature but preserve its newlines, handle the beginning of string matching correctly
-            // We'll just replace the first non-whitespace character with // 
-            const commentedSignature = signature.replace(/([\w\\]+.*)/s, '// $1');
-            
-            // Also nullify `return 0;` inside main
+            // Nullify `return 0;` inside main
             const modifiedBody = insideBody.replace(/return\s+0\s*;/g, '// return 0;');
             
-            js = beforeSig + commentedSignature + modifiedBody + '// }' + afterBody;
+            js = beforeSig + '\n/* main body */\n' + modifiedBody + '\n/* end main */\n' + afterBody;
         } else {
             // Helper function: "void swap(int a, int b) {" → "function swap(a, b) {"
             // Transpile parameters: remove C++ types from params
@@ -218,7 +215,8 @@ export function transpileCppToJs(cppCode: string): string {
                     if (!trimmed) return '';
                     // Remove type prefix: "int x" → "x", "const string& s" → "s"
                     const parts = trimmed.replace(/&/g, '').trim().split(/\s+/);
-                    return parts[parts.length - 1]; // last token is the name
+                    let name = parts[parts.length - 1]; // last token is the name
+                    return name.replace(/\s*\[.*\]\s*/g, ''); // strip array brackets
                 })
                 .filter(Boolean)
                 .join(', ');
@@ -377,14 +375,14 @@ export function transpileCppToJs(cppCode: string): string {
     // ═══════════════════════════════════════════════════════════════════════
 
     // cout (parenthesis-aware to handle bitshift properly)
-    js = js.replace(/(?:std::)?cout\s*<<\s*(.*);/g, (_, args) => {
+    js = js.replace(/(?:std::)?cout\s*<<\s*(.*?);/gs, (_, args) => {
         const parsed = parseCoutArgs(args);
         if (!parsed) return '// empty cout';
         return `console.log(${parsed});`;
     });
 
     // cerr → console.error
-    js = js.replace(/(?:std::)?cerr\s*<<\s*(.*);/g, (_, args) => {
+    js = js.replace(/(?:std::)?cerr\s*<<\s*(.*?);/gs, (_, args) => {
         const parsed = parseCoutArgs(args);
         if (!parsed) return '// empty cerr';
         return `console.error(${parsed});`;
@@ -392,7 +390,7 @@ export function transpileCppToJs(cppCode: string): string {
 
     // cin >> var; → let var = __tracer.input();
     // cin >> a >> b; → a = __tracer.input(); b = __tracer.input();
-    js = js.replace(/(?:std::)?cin\s*>>\s*(.*);/g, (_, args) => {
+    js = js.replace(/(?:std::)?cin\s*>>\s*(.*?);/gs, (_, args) => {
         const vars = args.split('>>').map((v: string) => v.trim()).filter(Boolean);
         return vars.map((v: string) => `${v} = __tracer.input();`).join(' ');
     });
@@ -556,13 +554,21 @@ export function transpileCppToJs(cppCode: string): string {
     // Math functions — (?<!\.) prevents matching property accesses like console.log
     js = js.replace(/(?<!\.)(?:\b)abs\s*\(/g, 'Math.abs(');
     js = js.replace(/(?<!\.)(?:\b)pow\s*\(/g, 'Math.pow(');
+    js = js.replace(/(?<!\.)(?:\b)exp\s*\(/g, 'Math.exp(');
     js = js.replace(/(?<!\.)(?:\b)sqrt\s*\(/g, 'Math.sqrt(');
     js = js.replace(/(?<!\.)(?:\b)ceil\s*\(/g, 'Math.ceil(');
     js = js.replace(/(?<!\.)(?:\b)floor\s*\(/g, 'Math.floor(');
     js = js.replace(/(?<!\.)(?:\b)log\s*\(/g, 'Math.log(');
     js = js.replace(/(?<!\.)(?:\b)log2\s*\(/g, 'Math.log2(');
     js = js.replace(/(?<!\.)(?:\b)log10\s*\(/g, 'Math.log10(');
-    js = js.replace(/(?<!\.)(?:\b)round\s*\(/g, 'Math.round(');
+    js = js.replace(/\bround\s*\(/g, 'Math.round(');
+
+    // sizeof(...) → (.length || 1)
+    js = js.replace(/\bsizeof\s*\(([^)]+)\)/g, (_, arg) => {
+        const typeArg = arg.trim();
+        if (['int', 'long', 'float', 'double', 'char', 'bool'].includes(typeArg)) return '1';
+        return `(${typeArg}.length || 1)`;
+    });
 
     // Constants
     js = js.replace(/\bINT_MAX\b/g, 'Number.MAX_SAFE_INTEGER');
