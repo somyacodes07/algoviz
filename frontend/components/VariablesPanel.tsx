@@ -4,10 +4,12 @@ import { VariableMap } from '../../types';
 import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
 import StructureVisualizer from './StructureVisualizer';
 
+import { getThemeConfig, ThemeColor } from '../theme/theme';
+
 interface VariablesPanelProps {
     variables: VariableMap;
     prevVariables: VariableMap;
-    themeColor: 'saffron' | 'blue';
+    themeColor: ThemeColor;
 }
 
 function safeSerialize(value: unknown, maxDepth: number = 3): string {
@@ -62,7 +64,7 @@ function valuesAreEqual(left: unknown, right: unknown): boolean {
 const ArrayVisualizer: React.FC<{
     value: number[];
     prevValue?: number[];
-    themeColor: 'saffron' | 'blue';
+    themeColor: ThemeColor;
     variables?: VariableMap;
 }> = ({ value, prevValue, themeColor, variables = {} }) => {
     if (!value || value.length === 0 || value.length > 30) return null;
@@ -202,7 +204,7 @@ const VariableCard: React.FC<{
     value: any;
     prevValue?: any;
     wasPresent: boolean;
-    themeColor: 'saffron' | 'blue';
+    themeColor: ThemeColor;
     variables: VariableMap;
 }> = ({ name, value, prevValue, wasPresent, themeColor, variables }) => {
     const [isExpanded, setIsExpanded] = useState(false);

@@ -8,11 +8,13 @@ import {
 } from 'lucide-react';
 import { ComplexityAnalysis, Timeline } from '../../types';
 
+import { getThemeConfig, ThemeColor } from '../theme/theme';
+
 interface PerformancePanelProps {
   timeline: Timeline;
   currentStepIndex: number;
   analysis: ComplexityAnalysis | null;
-  themeColor: 'saffron' | 'blue';
+  themeColor: ThemeColor;
 }
 
 function formatCount(value: number): string {
@@ -104,22 +106,14 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
   analysis,
   themeColor,
 }) => {
-  const isSaffron = themeColor === 'saffron';
-  const accentBg = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
-  const accentSoftBg = isSaffron ? 'bg-saffron-100 dark:bg-saffron-900/20' : 'bg-blue-100 dark:bg-blue-900/20';
-  const accentText = isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400';
-  const accentBorder = isSaffron ? 'border-saffron-300 dark:border-saffron-800' : 'border-blue-300 dark:border-blue-800';
-  const accentFill = isSaffron ? '#f97316' : '#3b82f6';
-  const accentFillSoft = isSaffron ? 'rgba(249, 115, 22, 0.18)' : 'rgba(59, 130, 246, 0.18)';
-  const panelClass = 'border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]';
-  const subPanelClass = 'border-[2px] border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113]';
+  const theme = getThemeConfig(themeColor);
 
   if (timeline.length === 0 || currentStepIndex < 0) {
     return (
       <div className="h-full flex items-center justify-center p-6">
         <div className="max-w-sm w-full border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] p-6 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
-          <div className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${accentBorder} ${accentSoftBg}`}>
-            <BarChart3 size={18} className={accentText} />
+          <div className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${theme.accentBorder} ${theme.accentSoftBg}`}>
+            <BarChart3 size={18} className={theme.accentText} />
           </div>
           <h3 className="text-sm font-black uppercase tracking-[0.24em] text-slate-700 dark:text-slate-300">
             Trace Complexity
@@ -177,12 +171,12 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`${panelClass} p-4`}
+        className={`${theme.panelClass} p-4`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+              <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
                 <Activity size={12} />
                 Trace Estimate
               </span>
@@ -205,11 +199,11 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             </div>
           </div>
 
-          <div className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${accentBorder} ${accentSoftBg}`}>
+          <div className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${theme.accentBorder} ${theme.accentSoftBg}`}>
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Trace Slice
             </div>
-            <div className={`mt-1 text-2xl font-black ${accentText}`}>
+            <div className={`mt-1 text-2xl font-black ${theme.accentText}`}>
               {Math.round(((currentStepIndex + 1) / timeline.length) * 100)}%
             </div>
             <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -223,9 +217,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             {analysis.estimate.rationale.slice(0, 2).map((reason) => (
               <div
                 key={reason}
-                className={`${subPanelClass} flex items-start gap-2 p-2 text-sm text-slate-600 dark:text-slate-300`}
+                className={`${theme.subPanelClass} flex items-start gap-2 p-2 text-sm text-slate-600 dark:text-slate-300`}
               >
-                <span className={`mt-1 h-2.5 w-2.5 shrink-0 ${accentBg}`} />
+                <span className={`mt-1 h-2.5 w-2.5 shrink-0 ${theme.accentBg}`} />
                 <span className="leading-relaxed font-medium">{compactReason(reason)}</span>
               </div>
             ))}
@@ -293,13 +287,13 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.04 }}
-            className={`${panelClass} p-3`}
+            className={`${theme.panelClass} p-3`}
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                 {card.label}
               </span>
-              <card.icon size={15} className={accentText} />
+              <card.icon size={15} className={theme.accentText} />
             </div>
             <div className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
               {card.value}
@@ -311,7 +305,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
         ))}
       </div>
 
-      <section className={`${panelClass} p-4`}>
+      <section className={`${theme.panelClass} p-4`}>
         <div className="flex items-center justify-between gap-3">
           <div>
             <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
@@ -321,7 +315,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               Most-hit lines in this slice.
             </p>
           </div>
-          <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+          <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
             Heat Map
           </span>
         </div>
@@ -337,7 +331,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                   initial={{ width: 0 }}
                   animate={{ width: `${entry.share * 100}%` }}
                   transition={{ type: 'spring', stiffness: 180, damping: 24, delay: index * 0.05 }}
-                  className={`h-full ${accentBg}`}
+                  className={`h-full ${theme.accentBg}`}
                 />
               </div>
               <span className="text-right text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
@@ -349,7 +343,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className={`${panelClass} p-4`}>
+        <div className={`${theme.panelClass} p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
@@ -359,18 +353,18 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                 Depth over time.
               </p>
             </div>
-            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
               Peak {peakStackDepth}
             </span>
           </div>
 
-          <div className={`mt-4 p-3 ${subPanelClass}`}>
+          <div className={`mt-4 p-3 ${theme.subPanelClass}`}>
             <svg viewBox="0 0 320 110" className="h-28 w-full">
-              <path d={stackChart.areaPath} fill={accentFillSoft} />
+              <path d={stackChart.areaPath} fill={theme.accentFillSoft} />
               <path
                 d={stackChart.linePath}
                 fill="none"
-                stroke={accentFill}
+                stroke={theme.accentFill}
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -379,7 +373,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           </div>
         </div>
 
-        <div className={`${panelClass} p-4`}>
+        <div className={`${theme.panelClass} p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
@@ -389,18 +383,18 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                 Line hops over time.
               </p>
             </div>
-            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${accentSoftBg} ${accentText} ${accentBorder}`}>
+            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
               Line Path
             </span>
           </div>
 
-          <div className={`mt-4 p-3 ${subPanelClass}`}>
+          <div className={`mt-4 p-3 ${theme.subPanelClass}`}>
             <svg viewBox="0 0 320 110" className="h-28 w-full">
-              <path d={lineChart.areaPath} fill={accentFillSoft} />
+              <path d={lineChart.areaPath} fill={theme.accentFillSoft} />
               <path
                 d={lineChart.linePath}
                 fill="none"
-                stroke={accentFill}
+                stroke={theme.accentFill}
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"

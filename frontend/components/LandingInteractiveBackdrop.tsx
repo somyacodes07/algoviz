@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   motion,
   useMotionTemplate,
@@ -6,6 +6,7 @@ import {
   useReducedMotion,
   useSpring,
   useTransform,
+  useInView,
 } from "framer-motion";
 
 type SignalTone = "amber" | "blue" | "emerald" | "slate";
@@ -41,6 +42,8 @@ const toneClasses = {
 const LandingInteractiveBackdrop: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef);
 
   const pointerX = useMotionValue(720);
   const pointerY = useMotionValue(320);
@@ -58,6 +61,8 @@ const LandingInteractiveBackdrop: React.FC = () => {
     };
 
     const handlePointerMove = (event: PointerEvent) => {
+      // Suspend tracking if strictly out of view to save CPU. 
+      if (!isInView) return;
       pointerX.set(event.clientX);
       pointerY.set(event.clientY);
     };
@@ -75,7 +80,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
       window.removeEventListener("resize", syncViewport);
       window.removeEventListener("pointermove", handlePointerMove);
     };
-  }, [pointerX, pointerY, prefersReducedMotion]);
+  }, [pointerX, pointerY, prefersReducedMotion, isInView]);
 
   const smoothX = useSpring(pointerX, {
     stiffness: 110,
@@ -109,6 +114,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       aria-hidden="true"
       className="absolute inset-0 overflow-hidden pointer-events-none"
     >
@@ -164,7 +170,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
             right: signal.right,
           }}
           animate={
-            prefersReducedMotion
+            prefersReducedMotion || !isInView
               ? undefined
               : {
                   y: [0, -10, 0],

@@ -75,20 +75,20 @@ const EXECUTION_STEPS = [
   },
 ];
 
-const HERO_SIGNAL_CARDS = [
-  {
-    label: "Live Variables",
-    value: "See values mutate instead of guessing what changed.",
-  },
-  {
-    label: "Call Stack",
-    value: "Follow recursion depth and frame order in real time.",
-  },
-  {
-    label: "Browser C++",
-    value: "Trace DSA-style C++ through the same visual timeline.",
-  },
-];
+// const HERO_SIGNAL_CARDS = [
+//   {
+//     label: "Live Variables",
+//     value: "See values mutate instead of guessing what changed.",
+//   },
+//   {
+//     label: "Call Stack",
+//     value: "Follow recursion depth and frame order in real time.",
+//   },
+//   {
+//     label: "Browser C++",
+//     value: "Trace DSA-style C++ through the same visual timeline.",
+//   },
+// ];
 
 const HomePage: React.FC<HomePageProps> = ({
   onSelectLanguage,
@@ -290,8 +290,8 @@ const HomePage: React.FC<HomePageProps> = ({
               transition={{ duration: 0.45, delay: 0.25 }}
               className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3"
             >
-              {HERO_SIGNAL_CARDS.map((card) => (
-                <div
+              {/* {HERO_SIGNAL_CARDS.map((card) => ( */}
+                {/* <div
                   key={card.label}
                   className="rounded-2xl border border-slate-900/15 bg-white/60 px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/35 dark:shadow-[0_16px_40px_rgba(2,6,23,0.45)]"
                 >
@@ -302,7 +302,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     {card.value}
                   </p>
                 </div>
-              ))}
+              ))} */}
             </motion.div>
           </div>
 

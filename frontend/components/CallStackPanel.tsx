@@ -1,22 +1,20 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { getThemeConfig, ThemeColor } from '../theme/theme';
+
 interface CallStackPanelProps {
   stack: string[];
-  themeColor: 'saffron' | 'blue';
+  themeColor: ThemeColor;
 }
 
 const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) => {
   const displayStack = [...stack].reverse();
-  const isSaffron = themeColor === 'saffron';
+  const theme = getThemeConfig(themeColor);
 
-  const activeClass = isSaffron
-    ? 'border-saffron-500 dark:border-saffron-600 shadow-[3px_3px_0_#fbd38d] dark:shadow-[3px_3px_0_#9c4221] bg-saffron-50 dark:bg-[#1c1411]'
-    : 'border-blue-500 dark:border-blue-600 shadow-[3px_3px_0_#93c5fd] dark:shadow-[3px_3px_0_#1e3a8a] bg-blue-50 dark:bg-[#11151c]';
-  const inactiveClass = 'border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] bg-white dark:bg-[#111113]';
-  const accentBadge = isSaffron
-    ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400'
-    : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+  const activeClass = theme.panelClass + ` ${theme.accentSoftBg} ${theme.accentBorder}`;
+  const inactiveClass = 'border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] bg-white dark:bg-[#111113]';
+  const accentBadge = theme.badgeClass;
 
   return (
     <div className="flex flex-col p-4 min-h-[100px] pb-10">
@@ -29,7 +27,7 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
             {stack.length > 0 ? `${stack.length} frame${stack.length > 1 ? 's' : ''}` : 'Idle'}
           </div>
         </div>
-        <span className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${accentBadge}`}>
+        <span className={accentBadge}>
           {stack.length > 0 ? 'Top live' : 'Empty'}
         </span>
       </div>
@@ -64,15 +62,15 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                 style={{ zIndex, marginTop: index > 0 ? -20 : 0 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className={`border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] ${
+                  <span className={
                     isTop
                       ? accentBadge
-                      : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400'
-                  }`}>
+                      : 'border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] border-slate-300 bg-slate-100 text-slate-500 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400'
+                  }>
                     {isTop ? 'Top frame' : `Frame ${stack.length - 1 - index}`}
                   </span>
                   {isTop && (
-                    <span className={`border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] ${accentBadge}`}>
+                    <span className={accentBadge}>
                       Live
                     </span>
                   )}

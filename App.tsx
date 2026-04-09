@@ -1,53 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CodeEditor from "./frontend/components/CodeEditor";
-import VariablesPanel from "./frontend/components/VariablesPanel";
-import CallStackPanel from "./frontend/components/CallStackPanel";
-import ConsolePanel from "./frontend/components/ConsolePanel";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
-import PerformancePanel from "./frontend/components/PerformancePanel";
 import TemplatePalette from "./frontend/components/TemplatePalette";
 import DocsPage from "./frontend/components/DocsPage";
+import WorkspaceHeader from "./frontend/components/layout/WorkspaceHeader";
+import WorkspaceEditor from "./frontend/components/layout/WorkspaceEditor";
+import WorkspaceVisualizer from "./frontend/components/layout/WorkspaceVisualizer";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
 import { useSeoMetadata } from "./frontend/hooks/useSeoMetadata";
-import {
-  JS_TEMPLATES,
-  CPP_TEMPLATES,
-  CodeTemplate,
-} from "./frontend/codeTemplates";
+import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from "./frontend/codeTemplates";
 import { getSeoConfig } from "./frontend/seo";
-import {
-  AppLanguage,
-  AppPage,
-  getPathForState,
-  getStateFromPath,
-  ROUTES,
-} from "./frontend/routes";
-import {
-  Play,
-  RotateCcw,
-  Box,
-  Layers,
-  Terminal as TerminalIcon,
-  Info,
-  Sparkles,
-  Moon,
-  Sun,
-  ArrowLeft,
-  Code,
-  Link2,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  BarChart3,
-  BookOpen,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
-
-import logoLight from "./assets/logo-light.png";
-import logoDark from "./assets/logo-dark.png";
+import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
 
 const JS_DEFAULT_CODE = `// Welcome to AlgoViz!
 // Edit this code and click the Play button below.
@@ -78,7 +42,6 @@ const CPP_DEFAULT_CODE = `// C++ Visualizer (Beta)
 #include <algorithm>
 
 using namespace std;
-
 
 int findMax(vector<int> arr) {
     int maxVal = arr[0];
@@ -117,7 +80,6 @@ int main() {
 }
 `;
 
-// --- Shareable Link Helpers ---
 function encodeShareLink(code: string, lang: string): string {
   const payload = JSON.stringify({ code, lang });
   const encoded = btoa(unescape(encodeURIComponent(payload)));
@@ -165,9 +127,7 @@ function getInitialAppState(): {
 const App: React.FC = () => {
   const [initialAppState] = useState(getInitialAppState);
   const [page, setPage] = useState<AppPage>(initialAppState.page);
-  const [language, setLanguage] = useState<AppLanguage>(
-    initialAppState.language,
-  );
+  const [language, setLanguage] = useState<AppLanguage>(initialAppState.language);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (
       typeof window !== "undefined" &&
@@ -180,9 +140,7 @@ const App: React.FC = () => {
   });
 
   const [code, setCode] = useState<string>(initialAppState.code);
-  const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance">(
-    "variables",
-  );
+  const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance">("variables");
   const [linkCopied, setLinkCopied] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [visualizerMode, setVisualizerMode] = useState(false);
@@ -211,7 +169,6 @@ const App: React.FC = () => {
 
   // Derived Theme Color
   const themeColor = language === "c++" ? "blue" : "saffron";
-  const isSaffron = themeColor === "saffron";
   const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
   const seoConfig = getSeoConfig(window.location.origin, page, language);
 
@@ -243,7 +200,6 @@ const App: React.FC = () => {
     [],
   );
 
-  // Apply Theme class to Body for Tailwind Dark Mode
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === "dark") {
@@ -266,13 +222,11 @@ const App: React.FC = () => {
     }
   }, [page, language, syncUrl]);
 
-  // Listen to System Theme Changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
       setTheme(e.matches ? "dark" : "light");
     };
-    // Use modern addEventListener if available, fallback for older Safari
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", handleChange);
       return () => mediaQuery.removeEventListener("change", handleChange);
@@ -285,7 +239,6 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Only run if in editor mode and timeline is empty (initial load)
     if (page === "editor" && timeline.length === 0) {
       handleRun(code, language);
     }
@@ -319,10 +272,8 @@ const App: React.FC = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [language, setIsPlaying]);
 
-  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Do not trigger shortcuts if user is typing in an input, textarea, or Monaco editor
       const target = e.target as HTMLElement;
       if (
         target.tagName === "INPUT" ||
@@ -348,7 +299,7 @@ const App: React.FC = () => {
           prevStep();
           break;
         case "KeyR":
-          if (e.metaKey || e.ctrlKey) return; // Don't block browser refresh
+          if (e.metaKey || e.ctrlKey) return;
           e.preventDefault();
           reset(code, language);
           break;
@@ -359,7 +310,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [page, togglePlayPause, nextStep, prevStep, reset, code, language]);
 
-  // Close template menu on outside click
   useEffect(() => {
     if (!templateMenuOpen) return;
     const handleClick = () => setTemplateMenuOpen(false);
@@ -401,7 +351,6 @@ const App: React.FC = () => {
     setCode(template.code);
     setIsPlaying(false);
     setTemplateMenuOpen(false);
-    // Auto-run after loading template
     setTimeout(() => handleRun(template.code, language), 100);
   };
 
@@ -426,96 +375,26 @@ const App: React.FC = () => {
   };
 
   const prevStepVariables = timeline[currentStepIndex - 1] || { variables: {} };
-  const progress =
-    timeline.length > 1 ? (currentStepIndex / (timeline.length - 1)) * 100 : 0;
+  const progress = timeline.length > 1 ? (currentStepIndex / (timeline.length - 1)) * 100 : 0;
+  const langLabel = language === "javascript" ? "JavaScript (ES6)" : "C++ (Beta)";
 
-  const langLabel =
-    language === "javascript" ? "JavaScript (ES6)" : "C++ (Beta)";
-
-  // Theme Helper Classes
-  const iconTextClass =
-    themeColor === "saffron" ? "text-saffron-500" : "text-blue-500";
-  const toolbarBtnClass =
-    "flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:bg-white dark:hover:bg-[#1a1a1c] active:translate-y-[2px] active:shadow-none";
-  const runBtnClass =
-    themeColor === "saffron"
-      ? "bg-saffron-500 hover:bg-saffron-600"
-      : "bg-blue-500 hover:bg-blue-600";
-  const tabActiveText =
-    themeColor === "saffron"
-      ? "text-saffron-600 dark:text-saffron-400"
-      : "text-blue-600 dark:text-blue-400";
-  const tabActiveBorder =
-    themeColor === "saffron" ? "border-saffron-500" : "border-blue-500";
-  const tabActiveBg =
-    themeColor === "saffron" ? "bg-saffron-50/50" : "bg-blue-50/50";
-  const tabActiveShadow =
-    themeColor === "saffron"
-      ? "shadow-[inset_0_-4px_0_#f97316]"
-      : "shadow-[inset_0_-4px_0_#3b82f6]";
-  const routeTransition = {
-    duration: 0.52,
-    ease: [0.22, 1, 0.36, 1] as const,
-  };
   const routeVariants = {
-    initial: {
-      opacity: 0,
-      y: 24,
-      scale: 0.985,
-      filter: "blur(10px)",
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: routeTransition,
-    },
-    exit: {
-      opacity: 0,
-      y: -18,
-      scale: 1.01,
-      filter: "blur(8px)",
-      transition: {
-        duration: 0.28,
-        ease: [0.4, 0, 1, 1] as const,
-      },
-    },
+    initial: { opacity: 0, y: 24, scale: 0.985, filter: "blur(10px)" },
+    animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1] } },
+    exit: { opacity: 0, y: -18, scale: 1.01, filter: "blur(8px)", transition: { duration: 0.28, ease: [0.4, 0, 1, 1] } },
   };
 
   return (
     <div
       className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
-        page === "home"
-          ? "min-h-screen overflow-x-hidden overflow-y-auto"
-          : "h-screen overflow-hidden"
+        page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-screen overflow-hidden"
       } ${
-        page === "home"
-          ? "bg-[#f7f0e3] dark:bg-[#08121f]"
-          : theme === "dark"
-            ? "bg-mesh-dark"
-            : "bg-mesh-light"
+        page === "home" ? "bg-[#f7f0e3] dark:bg-[#08121f]" : theme === "dark" ? "bg-mesh-dark" : "bg-mesh-light"
       }`}
     >
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
-          <motion.div
-            key="home"
-            variants={routeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="relative h-full w-full will-change-transform"
-          >
-            {/* We moved the theme toggle INTO the HomePage header or we can just adjust its absolute position here to not overlap */}
-            <div className="absolute top-6 right-6 z-50">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 shadow-md border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-              </button>
-            </div>
+          <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative h-full w-full will-change-transform">
             <HomePage
               onSelectLanguage={handleLanguageSelect}
               onOpenDocs={handleOpenDocs}
@@ -525,14 +404,7 @@ const App: React.FC = () => {
             />
           </motion.div>
         ) : page === "docs" ? (
-          <motion.div
-            key="docs"
-            variants={routeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="h-full w-full will-change-transform"
-          >
+          <motion.div key="docs" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="h-full w-full will-change-transform">
             <DocsPage
               onBack={handleGoHome}
               theme={theme}
@@ -542,273 +414,52 @@ const App: React.FC = () => {
             />
           </motion.div>
         ) : (
-          <motion.div
-            key="editor"
-            variants={routeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex h-full w-full flex-col will-change-transform"
-          >
-            {/* Header */}
-            <header
-              className={`h-14 flex items-center px-6 justify-between bg-white dark:bg-[#0A0A0B] border-b border-slate-900 dark:border-[#222] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0`}
-            >
-              <div className="flex items-center gap-4">
-                <a
-                  href={ROUTES.home}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleGoHome();
-                  }}
-                  className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-500 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
-                >
-                  <ArrowLeft size={18} />
-                </a>
-                <div className="flex items-center justify-center w-7 h-7 bg-white dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#444] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] rounded-sm transform -rotate-3 transition-transform hover:rotate-0">
-                  <span className="text-slate-900 dark:text-slate-100 font-black text-[11px] tracking-tighter">
-                    AV<span className="text-blue-600 dark:text-saffron-500">.</span>
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
-                    AlgoViz
-                  </h1>
-                  <span className="text-slate-500 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">
-                    Workbench
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div
-                  className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]"
-                >
-                  <span>{langLabel}</span>
-                </div>
-                <a
-                  href={ROUTES.docs}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleOpenDocs();
-                  }}
-                  className="hidden sm:inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] hover:text-slate-900 dark:hover:text-slate-200 active:translate-y-[2px] active:shadow-none"
-                >
-                  <BookOpen size={12} />
-                  Docs
-                </a>
-                <button
-                  onClick={toggleTheme}
-                  className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
-                >
-                  {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-                </button>
-              </div>
-            </header>
+          <motion.div key="editor" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="flex h-full w-full flex-col will-change-transform">
+            <WorkspaceHeader
+              language={language}
+              theme={theme}
+              langLabel={langLabel}
+              onGoHome={handleGoHome}
+              onOpenDocs={handleOpenDocs}
+              toggleTheme={toggleTheme}
+            />
 
-            {/* Main Content */}
             <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[#0A0A0B] z-10 relative">
-              {/* Left Panel: Editor */}
-              <div
-                className={`flex flex-col h-full w-full md:min-w-[300px] bg-white dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_#000] p-4 md:p-5 transition-all duration-200 ease-out ${visualizerMode ? "md:w-[40%]" : "md:flex-1"}`}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <Code size={16} className={iconTextClass} />
-                      Source Code
-                    </span>
-
-                    {/* Start Command Palette Trigger */}
-                    <div className="relative ml-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTemplateMenuOpen(true);
-                        }}
-                        className={toolbarBtnClass}
-                        title="Open Template Palette (Cmd+K)"
-                      >
-                        <BookOpen size={12} />
-                        Templates
-                        <span className="ml-1 border-[2px] border-slate-300 dark:border-[#333] bg-white dark:bg-[#161618] px-1 text-[9px] leading-4 text-slate-500 dark:text-slate-400">⌘K</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {executionError && (
-                      <span className="border-[2px] border-red-300 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-red-700 shadow-[2px_2px_0_#fecaca] dark:border-red-700 dark:bg-[#201010] dark:text-red-300 dark:shadow-[2px_2px_0_#3a1a1a]">
-                        {executionError}
-                      </span>
-                    )}
-
-                    {/* Copy Share Link */}
-                    <button
-                      onClick={handleCopyLink}
-                      className={`${toolbarBtnClass} ${
-                        linkCopied
-                          ? "border-green-300 bg-green-100 text-green-700 shadow-[2px_2px_0_#bbf7d0] dark:border-green-700 dark:bg-[#111113] dark:text-green-400 dark:shadow-[2px_2px_0_#14532d]"
-                          : ""
-                      }`}
-                      title="Copy shareable link"
-                    >
-                      {linkCopied ? <Check size={14} /> : <Link2 size={14} />}
-                      {linkCopied ? "Copied" : "Share"}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setIsPlaying(false);
-                        handleRun(code, language);
-                      }}
-                      className={`flex items-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${runBtnClass}`}
-                    >
-                      <Play size={14} fill="currentColor" />
-                      Run
-                    </button>
-                  </div>
-                </div>
-                <div className="flex-1 relative border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] overflow-hidden bg-white dark:bg-transparent">
-                  <CodeEditor
-                    code={code}
-                    language={language}
-                    theme={theme}
-                    readOnly={isPlaying}
-                    onChange={handleCodeChange}
-                    currentLine={currentStep.line}
-                    isError={!!executionError}
-                    themeColor={themeColor}
-                    breakpoints={breakpoints}
-                    onToggleBreakpoint={toggleBreakpoint}
-                  />
-                </div>
-              </div>
-
-              {/* Right Panel: Visualization */}
-              <div
-                className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#222] shadow-[2px_2px_0_#1e293b] dark:shadow-[2px_2px_0_#000] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? "w-full md:flex-1" : "w-full md:w-[480px]"}`}
-              >
-                {/* Visualizer Mode Toggle */}
-                <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[#161618] border-b-[2px] border-slate-900 dark:border-[#222]">
-                  <button
-                    onClick={() => setVisualizerMode(!visualizerMode)}
-                    className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all active:translate-y-[2px] active:shadow-none ${
-                      visualizerMode
-                        ? isSaffron
-                          ? "bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-500 dark:border-saffron-700"
-                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-500 dark:border-blue-700"
-                        : "bg-slate-100 dark:bg-[#1a1a1c] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222]"
-                    }`}
-                    title={
-                      visualizerMode
-                        ? "Exit focus mode"
-                        : "Enter focus mode (60/40 split)"
-                    }
-                  >
-                    {visualizerMode ? (
-                      <Minimize2 size={11} />
-                    ) : (
-                      <Maximize2 size={11} />
-                    )}
-                    {visualizerMode ? "Focus" : "Expand"}
-                  </button>
-                </div>
-                {/* Top half: Variables / Call Stack */}
-                <div
-                  className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? "flex-[3]" : "flex-[4]"}`}
-                >
-                  {/* Tabs */}
-                  <div className="flex border-b-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#111113]">
-                    <button
-                      onClick={() => setActiveTab("variables")}
-                      className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === "variables" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
-                    >
-                      <Layers size={16} /> Variables
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("stack")}
-                      className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === "stack" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
-                    >
-                      <Layers size={16} className="rotate-180" /> Call Stack
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("performance")}
-                      className={`flex-1 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === "performance" ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : "text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]"}`}
-                    >
-                      <BarChart3 size={16} /> Complexity
-                    </button>
-                  </div>
-
-                  {/* Content Area */}
-                  <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
-                    {activeTab === "variables" ? (
-                      <VariablesPanel
-                        variables={currentStep.variables || {}}
-                        prevVariables={prevStepVariables.variables || {}}
-                        themeColor={themeColor}
-                      />
-                    ) : activeTab === "stack" ? (
-                      <CallStackPanel
-                        stack={currentStep.callStack || []}
-                        themeColor={themeColor}
-                      />
-                    ) : (
-                      <PerformancePanel
-                        timeline={timeline}
-                        currentStepIndex={currentStepIndex}
-                        analysis={complexityAnalysis}
-                        themeColor={themeColor}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                  {/* Bottom half: Console */}
-                <div
-                  className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#0A0A0B] transition-all duration-200 ease-out ${
-                    consoleExpanded ? "flex-[3] min-h-[150px]" : "h-10"
-                  }`}
-                >
-                  <button
-                    className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[#161618] transition-colors cursor-pointer w-full"
-                    onClick={() => setConsoleExpanded(!consoleExpanded)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <TerminalIcon size={16} className={iconTextClass} />
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-400 uppercase tracking-wider">
-                        Console Output
-                      </span>
-                      {!consoleExpanded &&
-                        currentStep.consoleOutput &&
-                        currentStep.consoleOutput.length > 0 && (
-                          <span className="ml-2 border-[2px] border-slate-900 dark:border-[#333] bg-slate-200 dark:bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
-                            {currentStep.consoleOutput.length}
-                          </span>
-                        )}
-                    </div>
-                    <div className="text-slate-500 dark:text-slate-600">
-                      {consoleExpanded ? (
-                        <ChevronDown size={14} strokeWidth={3} />
-                      ) : (
-                        <ChevronUp size={14} strokeWidth={3} />
-                      )}
-                    </div>
-                  </button>
-
-                  <AnimatePresence>
-                    {consoleExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex-1 overflow-y-auto custom-scrollbar"
-                      >
-                        <ConsolePanel logs={currentStep.consoleOutput || []} themeColor={themeColor} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
+              <WorkspaceEditor
+                language={language}
+                theme={theme}
+                themeColor={themeColor}
+                code={code}
+                executionError={executionError}
+                isPlaying={isPlaying}
+                visualizerMode={visualizerMode}
+                currentStepLine={currentStep.line}
+                breakpoints={breakpoints}
+                linkCopied={linkCopied}
+                onCodeChange={handleCodeChange}
+                onRun={() => {
+                  setIsPlaying(false);
+                  handleRun(code, language);
+                }}
+                onShare={handleCopyLink}
+                onOpenTemplates={() => setTemplateMenuOpen(true)}
+                onToggleBreakpoint={toggleBreakpoint}
+              />
+              
+              <WorkspaceVisualizer
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                consoleExpanded={consoleExpanded}
+                setConsoleExpanded={setConsoleExpanded}
+                visualizerMode={visualizerMode}
+                setVisualizerMode={setVisualizerMode}
+                themeColor={themeColor}
+                currentStep={currentStep}
+                prevStepVariables={prevStepVariables}
+                timeline={timeline}
+                currentStepIndex={currentStepIndex}
+                complexityAnalysis={complexityAnalysis}
+              />
             </main>
 
             <Controls
@@ -823,9 +474,7 @@ const App: React.FC = () => {
               setSpeed={setSpeed}
               progress={progress}
               onSeek={(p) => {
-                const targetIndex = Math.floor(
-                  (p / 100) * (timeline.length - 1),
-                );
+                const targetIndex = Math.floor((p / 100) * (timeline.length - 1));
                 controls.jumpToStep(targetIndex);
               }}
               themeColor={themeColor}
@@ -833,7 +482,6 @@ const App: React.FC = () => {
               totalSteps={timeline.length}
             />
 
-            {/* Template Command Palette */}
             <TemplatePalette
               isOpen={templateMenuOpen}
               onClose={() => setTemplateMenuOpen(false)}
@@ -841,7 +489,6 @@ const App: React.FC = () => {
               onSelect={handleTemplateSelect}
               language={language}
             />
-
           </motion.div>
         )}
       </AnimatePresence>
