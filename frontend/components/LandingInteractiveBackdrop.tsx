@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   motion,
   useMotionTemplate,
@@ -6,7 +6,6 @@ import {
   useReducedMotion,
   useSpring,
   useTransform,
-  useInView,
 } from "framer-motion";
 
 type SignalTone = "amber" | "blue" | "emerald" | "slate";
@@ -42,8 +41,6 @@ const toneClasses = {
 const LandingInteractiveBackdrop: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef);
 
   const pointerX = useMotionValue(720);
   const pointerY = useMotionValue(320);
@@ -53,34 +50,24 @@ const LandingInteractiveBackdrop: React.FC = () => {
       const width = window.innerWidth;
       const height = Math.max(window.innerHeight, 720);
       setViewport({ width, height });
-
-      if (prefersReducedMotion) {
-        pointerX.set(width * 0.5);
-        pointerY.set(height * 0.35);
-      }
     };
 
-    const handlePointerMove = (event: PointerEvent) => {
-      // Suspend tracking if strictly out of view to save CPU. 
-      if (!isInView) return;
+    const handlePointerMove = (event: PointerEvent | MouseEvent) => {
       pointerX.set(event.clientX);
       pointerY.set(event.clientY);
     };
 
     syncViewport();
     window.addEventListener("resize", syncViewport);
-
-    if (!prefersReducedMotion) {
-      window.addEventListener("pointermove", handlePointerMove, {
-        passive: true,
-      });
-    }
+    window.addEventListener("mousemove", handlePointerMove, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     return () => {
       window.removeEventListener("resize", syncViewport);
+      window.removeEventListener("mousemove", handlePointerMove);
       window.removeEventListener("pointermove", handlePointerMove);
     };
-  }, [pointerX, pointerY, prefersReducedMotion, isInView]);
+  }, [pointerX, pointerY]);
 
   const smoothX = useSpring(pointerX, {
     stiffness: 110,
@@ -99,22 +86,13 @@ const LandingInteractiveBackdrop: React.FC = () => {
     radial-gradient(26rem 26rem at calc(${smoothX}px - 250px) calc(${smoothY}px + 160px), rgba(16, 185, 129, 0.12), transparent 58%)
   `;
 
-  const gridShiftX = useTransform(
-    smoothX,
-    [0, viewport.width],
-    [-18, 18],
-  );
-  const gridShiftY = useTransform(
-    smoothY,
-    [0, viewport.height],
-    [-14, 14],
-  );
+  const gridShiftX = useTransform(smoothX, [0, viewport.width], [-18, 18]);
+  const gridShiftY = useTransform(smoothY, [0, viewport.height], [-14, 14]);
   const haloX = useTransform(smoothX, (value) => value - 144);
   const haloY = useTransform(smoothY, (value) => value - 144);
 
   return (
     <div
-      ref={containerRef}
       aria-hidden="true"
       className="absolute inset-0 overflow-hidden pointer-events-none"
     >
@@ -170,7 +148,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
             right: signal.right,
           }}
           animate={
-            prefersReducedMotion || !isInView
+            prefersReducedMotion
               ? undefined
               : {
                   y: [0, -10, 0],

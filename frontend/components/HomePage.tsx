@@ -12,6 +12,8 @@ import {
   Eye,
   Layers,
   BookOpen,
+  Sun,
+  Moon
 } from "lucide-react";
 import homepagePreview from "../../assets/homepage.png";
 import editorPreview from "../../assets/editor.png";
@@ -24,6 +26,8 @@ interface HomePageProps {
   docsHref: string;
   javascriptHref: string;
   cppHref: string;
+  toggleTheme: () => void;
+  theme: "light" | "dark";
 }
 
 // Animation Data for fake execution tracking
@@ -96,6 +100,8 @@ const HomePage: React.FC<HomePageProps> = ({
   docsHref,
   javascriptHref,
   cppHref,
+  toggleTheme,
+  theme,
 }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -147,6 +153,13 @@ const HomePage: React.FC<HomePageProps> = ({
               />
               <span>Star us on GitHub</span>
             </a>
+            <button
+              onClick={toggleTheme}
+              className="p-2 border border-slate-300 dark:border-slate-700 rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
+              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+            >
+              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
           </div>
         </header>
 
@@ -338,7 +351,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
                   initial={false}
                   animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
                   <ChevronRight
@@ -363,7 +376,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   className="absolute left-0 right-0 h-[32px] bg-amber-100/50 dark:bg-amber-900/20 border-y border-amber-300/50 dark:border-amber-700/30 z-0"
                   initial={false}
                   animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
                 />
 
                 <motion.div
@@ -472,12 +485,13 @@ const HomePage: React.FC<HomePageProps> = ({
                     <AnimatePresence initial={false}>
                       {currentStep.callStack.map((frame, idx) => (
                         <motion.div
-                          key={frame.id}
-                          initial={{ opacity: 0, x: -10, height: 0 }}
-                          animate={{ opacity: 1, x: 0, height: "auto" }}
-                          exit={{ opacity: 0, x: 10, height: 0 }}
-                          className={`flex gap-2 ${idx === 0 ? "font-bold text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"}`}
-                        >
+                            key={`frame-${frame.id}-${idx}`}
+                            initial={{ opacity: 0, x: -15, scale: 0.95, height: 0 }}
+                            animate={{ opacity: 1, x: 0, scale: 1, height: "auto" }}
+                            exit={{ opacity: 0, x: 15, scale: 0.95, height: 0 }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 24, delay: idx * 0.05 }}
+                            className={`flex gap-2 ${idx === 0 ? "font-bold text-slate-900 dark:text-emerald-400 bg-white/40 dark:bg-black/20 rounded px-1" : "text-slate-500 dark:text-slate-400"}`}
+                          >
                           <span className="opacity-50 w-3 text-right">
                             {currentStep.callStack.length - 1 - idx}
                           </span>

@@ -401,6 +401,8 @@ const App: React.FC = () => {
               docsHref={ROUTES.docs}
               javascriptHref={ROUTES.visualizerJavascript}
               cppHref={ROUTES.visualizerCpp}
+              toggleTheme={toggleTheme}
+              theme={theme}
             />
           </motion.div>
         ) : page === "docs" ? (
