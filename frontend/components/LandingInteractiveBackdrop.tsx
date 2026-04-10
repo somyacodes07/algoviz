@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   motion,
   useMotionTemplate,
@@ -6,9 +6,9 @@ import {
   useReducedMotion,
   useSpring,
   useTransform,
-} from "framer-motion";
+} from 'framer-motion';
 
-type SignalTone = "amber" | "blue" | "emerald" | "slate";
+type SignalTone = 'amber' | 'blue' | 'emerald' | 'slate';
 
 interface FloatingSignal {
   label: string;
@@ -19,23 +19,22 @@ interface FloatingSignal {
 }
 
 const floatingSignals: FloatingSignal[] = [
-  { label: "vector<int>", top: "16%", left: "10%", tone: "amber" },
-  { label: "AST", top: "26%", right: "12%", tone: "blue" },
-  { label: "__tracer.step()", top: "58%", left: "8%", tone: "emerald" },
-  { label: "call stack", top: "64%", right: "16%", tone: "slate" },
-  { label: "Math.trunc()", top: "42%", left: "44%", tone: "amber" },
-  { label: "Web Worker", top: "18%", right: "34%", tone: "blue" },
+  { label: 'vector<int>', top: '16%', left: '10%', tone: 'amber' },
+  { label: 'AST', top: '26%', right: '12%', tone: 'blue' },
+  { label: '__tracer.step()', top: '58%', left: '8%', tone: 'emerald' },
+  { label: 'call stack', top: '64%', right: '16%', tone: 'slate' },
+  { label: 'Math.trunc()', top: '42%', left: '44%', tone: 'amber' },
+  { label: 'Web Worker', top: '18%', right: '34%', tone: 'blue' },
 ];
 
 const toneClasses = {
   amber:
-    "border-amber-300/70 bg-amber-100/80 text-amber-900 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-200",
-  blue:
-    "border-sky-300/70 bg-sky-100/80 text-sky-900 dark:border-sky-700/50 dark:bg-sky-500/10 dark:text-sky-200",
+    'border-amber-300/70 bg-amber-100/80 text-amber-900 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-200',
+  blue: 'border-sky-300/70 bg-sky-100/80 text-sky-900 dark:border-sky-700/50 dark:bg-sky-500/10 dark:text-sky-200',
   emerald:
-    "border-emerald-300/70 bg-emerald-100/80 text-emerald-900 dark:border-emerald-700/50 dark:bg-emerald-500/10 dark:text-emerald-200",
+    'border-emerald-300/70 bg-emerald-100/80 text-emerald-900 dark:border-emerald-700/50 dark:bg-emerald-500/10 dark:text-emerald-200',
   slate:
-    "border-slate-300/80 bg-white/80 text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/45 dark:text-slate-200",
+    'border-slate-300/80 bg-white/80 text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/45 dark:text-slate-200',
 } as const;
 
 const LandingInteractiveBackdrop: React.FC = () => {
@@ -58,14 +57,14 @@ const LandingInteractiveBackdrop: React.FC = () => {
     };
 
     syncViewport();
-    window.addEventListener("resize", syncViewport);
-    window.addEventListener("mousemove", handlePointerMove, { passive: true });
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener('resize', syncViewport);
+    window.addEventListener('mousemove', handlePointerMove, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
     return () => {
-      window.removeEventListener("resize", syncViewport);
-      window.removeEventListener("mousemove", handlePointerMove);
-      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener('resize', syncViewport);
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('pointermove', handlePointerMove);
     };
   }, [pointerX, pointerY]);
 
@@ -92,10 +91,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
   const haloY = useTransform(smoothY, (value) => value - 144);
 
   return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-    >
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-[linear-gradient(135deg,#07111e_0%,#0b1728_48%,#091a2e_100%)]" />
 
       <motion.div
@@ -109,10 +105,9 @@ const LandingInteractiveBackdrop: React.FC = () => {
           x: gridShiftX,
           y: gridShiftY,
           backgroundImage:
-            "linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage:
-            "radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)",
+            'linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px)',
+          backgroundSize: '72px 72px',
+          maskImage: 'radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)',
         }}
       />
 
@@ -122,10 +117,9 @@ const LandingInteractiveBackdrop: React.FC = () => {
           x: gridShiftX,
           y: gridShiftY,
           backgroundImage:
-            "linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage:
-            "radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)",
+            'linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px)',
+          backgroundSize: '72px 72px',
+          maskImage: 'radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)',
         }}
       />
 
@@ -158,7 +152,7 @@ const LandingInteractiveBackdrop: React.FC = () => {
           transition={{
             duration: 7 + index,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: 'easeInOut',
             delay: index * 0.35,
           }}
         >

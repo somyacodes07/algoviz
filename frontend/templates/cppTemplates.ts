@@ -30,7 +30,7 @@ int main() {
     cout << "Maximum value is " << maxVal << " at index " << maxIndex << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: 'Reverse Array',
@@ -61,7 +61,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: 'Two Sum',
@@ -89,7 +89,7 @@ int main() {
     }
     return 0;
 }
-`
+`,
   },
   {
     name: 'Max Subarray',
@@ -118,7 +118,7 @@ int main() {
     cout << "Maximum Subarray Sum is: " << globalMax << endl;
     return 0;
 }
-`
+`,
   },
 
   // ==============================
@@ -169,7 +169,7 @@ int main() {
     cout << "Is Valid? " << isValid << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: 'Frequency Counter',
@@ -203,7 +203,7 @@ int main() {
     
     return 0;
 }
-`
+`,
   },
 
   // ==============================
@@ -246,7 +246,7 @@ int main() {
     cout << "Binary Search Result Index: " << result << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: 'Selection Sort',
@@ -278,7 +278,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: 'Bubble Sort',
@@ -311,7 +311,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: 'Merge Sort Array Output',
@@ -373,7 +373,7 @@ int main() {
     
     return 0;
 }
-`
+`,
   },
 
   // ==============================
@@ -426,7 +426,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: 'Depth-First Search (DFS)',
@@ -467,10 +467,10 @@ int main() {
     dfs(0); // Start at Node A (0)
     return 0;
 }
-`
+`,
   },
   {
-    name: 'Dijkstra\'s Shortest Path',
+    name: "Dijkstra's Shortest Path",
     category: 'Graphs & Trees',
     description: 'Find shortest paths using priority queue (Min-Heap)',
     language: 'c++',
@@ -532,7 +532,7 @@ int main() {
     
     return 0;
 }
-`
+`,
   },
 
   // ==============================
@@ -563,7 +563,7 @@ int main() {
     cout << "Ways to climb " << n << " stairs: " << dp[n] << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: 'Factorial',
@@ -587,7 +587,7 @@ int main() {
     cout << "Factorial of 5 is: " << result << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: '0/1 Knapsack',
@@ -631,9 +631,9 @@ int main() {
     
     return 0;
 }
-`
+`,
   },
-  
+
   // ==============================
   // AARTI MAM TEMPLATES
   // ==============================
@@ -671,7 +671,7 @@ int main()
 
     return 0;
 }
-`
+`,
   },
   {
     name: '2. Frequency Count (Hash Map)',
@@ -705,12 +705,13 @@ int main()
 
     return 0;
 }
-`
+`,
   },
   {
     name: '3. Function Growth Table',
     category: 'Aarti Mam',
-    description: 'Compare computational growth functions mathematically (log, linear, quadratic, exponential)',
+    description:
+      'Compare computational growth functions mathematically (log, linear, quadratic, exponential)',
     language: 'c++',
     tags: ['math', 'growth', 'complexity', 'table', 'aarti-mam'],
     code: `// Function Growth Table (log, n, n², nⁿ, eⁿ)
@@ -745,7 +746,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: '4. Frequency Count (Simulated Array)',
@@ -780,7 +781,7 @@ int main() {
     
     return 0;
 }
-`
+`,
   },
   {
     name: '5. Pair Sum (Simulated Arrays)',
@@ -820,7 +821,7 @@ int main() {
 
     return 0;
 }
-`
+`,
   },
   {
     name: '6. Loop Complexity (O(N*logN))',
@@ -850,7 +851,7 @@ int main() {
     cout << "Total computation complexity evaluated to: " << count << " iterations." << endl;
     return 0;
 }
-`
+`,
   },
   {
     name: '7. Add Two Numbers',
@@ -873,6 +874,6 @@ int main() {
     cout << "Final Calculation (C) = " << C << endl;
     return 0;
 }
-`
-  }
+`,
+  },
 ];

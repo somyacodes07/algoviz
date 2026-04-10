@@ -27,17 +27,13 @@ export class WarningCollector {
 
   /** Get warnings as human-readable strings */
   getWarningStrings(): string[] {
-    return this.warnings.map(
-      w => `Line ${w.line}: [${w.nodeType}] ${w.message}`
-    );
+    return this.warnings.map((w) => `Line ${w.line}: [${w.nodeType}] ${w.message}`);
   }
 
   /** Emit all warnings as JS comments, suitable for prepending to output */
   toJsComments(): string {
     if (this.warnings.length === 0) return '';
-    const lines = this.warnings.map(
-      w => `// ⚠️ Line ${w.line}: ${w.message}`
-    );
+    const lines = this.warnings.map((w) => `// ⚠️ Line ${w.line}: ${w.message}`);
     return lines.join('\n') + '\n';
   }
 

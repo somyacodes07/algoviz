@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   BookOpen,
@@ -8,32 +8,32 @@ import {
   Binary,
   Settings,
   LayoutTemplate,
-} from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-import introMd from "../../docs/introduction.md?raw";
-import setupMd from "../../docs/setup-guide.md?raw";
-import featuresMd from "../../docs/features-and-ui.md?raw";
-import transpilerMd from "../../docs/cpp-engine.md?raw";
-import sandboxMd from "../../docs/instrumentation-sandbox.md?raw";
-import templateMd from "../../docs/templates-and-palette.md?raw";
-import image1 from "../../assets/image-1.png";
-import image2 from "../../assets/image-2.png";
-import image3 from "../../assets/image-3.png";
-import image4 from "../../assets/image-4.png";
-import image5 from "../../assets/image-5.png";
-import image6 from "../../assets/image-6.png";
+import introMd from '../../docs/introduction.md?raw';
+import setupMd from '../../docs/setup-guide.md?raw';
+import featuresMd from '../../docs/features-and-ui.md?raw';
+import transpilerMd from '../../docs/cpp-engine.md?raw';
+import sandboxMd from '../../docs/instrumentation-sandbox.md?raw';
+import templateMd from '../../docs/templates-and-palette.md?raw';
+import image1 from '../../assets/image-1.png';
+import image2 from '../../assets/image-2.png';
+import image3 from '../../assets/image-3.png';
+import image4 from '../../assets/image-4.png';
+import image5 from '../../assets/image-5.png';
+import image6 from '../../assets/image-6.png';
 
 interface DocsPageProps {
   onBack: () => void;
-  theme: "light" | "dark";
+  theme: 'light' | 'dark';
   homeHref: string;
   javascriptHref: string;
   cppHref: string;
 }
 
-type VisualTone = "amber" | "blue" | "emerald" | "slate";
+type VisualTone = 'amber' | 'blue' | 'emerald' | 'slate';
 
 interface VisualStep {
   label: string;
@@ -82,340 +82,325 @@ interface DocSection {
 
 const toneClasses: Record<VisualTone, string> = {
   amber:
-    "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700/60 dark:bg-amber-500/10 dark:text-amber-200",
-  blue:
-    "border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700/60 dark:bg-sky-500/10 dark:text-sky-200",
+    'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700/60 dark:bg-amber-500/10 dark:text-amber-200',
+  blue: 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700/60 dark:bg-sky-500/10 dark:text-sky-200',
   emerald:
-    "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-500/10 dark:text-emerald-200",
+    'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-500/10 dark:text-emerald-200',
   slate:
-    "border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200",
+    'border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200',
 };
 
 const docsStructure: DocSection[] = [
   {
-    id: "intro",
-    title: "Introduction & Philosophy",
+    id: 'intro',
+    title: 'Introduction & Philosophy',
     icon: <BookOpen size={16} />,
     content: introMd,
     visual: {
-      eyebrow: "Core Mental Model",
-      title: "Source code becomes visible state, not just output",
+      eyebrow: 'Core Mental Model',
+      title: 'Source code becomes visible state, not just output',
       summary:
-        "AlgoViz is built around one promise: every step should reveal what the program knows right now, not just what it eventually prints.",
+        'AlgoViz is built around one promise: every step should reveal what the program knows right now, not just what it eventually prints.',
       metrics: [
-        { label: "Supported Modes", value: "JavaScript + C++" },
-        { label: "Execution Surface", value: "Browser + Web Worker" },
-        { label: "Teaching Focus", value: "DSA and recursion" },
+        { label: 'Supported Modes', value: 'JavaScript + C++' },
+        { label: 'Execution Surface', value: 'Browser + Web Worker' },
+        { label: 'Teaching Focus', value: 'DSA and recursion' },
       ],
       steps: [
         {
-          label: "Author",
-          detail: "Write raw JavaScript or DSA-oriented C++ in the editor.",
-          tone: "amber",
+          label: 'Author',
+          detail: 'Write raw JavaScript or DSA-oriented C++ in the editor.',
+          tone: 'amber',
         },
         {
-          label: "Translate",
-          detail:
-            "Normalize the source into browser-runnable logic and trace points.",
-          tone: "blue",
+          label: 'Translate',
+          detail: 'Normalize the source into browser-runnable logic and trace points.',
+          tone: 'blue',
         },
         {
-          label: "Replay",
-          detail:
-            "Scrub variables, call stack frames, and console output like a timeline.",
-          tone: "emerald",
+          label: 'Replay',
+          detail: 'Scrub variables, call stack frames, and console output like a timeline.',
+          tone: 'emerald',
         },
       ],
       notes: [
-        "The product is optimized for understanding state transitions, not just stepping line numbers.",
-        "The visualizer intentionally favors bold, low-noise UI so students can map code to memory quickly.",
-        "Docs are organized by the same system stages the app uses internally.",
+        'The product is optimized for understanding state transitions, not just stepping line numbers.',
+        'The visualizer intentionally favors bold, low-noise UI so students can map code to memory quickly.',
+        'Docs are organized by the same system stages the app uses internally.',
       ],
     },
   },
   {
-    id: "setup",
-    title: "Setup & Installation",
+    id: 'setup',
+    title: 'Setup & Installation',
     icon: <Settings size={16} />,
     content: setupMd,
     visual: {
-      eyebrow: "Local Workflow",
-      title: "Run locally, then ship as a static site",
+      eyebrow: 'Local Workflow',
+      title: 'Run locally, then ship as a static site',
       summary:
-        "The app has no heavy application server. The parser, transpiler, instrumentation, and execution timeline all run in-browser.",
+        'The app has no heavy application server. The parser, transpiler, instrumentation, and execution timeline all run in-browser.',
       metrics: [
-        { label: "Node Requirement", value: "18+" },
-        { label: "Dev Server", value: "Vite on :3000" },
-        { label: "Deploy Model", value: "Static hosting" },
+        { label: 'Node Requirement', value: '18+' },
+        { label: 'Dev Server', value: 'Vite on :3000' },
+        { label: 'Deploy Model', value: 'Static hosting' },
       ],
       steps: [
         {
-          label: "Clone",
-          detail: "Pull the repository and install dependencies.",
-          tone: "amber",
+          label: 'Clone',
+          detail: 'Pull the repository and install dependencies.',
+          tone: 'amber',
         },
         {
-          label: "Develop",
-          detail: "Use `npm run dev` while Vite serves the app and worker.",
-          tone: "blue",
+          label: 'Develop',
+          detail: 'Use `npm run dev` while Vite serves the app and worker.',
+          tone: 'blue',
         },
         {
-          label: "Ship",
-          detail:
-            "Generate static HTML, JS, CSS, and WASM assets with `npm run build`.",
-          tone: "emerald",
+          label: 'Ship',
+          detail: 'Generate static HTML, JS, CSS, and WASM assets with `npm run build`.',
+          tone: 'emerald',
         },
       ],
       notes: [
-        "Because execution happens in a worker, hosting stays simple.",
-        "The production output contains static route entry points for home, docs, and visualizer pages.",
-        "Browser-delivered WASM assets handle the parser layer for C++.",
+        'Because execution happens in a worker, hosting stays simple.',
+        'The production output contains static route entry points for home, docs, and visualizer pages.',
+        'Browser-delivered WASM assets handle the parser layer for C++.',
       ],
     },
   },
   {
-    id: "features",
-    title: "Features & UI Layouts",
+    id: 'features',
+    title: 'Features & UI Layouts',
     icon: <Sparkles size={16} />,
     content: featuresMd,
     visual: {
-      eyebrow: "Workbench Anatomy",
-      title: "The interface is organized around decisions students make while debugging",
+      eyebrow: 'Workbench Anatomy',
+      title: 'The interface is organized around decisions students make while debugging',
       summary:
-        "Every panel in the UI exists to answer one question fast: where am I, what changed, what called this, and what is it printing?",
+        'Every panel in the UI exists to answer one question fast: where am I, what changed, what called this, and what is it printing?',
       metrics: [
-        { label: "Editor Engine", value: "Monaco" },
-        { label: "Template Access", value: "Cmd/Ctrl + K" },
-        { label: "Main Panels", value: "Editor, state, stack, console" },
+        { label: 'Editor Engine', value: 'Monaco' },
+        { label: 'Template Access', value: 'Cmd/Ctrl + K' },
+        { label: 'Main Panels', value: 'Editor, state, stack, console' },
       ],
       steps: [
         {
-          label: "Source Editor",
-          detail:
-            "Primary authoring surface with line focus, theme sync, and breakpoints.",
-          tone: "blue",
+          label: 'Source Editor',
+          detail: 'Primary authoring surface with line focus, theme sync, and breakpoints.',
+          tone: 'blue',
         },
         {
-          label: "Variables",
-          detail:
-            "Highlights how values and algorithm pointers change across steps.",
-          tone: "emerald",
+          label: 'Variables',
+          detail: 'Highlights how values and algorithm pointers change across steps.',
+          tone: 'emerald',
         },
         {
-          label: "Call Stack",
-          detail:
-            "Shows recursive depth and nested function context without IDE overhead.",
-          tone: "amber",
+          label: 'Call Stack',
+          detail: 'Shows recursive depth and nested function context without IDE overhead.',
+          tone: 'amber',
         },
         {
-          label: "Console",
-          detail:
-            "Replays logs in the exact order they become visible during execution.",
-          tone: "slate",
+          label: 'Console',
+          detail: 'Replays logs in the exact order they become visible during execution.',
+          tone: 'slate',
         },
       ],
       notes: [
-        "The layout is tuned for line-by-line reasoning, not generic dashboard density.",
-        "Algorithmic pointer tracking makes arrays and search windows easier to teach visually.",
-        "The editor and visualizer can shift between compact and focus-heavy modes.",
+        'The layout is tuned for line-by-line reasoning, not generic dashboard density.',
+        'Algorithmic pointer tracking makes arrays and search windows easier to teach visually.',
+        'The editor and visualizer can shift between compact and focus-heavy modes.',
       ],
       gallery: [
         {
           src: image1,
-          alt: "JavaScript visualizer showing a reverse array example with highlighted variables and pointer markers.",
+          alt: 'JavaScript visualizer showing a reverse array example with highlighted variables and pointer markers.',
           caption:
-            "Array and pointer state stays front-and-center, which makes swap-based problems much easier to explain live.",
-          label: "Reverse Array Trace",
-          tone: "amber",
+            'Array and pointer state stays front-and-center, which makes swap-based problems much easier to explain live.',
+          label: 'Reverse Array Trace',
+          tone: 'amber',
         },
         {
           src: image4,
-          alt: "AlgoViz graph traversal view showing visited and result arrays updating while a C++ depth-first search runs.",
+          alt: 'AlgoViz graph traversal view showing visited and result arrays updating while a C++ depth-first search runs.',
           caption:
-            "The workbench can keep multiple evolving structures readable at once, which is where a lot of teaching tools usually collapse.",
-          label: "Graph State View",
-          tone: "emerald",
+            'The workbench can keep multiple evolving structures readable at once, which is where a lot of teaching tools usually collapse.',
+          label: 'Graph State View',
+          tone: 'emerald',
         },
         {
           src: image5,
-          alt: "Performance and complexity panel tracking step frequency and Big O analysis.",
+          alt: 'Performance and complexity panel tracking step frequency and Big O analysis.',
           caption:
-            "The Complexity panel dynamically evaluates recursive depth, loop frequencies, and array mutations to visually model Big-O behavior at runtime.",
-          label: "Complexity Analysis",
-          tone: "blue",
+            'The Complexity panel dynamically evaluates recursive depth, loop frequencies, and array mutations to visually model Big-O behavior at runtime.',
+          label: 'Complexity Analysis',
+          tone: 'blue',
         },
         {
           src: image6,
-          alt: "Source code editor highlighting hot lines and execution flow.",
+          alt: 'Source code editor highlighting hot lines and execution flow.',
           caption:
-            "The editor visualizes the concentration of execution cycles with glowing hot lines, making bottlenecks and loop frequencies immediately recognizable during source flow tracking.",
-          label: "Source Flow & Hot Lines",
-          tone: "amber",
+            'The editor visualizes the concentration of execution cycles with glowing hot lines, making bottlenecks and loop frequencies immediately recognizable during source flow tracking.',
+          label: 'Source Flow & Hot Lines',
+          tone: 'amber',
         },
       ],
     },
   },
   {
-    id: "cpp-engine",
-    title: "C++ Transpiler Engine",
+    id: 'cpp-engine',
+    title: 'C++ Transpiler Engine',
     icon: <Terminal size={16} />,
     content: transpilerMd,
     visual: {
-      eyebrow: "C++ In The Browser",
-      title: "How AlgoViz makes C++ explorable without shipping a full native compiler",
+      eyebrow: 'C++ In The Browser',
+      title: 'How AlgoViz makes C++ explorable without shipping a full native compiler',
       summary:
-        "Instead of compiling arbitrary native C++ to machine-like WASM and losing runtime introspection, AlgoViz parses a DSA-friendly C++ subset, transforms it into JavaScript, then traces the result.",
+        'Instead of compiling arbitrary native C++ to machine-like WASM and losing runtime introspection, AlgoViz parses a DSA-friendly C++ subset, transforms it into JavaScript, then traces the result.',
       metrics: [
-        { label: "Parser", value: "Tree-sitter WASM" },
-        { label: "Runtime Target", value: "JavaScript + Worker" },
-        { label: "Primary Goal", value: "Line-level state visibility" },
+        { label: 'Parser', value: 'Tree-sitter WASM' },
+        { label: 'Runtime Target', value: 'JavaScript + Worker' },
+        { label: 'Primary Goal', value: 'Line-level state visibility' },
       ],
       steps: [
         {
-          label: "Parse",
-          detail:
-            "Load `tree-sitter-cpp.wasm` and build a structural syntax tree in the browser.",
-          tone: "blue",
+          label: 'Parse',
+          detail: 'Load `tree-sitter-cpp.wasm` and build a structural syntax tree in the browser.',
+          tone: 'blue',
         },
         {
-          label: "Transform",
+          label: 'Transform',
           detail:
-            "Map vectors, loops, integer math, and STL-like operations into safe JS equivalents.",
-          tone: "amber",
+            'Map vectors, loops, integer math, and STL-like operations into safe JS equivalents.',
+          tone: 'amber',
         },
         {
-          label: "Instrument",
-          detail:
-            "Inject tracer hooks into the generated JS so every step becomes observable.",
-          tone: "emerald",
+          label: 'Instrument',
+          detail: 'Inject tracer hooks into the generated JS so every step becomes observable.',
+          tone: 'emerald',
         },
         {
-          label: "Execute",
+          label: 'Execute',
           detail:
-            "Run the instrumented output in a Web Worker and stream timeline frames back to React.",
-          tone: "slate",
+            'Run the instrumented output in a Web Worker and stream timeline frames back to React.',
+          tone: 'slate',
         },
       ],
       notes: [
-        "This approach keeps the browser runtime debuggable, which pure native-style compilation does not.",
-        "The engine is intentionally tuned around the kind of syntax students use in algorithm practice.",
-        "Integer coercion is explicit so binary search and index arithmetic behave like C++, not float-heavy JavaScript.",
+        'This approach keeps the browser runtime debuggable, which pure native-style compilation does not.',
+        'The engine is intentionally tuned around the kind of syntax students use in algorithm practice.',
+        'Integer coercion is explicit so binary search and index arithmetic behave like C++, not float-heavy JavaScript.',
       ],
       gallery: [
         {
           src: image2,
-          alt: "C++ bubble sort running in AlgoViz with the current line highlighted and runtime variables visible beside the source code.",
+          alt: 'C++ bubble sort running in AlgoViz with the current line highlighted and runtime variables visible beside the source code.',
           caption:
-            "C++ stays explorable because the parser and transform pipeline preserve loop progress, scalar values, and array mutations for the browser runtime.",
-          label: "C++ Bubble Sort",
-          tone: "blue",
+            'C++ stays explorable because the parser and transform pipeline preserve loop progress, scalar values, and array mutations for the browser runtime.',
+          label: 'C++ Bubble Sort',
+          tone: 'blue',
         },
       ],
       pair: {
-        leftLabel: "C++ Source",
+        leftLabel: 'C++ Source',
         leftCode: `vector<int> nums = {5, 3, 8};\nsort(nums.begin(), nums.end());\nint mid = (left + right) / 2;`,
-        rightLabel: "Generated JS Shape",
+        rightLabel: 'Generated JS Shape',
         rightCode: `let nums = [5, 3, 8];\nnums.sort((a, b) => a - b);\nlet mid = Math.trunc((left + right) / 2);`,
       },
     },
   },
   {
-    id: "sandbox",
-    title: "Instrumentation Sandbox",
+    id: 'sandbox',
+    title: 'Instrumentation Sandbox',
     icon: <Binary size={16} />,
     content: sandboxMd,
     visual: {
-      eyebrow: "Execution Safety",
-      title: "Tracing, guardrails, and replay all happen in an isolated worker loop",
+      eyebrow: 'Execution Safety',
+      title: 'Tracing, guardrails, and replay all happen in an isolated worker loop',
       summary:
-        "Once code is runnable JavaScript, AlgoViz rewrites it with trace calls, blocks dangerous browser APIs, and records a timeline of program state snapshots.",
+        'Once code is runnable JavaScript, AlgoViz rewrites it with trace calls, blocks dangerous browser APIs, and records a timeline of program state snapshots.',
       metrics: [
-        { label: "AST Tooling", value: "Acorn" },
-        { label: "Loop Guard", value: "2,000 steps default" },
-        { label: "Isolation", value: "Web Worker sandbox" },
+        { label: 'AST Tooling', value: 'Acorn' },
+        { label: 'Loop Guard', value: '2,000 steps default' },
+        { label: 'Isolation', value: 'Web Worker sandbox' },
       ],
       steps: [
         {
-          label: "Inject",
+          label: 'Inject',
           detail:
-            "Append `__tracer.step()` calls and wrap functions with stack enter and exit hooks.",
-          tone: "amber",
+            'Append `__tracer.step()` calls and wrap functions with stack enter and exit hooks.',
+          tone: 'amber',
         },
         {
-          label: "Protect",
-          detail:
-            "Disable network and risky globals while the worker evaluates the code.",
-          tone: "slate",
+          label: 'Protect',
+          detail: 'Disable network and risky globals while the worker evaluates the code.',
+          tone: 'slate',
         },
         {
-          label: "Snapshot",
-          detail:
-            "Deep-clone variables and capture only new console output for each step.",
-          tone: "blue",
+          label: 'Snapshot',
+          detail: 'Deep-clone variables and capture only new console output for each step.',
+          tone: 'blue',
         },
         {
-          label: "Return",
+          label: 'Return',
           detail:
-            "Emit a timeline the UI can scrub forward and backward without rerunning everything.",
-          tone: "emerald",
+            'Emit a timeline the UI can scrub forward and backward without rerunning everything.',
+          tone: 'emerald',
         },
       ],
       notes: [
-        "The worker protects the UI thread from infinite loops and heavy recursion.",
-        "Console history is stored incrementally to keep worker memory lower.",
-        "Runtime, transpilation, and worker failures are separated so the UI can report them clearly.",
+        'The worker protects the UI thread from infinite loops and heavy recursion.',
+        'Console history is stored incrementally to keep worker memory lower.',
+        'Runtime, transpilation, and worker failures are separated so the UI can report them clearly.',
       ],
       gallery: [
         {
           src: image3,
-          alt: "Call stack focused AlgoViz view showing nested dfs stack frames during recursive execution.",
+          alt: 'Call stack focused AlgoViz view showing nested dfs stack frames during recursive execution.',
           caption:
-            "Because execution is isolated and traced frame-by-frame, recursive calls can be replayed as a readable stack instead of a final opaque result.",
-          label: "DFS Call Stack Replay",
-          tone: "slate",
+            'Because execution is isolated and traced frame-by-frame, recursive calls can be replayed as a readable stack instead of a final opaque result.',
+          label: 'DFS Call Stack Replay',
+          tone: 'slate',
         },
       ],
     },
   },
   {
-    id: "template",
-    title: "Template Library & Palette",
+    id: 'template',
+    title: 'Template Library & Palette',
     icon: <LayoutTemplate size={16} />,
     content: templateMd,
     visual: {
-      eyebrow: "Learning Acceleration",
-      title: "Templates are indexed for intent, not just exact string matches",
+      eyebrow: 'Learning Acceleration',
+      title: 'Templates are indexed for intent, not just exact string matches',
       summary:
-        "The command palette is built so a student can think in concepts like heap, sliding window, or cycle detection and still land on a runnable example immediately.",
+        'The command palette is built so a student can think in concepts like heap, sliding window, or cycle detection and still land on a runnable example immediately.',
       metrics: [
-        { label: "Query Style", value: "Title + tag search" },
-        { label: "Coverage", value: "Search, graphs, DP, structures" },
-        { label: "Outcome", value: "Load and run instantly" },
+        { label: 'Query Style', value: 'Title + tag search' },
+        { label: 'Coverage', value: 'Search, graphs, DP, structures' },
+        { label: 'Outcome', value: 'Load and run instantly' },
       ],
       steps: [
         {
-          label: "Search",
-          detail:
-            "Open the palette and describe the problem, data structure, or technique.",
-          tone: "blue",
+          label: 'Search',
+          detail: 'Open the palette and describe the problem, data structure, or technique.',
+          tone: 'blue',
         },
         {
-          label: "Match",
-          detail:
-            "Use heavily tagged template metadata to surface related algorithms.",
-          tone: "amber",
+          label: 'Match',
+          detail: 'Use heavily tagged template metadata to surface related algorithms.',
+          tone: 'amber',
         },
         {
-          label: "Load",
-          detail:
-            "Insert the selected template into the editor with teaching-friendly code.",
-          tone: "emerald",
+          label: 'Load',
+          detail: 'Insert the selected template into the editor with teaching-friendly code.',
+          tone: 'emerald',
         },
       ],
       notes: [
-        "Templates reduce blank-page friction when the real goal is understanding execution.",
-        "C++ templates are authored to align with the supported transpilation subset.",
-        "The palette makes the visualizer useful for both exploration and demonstration.",
+        'Templates reduce blank-page friction when the real goal is understanding execution.',
+        'C++ templates are authored to align with the supported transpilation subset.',
+        'The palette makes the visualizer useful for both exploration and demonstration.',
       ],
     },
   },
@@ -430,11 +415,10 @@ const DocsPage: React.FC<DocsPageProps> = ({
 }) => {
   const [activeDoc, setActiveDoc] = useState(docsStructure[0].id);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const activeSection =
-    docsStructure.find((doc) => doc.id === activeDoc) || docsStructure[0];
+  const activeSection = docsStructure.find((doc) => doc.id === activeDoc) || docsStructure[0];
 
   useEffect(() => {
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeDoc]);
 
   return (
@@ -456,9 +440,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
         </a>
         <div className="mx-auto flex items-center gap-2">
           <BookOpen size={18} className="text-saffron-500" />
-          <h1 className="font-black text-lg tracking-tight leading-none uppercase">
-            AlgoViz Docs
-          </h1>
+          <h1 className="font-black text-lg tracking-tight leading-none uppercase">AlgoViz Docs</h1>
         </div>
       </header>
 
@@ -475,8 +457,8 @@ const DocsPage: React.FC<DocsPageProps> = ({
                   onClick={() => setActiveDoc(doc.id)}
                   className={`flex w-full items-center gap-3 rounded border px-3 py-2.5 text-left text-sm font-bold transition-all active:translate-y-[1px] ${
                     activeDoc === doc.id
-                      ? "border-saffron-400 bg-saffron-50 text-saffron-700 shadow-[2px_2px_0_#fbd38d] dark:border-saffron-600 dark:bg-[#1A1A1C] dark:text-saffron-500 dark:shadow-[2px_2px_0_#9c4221]"
-                      : "border-slate-200 bg-white text-slate-600 shadow-[1px_1px_0_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400 dark:shadow-[1px_1px_0_#000] dark:hover:bg-[#1A1A1C]"
+                      ? 'border-saffron-400 bg-saffron-50 text-saffron-700 shadow-[2px_2px_0_#fbd38d] dark:border-saffron-600 dark:bg-[#1A1A1C] dark:text-saffron-500 dark:shadow-[2px_2px_0_#9c4221]'
+                      : 'border-slate-200 bg-white text-slate-600 shadow-[1px_1px_0_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400 dark:shadow-[1px_1px_0_#000] dark:hover:bg-[#1A1A1C]'
                   }`}
                 >
                   {doc.icon}
@@ -530,9 +512,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                         <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
                           {metric.label}
                         </div>
-                        <div className="mt-2 text-lg font-black text-white">
-                          {metric.value}
-                        </div>
+                        <div className="mt-2 text-lg font-black text-white">{metric.value}</div>
                       </div>
                     ))}
                   </div>
@@ -614,9 +594,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
 
                   <div
                     className={`grid gap-5 ${
-                      activeSection.visual.gallery.length > 1
-                        ? "lg:grid-cols-2"
-                        : "grid-cols-1"
+                      activeSection.visual.gallery.length > 1 ? 'lg:grid-cols-2' : 'grid-cols-1'
                     }`}
                   >
                     {activeSection.visual.gallery.map((item) => (
@@ -669,9 +647,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
 
               <section className="rounded border-[2px] border-slate-900 bg-white p-8 shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000] md:p-12">
                 <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-saffron-600 prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-rose-600 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-strong:text-slate-900 prose-table:text-sm prose-th:text-[11px] prose-th:uppercase prose-th:tracking-wider hover:prose-a:text-saffron-500 dark:prose-invert dark:prose-headings:text-slate-100 dark:prose-p:text-slate-300 dark:prose-a:text-saffron-500 dark:prose-code:bg-[#222] dark:prose-code:text-rose-400 dark:prose-strong:text-slate-100">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {activeSection.content}
-                  </ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeSection.content}</ReactMarkdown>
                 </article>
               </section>
             </motion.div>

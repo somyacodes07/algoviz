@@ -9,10 +9,7 @@ interface StructureVisualizerProps {
   themeColor: ThemeColor;
 }
 
-const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
-  variables,
-  themeColor,
-}) => {
+const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, themeColor }) => {
   const linkedListPreview = buildLinkedListPreview(variables);
   const graphPreview = buildGraphPreview(variables);
 
@@ -22,12 +19,8 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-3 p-2">
-      {linkedListPreview && (
-        <LinkedListPanel preview={linkedListPreview} themeColor={themeColor} />
-      )}
-      {graphPreview && (
-        <GraphPanel preview={graphPreview} themeColor={themeColor} />
-      )}
+      {linkedListPreview && <LinkedListPanel preview={linkedListPreview} themeColor={themeColor} />}
+      {graphPreview && <GraphPanel preview={graphPreview} themeColor={themeColor} />}
     </div>
   );
 };

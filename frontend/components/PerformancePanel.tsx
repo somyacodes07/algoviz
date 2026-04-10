@@ -1,11 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  Activity,
-  BarChart3,
-  GitBranch,
-  Hash,
-} from 'lucide-react';
+import { Activity, BarChart3, GitBranch, Hash } from 'lucide-react';
 import { ComplexityAnalysis, Timeline } from '../../types';
 
 import { getThemeConfig, ThemeColor } from '../theme/theme';
@@ -25,7 +20,11 @@ function formatCount(value: number): string {
   return `${value}`;
 }
 
-function sampleSeries(values: number[], maxPoints: number, mode: 'last' | 'max' = 'last'): number[] {
+function sampleSeries(
+  values: number[],
+  maxPoints: number,
+  mode: 'last' | 'max' = 'last',
+): number[] {
   if (values.length <= maxPoints) return values;
 
   const bucketSize = Math.ceil(values.length / maxPoints);
@@ -62,7 +61,7 @@ function buildSparklinePaths(
 
   const points = values.map((value, index) => {
     const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width;
-    const y = topPadding + (1 - ((value - minValue) / spread)) * usableHeight;
+    const y = topPadding + (1 - (value - minValue) / spread) * usableHeight;
     return { x, y };
   });
 
@@ -87,14 +86,23 @@ function compactReason(reason: string): string {
   const shortened = reason
     .replace(/^Detected /, '')
     .replace(/^Observed /, '')
-    .replace(/^A sort-style call was detected and contributes a linearithmic signal\.$/, 'Sort call adds an n log n signal')
-    .replace(/^No repeating loop or recursive structure dominated the analyzed source\.$/, 'No dominant loop or recursion signal')
+    .replace(
+      /^A sort-style call was detected and contributes a linearithmic signal\.$/,
+      'Sort call adds an n log n signal',
+    )
+    .replace(
+      /^No repeating loop or recursive structure dominated the analyzed source\.$/,
+      'No dominant loop or recursion signal',
+    )
     .replace('the analyzed control flow', 'control flow')
     .replace('current execution trace', 'trace')
     .replace('traced operations across', 'ops across')
     .replace('active lines over', 'lines over')
     .replace('traced steps', 'steps')
-    .replace('stack frames, reinforcing a branching-recursion profile', 'stack frames; branching recursion fits')
+    .replace(
+      'stack frames, reinforcing a branching-recursion profile',
+      'stack frames; branching recursion fits',
+    )
     .replace(/\.$/, '');
 
   return shortened.length > 84 ? `${shortened.slice(0, 81).trim()}...` : shortened;
@@ -112,7 +120,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
     return (
       <div className="h-full flex items-center justify-center p-6">
         <div className="max-w-sm w-full border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] p-6 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
-          <div className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${theme.accentBorder} ${theme.accentSoftBg}`}>
+          <div
+            className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${theme.accentBorder} ${theme.accentSoftBg}`}
+          >
             <BarChart3 size={18} className={theme.accentText} />
           </div>
           <h3 className="text-sm font-black uppercase tracking-[0.24em] text-slate-700 dark:text-slate-300">
@@ -160,11 +170,12 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
   );
   const stackChart = buildSparklinePaths(stackSeries, 320, 110, { minBase: 0 });
   const lineChart = buildSparklinePaths(lineSeries, 320, 110);
-  const confidenceClass = analysis?.estimate.confidence === 'high'
-    ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
-    : analysis?.estimate.confidence === 'medium'
-      ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
-      : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+  const confidenceClass =
+    analysis?.estimate.confidence === 'high'
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
+      : analysis?.estimate.confidence === 'medium'
+        ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
+        : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -176,12 +187,16 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
+              <span
+                className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
+              >
                 <Activity size={12} />
                 Trace Estimate
               </span>
               {analysis && (
-                <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${confidenceClass}`}>
+                <span
+                  className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${confidenceClass}`}
+                >
                   {analysis.estimate.confidence} confidence
                 </span>
               )}
@@ -199,7 +214,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             </div>
           </div>
 
-          <div className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${theme.accentBorder} ${theme.accentSoftBg}`}>
+          <div
+            className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${theme.accentBorder} ${theme.accentSoftBg}`}
+          >
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Trace Slice
             </div>
@@ -315,7 +332,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               Most-hit lines in this slice.
             </p>
           </div>
-          <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
+          <span
+            className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
+          >
             Heat Map
           </span>
         </div>
@@ -349,11 +368,11 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
                 Stack Depth
               </h4>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Depth over time.
-              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Depth over time.</p>
             </div>
-            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
+            <span
+              className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
+            >
               Peak {peakStackDepth}
             </span>
           </div>
@@ -383,7 +402,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                 Line hops over time.
               </p>
             </div>
-            <span className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}>
+            <span
+              className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
+            >
               Line Path
             </span>
           </div>

@@ -9,21 +9,42 @@
 
 /** Set of C++ primitive type specifiers that map to `let` in JS */
 export const CPP_PRIMITIVE_TYPES = new Set([
-  'int', 'float', 'double', 'bool', 'char', 'void',
-  'auto', 'long', 'short', 'string',
+  'int',
+  'float',
+  'double',
+  'bool',
+  'char',
+  'void',
+  'auto',
+  'long',
+  'short',
+  'string',
 ]);
 
 /** Multi-word type specifiers (handled as a combined token) */
 export const CPP_COMPOUND_TYPES = new Set([
-  'long long', 'unsigned int', 'long int', 'short int',
-  'unsigned long', 'unsigned long long', 'signed int',
+  'long long',
+  'unsigned int',
+  'long int',
+  'short int',
+  'unsigned long',
+  'unsigned long long',
+  'signed int',
 ]);
 
 /** Types that require integer semantics (Math.trunc on division) */
 export const CPP_INTEGER_TYPES = new Set([
-  'int', 'long', 'short', 'long long', 'unsigned int',
-  'long int', 'short int', 'unsigned long', 'unsigned long long',
-  'signed int', 'char',
+  'int',
+  'long',
+  'short',
+  'long long',
+  'unsigned int',
+  'long int',
+  'short int',
+  'unsigned long',
+  'unsigned long long',
+  'signed int',
+  'char',
 ]);
 
 // ─── STL Method → JS Method Maps ─────────────────────────────────────────────
@@ -34,35 +55,35 @@ export const CPP_INTEGER_TYPES = new Set([
  * educational clarity — bracket access m[key] works naturally.
  */
 export const STL_METHOD_MAP: Record<string, string> = {
-  'push_back': 'push',
-  'emplace_back': 'push',
-  'pop_back': 'pop',
+  push_back: 'push',
+  emplace_back: 'push',
+  pop_back: 'pop',
 };
 
 /** STL algorithm function → JS equivalent patterns */
 export const STL_MATH_FUNCTIONS: Record<string, string> = {
-  'abs': 'Math.abs',
-  'pow': 'Math.pow',
-  'exp': 'Math.exp',
-  'sqrt': 'Math.sqrt',
-  'ceil': 'Math.ceil',
-  'floor': 'Math.floor',
-  'log': 'Math.log',
-  'log2': 'Math.log2',
-  'log10': 'Math.log10',
-  'round': 'Math.round',
+  abs: 'Math.abs',
+  pow: 'Math.pow',
+  exp: 'Math.exp',
+  sqrt: 'Math.sqrt',
+  ceil: 'Math.ceil',
+  floor: 'Math.floor',
+  log: 'Math.log',
+  log2: 'Math.log2',
+  log10: 'Math.log10',
+  round: 'Math.round',
 };
 
 /** C++ constants → JS equivalents */
 export const CPP_CONSTANTS: Record<string, string> = {
-  'INT_MAX': 'Number.MAX_SAFE_INTEGER',
-  'INT_MIN': 'Number.MIN_SAFE_INTEGER',
-  'LLONG_MAX': 'Number.MAX_SAFE_INTEGER',
-  'LLONG_MIN': 'Number.MIN_SAFE_INTEGER',
-  'nullptr': 'null',
-  'NULL': 'null',
-  'true': 'true',
-  'false': 'false',
+  INT_MAX: 'Number.MAX_SAFE_INTEGER',
+  INT_MIN: 'Number.MIN_SAFE_INTEGER',
+  LLONG_MAX: 'Number.MAX_SAFE_INTEGER',
+  LLONG_MIN: 'Number.MIN_SAFE_INTEGER',
+  nullptr: 'null',
+  NULL: 'null',
+  true: 'true',
+  false: 'false',
 };
 
 // ─── Transpiler Configuration ─────────────────────────────────────────────────

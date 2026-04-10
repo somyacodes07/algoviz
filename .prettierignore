@@ -1,0 +1,8 @@
+node_modules
+dist
+.vscode
+.idea
+*.out
+*.cjs
+*.mjs
+assets/

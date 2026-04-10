@@ -42,7 +42,7 @@ export async function initTranspiler(): Promise<void> {
     initDone = true;
     console.warn(
       '[Transpiler] Tree-sitter init failed, falling back to regex engine:',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
   }
 }

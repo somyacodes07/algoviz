@@ -24,31 +24,76 @@ import {
 // ─── Supported node types whitelist ───────────────────────────────────────────
 
 const SUPPORTED_NODE_TYPES = new Set([
-  'translation_unit', 'function_definition', 'declaration',
-  'expression_statement', 'return_statement', 'break_statement',
-  'continue_statement', 'compound_statement',
-  'if_statement', 'else_clause', 'for_statement', 'for_range_loop',
-  'while_statement', 'do_statement', 'switch_statement', 'case_statement',
-  'binary_expression', 'unary_expression', 'update_expression',
-  'assignment_expression', 'call_expression', 'field_expression',
-  'subscript_expression', 'parenthesized_expression', 'conditional_expression',
+  'translation_unit',
+  'function_definition',
+  'declaration',
+  'expression_statement',
+  'return_statement',
+  'break_statement',
+  'continue_statement',
+  'compound_statement',
+  'if_statement',
+  'else_clause',
+  'for_statement',
+  'for_range_loop',
+  'while_statement',
+  'do_statement',
+  'switch_statement',
+  'case_statement',
+  'binary_expression',
+  'unary_expression',
+  'update_expression',
+  'assignment_expression',
+  'call_expression',
+  'field_expression',
+  'subscript_expression',
+  'parenthesized_expression',
+  'conditional_expression',
   'comma_expression',
-  'number_literal', 'string_literal', 'char_literal', 'concatenated_string',
-  'true', 'false', 'null', 'identifier', 'comment',
-  'template_type', 'primitive_type', 'sized_type_specifier',
+  'number_literal',
+  'string_literal',
+  'char_literal',
+  'concatenated_string',
+  'true',
+  'false',
+  'null',
+  'identifier',
+  'comment',
+  'template_type',
+  'primitive_type',
+  'sized_type_specifier',
   'placeholder_type_specifier',
-  'type_qualifier', 'storage_class_specifier',
-  'preproc_include', 'preproc_def', 'preproc_call',
-  'using_declaration', 'type_definition', 'alias_declaration',
-  'struct_specifier', 'class_specifier', 'access_specifier', 'sizeof_expression', 
-  'field_declaration_list', 'field_declaration',
-  'field_initializer_list', 'field_initializer',
-  'parameter_list', 'parameter_declaration', 'argument_list',
-  'init_declarator', 'initializer_list',
-  'array_declarator', 'pointer_declarator', 'reference_declarator',
-  'function_declarator', 'parenthesized_declarator',
-  'qualified_identifier', 'template_function',
-  'field_identifier', 'type_identifier', 'namespace_identifier',
+  'type_qualifier',
+  'storage_class_specifier',
+  'preproc_include',
+  'preproc_def',
+  'preproc_call',
+  'using_declaration',
+  'type_definition',
+  'alias_declaration',
+  'struct_specifier',
+  'class_specifier',
+  'access_specifier',
+  'sizeof_expression',
+  'field_declaration_list',
+  'field_declaration',
+  'field_initializer_list',
+  'field_initializer',
+  'parameter_list',
+  'parameter_declaration',
+  'argument_list',
+  'init_declarator',
+  'initializer_list',
+  'array_declarator',
+  'pointer_declarator',
+  'reference_declarator',
+  'function_declarator',
+  'parenthesized_declarator',
+  'qualified_identifier',
+  'template_function',
+  'field_identifier',
+  'type_identifier',
+  'namespace_identifier',
   'condition_clause',
   'labeled_statement',
 ]);
@@ -123,7 +168,10 @@ export class CppToJsTransformer {
     }
 
     const code = this.postProcessContainerSemantics(
-      parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim(),
+      parts
+        .join('\n\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim(),
     );
     return { code, warnings: this.warnings.getWarningStrings() };
   }
@@ -273,7 +321,10 @@ export class CppToJsTransformer {
     const constructors = this.extractStructConstructors(structName, bodyNode, fields);
 
     this.structDefinitions.set(structName, { name: structName, fields, constructors });
-    this.ensureHelper(`struct:${structName}`, this.buildStructFactory(structName, fields, constructors));
+    this.ensureHelper(
+      `struct:${structName}`,
+      this.buildStructFactory(structName, fields, constructors),
+    );
   }
 
   private extractStructFields(structName: string, bodyNode: SyntaxNode): StructFieldInfo[] {
@@ -295,7 +346,8 @@ export class CppToJsTransformer {
         fields.push({
           name,
           cppType: rawType,
-          isPointer: declarator.type === 'pointer_declarator' || declarator.type === 'reference_declarator',
+          isPointer:
+            declarator.type === 'pointer_declarator' || declarator.type === 'reference_declarator',
           defaultValue: this.getStructFieldDefaultValue(structName, rawType, declarator),
         });
       }
@@ -342,11 +394,13 @@ export class CppToJsTransformer {
 
       const params = this.extractFunctionParams(declarator);
       const assignments: string[] = [];
-      const initializerList = child.namedChildCount > 1 && child.namedChild(1)?.type === 'field_initializer_list'
-        ? child.namedChild(1)
-        : child.childForFieldName('declarator')?.nextNamedSibling?.type === 'field_initializer_list'
-          ? child.childForFieldName('declarator')?.nextNamedSibling
-          : null;
+      const initializerList =
+        child.namedChildCount > 1 && child.namedChild(1)?.type === 'field_initializer_list'
+          ? child.namedChild(1)
+          : child.childForFieldName('declarator')?.nextNamedSibling?.type ===
+              'field_initializer_list'
+            ? child.childForFieldName('declarator')?.nextNamedSibling
+            : null;
       const body = child.childForFieldName('body');
 
       if (initializerList) {
@@ -453,16 +507,17 @@ export class CppToJsTransformer {
     });
 
     const positionalFallback = fields
-      .map((field, index) => `  if (args.length > ${index}) instance.${field.name} = args[${index}];`)
+      .map(
+        (field, index) => `  if (args.length > ${index}) instance.${field.name} = args[${index}];`,
+      )
       .join('\n');
 
-    const overloadBlock = constructorCases.length > 0
-      ? `  switch (args.length) {\n${constructorCases.join('\n')}\n  }\n`
-      : '';
+    const overloadBlock =
+      constructorCases.length > 0
+        ? `  switch (args.length) {\n${constructorCases.join('\n')}\n  }\n`
+        : '';
 
-    const fallbackBlock = positionalFallback
-      ? `\n${positionalFallback}\n`
-      : '\n';
+    const fallbackBlock = positionalFallback ? `\n${positionalFallback}\n` : '\n';
 
     return `function ${structName}(...args) {
   const instance = {};
@@ -568,7 +623,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
         if (p.name) this.symbols.declare(p.name, p.type, false);
       }
 
-      const paramStr = params.map(p => p.name).join(', ');
+      const paramStr = params.map((p) => p.name).join(', ');
       let bodyStr = '';
       if (body) {
         bodyStr = this.visitCompoundStatementBody(body, false);
@@ -627,7 +682,10 @@ ${overloadBlock}${fallbackBlock}  return instance;
         const paramDeclarator = param.childForFieldName('declarator');
         let paramName = paramDeclarator?.text ?? `_p${i}`;
         // Strip reference/pointer and array brackets from name
-        paramName = paramName.replace(/^[&*\s]+/, '').replace(/\s*\[.*\]\s*/g, '').trim();
+        paramName = paramName
+          .replace(/^[&*\s]+/, '')
+          .replace(/\s*\[.*\]\s*/g, '')
+          .trim();
         params.push({ name: paramName, type: paramType });
       }
     }
@@ -691,7 +749,10 @@ ${overloadBlock}${fallbackBlock}  return instance;
       case 'labeled_statement': {
         // default: or label:
         const label = node.child(0)?.text ?? '';
-        const body = node.namedChildCount > 0 ? this.visitStatement(node.namedChild(node.namedChildCount - 1)!) : '';
+        const body =
+          node.namedChildCount > 0
+            ? this.visitStatement(node.namedChild(node.namedChildCount - 1)!)
+            : '';
         return `${label}: ${body}`;
       }
       default:
@@ -721,7 +782,10 @@ ${overloadBlock}${fallbackBlock}  return instance;
     }
 
     // Determine the base C++ type (stripping qualifiers, std::, etc.)
-    const cleanType = typeText.replace(/^(const\s+)?/, '').replace(/std::/g, '').trim();
+    const cleanType = typeText
+      .replace(/^(const\s+)?/, '')
+      .replace(/std::/g, '')
+      .trim();
 
     // Check if this is an STL container type
     const containerInfo = this.parseContainerType(typeNode, cleanType);
@@ -741,16 +805,20 @@ ${overloadBlock}${fallbackBlock}  return instance;
   }
 
   private isDeclaratorType(type: string): boolean {
-    return type === 'identifier' || type === 'array_declarator' ||
-           type === 'pointer_declarator' || type === 'reference_declarator' ||
-           type === 'function_declarator';
+    return (
+      type === 'identifier' ||
+      type === 'array_declarator' ||
+      type === 'pointer_declarator' ||
+      type === 'reference_declarator' ||
+      type === 'function_declarator'
+    );
   }
 
   private visitInitDeclarator(
     node: SyntaxNode,
     cppType: string,
     isConst: boolean,
-    containerInfo: ContainerInfo | null
+    containerInfo: ContainerInfo | null,
   ): string {
     const keyword = isConst ? 'const' : 'let';
 
@@ -840,7 +908,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
     declarator: SyntaxNode,
     value: SyntaxNode | null,
     keyword: string,
-    varName: string
+    varName: string,
   ): string {
     // Extract array size from the declarator
     const sizeNode = declarator.childForFieldName('size');
@@ -875,7 +943,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
   private visitInitValue(
     node: SyntaxNode,
     cppType: string,
-    containerInfo: ContainerInfo | null
+    containerInfo: ContainerInfo | null,
   ): string {
     const normalizedType = cppType.replace(/std::/g, '').trim();
 
@@ -980,13 +1048,18 @@ ${overloadBlock}${fallbackBlock}  return instance;
 
     if (containerInfo) {
       switch (containerInfo.kind) {
-        case 'vector': return '[]';
-        case 'map': return '{}';
-        case 'set': return 'new Set()';
-        case 'pair': return '[0, 0]';
+        case 'vector':
+          return '[]';
+        case 'map':
+          return '{}';
+        case 'set':
+          return 'new Set()';
+        case 'pair':
+          return '[0, 0]';
         case 'stack':
         case 'queue':
-        case 'priority_queue': return '[]';
+        case 'priority_queue':
+          return '[]';
       }
     }
     if (this.isStructType(normalizedType)) return `${normalizedType}()`;
@@ -1002,10 +1075,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
   // CONTAINER TYPE PARSING
   // ═══════════════════════════════════════════════════════════════════════════
 
-  private parseContainerType(
-    typeNode: SyntaxNode | null,
-    cleanType: string
-  ): ContainerInfo | null {
+  private parseContainerType(typeNode: SyntaxNode | null, cleanType: string): ContainerInfo | null {
     if (!typeNode) return null;
 
     // Check for template_type node (vector<int>, map<string,int>, etc.)
@@ -1289,7 +1359,9 @@ ${overloadBlock}${fallbackBlock}  return instance;
 
       case 'cast_expression':
         // (int)x → just the value, skip the cast
-        return this.visitExpression(node.childForFieldName('value') ?? node.namedChild(node.namedChildCount - 1)!);
+        return this.visitExpression(
+          node.childForFieldName('value') ?? node.namedChild(node.namedChildCount - 1)!,
+        );
 
       case 'sizeof_expression': {
         const valueNode = node.childForFieldName('value') || node.namedChild(0);
@@ -1390,11 +1462,13 @@ ${overloadBlock}${fallbackBlock}  return instance;
       if (right) {
         const rightText = right.text.replace(/std::/g, '').trim();
         // Skip endl and <iomanip> manipulators
-        if (rightText !== 'endl' && 
-            rightText !== '"\\n"' && 
-            rightText !== 'fixed' && 
-            !rightText.startsWith('setw') && 
-            !rightText.startsWith('setprecision')) {
+        if (
+          rightText !== 'endl' &&
+          rightText !== '"\\n"' &&
+          rightText !== 'fixed' &&
+          !rightText.startsWith('setw') &&
+          !rightText.startsWith('setprecision')
+        ) {
           parts.unshift(this.visitExpression(right));
         }
       }
@@ -1448,7 +1522,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
     }
 
     if (!isCin) return null;
-    return vars.map(v => `${v} = __tracer.input()`).join('; ');
+    return vars.map((v) => `${v} = __tracer.input()`).join('; ');
   }
 
   // ─── Assignment Expressions ─────────────────────────────────────────────────
@@ -1539,7 +1613,8 @@ ${overloadBlock}${fallbackBlock}  return instance;
             return `${obj}.shift()`;
           }
         }
-        if (method === 'push_back' || method === 'emplace_back') return `${obj}.push(${args.join(', ')})`;
+        if (method === 'push_back' || method === 'emplace_back')
+          return `${obj}.push(${args.join(', ')})`;
         if (method === 'pop_back') return `${obj}.pop()`;
         if (method === 'clear') return `${obj}.length = 0`;
 
@@ -1563,7 +1638,8 @@ ${overloadBlock}${fallbackBlock}  return instance;
         }
 
         // count(key) → has(key) ? 1 : 0
-        if (method === 'count') return `(${obj}.has ? (${obj}.has(${args[0]}) ? 1 : 0) : (${args[0]} in ${obj} ? 1 : 0))`;
+        if (method === 'count')
+          return `(${obj}.has ? (${obj}.has(${args[0]}) ? 1 : 0) : (${args[0]} in ${obj} ? 1 : 0))`;
 
         // find for map/set → .has check or string → .indexOf
         if (method === 'find') return `${obj}.indexOf(${args.join(', ')})`;
@@ -1772,7 +1848,9 @@ ${overloadBlock}${fallbackBlock}  return instance;
     return beginMatch ? beginMatch[1] : null;
   }
 
-  private matchMergeCall(argsNode: SyntaxNode): { left: string; right: string; out: string } | null {
+  private matchMergeCall(
+    argsNode: SyntaxNode,
+  ): { left: string; right: string; out: string } | null {
     if (argsNode.namedChildCount < 5) return null;
 
     const leftBegin = this.matchBeginCall(argsNode.namedChild(0)!);
@@ -1923,7 +2001,7 @@ ${overloadBlock}${fallbackBlock}  return instance;
       node.startPosition.row + 1,
       node.startPosition.column,
       node.type,
-      `Unsupported C++ construct: ${node.type} — "${node.text.substring(0, 40)}..."`
+      `Unsupported C++ construct: ${node.type} — "${node.text.substring(0, 40)}..."`,
     );
   }
 }

@@ -25,171 +25,171 @@ const DEFAULT_MAX_STEPS = 2000;
 const DEFAULT_INPUT_VALUES = [5, 10, 3, 7, 1, 42, 100, 0, -1, 99];
 
 function serializeForDisplay(value: unknown, maxDepth: number = 4): string {
-    const seen = new WeakSet<object>();
+  const seen = new WeakSet<object>();
 
-    const normalize = (current: unknown, depth: number): unknown => {
-        if (current === null || typeof current !== 'object') {
-            if (typeof current === 'function') return '[Function]';
-            if (current === undefined) return 'undefined';
-            if (Number.isNaN(current)) return 'NaN';
-            return current;
-        }
-
-        if (seen.has(current as object)) {
-            return '[Circular]';
-        }
-
-        if (depth >= maxDepth) {
-            return Array.isArray(current) ? `[Array(${current.length})]` : '[Object]';
-        }
-
-        seen.add(current as object);
-
-        if (Array.isArray(current)) {
-            return current.map((item) => normalize(item, depth + 1));
-        }
-
-        const normalized: Record<string, unknown> = {};
-        for (const [key, entryValue] of Object.entries(current as Record<string, unknown>)) {
-            normalized[key] = normalize(entryValue, depth + 1);
-        }
-        return normalized;
-    };
-
-    try {
-        return JSON.stringify(normalize(value, 0));
-    } catch {
-        return String(value);
+  const normalize = (current: unknown, depth: number): unknown => {
+    if (current === null || typeof current !== 'object') {
+      if (typeof current === 'function') return '[Function]';
+      if (current === undefined) return 'undefined';
+      if (Number.isNaN(current)) return 'NaN';
+      return current;
     }
+
+    if (seen.has(current as object)) {
+      return '[Circular]';
+    }
+
+    if (depth >= maxDepth) {
+      return Array.isArray(current) ? `[Array(${current.length})]` : '[Object]';
+    }
+
+    seen.add(current as object);
+
+    if (Array.isArray(current)) {
+      return current.map((item) => normalize(item, depth + 1));
+    }
+
+    const normalized: Record<string, unknown> = {};
+    for (const [key, entryValue] of Object.entries(current as Record<string, unknown>)) {
+      normalized[key] = normalize(entryValue, depth + 1);
+    }
+    return normalized;
+  };
+
+  try {
+    return JSON.stringify(normalize(value, 0));
+  } catch {
+    return String(value);
+  }
 }
 
 // ─── Worker message handler ───────────────────────────────────────────────────
 
 self.onmessage = async (e: MessageEvent) => {
-    await ensureInit();
+  await ensureInit();
 
-    const { userCode, language, config } = e.data as {
-      userCode: string;
-      language: string;
-      config?: ExecutionConfig;
-    };
+  const { userCode, language, config } = e.data as {
+    userCode: string;
+    language: string;
+    config?: ExecutionConfig;
+  };
 
-    const MAX_STEPS = config?.maxSteps ?? DEFAULT_MAX_STEPS;
-    const inputValues = config?.inputValues ?? DEFAULT_INPUT_VALUES;
+  const MAX_STEPS = config?.maxSteps ?? DEFAULT_MAX_STEPS;
+  const inputValues = config?.inputValues ?? DEFAULT_INPUT_VALUES;
 
-    const timeline: Timeline = [];
-    const currentLogs: ConsoleLog[] = [];
-    let logSnapshotIndex = 0; // Track where we last snapshotted logs
-    let lastLine = 0;
-    let analyzedCode = userCode;
-    let complexityAnalysis: ComplexityAnalysis | null = null;
+  const timeline: Timeline = [];
+  const currentLogs: ConsoleLog[] = [];
+  let logSnapshotIndex = 0; // Track where we last snapshotted logs
+  let lastLine = 0;
+  let analyzedCode = userCode;
+  let complexityAnalysis: ComplexityAnalysis | null = null;
 
-    /** Helper: snapshot only NEW logs since last step */
-    function getNewLogs(): ConsoleLog[] {
-      const newLogs = currentLogs.slice(logSnapshotIndex);
-      logSnapshotIndex = currentLogs.length;
-      return newLogs;
+  /** Helper: snapshot only NEW logs since last step */
+  function getNewLogs(): ConsoleLog[] {
+    const newLogs = currentLogs.slice(logSnapshotIndex);
+    logSnapshotIndex = currentLogs.length;
+    return newLogs;
+  }
+
+  try {
+    let codeToInstrument = userCode;
+
+    // ── Transpile C++ ──
+    if (language === 'c++' || language === 'cpp') {
+      try {
+        codeToInstrument = transpileCppToJs(userCode);
+        analyzedCode = codeToInstrument;
+      } catch (transpileError: any) {
+        postError(`Transpilation Failed: ${transpileError.message}`, lastLine, 'transpile');
+        return;
+      }
     }
 
+    // ── Instrument ──
+    let instrumented: string;
     try {
-        let codeToInstrument = userCode;
+      instrumented = instrumentCode(codeToInstrument);
+    } catch (instrumentError: any) {
+      postError(`Instrumentation Failed: ${instrumentError.message}`, lastLine, 'instrument');
+      return;
+    }
 
-        // ── Transpile C++ ──
-        if (language === 'c++' || language === 'cpp') {
-            try {
-                codeToInstrument = transpileCppToJs(userCode);
-                analyzedCode = codeToInstrument;
-            } catch (transpileError: any) {
-                postError(`Transpilation Failed: ${transpileError.message}`, lastLine, 'transpile');
-                return;
-            }
+    complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+
+    let stepCount = 0;
+
+    // ── Tracer object ──
+    const tracer = {
+      stack: ['main'],
+      currentLine: 1,
+      _inputValues: inputValues,
+      _inputIndex: 0,
+
+      enter: (name: string) => {
+        tracer.stack.push(name);
+      },
+
+      exit: () => {
+        if (tracer.stack.length > 1) {
+          tracer.stack.pop();
+        }
+      },
+
+      setLine: (line: number) => {
+        tracer.currentLine = line;
+        lastLine = line;
+      },
+
+      step: (line: number, vars: any) => {
+        if (stepCount++ > MAX_STEPS) {
+          throw new Error('Execution limit exceeded (infinite loop detection).');
         }
 
-        // ── Instrument ──
-        let instrumented: string;
+        tracer.currentLine = line;
+        lastLine = line;
+
+        // Deep-clone variables — structuredClone is faster than JSON round-trip
+        // and handles more types (Map, Set, Date, RegExp, etc.)
+        let safeVars: any;
         try {
-            instrumented = instrumentCode(codeToInstrument);
-        } catch (instrumentError: any) {
-            postError(`Instrumentation Failed: ${instrumentError.message}`, lastLine, 'instrument');
-            return;
+          safeVars = structuredClone(vars);
+        } catch {
+          // Fallback for non-cloneable values (functions, symbols)
+          safeVars = JSON.parse(serializeForDisplay(vars));
         }
 
-        complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+        timeline.push({
+          line,
+          variables: safeVars,
+          callStack: [...tracer.stack],
+          // Only store NEW logs since last step (delta, not full history)
+          consoleOutput: getNewLogs(),
+        });
+      },
 
-        let stepCount = 0;
+      checkLoop: () => {
+        return stepCount > MAX_STEPS;
+      },
 
-        // ── Tracer object ──
-        const tracer = {
-            stack: ['main'],
-            currentLine: 1,
-            _inputValues: inputValues,
-            _inputIndex: 0,
+      log: (...args: any[]) => {
+        const message = args
+          .map((a) => (typeof a === 'object' ? serializeForDisplay(a) : String(a)))
+          .join(' ');
+        currentLogs.push({ type: 'log', message });
+      },
 
-            enter: (name: string) => {
-                tracer.stack.push(name);
-            },
+      input: () => {
+        const val = tracer._inputValues[tracer._inputIndex % tracer._inputValues.length];
+        tracer._inputIndex++;
+        currentLogs.push({ type: 'log', message: `[input] → ${val}` });
+        return val;
+      },
+    };
 
-            exit: () => {
-                if (tracer.stack.length > 1) {
-                    tracer.stack.pop();
-                }
-            },
-
-            setLine: (line: number) => {
-                tracer.currentLine = line;
-                lastLine = line;
-            },
-
-            step: (line: number, vars: any) => {
-                if (stepCount++ > MAX_STEPS) {
-                    throw new Error("Execution limit exceeded (infinite loop detection).");
-                }
-
-                tracer.currentLine = line;
-                lastLine = line;
-
-                // Deep-clone variables — structuredClone is faster than JSON round-trip
-                // and handles more types (Map, Set, Date, RegExp, etc.)
-                let safeVars: any;
-                try {
-                    safeVars = structuredClone(vars);
-                } catch {
-                    // Fallback for non-cloneable values (functions, symbols)
-                    safeVars = JSON.parse(serializeForDisplay(vars));
-                }
-
-                timeline.push({
-                    line,
-                    variables: safeVars,
-                    callStack: [...tracer.stack],
-                    // Only store NEW logs since last step (delta, not full history)
-                    consoleOutput: getNewLogs(),
-                });
-            },
-
-            checkLoop: () => {
-                return stepCount > MAX_STEPS;
-            },
-
-            log: (...args: any[]) => {
-                const message = args.map(a =>
-                    typeof a === 'object' ? serializeForDisplay(a) : String(a)
-                ).join(' ');
-                currentLogs.push({ type: 'log', message });
-            },
-
-            input: () => {
-                const val = tracer._inputValues[tracer._inputIndex % tracer._inputValues.length];
-                tracer._inputIndex++;
-                currentLogs.push({ type: 'log', message: `[input] → ${val}` });
-                return val;
-            }
-        };
-
-        // ── Sandboxed execution ──
-        // Block dangerous globals inside the sandbox to prevent exfiltration.
-        // The worker already has no DOM access, but still has network APIs.
-        const wrappedCode = `
+    // ── Sandboxed execution ──
+    // Block dangerous globals inside the sandbox to prevent exfiltration.
+    // The worker already has no DOM access, but still has network APIs.
+    const wrappedCode = `
         const __tracer = arguments[0];
         const console = {
           log: __tracer.log,
@@ -217,42 +217,41 @@ self.onmessage = async (e: MessageEvent) => {
         }
       `;
 
-        new Function(wrappedCode).call(null, tracer);
+    new Function(wrappedCode).call(null, tracer);
 
-        complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
-        self.postMessage({ type: 'success', timeline, analysis: complexityAnalysis });
+    complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+    self.postMessage({ type: 'success', timeline, analysis: complexityAnalysis });
+  } catch (e: any) {
+    postError(e.message, lastLine, 'runtime');
+  }
 
-    } catch (e: any) {
-        postError(e.message, lastLine, 'runtime');
+  // ── Helper: post error with partial timeline ──
+  function postError(message: string, errorLine: number, errorType: ErrorType) {
+    const errorTimeline = [
+      ...timeline,
+      {
+        line: errorLine,
+        variables: timeline.length > 0 ? timeline[timeline.length - 1].variables : {},
+        callStack: timeline.length > 0 ? timeline[timeline.length - 1].callStack : ['main'],
+        consoleOutput: [
+          ...getNewLogs(),
+          { type: 'error' as const, message: `Runtime Error: ${message}` },
+        ],
+        isError: true,
+        errorMessage: message,
+      },
+    ];
+    try {
+      complexityAnalysis = analyzeComplexity(analyzedCode, errorTimeline);
+    } catch {
+      // Keep the last successful analysis if the fallback pass fails.
     }
-
-    // ── Helper: post error with partial timeline ──
-    function postError(message: string, errorLine: number, errorType: ErrorType) {
-        const errorTimeline = [
-            ...timeline,
-            {
-                line: errorLine,
-                variables: timeline.length > 0 ? timeline[timeline.length - 1].variables : {},
-                callStack: timeline.length > 0 ? timeline[timeline.length - 1].callStack : ['main'],
-                consoleOutput: [
-                    ...getNewLogs(),
-                    { type: 'error' as const, message: `Runtime Error: ${message}` }
-                ],
-                isError: true,
-                errorMessage: message,
-            }
-        ];
-        try {
-            complexityAnalysis = analyzeComplexity(analyzedCode, errorTimeline);
-        } catch {
-            // Keep the last successful analysis if the fallback pass fails.
-        }
-        self.postMessage({
-            type: 'error',
-            timeline: errorTimeline,
-            message,
-            errorType,
-            analysis: complexityAnalysis,
-        });
-    }
+    self.postMessage({
+      type: 'error',
+      timeline: errorTimeline,
+      message,
+      errorType,
+      analysis: complexityAnalysis,
+    });
+  }
 };

@@ -18,7 +18,13 @@ export interface LinkedListPreview {
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Set) && !(value instanceof Map);
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !(value instanceof Set) &&
+    !(value instanceof Map)
+  );
 }
 
 function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): string {
@@ -140,7 +146,10 @@ export const LinkedListPanel: React.FC<{
             >
               <div className="flex min-h-5 flex-wrap gap-1">
                 {node.pointerNames.map((pointer) => (
-                  <span key={pointer} className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}>
+                  <span
+                    key={pointer}
+                    className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
+                  >
                     {pointer}
                   </span>
                 ))}

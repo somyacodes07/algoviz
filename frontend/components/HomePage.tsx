@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Terminal,
   Code2,
@@ -13,12 +13,12 @@ import {
   Layers,
   BookOpen,
   Sun,
-  Moon
-} from "lucide-react";
-import homepagePreview from "../../assets/homepage.png";
-import editorPreview from "../../assets/editor.png";
-import { HOME_FAQ_ITEMS } from "../seo";
-import LandingInteractiveBackdrop from "./LandingInteractiveBackdrop.tsx";
+  Moon,
+} from 'lucide-react';
+import homepagePreview from '../../assets/homepage.png';
+import editorPreview from '../../assets/editor.png';
+import { HOME_FAQ_ITEMS } from '../seo';
+import LandingInteractiveBackdrop from './LandingInteractiveBackdrop.tsx';
 
 interface HomePageProps {
   onSelectLanguage: (lang: string) => void;
@@ -27,54 +27,54 @@ interface HomePageProps {
   javascriptHref: string;
   cppHref: string;
   toggleTheme: () => void;
-  theme: "light" | "dark";
+  theme: 'light' | 'dark';
 }
 
 // Animation Data for fake execution tracking
 const EXECUTION_STEPS = [
-  { line: 1, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
-  { line: 2, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
-  { line: 4, n: 6, callStack: [{ id: 0, call: "fibonacci(6)" }] },
+  { line: 1, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
+  { line: 2, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
+  { line: 4, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
   {
     line: 1,
     n: 5,
     callStack: [
-      { id: 1, call: "fibonacci(5)" },
-      { id: 0, call: "fibonacci(6)" },
+      { id: 1, call: 'fibonacci(5)' },
+      { id: 0, call: 'fibonacci(6)' },
     ],
   },
   {
     line: 2,
     n: 5,
     callStack: [
-      { id: 1, call: "fibonacci(5)" },
-      { id: 0, call: "fibonacci(6)" },
+      { id: 1, call: 'fibonacci(5)' },
+      { id: 0, call: 'fibonacci(6)' },
     ],
   },
   {
     line: 4,
     n: 5,
     callStack: [
-      { id: 1, call: "fibonacci(5)" },
-      { id: 0, call: "fibonacci(6)" },
+      { id: 1, call: 'fibonacci(5)' },
+      { id: 0, call: 'fibonacci(6)' },
     ],
   },
   {
     line: 1,
     n: 4,
     callStack: [
-      { id: 2, call: "fibonacci(4)" },
-      { id: 1, call: "fibonacci(5)" },
-      { id: 0, call: "fibonacci(6)" },
+      { id: 2, call: 'fibonacci(4)' },
+      { id: 1, call: 'fibonacci(5)' },
+      { id: 0, call: 'fibonacci(6)' },
     ],
   },
   {
     line: 2,
     n: 4,
     callStack: [
-      { id: 2, call: "fibonacci(4)" },
-      { id: 1, call: "fibonacci(5)" },
-      { id: 0, call: "fibonacci(6)" },
+      { id: 2, call: 'fibonacci(4)' },
+      { id: 1, call: 'fibonacci(5)' },
+      { id: 0, call: 'fibonacci(6)' },
     ],
   },
 ];
@@ -124,10 +124,7 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Top Navigation / Header */}
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
-            <Activity
-              className="text-amber-600 dark:text-amber-500"
-              strokeWidth={3}
-            />
+            <Activity className="text-amber-600 dark:text-amber-500" strokeWidth={3} />
             <span className="font-bold text-xl tracking-tight">AlgoViz.</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
@@ -147,18 +144,15 @@ const HomePage: React.FC<HomePageProps> = ({
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-slate-700 rounded-full transition-colors group cursor-pointer backdrop-blur-sm"
             >
-              <Star
-                size={14}
-                className="group-hover:text-amber-500 transition-colors"
-              />
+              <Star size={14} className="group-hover:text-amber-500 transition-colors" />
               <span>Star us on GitHub</span>
             </a>
             <button
               onClick={toggleTheme}
               className="p-2 border border-slate-300 dark:border-slate-700 rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
-              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
-              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
           </div>
         </header>
@@ -209,7 +203,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   transition={{
                     duration: 0.5,
                     delay: 0.4,
-                    type: "spring",
+                    type: 'spring',
                     stiffness: 200,
                   }}
                   whileHover={{ scale: 1.05, rotate: -2 }}
@@ -238,8 +232,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </motion.h1>
 
               <p className="mb-10 max-w-md text-lg font-medium leading-relaxed text-slate-600 md:text-xl dark:text-slate-400">
-                Stop guessing. Step through your logic line-by-line, watch
-                variables mutate in real-time, and untangle the call stack.
+                Stop guessing. Step through your logic line-by-line, watch variables mutate in
+                real-time, and untangle the call stack.
               </p>
 
               <div className="mb-4 flex flex-col gap-4 sm:flex-row">
@@ -247,9 +241,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   href={javascriptHref}
                   onClick={(e) => {
                     e.preventDefault();
-                    onSelectLanguage("javascript");
+                    onSelectLanguage('javascript');
                   }}
-                  onMouseEnter={() => setHoverLang("js")}
+                  onMouseEnter={() => setHoverLang('js')}
                   onMouseLeave={() => setHoverLang(null)}
                   className="group relative flex items-center justify-between border-2 border-slate-900 bg-yellow-400 px-6 py-4 text-lg font-bold text-slate-900 shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-yellow-300 active:translate-y-1 dark:bg-yellow-500 dark:shadow-[4px_4px_0px_#000] dark:hover:bg-yellow-400"
                 >
@@ -264,9 +258,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   href={cppHref}
                   onClick={(e) => {
                     e.preventDefault();
-                    onSelectLanguage("c++");
+                    onSelectLanguage('c++');
                   }}
-                  onMouseEnter={() => setHoverLang("cpp")}
+                  onMouseEnter={() => setHoverLang('cpp')}
                   onMouseLeave={() => setHoverLang(null)}
                   className="group relative flex items-center justify-between border-2 border-slate-900 bg-blue-500 px-6 py-4 text-lg font-bold text-white shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-blue-400 active:translate-y-1 dark:border-white/10 dark:bg-blue-600 dark:shadow-[4px_4px_0px_#000] dark:hover:bg-blue-500"
                 >
@@ -304,7 +298,7 @@ const HomePage: React.FC<HomePageProps> = ({
               className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3"
             >
               {/* {HERO_SIGNAL_CARDS.map((card) => ( */}
-                {/* <div
+              {/* <div
                   key={card.label}
                   className="rounded-2xl border border-slate-900/15 bg-white/60 px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/35 dark:shadow-[0_16px_40px_rgba(2,6,23,0.45)]"
                 >
@@ -322,188 +316,162 @@ const HomePage: React.FC<HomePageProps> = ({
           {/* Right Side: Visualizer abstract graphic */}
           <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[#08111d]/30">
             <div className="absolute inset-0 bg-dot-pattern opacity-60 dark:opacity-40" />
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-slate-700 dark:bg-[#1e1e1e] dark:shadow-[8px_8px_0px_#000] lg:h-[460px]"
-          >
-            {/* Terminal Header */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#252526]">
-              <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
-              <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
-              <div className="w-3 h-3 rounded-full bg-green-400 border border-slate-900/20"></div>
-              <div className="ml-2 font-mono text-xs opacity-60 flex-1 text-center font-semibold text-slate-900 dark:text-slate-100">
-                {hoverLang === "js"
-                  ? "index.js"
-                  : hoverLang === "cpp"
-                    ? "main.cpp"
-                    : "scratchpad.js"}{" "}
-                - Execution View
-              </div>
-            </div>
-
-            {/* Editor Body */}
-            <div className="flex-1 flex bg-white dark:bg-[#1e1e1e]">
-              {/* Lines */}
-              <div className="w-12 bg-slate-50 dark:bg-[#1e1e1e] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
-                <motion.div
-                  className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
-                  initial={false}
-                  animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-                  <ChevronRight
-                    size={14}
-                    strokeWidth={3}
-                    className="absolute left-1"
-                  />
-                </motion.div>
-                <div className="relative z-10 w-full text-center">1</div>
-                <div className="relative z-10 w-full text-center">2</div>
-                <div className="relative z-10 w-full text-center">3</div>
-                <div className="relative z-10 w-full text-center">4</div>
-                <div className="relative z-10 w-full text-center">5</div>
-                <div className="relative z-10 w-full text-center">6</div>
-                <div className="relative z-10 w-full text-center">7</div>
-              </div>
-
-              {/* Dummy Code */}
-              <div className="flex-1 py-4 px-5 font-mono text-[14px] leading-8 overflow-hidden text-slate-700 dark:text-slate-300 relative">
-                {/* Highlight Background that moves */}
-                <motion.div
-                  className="absolute left-0 right-0 h-[32px] bg-amber-100/50 dark:bg-amber-900/20 border-y border-amber-300/50 dark:border-amber-700/30 z-0"
-                  initial={false}
-                  animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                />
-
-                <motion.div
-                  className={`opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 1 ? "font-bold text-slate-900 dark:text-white" : ""}`}
-                  animate={{
-                    opacity:
-                      hoverLang === "js" ? 1 : hoverLang === "cpp" ? 0.3 : 0.8,
-                  }}
-                >
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    function
-                  </span>{" "}
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">
-                    fibonacci
-                  </span>
-                  (n) {"{"}
-                </motion.div>
-                <motion.div
-                  className={`pl-4 opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 2 ? "font-bold text-slate-900 dark:text-white" : ""}`}
-                >
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    if
-                  </span>{" "}
-                  (n {"<="} 1){" "}
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    return
-                  </span>{" "}
-                  n;
-                </motion.div>
-                <motion.div
-                  className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? "font-bold text-slate-900 dark:text-white" : "opacity-80"}`}
-                >
-                  <span>
-                    <span className="text-blue-700 dark:text-blue-400">
-                      return
-                    </span>{" "}
-                    <span className="text-amber-700 dark:text-amber-400">
-                      fibonacci
-                    </span>
-                    (n - 1) +{" "}
-                    <span className="text-amber-700 dark:text-amber-400">
-                      fibonacci
-                    </span>
-                    (n - 2);
-                  </span>
-                </motion.div>
-                <motion.div className="opacity-60 h-[32px]">{"}"}</motion.div>
-                <motion.div
-                  className="opacity-60 h-[32px]"
-                  animate={{
-                    opacity:
-                      hoverLang === "js" ? 1 : hoverLang === "cpp" ? 0.3 : 0.8,
-                  }}
-                >
-                  console.
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">
-                    log
-                  </span>
-                  (
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">
-                    fibonacci
-                  </span>
-                  (
-                  <span className="text-green-600 dark:text-green-400 font-bold">
-                    6
-                  </span>
-                  ));
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Variables Panel Mini */}
-            <div className="h-[140px] border-t-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#1e1e1e] flex flex-col">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-slate-700 flex justify-between items-center text-slate-700 dark:text-slate-300">
-                <span>Variables / Watch</span>
-                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <Play size={10} fill="currentColor" /> PAUSED on line{" "}
-                  {currentStep.line}
-                </span>
-              </div>
-              <div className="flex-1 p-3 font-mono text-xs overflow-hidden flex flex-col gap-2">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    n
-                  </span>
-                  <motion.span
-                    key={currentStep.n}
-                    initial={{
-                      backgroundColor: "rgb(254, 240, 138)",
-                      color: "rgb(161, 98, 7)",
-                    }}
-                    animate={{
-                      backgroundColor: "rgba(220, 252, 231, 0)",
-                      color: "rgb(22, 163, 74)",
-                    }}
-                    className="text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 rounded"
-                  >
-                    {currentStep.n}
-                  </motion.span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-slate-700 dark:bg-[#1e1e1e] dark:shadow-[8px_8px_0px_#000] lg:h-[460px]"
+            >
+              {/* Terminal Header */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#252526]">
+                <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400 border border-slate-900/20"></div>
+                <div className="ml-2 font-mono text-xs opacity-60 flex-1 text-center font-semibold text-slate-900 dark:text-slate-100">
+                  {hoverLang === 'js'
+                    ? 'index.js'
+                    : hoverLang === 'cpp'
+                      ? 'main.cpp'
+                      : 'scratchpad.js'}{' '}
+                  - Execution View
                 </div>
-                <div className="flex-1 flex flex-col p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800/50 transition-colors overflow-hidden relative">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold mb-1 border-b border-amber-200/50 dark:border-amber-800/50 pb-0.5 z-10 bg-inherit">
-                    Call Stack
+              </div>
+
+              {/* Editor Body */}
+              <div className="flex-1 flex bg-white dark:bg-[#1e1e1e]">
+                {/* Lines */}
+                <div className="w-12 bg-slate-50 dark:bg-[#1e1e1e] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
+                  <motion.div
+                    className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
+                    initial={false}
+                    animate={{ top: 16 + (currentStep.line - 1) * 32 }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+                  >
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+                    <ChevronRight size={14} strokeWidth={3} className="absolute left-1" />
+                  </motion.div>
+                  <div className="relative z-10 w-full text-center">1</div>
+                  <div className="relative z-10 w-full text-center">2</div>
+                  <div className="relative z-10 w-full text-center">3</div>
+                  <div className="relative z-10 w-full text-center">4</div>
+                  <div className="relative z-10 w-full text-center">5</div>
+                  <div className="relative z-10 w-full text-center">6</div>
+                  <div className="relative z-10 w-full text-center">7</div>
+                </div>
+
+                {/* Dummy Code */}
+                <div className="flex-1 py-4 px-5 font-mono text-[14px] leading-8 overflow-hidden text-slate-700 dark:text-slate-300 relative">
+                  {/* Highlight Background that moves */}
+                  <motion.div
+                    className="absolute left-0 right-0 h-[32px] bg-amber-100/50 dark:bg-amber-900/20 border-y border-amber-300/50 dark:border-amber-700/30 z-0"
+                    initial={false}
+                    animate={{ top: 16 + (currentStep.line - 1) * 32 }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+                  />
+
+                  <motion.div
+                    className={`opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 1 ? 'font-bold text-slate-900 dark:text-white' : ''}`}
+                    animate={{
+                      opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
+                    }}
+                  >
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">function</span>{' '}
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">fibonacci</span>
+                    (n) {'{'}
+                  </motion.div>
+                  <motion.div
+                    className={`pl-4 opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 2 ? 'font-bold text-slate-900 dark:text-white' : ''}`}
+                  >
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">if</span> (n{' '}
+                    {'<='} 1){' '}
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">return</span>{' '}
+                    n;
+                  </motion.div>
+                  <motion.div
+                    className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? 'font-bold text-slate-900 dark:text-white' : 'opacity-80'}`}
+                  >
+                    <span>
+                      <span className="text-blue-700 dark:text-blue-400">return</span>{' '}
+                      <span className="text-amber-700 dark:text-amber-400">fibonacci</span>
+                      (n - 1) +{' '}
+                      <span className="text-amber-700 dark:text-amber-400">fibonacci</span>
+                      (n - 2);
+                    </span>
+                  </motion.div>
+                  <motion.div className="opacity-60 h-[32px]">{'}'}</motion.div>
+                  <motion.div
+                    className="opacity-60 h-[32px]"
+                    animate={{
+                      opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
+                    }}
+                  >
+                    console.
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">log</span>(
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">fibonacci</span>(
+                    <span className="text-green-600 dark:text-green-400 font-bold">6</span>
+                    ));
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Variables Panel Mini */}
+              <div className="h-[140px] border-t-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#1e1e1e] flex flex-col">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-slate-700 flex justify-between items-center text-slate-700 dark:text-slate-300">
+                  <span>Variables / Watch</span>
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
                   </span>
-                  <div className="flex-1 overflow-hidden relative">
-                    <AnimatePresence initial={false}>
-                      {currentStep.callStack.map((frame, idx) => (
-                        <motion.div
+                </div>
+                <div className="flex-1 p-3 font-mono text-xs overflow-hidden flex flex-col gap-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">n</span>
+                    <motion.span
+                      key={currentStep.n}
+                      initial={{
+                        backgroundColor: 'rgb(254, 240, 138)',
+                        color: 'rgb(161, 98, 7)',
+                      }}
+                      animate={{
+                        backgroundColor: 'rgba(220, 252, 231, 0)',
+                        color: 'rgb(22, 163, 74)',
+                      }}
+                      className="text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 rounded"
+                    >
+                      {currentStep.n}
+                    </motion.span>
+                  </div>
+                  <div className="flex-1 flex flex-col p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800/50 transition-colors overflow-hidden relative">
+                    <span className="text-blue-600 dark:text-blue-400 font-bold mb-1 border-b border-amber-200/50 dark:border-amber-800/50 pb-0.5 z-10 bg-inherit">
+                      Call Stack
+                    </span>
+                    <div className="flex-1 overflow-hidden relative">
+                      <AnimatePresence initial={false}>
+                        {currentStep.callStack.map((frame, idx) => (
+                          <motion.div
                             key={`frame-${frame.id}-${idx}`}
                             initial={{ opacity: 0, x: -15, scale: 0.95, height: 0 }}
-                            animate={{ opacity: 1, x: 0, scale: 1, height: "auto" }}
+                            animate={{ opacity: 1, x: 0, scale: 1, height: 'auto' }}
                             exit={{ opacity: 0, x: 15, scale: 0.95, height: 0 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 24, delay: idx * 0.05 }}
-                            className={`flex gap-2 ${idx === 0 ? "font-bold text-slate-900 dark:text-emerald-400 bg-white/40 dark:bg-black/20 rounded px-1" : "text-slate-500 dark:text-slate-400"}`}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 200,
+                              damping: 24,
+                              delay: idx * 0.05,
+                            }}
+                            className={`flex gap-2 ${idx === 0 ? 'font-bold text-slate-900 dark:text-emerald-400 bg-white/40 dark:bg-black/20 rounded px-1' : 'text-slate-500 dark:text-slate-400'}`}
                           >
-                          <span className="opacity-50 w-3 text-right">
-                            {currentStep.callStack.length - 1 - idx}
-                          </span>
-                          <span>{frame.call}</span>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
+                            <span className="opacity-50 w-3 text-right">
+                              {currentStep.callStack.length - 1 - idx}
+                            </span>
+                            <span>{frame.call}</span>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
           </div>
         </main>
       </section>
@@ -516,8 +484,8 @@ const HomePage: React.FC<HomePageProps> = ({
               Why use AlgoViz?
             </h2>
             <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto">
-              Built for students and educators to strip away the magic and show
-              exactly how algorithms compute data in memory.
+              Built for students and educators to strip away the magic and show exactly how
+              algorithms compute data in memory.
             </p>
           </div>
 
@@ -526,7 +494,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
             >
@@ -535,8 +503,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
               <h3 className="text-xl font-bold mb-3">Multi-Language Support</h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Whether you're learning web paradigms in JavaScript or digging
-                into memory management in C++, AlgoViz speaks your language.
+                Whether you're learning web paradigms in JavaScript or digging into memory
+                management in C++, AlgoViz speaks your language.
               </p>
             </motion.div>
 
@@ -544,7 +512,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
             >
@@ -553,9 +521,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
               <h3 className="text-xl font-bold mb-3">Step-by-Step Debugging</h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Control the flow of time. Pause execution, step forwards, trace
-                backwards, and watch variables mutate exactly when lines
-                evaluate.
+                Control the flow of time. Pause execution, step forwards, trace backwards, and watch
+                variables mutate exactly when lines evaluate.
               </p>
             </motion.div>
 
@@ -563,7 +530,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
             >
@@ -572,8 +539,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
               <h3 className="text-xl font-bold mb-3">Visual Call Stack</h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Demystify recursion and nested function calls. See the stack
-                grow and shrink in real-time as frames are pushed and popped.
+                Demystify recursion and nested function calls. See the stack grow and shrink in
+                real-time as frames are pushed and popped.
               </p>
             </motion.div>
           </div>
@@ -587,9 +554,9 @@ const HomePage: React.FC<HomePageProps> = ({
               See the algorithm visualizer interface before you start
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              AlgoViz combines a code editor, variable inspector, console
-              playback, and call stack timeline into one place so students can
-              understand how JavaScript and C++ algorithms actually execute.
+              AlgoViz combines a code editor, variable inspector, console playback, and call stack
+              timeline into one place so students can understand how JavaScript and C++ algorithms
+              actually execute.
             </p>
           </div>
 
@@ -605,9 +572,8 @@ const HomePage: React.FC<HomePageProps> = ({
                 Launch into JavaScript or C++ visual debugging
               </h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                The homepage is built to get students into the right visualizer
-                fast, whether they want to trace JavaScript logic or inspect C++
-                algorithm flow.
+                The homepage is built to get students into the right visualizer fast, whether they
+                want to trace JavaScript logic or inspect C++ algorithm flow.
               </p>
             </article>
 
@@ -622,8 +588,8 @@ const HomePage: React.FC<HomePageProps> = ({
                 Follow variables, stack frames, and console output
               </h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                The workbench focuses on the exact runtime state students care
-                about during recursion, sorting, graph traversal, and debugging.
+                The workbench focuses on the exact runtime state students care about during
+                recursion, sorting, graph traversal, and debugging.
               </p>
             </article>
           </div>
@@ -637,9 +603,8 @@ const HomePage: React.FC<HomePageProps> = ({
               Frequently asked questions about AlgoViz
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              If you are comparing code visualization tools for teaching data
-              structures, recursion, or debugging practice, these are the
-              questions people usually ask first.
+              If you are comparing code visualization tools for teaching data structures, recursion,
+              or debugging practice, these are the questions people usually ask first.
             </p>
           </div>
 
@@ -667,7 +632,7 @@ const HomePage: React.FC<HomePageProps> = ({
               href={javascriptHref}
               onClick={(e) => {
                 e.preventDefault();
-                onSelectLanguage("javascript");
+                onSelectLanguage('javascript');
               }}
               className="inline-flex items-center justify-center px-5 py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold border-2 border-slate-900 transition-colors"
             >

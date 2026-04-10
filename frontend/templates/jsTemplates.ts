@@ -25,7 +25,7 @@ for (let i = 1; i < arr.length; i++) {
 }
 
 console.log("Maximum value is", maxVal, "at index", maxIndex);
-`
+`,
   },
   {
     name: 'Reverse Array',
@@ -52,7 +52,7 @@ while (left < right) {
 }
 
 console.log("Reversed array:", arr);
-`
+`,
   },
   {
     name: 'Two Sum',
@@ -75,7 +75,7 @@ for (let i = 0; i < nums.length; i++) {
     }
   }
 }
-`
+`,
   },
   {
     name: 'Valid Palindrome',
@@ -101,7 +101,7 @@ while (left < right) {
 }
 
 console.log("Is Palindrome?", isPalindrome);
-`
+`,
   },
   {
     name: 'Max Subarray',
@@ -123,7 +123,7 @@ for (let i = 1; i < nums.length; i++) {
 }
 
 console.log("Maximum Subarray Sum is:", globalMax);
-`
+`,
   },
   {
     name: 'Longest Substring',
@@ -156,7 +156,7 @@ for (let right = 0; right < s.length; right++) {
 }
 
 console.log("Final Maximum Length:", maxLength);
-`
+`,
   },
 
   // ==============================
@@ -200,7 +200,7 @@ for (let i = 0; i < s.length; i++) {
 
 if (stack.length > 0) isValid = false;
 console.log("Is Valid?", isValid);
-`
+`,
   },
   {
     name: 'Reverse List',
@@ -235,7 +235,7 @@ while (curr !== null) {
 
 head = prev; // New head
 console.log("Reversal complete. New head is Node", head.val);
-`
+`,
   },
   {
     name: 'Detect Cycle',
@@ -282,7 +282,7 @@ while (fast !== null && fast.next !== null && steps < 20) {
 }
 
 console.log("Does list have cycle?", hasCycle);
-`
+`,
   },
 
   // ==============================
@@ -321,7 +321,7 @@ while (low <= high) {
 }
 
 console.log("Binary Search Result:", result);
-`
+`,
   },
   {
     name: 'Merge Sort',
@@ -362,7 +362,7 @@ let numbers = [38, 27, 43, 3, 9, 82, 10];
 console.log("Original:", numbers);
 let sorted = mergeSort(numbers);
 console.log("Sorted:", sorted);
-`
+`,
   },
   {
     name: 'Quick Sort',
@@ -404,7 +404,7 @@ function partition(arr, left, right) {
 let arr = [64, 34, 25, 12, 22, 11, 90];
 quickSort(arr);
 console.log("Final sorted:", arr);
-`
+`,
   },
   {
     name: 'Selection Sort',
@@ -430,7 +430,7 @@ for (let i = 0; i < arr.length - 1; i++) {
 }
 
 console.log("Sorted array:", arr);
-`
+`,
   },
   {
     name: 'Insertion Sort',
@@ -457,7 +457,7 @@ for (let i = 1; i < arr.length; i++) {
 }
 
 console.log("Sorted array:", arr);
-`
+`,
   },
 
   // ==============================
@@ -508,7 +508,7 @@ for (let val of vals) {
 
 let sortedVals = inorder(root);
 console.log("Inorder Traversal (Sorted):", sortedVals);
-`
+`,
   },
   {
     name: 'Breadth-First Search (BFS)',
@@ -547,7 +547,7 @@ while (queue.length > 0) {
 }
 
 console.log("BFS Traversal Order:", result);
-`
+`,
   },
   {
     name: 'Depth-First Search (DFS)',
@@ -584,10 +584,10 @@ console.log("Starting DFS from node A");
 dfs('A');
 
 console.log("DFS Traversal Order:", result);
-`
+`,
   },
   {
-    name: 'Dijkstra\'s Shortest Path',
+    name: "Dijkstra's Shortest Path",
     category: 'Graphs & Trees',
     description: 'Find shortest paths from a source to all nodes in a weighted graph',
     language: 'javascript',
@@ -638,7 +638,7 @@ while (visited.size < Object.keys(graph).length) {
 }
 
 console.log("Final Distances from A:", distances);
-`
+`,
   },
 
   // ==============================
@@ -665,7 +665,7 @@ for (let i = 3; i <= n; i++) {
 }
 
 console.log("\\nNumber of ways to climb", n, "stairs:", dp[n]);
-`
+`,
   },
   {
     name: 'Coin Change',
@@ -695,7 +695,7 @@ for (let currentAmount = 1; currentAmount <= amount; currentAmount++) {
 
 let result = dp[amount] > amount ? -1 : dp[amount];
 console.log("Min coins needed for amount", amount, "is", result);
-`
+`,
   },
   {
     name: '0/1 Knapsack',
@@ -726,7 +726,7 @@ for (let i = 1; i <= weights.length; i++) {
 }
 
 console.log("Maximum Knapsack Value:", dp[weights.length][W]);
-`
+`,
   },
   {
     name: 'N-Queens Backtracking',
@@ -774,6 +774,6 @@ function solveNQueens(row) {
 console.log("Starting N-Queens Solver for N =", N);
 solveNQueens(0);
 console.log("Total Solutions:", solutions.length);
-`
-  }
+`,
+  },
 ];

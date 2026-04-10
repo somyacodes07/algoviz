@@ -49,9 +49,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <div
-          className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]"
-        >
+        <div className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
           <span>{langLabel}</span>
         </div>
         <a

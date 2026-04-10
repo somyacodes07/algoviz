@@ -89,7 +89,10 @@ export class SymbolTable {
 
   /** Check if a type is an integer type */
   private inferIsInteger(type: string): boolean {
-    const stripped = type.replace(/std::/g, '').replace(/const\s+/g, '').trim();
+    const stripped = type
+      .replace(/std::/g, '')
+      .replace(/const\s+/g, '')
+      .trim();
     return CPP_INTEGER_TYPES.has(stripped);
   }
 }

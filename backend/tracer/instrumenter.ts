@@ -84,14 +84,14 @@ export function instrumentCode(code: string): string {
     const scopeStack: Set<string>[] = [new Set()];
     function getCurrentScopeVars(): string[] {
       const vars = new Set<string>();
-      scopeStack.forEach(s => s.forEach(v => vars.add(v)));
+      scopeStack.forEach((s) => s.forEach((v) => vars.add(v)));
       return Array.from(vars);
     }
 
     function generateTraceCall(line: number, type: string = 'step') {
       const vars = getCurrentScopeVars();
-      const varObj = `{ ${vars.map(v => `${v}: (typeof ${v} !== 'undefined' ? ${v} : undefined)`).join(', ')} }`;
-      return `__tracer.step(${line}, ${varObj});`; 
+      const varObj = `{ ${vars.map((v) => `${v}: (typeof ${v} !== 'undefined' ? ${v} : undefined)`).join(', ')} }`;
+      return `__tracer.step(${line}, ${varObj});`;
     }
 
     function shouldWrapInSyntheticBlock(node: Node, parent?: Node): boolean {
@@ -101,52 +101,69 @@ export function instrumentCode(code: string): string {
         return parent.consequent === node || parent.alternate === node;
       }
 
-      return ['ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'].includes(parent.type)
-        && parent.body === node;
+      return (
+        [
+          'ForStatement',
+          'WhileStatement',
+          'DoWhileStatement',
+          'ForInStatement',
+          'ForOfStatement',
+        ].includes(parent.type) && parent.body === node
+      );
     }
 
     function walk(node: Node, parent?: Node) {
       if (!node) return;
 
       const isLoopInitializer =
-        !!parent && (
-          (parent.type === 'ForStatement' && parent.init === node) ||
+        !!parent &&
+        ((parent.type === 'ForStatement' && parent.init === node) ||
           (parent.type === 'ForInStatement' && parent.left === node) ||
-          (parent.type === 'ForOfStatement' && parent.left === node)
-        );
+          (parent.type === 'ForOfStatement' && parent.left === node));
 
       // Scope Management
       const isBlock = node.type === 'BlockStatement' || node.type === 'Program';
-      const isFunction = node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression' || node.type === 'FunctionExpression';
-      
+      const isFunction =
+        node.type === 'FunctionDeclaration' ||
+        node.type === 'ArrowFunctionExpression' ||
+        node.type === 'FunctionExpression';
+
       if (isBlock || isFunction) {
         scopeStack.push(new Set());
       }
 
       // Variable Collection — supports destructuring (ArrayPattern, ObjectPattern)
       if (node.type === 'VariableDeclaration') {
-        node.declarations?.forEach(decl => {
+        node.declarations?.forEach((decl) => {
           collectBindingNames(decl.id, scopeStack[scopeStack.length - 1]);
         });
       }
       if (isFunction && node.id?.type === 'Identifier') {
-         if(scopeStack.length > 1) scopeStack[scopeStack.length - 2].add(node.id.name);
+        if (scopeStack.length > 1) scopeStack[scopeStack.length - 2].add(node.id.name);
       }
       if (isFunction && node.params) {
-        node.params.forEach(param => {
+        node.params.forEach((param) => {
           collectBindingNames(param, scopeStack[scopeStack.length - 1]);
         });
       }
 
       // Loop Protection
-      if (['ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'].includes(node.type)) {
-         const body = node.body as Node;
-         if (body.type === 'BlockStatement') {
-             addPatch(body.start + 1, ` if (__tracer.checkLoop()) break; `);
-         } else {
-             addPatch(body.start, `{ if (__tracer.checkLoop()) break; `);
-             addPatch(body.end, ` }`);
-         }
+      if (
+        [
+          'ForStatement',
+          'WhileStatement',
+          'DoWhileStatement',
+          'ForInStatement',
+          'ForOfStatement',
+        ].includes(node.type)
+      ) {
+        const body = node.body as Node;
+        if (body.type === 'BlockStatement') {
+          addPatch(body.start + 1, ` if (__tracer.checkLoop()) break; `);
+        } else {
+          addPatch(body.start, `{ if (__tracer.checkLoop()) break; `);
+          addPatch(body.end, ` }`);
+        }
       }
 
       // Line Tracking & Call Stack Instrumentation
@@ -154,74 +171,73 @@ export function instrumentCode(code: string): string {
 
       // Function Entry/Exit with Try-Finally
       if (isFunction) {
-          const body = node.body as Node;
-          const funcName = node.id?.name || '(anonymous)';
-          if (body.type === 'BlockStatement') {
-              // Wrap body in try-finally to ensure exit is called
-              // We insert: __tracer.enter(name); try { ... } finally { __tracer.exit(); }
-              // body.start + 1 is after '{'
-              // body.end - 1 is before '}'
-              addPatch(body.start + 1, ` __tracer.enter("${funcName}"); try { `);
-              addPatch(body.end - 1, ` } finally { __tracer.exit(); } `);
-          }
+        const body = node.body as Node;
+        const funcName = node.id?.name || '(anonymous)';
+        if (body.type === 'BlockStatement') {
+          // Wrap body in try-finally to ensure exit is called
+          // We insert: __tracer.enter(name); try { ... } finally { __tracer.exit(); }
+          // body.start + 1 is after '{'
+          // body.end - 1 is before '}'
+          addPatch(body.start + 1, ` __tracer.enter("${funcName}"); try { `);
+          addPatch(body.end - 1, ` } finally { __tracer.exit(); } `);
+        }
       }
 
       // Statement Instrumentation
-      if (!isLoopInitializer && (node.type === 'VariableDeclaration' || node.type === 'ExpressionStatement')) {
-         const needsBlock = shouldWrapInSyntheticBlock(node, parent);
-         const trace = generateTraceCall(line);
+      if (
+        !isLoopInitializer &&
+        (node.type === 'VariableDeclaration' || node.type === 'ExpressionStatement')
+      ) {
+        const needsBlock = shouldWrapInSyntheticBlock(node, parent);
+        const trace = generateTraceCall(line);
 
-         addPatch(
-            node.start,
-            needsBlock
-              ? `{ __tracer.setLine(${line}); `
-              : `__tracer.setLine(${line}); `,
-         );
-         addPatch(node.end, needsBlock ? `; ${trace} }` : `; ${trace}`);
+        addPatch(
+          node.start,
+          needsBlock ? `{ __tracer.setLine(${line}); ` : `__tracer.setLine(${line}); `,
+        );
+        addPatch(node.end, needsBlock ? `; ${trace} }` : `; ${trace}`);
       }
 
       // Return Trace
       if (!isLoopInitializer && node.type === 'ReturnStatement') {
-         const needsBlock = shouldWrapInSyntheticBlock(node, parent);
-         const trace = generateTraceCall(line);
-         const traceExpr = trace.replace(/;$/, '');
-         
-         if (node.argument) {
-             addPatch(
-                node.start,
-                needsBlock
-                  ? `{ __tracer.setLine(${line}); `
-                  : `__tracer.setLine(${line}); `,
-             );
-             addPatch(node.argument.start, `(${traceExpr}, `);
-             addPatch(node.argument.end, `)`);
-             if (needsBlock) {
-                addPatch(node.end, ` }`);
-             }
-         } else {
-             addPatch(
-                node.start,
-                needsBlock
-                  ? `{ __tracer.setLine(${line}); ${trace} `
-                  : `__tracer.setLine(${line}); ${trace} `,
-             );
-             if (needsBlock) {
-                addPatch(node.end, ' }');
-             }
-         }
+        const needsBlock = shouldWrapInSyntheticBlock(node, parent);
+        const trace = generateTraceCall(line);
+        const traceExpr = trace.replace(/;$/, '');
+
+        if (node.argument) {
+          addPatch(
+            node.start,
+            needsBlock ? `{ __tracer.setLine(${line}); ` : `__tracer.setLine(${line}); `,
+          );
+          addPatch(node.argument.start, `(${traceExpr}, `);
+          addPatch(node.argument.end, `)`);
+          if (needsBlock) {
+            addPatch(node.end, ` }`);
+          }
+        } else {
+          addPatch(
+            node.start,
+            needsBlock
+              ? `{ __tracer.setLine(${line}); ${trace} `
+              : `__tracer.setLine(${line}); ${trace} `,
+          );
+          if (needsBlock) {
+            addPatch(node.end, ' }');
+          }
+        }
       }
 
       // Children Traversal
       const keys = Object.keys(node);
       for (const key of keys) {
-          const val = node[key];
-          if (Array.isArray(val)) {
-              val.forEach(v => {
-                  if (v && typeof v.type === 'string') walk(v, node);
-              });
-          } else if (val && typeof val.type === 'string') {
-              walk(val, node);
-          }
+        const val = node[key];
+        if (Array.isArray(val)) {
+          val.forEach((v) => {
+            if (v && typeof v.type === 'string') walk(v, node);
+          });
+        } else if (val && typeof val.type === 'string') {
+          walk(val, node);
+        }
       }
 
       // Exit Scope
@@ -233,16 +249,15 @@ export function instrumentCode(code: string): string {
     walk(ast);
 
     patches.sort((a, b) => b.index - a.index);
-    
+
     let out = code;
     for (const p of patches) {
-        out = out.slice(0, p.index) + p.text + out.slice(p.index);
+      out = out.slice(0, p.index) + p.text + out.slice(p.index);
     }
-    
-    return out;
 
+    return out;
   } catch (e) {
-    console.error("Instrumentation error", e);
+    console.error('Instrumentation error', e);
     throw e;
   }
 }

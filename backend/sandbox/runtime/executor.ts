@@ -1,9 +1,4 @@
-import {
-  Timeline,
-  ExecutionConfig,
-  ErrorType,
-  ComplexityAnalysis,
-} from '../../../types';
+import { Timeline, ExecutionConfig, ErrorType, ComplexityAnalysis } from '../../../types';
 
 // We use Vite's ?worker feature to correctly bundle the worker and resolve its URL
 import ExecutorWorker from './executor.worker?worker';
@@ -28,7 +23,7 @@ export interface ExecuteResult {
 export const executeCode = (
   userCode: string,
   language: string = 'javascript',
-  config?: ExecutionConfig
+  config?: ExecutionConfig,
 ): Promise<ExecuteResult> => {
   const timeoutMs = config?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
@@ -42,14 +37,21 @@ export const executeCode = (
       settled = true;
       worker.terminate();
       resolve({
-        timeline: [{
-          line: 0,
-          variables: {},
-          callStack: ['main'],
-          consoleOutput: [{ type: 'error', message: `Execution timed out after ${timeoutMs / 1000}s. Possible infinite loop or heavy computation.` }],
-          isError: true,
-          errorMessage: `Execution timed out after ${timeoutMs / 1000}s.`,
-        }],
+        timeline: [
+          {
+            line: 0,
+            variables: {},
+            callStack: ['main'],
+            consoleOutput: [
+              {
+                type: 'error',
+                message: `Execution timed out after ${timeoutMs / 1000}s. Possible infinite loop or heavy computation.`,
+              },
+            ],
+            isError: true,
+            errorMessage: `Execution timed out after ${timeoutMs / 1000}s.`,
+          },
+        ],
         errorType: 'timeout',
       });
     }, timeoutMs);
@@ -64,7 +66,7 @@ export const executeCode = (
       const { type, timeline, errorType, analysis } = e.data;
       resolve({
         timeline: timeline || [],
-        errorType: type === 'error' ? (errorType || 'runtime') : undefined,
+        errorType: type === 'error' ? errorType || 'runtime' : undefined,
         analysis: analysis || null,
       });
     };
@@ -76,14 +78,16 @@ export const executeCode = (
       clearTimeout(timer);
       worker.terminate();
       resolve({
-        timeline: [{
-          line: 0,
-          variables: {},
-          callStack: ['main'],
-          consoleOutput: [{ type: 'error', message: `Worker crashed: ${e.message}` }],
-          isError: true,
-          errorMessage: e.message,
-        }],
+        timeline: [
+          {
+            line: 0,
+            variables: {},
+            callStack: ['main'],
+            consoleOutput: [{ type: 'error', message: `Worker crashed: ${e.message}` }],
+            isError: true,
+            errorMessage: e.message,
+          },
+        ],
         errorType: 'worker',
         analysis: null,
       });

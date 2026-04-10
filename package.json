@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"frontend/**/*.{ts,tsx,css}\" \"backend/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -23,6 +25,9 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "prettier": "^3.8.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

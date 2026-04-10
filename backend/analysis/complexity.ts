@@ -36,21 +36,23 @@ interface TraversalContext {
 type GrowthTerm = 'n' | 'log n';
 
 function isLoopNode(node: AstNode | null | undefined): boolean {
-  return !!node && [
-    'ForStatement',
-    'ForInStatement',
-    'ForOfStatement',
-    'WhileStatement',
-    'DoWhileStatement',
-  ].includes(node.type);
+  return (
+    !!node &&
+    [
+      'ForStatement',
+      'ForInStatement',
+      'ForOfStatement',
+      'WhileStatement',
+      'DoWhileStatement',
+    ].includes(node.type)
+  );
 }
 
 function isFunctionNode(node: AstNode | null | undefined): boolean {
-  return !!node && [
-    'FunctionDeclaration',
-    'FunctionExpression',
-    'ArrowFunctionExpression',
-  ].includes(node.type);
+  return (
+    !!node &&
+    ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(node.type)
+  );
 }
 
 function getFunctionName(node: AstNode, parent?: AstNode): string | null {
@@ -94,17 +96,12 @@ function updateLooksLogarithmic(node: AstNode | null | undefined): boolean {
     }
   }
 
-  if (
-    node.type === 'UpdateExpression' &&
-    ['++', '--'].includes(String(node.operator))
-  ) {
+  if (node.type === 'UpdateExpression' && ['++', '--'].includes(String(node.operator))) {
     return false;
   }
 
   if (node.type === 'SequenceExpression' && Array.isArray(node.expressions)) {
-    return node.expressions.some((expression) =>
-      updateLooksLogarithmic(expression as AstNode),
-    );
+    return node.expressions.some((expression) => updateLooksLogarithmic(expression as AstNode));
   }
 
   return false;
@@ -127,10 +124,7 @@ function bodyContainsGeometricMutation(
     return true;
   }
 
-  if (
-    node.type === 'BinaryExpression' &&
-    ['*', '/'].includes(String(node.operator))
-  ) {
+  if (node.type === 'BinaryExpression' && ['*', '/'].includes(String(node.operator))) {
     const rightMagnitude = literalMagnitude(node.right as AstNode);
     return rightMagnitude !== null && rightMagnitude !== 1;
   }
@@ -185,20 +179,12 @@ function countSelfCalls(node: AstNode | null | undefined, functionName: string):
   for (const value of Object.values(node)) {
     if (Array.isArray(value)) {
       total += value.reduce((sum, child) => {
-        if (
-          child &&
-          typeof child === 'object' &&
-          typeof (child as AstNode).type === 'string'
-        ) {
+        if (child && typeof child === 'object' && typeof (child as AstNode).type === 'string') {
           return sum + countSelfCalls(child as AstNode, functionName);
         }
         return sum;
       }, 0);
-    } else if (
-      value &&
-      typeof value === 'object' &&
-      typeof (value as AstNode).type === 'string'
-    ) {
+    } else if (value && typeof value === 'object' && typeof (value as AstNode).type === 'string') {
       total += countSelfCalls(value as AstNode, functionName);
     }
   }
@@ -288,7 +274,9 @@ function buildEstimate(input: {
   if (input.hasBranchingRecursion) {
     rationale.push('Detected multiple self-recursive calls in the same execution branch.');
     if (input.peakStackDepth > 2) {
-      rationale.push(`Runtime reached ${input.peakStackDepth} stack frames, reinforcing a branching-recursion profile.`);
+      rationale.push(
+        `Runtime reached ${input.peakStackDepth} stack frames, reinforcing a branching-recursion profile.`,
+      );
     }
     return {
       notation: 'O(2^n)',
@@ -326,7 +314,9 @@ function buildEstimate(input: {
   }
 
   if (dominant === 'log n') {
-    rationale.push('Detected a loop update that scales geometrically, such as multiplying or dividing by a constant.');
+    rationale.push(
+      'Detected a loop update that scales geometrically, such as multiplying or dividing by a constant.',
+    );
   } else if (dominant === 'n') {
     rationale.push('Detected one dominant iterative or recursive pass.');
     rationale.push(`Detected self-recursion in ${input.recursiveFunctions.join(', ')}.`);
@@ -348,26 +338,37 @@ function buildEstimate(input: {
   }
 
   if (input.maxLoopDepth >= 2 && rankNotation(dominant) >= rankNotation('n^2')) {
-    rationale.push(`Observed ${input.observedOperations} traced operations across ${input.uniqueExecutedLines} executed lines, with higher-order loop structure dominating weaker signals.`);
+    rationale.push(
+      `Observed ${input.observedOperations} traced operations across ${input.uniqueExecutedLines} executed lines, with higher-order loop structure dominating weaker signals.`,
+    );
   } else {
-    rationale.push(`Observed ${input.uniqueExecutedLines} active lines over ${input.observedOperations} traced steps.`);
+    rationale.push(
+      `Observed ${input.uniqueExecutedLines} active lines over ${input.observedOperations} traced steps.`,
+    );
   }
 
   if (dominated.length > 0) {
     rationale.push(`Other weaker signals were also detected: ${dominated.join(', ')}.`);
   }
 
-  if (recursionDetected && input.peakStackDepth > 2 && rankNotation(dominant) <= rankNotation('n')) {
-    rationale.push(`Peak stack depth reached ${input.peakStackDepth}, which is consistent with a recursive chain in this run.`);
+  if (
+    recursionDetected &&
+    input.peakStackDepth > 2 &&
+    rankNotation(dominant) <= rankNotation('n')
+  ) {
+    rationale.push(
+      `Peak stack depth reached ${input.peakStackDepth}, which is consistent with a recursive chain in this run.`,
+    );
   }
 
   return {
     notation: `O(${dominant})`,
-    confidence: rankNotation(dominant) >= rankNotation('n^2')
-      ? 'high' as const
-      : dominant === 'n log n' || dominant === 'log n'
-        ? 'medium' as const
-        : 'medium' as const,
+    confidence:
+      rankNotation(dominant) >= rankNotation('n^2')
+        ? ('high' as const)
+        : dominant === 'n log n' || dominant === 'log n'
+          ? ('medium' as const)
+          : ('medium' as const),
     rationale,
   };
 }
@@ -375,9 +376,8 @@ function buildEstimate(input: {
 export function analyzeComplexity(code: string, timeline: Timeline): ComplexityAnalysis {
   const hotspots = buildHotspots(timeline);
   const observedOperations = timeline.length;
-  const uniqueExecutedLines = new Set(
-    timeline.map((step) => step.line).filter((line) => line > 0),
-  ).size;
+  const uniqueExecutedLines = new Set(timeline.map((step) => step.line).filter((line) => line > 0))
+    .size;
   const peakStackDepth = timeline.reduce(
     (maxDepth, step) => Math.max(maxDepth, step.callStack.length),
     1,
@@ -396,22 +396,25 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
       sourceType: 'script',
     }) as unknown as AstNode;
 
-    function walk(node: AstNode | null | undefined, parent?: AstNode, context: TraversalContext = {
-      functionName: null,
-      loopDepth: 0,
-      loopTerms: [],
-    }) {
+    function walk(
+      node: AstNode | null | undefined,
+      parent?: AstNode,
+      context: TraversalContext = {
+        functionName: null,
+        loopDepth: 0,
+        loopTerms: [],
+      },
+    ) {
       if (!node) return;
 
       let nextContext = context;
 
       if (isLoopNode(node)) {
-        const loopTerm: GrowthTerm = (
+        const loopTerm: GrowthTerm =
           updateLooksLogarithmic(node.update as AstNode) ||
           bodyContainsGeometricMutation(node.body as AstNode)
-        )
-          ? 'log n'
-          : 'n';
+            ? 'log n'
+            : 'n';
         const nextLoopDepth = context.loopDepth + 1;
         maxLoopDepth = Math.max(maxLoopDepth, nextLoopDepth);
         nextContext = {
@@ -446,12 +449,10 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
 
       if (
         node.type === 'CallExpression' &&
-        (
-          (node.callee?.type === 'Identifier' && node.callee.name === 'sort') ||
+        ((node.callee?.type === 'Identifier' && node.callee.name === 'sort') ||
           (node.callee?.type === 'MemberExpression' &&
             node.callee.property?.type === 'Identifier' &&
-            node.callee.property.name === 'sort')
-        )
+            node.callee.property.name === 'sort'))
       ) {
         hasArraySort = true;
       }
@@ -467,11 +468,7 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
       for (const value of Object.values(node)) {
         if (Array.isArray(value)) {
           value.forEach((child) => {
-            if (
-              child &&
-              typeof child === 'object' &&
-              typeof (child as AstNode).type === 'string'
-            ) {
+            if (child && typeof child === 'object' && typeof (child as AstNode).type === 'string') {
               walk(child as AstNode, node, nextContext);
             }
           });

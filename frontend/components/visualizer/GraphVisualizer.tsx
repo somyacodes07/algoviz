@@ -27,7 +27,13 @@ export interface GraphPreview {
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Set) && !(value instanceof Map);
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !(value instanceof Set) &&
+    !(value instanceof Map)
+  );
 }
 
 function collectVisitedNodeIds(variables: VariableMap): Set<string> {
@@ -62,9 +68,12 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
     return Array.isArray(value) || isPlainObject(value);
   });
 
-  const candidates = namedCandidates.length > 0
-    ? namedCandidates
-    : Object.entries(variables).filter(([, value]) => Array.isArray(value) || isPlainObject(value));
+  const candidates =
+    namedCandidates.length > 0
+      ? namedCandidates
+      : Object.entries(variables).filter(
+          ([, value]) => Array.isArray(value) || isPlainObject(value),
+        );
 
   const visitedIds = collectVisitedNodeIds(variables);
 
@@ -115,7 +124,10 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
       }));
 
       for (const [name, value] of Object.entries(variables)) {
-        if ((typeof value === 'string' || typeof value === 'number') && keys.includes(String(value))) {
+        if (
+          (typeof value === 'string' || typeof value === 'number') &&
+          keys.includes(String(value))
+        ) {
           pushPointer(String(value), name);
         }
       }
@@ -135,12 +147,24 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
         sourceName,
         nodes,
         edges,
-        directed: weighted || edges.some((edge) => !edges.find((candidateEdge) => candidateEdge.from === edge.to && candidateEdge.to === edge.from)),
+        directed:
+          weighted ||
+          edges.some(
+            (edge) =>
+              !edges.find(
+                (candidateEdge) => candidateEdge.from === edge.to && candidateEdge.to === edge.from,
+              ),
+          ),
         truncated: false,
       };
     }
 
-    if (Array.isArray(candidate) && candidate.length > 0 && candidate.length <= 10 && candidate.every(Array.isArray)) {
+    if (
+      Array.isArray(candidate) &&
+      candidate.length > 0 &&
+      candidate.length <= 10 &&
+      candidate.every(Array.isArray)
+    ) {
       const rows = candidate as unknown[];
       const isMatrix = rows.every(
         (row) =>
@@ -157,7 +181,12 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
       }));
 
       for (const [name, value] of Object.entries(variables)) {
-        if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < rows.length) {
+        if (
+          typeof value === 'number' &&
+          Number.isInteger(value) &&
+          value >= 0 &&
+          value < rows.length
+        ) {
           pushPointer(String(value), name);
         }
       }
@@ -188,7 +217,12 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
           sourceName,
           nodes,
           edges,
-          directed: edges.some((edge) => !edges.find((candidateEdge) => candidateEdge.from === edge.to && candidateEdge.to === edge.from)),
+          directed: edges.some(
+            (edge) =>
+              !edges.find(
+                (candidateEdge) => candidateEdge.from === edge.to && candidateEdge.to === edge.from,
+              ),
+          ),
           truncated: false,
         };
       }
@@ -259,7 +293,7 @@ export const GraphPanel: React.FC<{
     r1: number,
     r2: number,
     isBidirectional: boolean,
-    isDirected: boolean
+    isDirected: boolean,
   ) => {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -283,12 +317,12 @@ export const GraphPanel: React.FC<{
       // Find normal vector
       const nx = -unitY;
       const ny = unitX;
-      
+
       // Control point offset magnitude
       const curveOffset = 30;
       const midPointX = (from.x + to.x) / 2;
       const midPointY = (from.y + to.y) / 2;
-      
+
       // We push the control point along the normal. Which direction depends on from/to order.
       // Easiest is to always use nx, ny but it pushes both lines out on their respective right hand sides.
       const cpX = midPointX + nx * curveOffset;
@@ -353,11 +387,11 @@ export const GraphPanel: React.FC<{
 
             <AnimatePresence>
               {preview.edges.map((edge, index) => {
-                const fromNode = preview.nodes.find(n => n.id === edge.from);
-                const toNode = preview.nodes.find(n => n.id === edge.to);
+                const fromNode = preview.nodes.find((n) => n.id === edge.from);
+                const toNode = preview.nodes.find((n) => n.id === edge.to);
                 const fromPos = positions.get(edge.from);
                 const toPos = positions.get(edge.to);
-                
+
                 if (!fromPos || !toPos || !fromNode || !toNode) return null;
 
                 const r1 = getRadius(fromNode.visited);
@@ -369,11 +403,11 @@ export const GraphPanel: React.FC<{
                   r1,
                   r2,
                   !!edge.isBidirectional,
-                  preview.directed
+                  preview.directed,
                 );
 
                 return (
-                  <motion.g 
+                  <motion.g
                     key={`${edge.from}-${edge.to}-${index}`}
                     initial={{ opacity: 0, pathLength: 0 }}
                     animate={{ opacity: 1, pathLength: 1 }}
@@ -389,21 +423,21 @@ export const GraphPanel: React.FC<{
                     />
                     {edge.weight && (
                       <motion.g
-                         initial={{ scale: 0 }}
-                         animate={{ scale: 1 }}
-                         transition={{ delay: 0.2 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2 }}
                       >
-                       <rect
-                         x={midX - 10}
-                         y={midY - 8}
-                         width="20"
-                         height="16"
-                         rx="4"
-                         fill="white"
-                         opacity="0.85"
-                         className="dark:fill-[#111113]"
-                       />
-                       <text
+                        <rect
+                          x={midX - 10}
+                          y={midY - 8}
+                          width="20"
+                          height="16"
+                          rx="4"
+                          fill="white"
+                          opacity="0.85"
+                          className="dark:fill-[#111113]"
+                        />
+                        <text
                           x={midX}
                           y={midY + 3.5}
                           textAnchor="middle"
@@ -423,12 +457,12 @@ export const GraphPanel: React.FC<{
                 const r = getRadius(node.visited);
 
                 return (
-                  <motion.g 
+                  <motion.g
                     key={node.id}
                     layoutId={`node-${node.id}`}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   >
                     {hasPointer && (
                       <motion.circle
@@ -440,11 +474,11 @@ export const GraphPanel: React.FC<{
                         strokeWidth="2"
                         strokeDasharray="4 4"
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                         style={{ originX: `${position.x}px`, originY: `${position.y}px` }}
                       />
                     )}
-                     <motion.circle
+                    <motion.circle
                       cx={position.x}
                       cy={position.y}
                       r={r}
@@ -481,7 +515,9 @@ export const GraphPanel: React.FC<{
                   {node.label}
                 </span>
                 {node.visited && (
-                  <span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${theme.accentText}`}>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-[0.16em] ${theme.accentText}`}
+                  >
                     Visited
                   </span>
                 )}
@@ -489,7 +525,10 @@ export const GraphPanel: React.FC<{
               {node.pointerNames.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {node.pointerNames.map((pointer) => (
-                    <span key={pointer} className="border border-emerald-700 bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white">
+                    <span
+                      key={pointer}
+                      className="border border-emerald-700 bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white"
+                    >
                       {pointer}
                     </span>
                   ))}

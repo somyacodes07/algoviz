@@ -51,9 +51,7 @@ export function isParserReady(): boolean {
  */
 export function parseCpp(code: string): Tree {
   if (!parserInstance || !cppLanguage) {
-    throw new Error(
-      'Tree-sitter parser not initialized. Call and await initParser() first.'
-    );
+    throw new Error('Tree-sitter parser not initialized. Call and await initParser() first.');
   }
 
   const tree = parserInstance.parse(code);
@@ -106,14 +104,13 @@ async function doInit(): Promise<void> {
 
     // Set the language on the parser
     parserInstance.setLanguage(cppLanguage);
-
   } catch (error) {
     // Reset state on failure so a retry is possible
     parserInstance = null;
     cppLanguage = null;
     initPromise = null;
     throw new Error(
-      `Failed to initialize Tree-sitter C++ parser: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to initialize Tree-sitter C++ parser: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
