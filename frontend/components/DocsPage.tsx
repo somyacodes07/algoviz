@@ -22,6 +22,8 @@ import image1 from "../../assets/image-1.png";
 import image2 from "../../assets/image-2.png";
 import image3 from "../../assets/image-3.png";
 import image4 from "../../assets/image-4.png";
+import image5 from "../../assets/image-5.png";
+import image6 from "../../assets/image-6.png";
 
 interface DocsPageProps {
   onBack: () => void;
@@ -233,6 +235,22 @@ const docsStructure: DocSection[] = [
             "The workbench can keep multiple evolving structures readable at once, which is where a lot of teaching tools usually collapse.",
           label: "Graph State View",
           tone: "emerald",
+        },
+        {
+          src: image5,
+          alt: "Performance and complexity panel tracking step frequency and Big O analysis.",
+          caption:
+            "The Complexity panel dynamically evaluates recursive depth, loop frequencies, and array mutations to visually model Big-O behavior at runtime.",
+          label: "Complexity Analysis",
+          tone: "blue",
+        },
+        {
+          src: image6,
+          alt: "Source code editor highlighting hot lines and execution flow.",
+          caption:
+            "The editor visualizes the concentration of execution cycles with glowing hot lines, making bottlenecks and loop frequencies immediately recognizable during source flow tracking.",
+          label: "Source Flow & Hot Lines",
+          tone: "amber",
         },
       ],
     },

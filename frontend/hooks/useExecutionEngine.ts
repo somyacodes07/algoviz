@@ -13,7 +13,7 @@ interface ExecutionState {
 }
 
 interface ExecutionControls {
-    handleRun: (code: string, language: string) => Promise<void>;
+    handleRun: (code: string, language: string) => Promise<boolean>;
     setIsPlaying: (playing: boolean) => void;
     setSpeed: (speed: number) => void;
     setCurrentStepIndex: (index: number | ((prev: number) => number)) => void;
@@ -42,7 +42,7 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
         breakpointsRef.current = breakpoints;
     }, [breakpoints]);
 
-    const handleRun = useCallback(async (code: string, language: string) => {
+    const handleRun = useCallback(async (code: string, language: string): Promise<boolean> => {
         setExecutionError(null);
         setIsPlaying(false);
         try {
@@ -57,16 +57,18 @@ export const useExecutionEngine = (): { state: ExecutionState, controls: Executi
 
             setTimeline(result);
             setComplexityAnalysis(analysis || null);
-            // If error exists in result
             if (result.length > 0 && result[result.length - 1].isError) {
                 setExecutionError(result[result.length - 1].errorMessage || "Error");
+                return false;
             }
             setCurrentStepIndex(0);
+            return true;
         } catch (e: any) {
             setExecutionError(e.message || "Execution Failed");
             setTimeline([]);
             setComplexityAnalysis(null);
             setCurrentStepIndex(-1);
+            return false;
         }
     }, []);
 

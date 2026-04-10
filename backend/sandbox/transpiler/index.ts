@@ -78,12 +78,10 @@ export function transpileCppToJs(cppCode: string): string {
 
     return formatted;
   } catch (error) {
-    // If AST transpilation fails, fall back to regex
-    console.warn(
-      '[Transpiler] AST transpilation failed, falling back to regex:',
-      error instanceof Error ? error.message : String(error)
-    );
-    return regexTranspile(cppCode);
+    // If AST transpilation fails, throw the explicit compiler error so it reaches the UI!
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Transpiler] AST transpilation failed:', msg);
+    throw new Error(`C++ Transpiler Error: ${msg}`);
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
 import TemplatePalette from "./frontend/components/TemplatePalette";
@@ -378,7 +378,7 @@ const App: React.FC = () => {
   const progress = timeline.length > 1 ? (currentStepIndex / (timeline.length - 1)) * 100 : 0;
   const langLabel = language === "javascript" ? "JavaScript (ES6)" : "C++ (Beta)";
 
-  const routeVariants = {
+  const routeVariants: Variants = {
     initial: { opacity: 0, y: 24, scale: 0.985, filter: "blur(10px)" },
     animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1] } },
     exit: { opacity: 0, y: -18, scale: 1.01, filter: "blur(8px)", transition: { duration: 0.28, ease: [0.4, 0, 1, 1] } },
@@ -439,9 +439,9 @@ const App: React.FC = () => {
                 breakpoints={breakpoints}
                 linkCopied={linkCopied}
                 onCodeChange={handleCodeChange}
-                onRun={() => {
+                onRun={async () => {
                   setIsPlaying(false);
-                  handleRun(code, language);
+                  return await handleRun(code, language);
                 }}
                 onShare={handleCopyLink}
                 onOpenTemplates={() => setTemplateMenuOpen(true)}

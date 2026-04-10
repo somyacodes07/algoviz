@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Code, BookOpen, Check, Link2, Play } from 'lucide-react';
 import CodeEditor from '../CodeEditor';
 import { ThemeColor, getThemeConfig } from '../../theme/theme';
@@ -12,10 +12,10 @@ interface WorkspaceEditorProps {
   isPlaying: boolean;
   visualizerMode: boolean;
   currentStepLine: number;
-  breakpoints: Record<string, boolean>;
+  breakpoints: Set<number>;
   linkCopied: boolean;
   onCodeChange: (newCode: string | undefined) => void;
-  onRun: () => void;
+  onRun: () => Promise<boolean>;
   onShare: () => void;
   onOpenTemplates: () => void;
   onToggleBreakpoint: (line: number) => void;
@@ -39,6 +39,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   onToggleBreakpoint,
 }) => {
   const themeConfig = getThemeConfig(themeColor);
+  const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
   
   const iconTextClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
   const toolbarBtnClass =
@@ -92,7 +93,16 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
           </button>
 
           <button
-            onClick={onRun}
+            onClick={async () => {
+              setToast(null);
+              const success = await onRun();
+              if (success) {
+                setToast({ message: 'Execution completed successfully!', type: 'success' });
+              } else {
+                setToast({ message: 'Execution failed: Check console or errors.', type: 'error' });
+              }
+              setTimeout(() => setToast(null), 4000);
+            }}
             className={`flex items-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none bg-blue-500 hover:bg-blue-600 ${themeColor === 'saffron' ? 'bg-saffron-500 hover:bg-saffron-600' : 'bg-blue-500 hover:bg-blue-600'}`}
           >
             <Play size={14} fill="currentColor" />
@@ -113,6 +123,21 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
           breakpoints={breakpoints}
           onToggleBreakpoint={onToggleBreakpoint}
         />
+        
+        {/* Toast Notification Popup */}
+        {toast && (
+          <div className="absolute bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className={`flex items-center gap-2 px-4 py-3 rounded border-[2px] shadow-[4px_4px_0_rgba(15,23,42,1)] dark:shadow-[4px_4px_0_#000] font-bold text-sm tracking-wide
+              ${toast.type === 'success' 
+                ? 'bg-green-100 border-green-700 text-green-900 dark:bg-emerald-950 dark:border-emerald-600 dark:text-emerald-100' 
+                : 'bg-red-100 border-red-700 text-red-900 dark:bg-rose-950 dark:border-rose-600 dark:text-rose-100'
+              }`}
+            >
+              {toast.type === 'success' ? <Check size={18} /> : <div className="w-4 h-4 rounded-full bg-current flex items-center justify-center text-white text-[10px]">!</div>}
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
