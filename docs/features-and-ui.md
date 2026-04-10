@@ -38,3 +38,11 @@ We utilize Microsoft's Monaco Editor internally—the exact engine powering VS C
 
 - The **Console Output Panel** gracefully truncates massive mathematical overflows (like trailing JS floats or string arrays) instead of shattering the CSS layout grid.
 - The **Call Stack Tab** dynamically visualizes recursive trees—Watch standard Fibonacci DFS or dynamic programming branches branch out and pop from memory.
+
+## 5. Automated Data Structure Visualizers
+
+AlgoViz doesn't just show active variables; it interprets structure geometry. 
+
+- **Graph Visualizer (`GraphVisualizer.tsx`)**: Analyzes adjacency matrices and maps inside the execution context to draw mathematical nodes. Directed graphs automatically display exact **SVG perimeter arrows**, while bidirectional pathways bow beautifully outward using Bezier curve physics to prevent collision!
+- **Linked Lists (`LinkedListVisualizer.tsx`)**: Infers chaining via `.next` properties to print linear memory graphs perfectly across the UI timeline, even highlighting looping cycle anomalies.
+

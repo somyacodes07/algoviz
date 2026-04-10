@@ -1,5 +1,6 @@
 import React from 'react';
 import { Network } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
@@ -14,6 +15,7 @@ export interface GraphEdgeView {
   from: string;
   to: string;
   weight?: string;
+  isBidirectional?: boolean;
 }
 
 export interface GraphPreview {
@@ -122,6 +124,13 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
         node.pointerNames = pointerMap.get(node.id) || [];
       });
 
+      // Detect bidirectional
+      edges.forEach((edge) => {
+        if (edges.find((e) => e.from === edge.to && e.to === edge.from)) {
+          edge.isBidirectional = true;
+        }
+      });
+
       return {
         sourceName,
         nodes,
@@ -169,6 +178,12 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
         if (edges.length === 0) continue;
 
+        edges.forEach((edge) => {
+          if (edges.find((e) => e.from === edge.to && e.to === edge.from)) {
+            edge.isBidirectional = true;
+          }
+        });
+
         return {
           sourceName,
           nodes,
@@ -199,6 +214,12 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
       if (!validListShape || adjacencyListEdges.length === 0) continue;
 
+      adjacencyListEdges.forEach((edge) => {
+        if (adjacencyListEdges.find((e) => e.from === edge.to && e.to === edge.from)) {
+          edge.isBidirectional = true;
+        }
+      });
+
       return {
         sourceName,
         nodes,
@@ -217,8 +238,8 @@ export const GraphPanel: React.FC<{
   themeColor: ThemeColor;
 }> = ({ preview, themeColor }) => {
   const theme = getThemeConfig(themeColor);
-  const size = 260;
-  const radius = 88;
+  const size = 300;
+  const radius = 100;
   const center = size / 2;
   const positions = new Map<string, { x: number; y: number }>();
 
@@ -229,6 +250,66 @@ export const GraphPanel: React.FC<{
       y: center + Math.sin(angle) * radius,
     });
   });
+
+  const getRadius = (isVisited: boolean) => (isVisited ? 24 : 20);
+
+  const calculateEdgePath = (
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    r1: number,
+    r2: number,
+    isBidirectional: boolean,
+    isDirected: boolean
+  ) => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist === 0) return { d: '', midX: from.x, midY: from.y };
+
+    const unitX = dx / dist;
+    const unitY = dy / dist;
+
+    // Start slightly outside the node
+    const startX = from.x + unitX * (r1 + 2);
+    const startY = from.y + unitY * (r1 + 2);
+
+    // End strictly at target node boundary (account for arrow marker size if directed)
+    const arrowMargin = isDirected ? 12 : 2;
+    const endX = to.x - unitX * (r2 + arrowMargin);
+    const endY = to.y - unitY * (r2 + arrowMargin);
+
+    if (isBidirectional) {
+      // Create a quadratic bezier curve for overlapping edges
+      // Find normal vector
+      const nx = -unitY;
+      const ny = unitX;
+      
+      // Control point offset magnitude
+      const curveOffset = 30;
+      const midPointX = (from.x + to.x) / 2;
+      const midPointY = (from.y + to.y) / 2;
+      
+      // We push the control point along the normal. Which direction depends on from/to order.
+      // Easiest is to always use nx, ny but it pushes both lines out on their respective right hand sides.
+      const cpX = midPointX + nx * curveOffset;
+      const cpY = midPointY + ny * curveOffset;
+
+      const bezierMidX = 0.25 * startX + 0.5 * cpX + 0.25 * endX;
+      const bezierMidY = 0.25 * startY + 0.5 * cpY + 0.25 * endY;
+
+      return {
+        d: `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`,
+        midX: bezierMidX,
+        midY: bezierMidY,
+      };
+    }
+
+    return {
+      d: `M ${startX} ${startY} L ${endX} ${endY}`,
+      midX: (startX + endX) / 2,
+      midY: (startY + endY) / 2,
+    };
+  };
 
   return (
     <section className={`${theme.panelClass} p-4`}>
@@ -253,66 +334,139 @@ export const GraphPanel: React.FC<{
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
-        <div className="border-[2px] border-slate-900 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113]">
-          <svg viewBox={`0 0 ${size} ${size}`} className="h-[260px] w-full">
-            {preview.edges.map((edge, index) => {
-              const from = positions.get(edge.from);
-              const to = positions.get(edge.to);
-              if (!from || !to) return null;
+        <div className="border-[2px] border-slate-900 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113] flex justify-center">
+          <svg viewBox={`0 0 ${size} ${size}`} className="h-[280px] w-full max-w-[320px]">
+            <defs>
+              <marker
+                id="arrowhead"
+                viewBox="0 0 10 10"
+                refX="8"
+                refY="5"
+                markerUnits="strokeWidth"
+                markerWidth="5"
+                markerHeight="5"
+                orient="auto"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 L 3 5 z" fill={theme.accentFill} opacity="0.8" />
+              </marker>
+            </defs>
 
-              const midX = (from.x + to.x) / 2;
-              const midY = (from.y + to.y) / 2;
+            <AnimatePresence>
+              {preview.edges.map((edge, index) => {
+                const fromNode = preview.nodes.find(n => n.id === edge.from);
+                const toNode = preview.nodes.find(n => n.id === edge.to);
+                const fromPos = positions.get(edge.from);
+                const toPos = positions.get(edge.to);
+                
+                if (!fromPos || !toPos || !fromNode || !toNode) return null;
 
-              return (
-                <g key={`${edge.from}-${edge.to}-${index}`}>
-                  <line
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    stroke={theme.accentFill}
-                    strokeWidth="2"
-                    opacity="0.65"
-                  />
-                  {edge.weight && (
-                     <text
-                      x={midX}
-                      y={midY}
-                      textAnchor="middle"
-                      className="fill-slate-500 text-[9px] font-bold dark:fill-slate-400"
-                    >
-                      {edge.weight}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
+                const r1 = getRadius(fromNode.visited);
+                const r2 = getRadius(toNode.visited);
 
-            {preview.nodes.map((node) => {
-              const position = positions.get(node.id)!;
-              const hasPointer = node.pointerNames.length > 0;
+                const { d, midX, midY } = calculateEdgePath(
+                  fromPos,
+                  toPos,
+                  r1,
+                  r2,
+                  !!edge.isBidirectional,
+                  preview.directed
+                );
 
-              return (
-                <g key={node.id}>
-                  <circle
-                    cx={position.x}
-                    cy={position.y}
-                    r={node.visited ? 24 : 20}
-                    fill={node.visited ? theme.accentFill : '#ffffff'}
-                    stroke={hasPointer ? '#10b981' : '#0f172a'}
-                    strokeWidth={hasPointer ? 4 : 3}
-                  />
-                  <text
-                    x={position.x}
-                    y={position.y + 4}
-                    textAnchor="middle"
-                    className={`text-[10px] font-black ${node.visited ? 'fill-white' : 'fill-slate-900'}`}
+                return (
+                  <motion.g 
+                    key={`${edge.from}-${edge.to}-${index}`}
+                    initial={{ opacity: 0, pathLength: 0 }}
+                    animate={{ opacity: 1, pathLength: 1 }}
+                    transition={{ duration: 0.4 }}
                   >
-                    {node.label}
-                  </text>
-                </g>
-              );
-            })}
+                    <motion.path
+                      d={d}
+                      stroke={theme.accentFill}
+                      strokeWidth="2.5"
+                      fill="none"
+                      opacity="0.65"
+                      markerEnd={preview.directed ? 'url(#arrowhead)' : undefined}
+                    />
+                    {edge.weight && (
+                      <motion.g
+                         initial={{ scale: 0 }}
+                         animate={{ scale: 1 }}
+                         transition={{ delay: 0.2 }}
+                      >
+                       <rect
+                         x={midX - 10}
+                         y={midY - 8}
+                         width="20"
+                         height="16"
+                         rx="4"
+                         fill="white"
+                         opacity="0.85"
+                         className="dark:fill-[#111113]"
+                       />
+                       <text
+                          x={midX}
+                          y={midY + 3.5}
+                          textAnchor="middle"
+                          className={`fill-slate-700 text-[10px] font-black dark:fill-slate-300`}
+                        >
+                          {edge.weight}
+                        </text>
+                      </motion.g>
+                    )}
+                  </motion.g>
+                );
+              })}
+
+              {preview.nodes.map((node) => {
+                const position = positions.get(node.id)!;
+                const hasPointer = node.pointerNames.length > 0;
+                const r = getRadius(node.visited);
+
+                return (
+                  <motion.g 
+                    key={node.id}
+                    layoutId={`node-${node.id}`}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {hasPointer && (
+                      <motion.circle
+                        cx={position.x}
+                        cy={position.y}
+                        r={r + 8}
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                        style={{ originX: `${position.x}px`, originY: `${position.y}px` }}
+                      />
+                    )}
+                     <motion.circle
+                      cx={position.x}
+                      cy={position.y}
+                      r={r}
+                      fill={node.visited ? theme.accentFill : '#ffffff'}
+                      stroke={hasPointer ? '#10b981' : '#0f172a'}
+                      strokeWidth={hasPointer ? 3.5 : 3}
+                      className="dark:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+                      layout
+                    />
+                    <motion.text
+                      x={position.x}
+                      y={position.y + 4}
+                      textAnchor="middle"
+                      className={`text-[11px] font-black pointer-events-none ${node.visited ? 'fill-white' : 'fill-slate-900'}`}
+                      layout
+                    >
+                      {node.label}
+                    </motion.text>
+                  </motion.g>
+                );
+              })}
+            </AnimatePresence>
           </svg>
         </div>
 

@@ -156,6 +156,13 @@ algoviz/
 │
 ├── frontend/
 │   ├── components/
+│   │   ├── layout/
+│   │   │   ├── WorkspaceHeader.tsx
+│   │   │   ├── WorkspaceEditor.tsx
+│   │   │   └── WorkspaceVisualizer.tsx
+│   │   ├── visualizer/
+│   │   │   ├── GraphVisualizer.tsx
+│   │   │   └── LinkedListVisualizer.tsx
 │   │   ├── HomePage.tsx
 │   │   ├── DocsPage.tsx
 │   │   ├── CodeEditor.tsx
@@ -165,7 +172,9 @@ algoviz/
 │   │   ├── Controls.tsx
 │   │   ├── TemplatePalette.tsx
 │   │   └── LandingInteractiveBackdrop.tsx
-│   └── hooks/
+│   ├── hooks/
+│   ├── theme/
+│   │   └── theme.ts
 │
 └── assets/                        # README screenshots and product imagery
 ```
