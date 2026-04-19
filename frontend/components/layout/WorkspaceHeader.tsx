@@ -34,11 +34,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         >
           <ArrowLeft size={18} />
         </a>
-        <div className="flex items-center justify-center w-7 h-7 bg-white dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#444] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] rounded-sm transform -rotate-3 transition-transform hover:rotate-0">
-          <span className="text-slate-900 dark:text-slate-100 font-black text-[11px] tracking-tighter">
-            AV<span className="text-blue-600 dark:text-saffron-500">.</span>
-          </span>
-        </div>
+        <img src="/logo.svg" alt="AlgoViz Logo" className="w-[1.8rem] h-[1.8rem] transform -rotate-2 hover:rotate-0 transition-transform drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]" />
         <div className="flex items-baseline gap-2">
           <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
             AlgoViz

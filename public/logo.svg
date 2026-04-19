@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .shadow { fill: #0f172a; }
+    .box { fill: #ffffff; stroke: #0f172a; stroke-width: 5; stroke-linejoin: round; }
+    .letters { fill: none; stroke: #0f172a; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+    .dot { fill: #f97316; }
+
+    @media (prefers-color-scheme: dark) {
+      .shadow { fill: #000000; }
+      .box { fill: #111113; stroke: #444444; }
+      .letters { stroke: #f1f5f9; }
+      .dot { fill: #f97316; }
+    }
+  </style>
+
+  <rect x="20" y="22" width="60" height="60" rx="6" class="shadow" />
+  <rect x="14" y="16" width="60" height="60" rx="6" class="box" />
+
+  <path d="M 28,60 L 35,36 L 42,60 M 31,51 L 39,51" class="letters" />
+  <path d="M 46,36 L 53,60 L 60,36" class="letters" />
+  <circle cx="68" cy="57" r="4.5" class="dot" />
+</svg>

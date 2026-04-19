@@ -124,7 +124,7 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Top Navigation / Header */}
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
-            <Activity className="text-amber-600 dark:text-amber-500" strokeWidth={3} />
+            <img src="/logo.svg" alt="AlgoViz Logo" className="w-[1.8rem] h-[1.8rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000] transform -rotate-2 hover:rotate-0 transition-transform" />
             <span className="font-bold text-xl tracking-tight">AlgoViz.</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
