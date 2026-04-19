@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, BookOpen, Sun, Moon } from 'lucide-react';
 import { ROUTES } from '../../routes';
+import Logo from '../Logo';
 
 interface WorkspaceHeaderProps {
   language: string;
@@ -34,7 +35,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         >
           <ArrowLeft size={18} />
         </a>
-        <img src="/logo.svg" alt="AlgoViz Logo" className="w-[1.8rem] h-[1.8rem] transform -rotate-2 hover:rotate-0 transition-transform drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]" />
+        <Logo language={language} className="w-[2.2rem] h-[2.2rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]" />
         <div className="flex items-baseline gap-2">
           <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
             AlgoViz

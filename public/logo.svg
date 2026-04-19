@@ -13,10 +13,15 @@
     }
   </style>
 
-  <rect x="20" y="22" width="60" height="60" rx="6" class="shadow" />
-  <rect x="14" y="16" width="60" height="60" rx="6" class="box" />
+  <!-- Shadow offset -->
+  <rect x="18" y="18" width="74" height="74" rx="8" class="shadow" />
+  <!-- Main bounding box centered at x=50, y=50 -->
+  <rect x="13" y="13" width="74" height="74" rx="8" class="box" />
 
-  <path d="M 28,60 L 35,36 L 42,60 M 31,51 L 39,51" class="letters" />
-  <path d="M 46,36 L 53,60 L 60,36" class="letters" />
-  <circle cx="68" cy="57" r="4.5" class="dot" />
+  <!-- A centered and scaled inside perfectly -->
+  <path d="M 21,66 L 31,34 L 41,66 M 26,53 L 36,53" class="letters" />
+  <!-- V directly adjacent -->
+  <path d="M 45,34 L 55,66 L 65,34" class="letters" />
+  <!-- Saffron dot -->
+  <circle cx="74" cy="62" r="4.5" class="dot" />
 </svg>

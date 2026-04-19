@@ -19,6 +19,7 @@ import homepagePreview from '../../assets/homepage.png';
 import editorPreview from '../../assets/editor.png';
 import { HOME_FAQ_ITEMS } from '../seo';
 import LandingInteractiveBackdrop from './LandingInteractiveBackdrop.tsx';
+import Logo from './Logo';
 
 interface HomePageProps {
   onSelectLanguage: (lang: string) => void;
@@ -124,7 +125,7 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Top Navigation / Header */}
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="AlgoViz Logo" className="w-[1.8rem] h-[1.8rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000] transform -rotate-2 hover:rotate-0 transition-transform" />
+            <Logo language={hoverLang === 'cpp' ? 'c++' : 'javascript'} className="w-[2.4rem] h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]" />
             <span className="font-bold text-xl tracking-tight">AlgoViz.</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
