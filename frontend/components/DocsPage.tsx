@@ -8,6 +8,8 @@ import {
   Binary,
   Settings,
   LayoutTemplate,
+  BarChart3,
+  Cpu,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -18,6 +20,8 @@ import featuresMd from '../../docs/features-and-ui.md?raw';
 import transpilerMd from '../../docs/cpp-engine.md?raw';
 import sandboxMd from '../../docs/instrumentation-sandbox.md?raw';
 import templateMd from '../../docs/templates-and-palette.md?raw';
+import complexityMd from '../../docs/complexity-analysis.md?raw';
+import architectureMd from '../../docs/architecture.md?raw';
 import image1 from '../../assets/image-1.png';
 import image2 from '../../assets/image-2.png';
 import image3 from '../../assets/image-3.png';
@@ -249,54 +253,52 @@ const docsStructure: DocSection[] = [
   },
   {
     id: 'cpp-engine',
-    title: 'C++ Transpiler Engine',
+    title: 'C++ Execution Engine',
     icon: <Terminal size={16} />,
     content: transpilerMd,
     visual: {
-      eyebrow: 'C++ In The Browser',
-      title: 'How AlgoViz makes C++ explorable without shipping a full native compiler',
+      eyebrow: 'Dual-Engine C++',
+      title: 'Real GCC compilation with automatic local fallback',
       summary:
-        'Instead of compiling arbitrary native C++ to machine-like WASM and losing runtime introspection, AlgoViz parses a DSA-friendly C++ subset, transforms it into JavaScript, then traces the result.',
+        'AlgoViz sends instrumented C++ to Wandbox for real GCC compilation. If the API is unreachable, it seamlessly falls back to a local C++→JS transpiler.',
       metrics: [
-        { label: 'Parser', value: 'Tree-sitter WASM' },
-        { label: 'Runtime Target', value: 'JavaScript + Worker' },
-        { label: 'Primary Goal', value: 'Line-level state visibility' },
+        { label: 'Primary Engine', value: 'Wandbox (GCC)' },
+        { label: 'Fallback Engine', value: 'Local Transpiler' },
+        { label: 'STL Support', value: 'vector, map, stack, queue' },
       ],
       steps: [
         {
-          label: 'Parse',
-          detail: 'Load `tree-sitter-cpp.wasm` and build a structural syntax tree in the browser.',
+          label: 'Instrument',
+          detail: 'Tree-sitter parses C++ and injects __trace() calls with JSON serialization.',
           tone: 'blue',
         },
         {
-          label: 'Transform',
-          detail:
-            'Map vectors, loops, integer math, and STL-like operations into safe JS equivalents.',
+          label: 'Compile',
+          detail: 'Instrumented code is sent to Wandbox API for real GCC compilation and execution.',
           tone: 'amber',
         },
         {
-          label: 'Instrument',
-          detail: 'Inject tracer hooks into the generated JS so every step becomes observable.',
+          label: 'Parse',
+          detail: 'Extract __TRACE__ JSON blocks from stdout and build the execution timeline.',
           tone: 'emerald',
         },
         {
-          label: 'Execute',
-          detail:
-            'Run the instrumented output in a Web Worker and stream timeline frames back to React.',
+          label: 'Fallback',
+          detail: 'If Wandbox is down, automatically use the local C++→JS transpiler in a Web Worker.',
           tone: 'slate',
         },
       ],
       notes: [
-        'This approach keeps the browser runtime debuggable, which pure native-style compilation does not.',
-        'The engine is intentionally tuned around the kind of syntax students use in algorithm practice.',
-        'Integer coercion is explicit so binary search and index arithmetic behave like C++, not float-heavy JavaScript.',
+        'The Wandbox API requires no API keys or credentials — it is fully public and free.',
+        'Compiler errors are shown directly to the user; network errors trigger the silent fallback.',
+        'The local transpiler covers DSA-focused C++ (vectors, loops, recursion) for offline use.',
       ],
       gallery: [
         {
           src: image2,
           alt: 'C++ bubble sort running in AlgoViz with the current line highlighted and runtime variables visible beside the source code.',
           caption:
-            'C++ stays explorable because the parser and transform pipeline preserve loop progress, scalar values, and array mutations for the browser runtime.',
+            'C++ compiles with real GCC, producing accurate execution traces for any standard C++ code including full STL container support.',
           label: 'C++ Bubble Sort',
           tone: 'blue',
         },
@@ -304,8 +306,8 @@ const docsStructure: DocSection[] = [
       pair: {
         leftLabel: 'C++ Source',
         leftCode: `vector<int> nums = {5, 3, 8};\nsort(nums.begin(), nums.end());\nint mid = (left + right) / 2;`,
-        rightLabel: 'Generated JS Shape',
-        rightCode: `let nums = [5, 3, 8];\nnums.sort((a, b) => a - b);\nlet mid = Math.trunc((left + right) / 2);`,
+        rightLabel: 'Instrumented C++ (simplified)',
+        rightCode: `vector<int> nums = {5, 3, 8};\n__trace(1, {{"nums", __to_json(nums)}});\nsort(nums.begin(), nums.end());\n__trace(2, {{"nums", __to_json(nums)}});`,
       },
     },
   },
@@ -399,8 +401,91 @@ const docsStructure: DocSection[] = [
       ],
       notes: [
         'Templates reduce blank-page friction when the real goal is understanding execution.',
-        'C++ templates are authored to align with the supported transpilation subset.',
+        'C++ templates work with both Wandbox (full C++) and the local transpiler (offline).',
         'The palette makes the visualizer useful for both exploration and demonstration.',
+      ],
+    },
+  },
+  {
+    id: 'complexity',
+    title: 'Complexity Analysis',
+    icon: <BarChart3 size={16} />,
+    content: complexityMd,
+    visual: {
+      eyebrow: 'Performance Insight',
+      title: 'Live time complexity estimation from source structure and runtime behavior',
+      summary:
+        'The Complexity tab estimates Big-O notation using AST analysis for JavaScript and timeline-based heuristics for C++, complete with hotspot heatmaps.',
+      metrics: [
+        { label: 'JS Analysis', value: 'Acorn AST walk' },
+        { label: 'C++ Analysis', value: 'Timeline heuristic' },
+        { label: 'Visual Output', value: 'Heatmap + Big-O' },
+      ],
+      steps: [
+        {
+          label: 'Detect',
+          detail: 'Identify loops, recursion, and sort calls from source structure or runtime traces.',
+          tone: 'blue',
+        },
+        {
+          label: 'Estimate',
+          detail: 'Compare loop depth, hit counts, and input sizes to infer growth rate.',
+          tone: 'amber',
+        },
+        {
+          label: 'Visualize',
+          detail: 'Show Big-O notation, hot lines, peak stack depth, and operation counts.',
+          tone: 'emerald',
+        },
+      ],
+      notes: [
+        'Works for both JavaScript and C++ — JS uses AST analysis, C++ uses runtime trace heuristics.',
+        'The hotspot heatmap reveals which lines consume the most execution time.',
+        'Supports O(1), O(log n), O(n), O(n log n), O(n²), O(n³), and O(2^n) detection.',
+      ],
+    },
+  },
+  {
+    id: 'architecture',
+    title: 'Architecture Reference',
+    icon: <Cpu size={16} />,
+    content: architectureMd,
+    visual: {
+      eyebrow: 'Technical Overview',
+      title: 'Module layout, data flow, and error handling strategy',
+      summary:
+        'A developer-focused reference covering the execution pipeline, module boundaries, timeline data format, and error categorization.',
+      metrics: [
+        { label: 'Frontend', value: 'React 19 + Vite' },
+        { label: 'Backend', value: 'Web Worker + Wandbox' },
+        { label: 'Parser', value: 'Tree-sitter WASM' },
+      ],
+      steps: [
+        {
+          label: 'Route',
+          detail: 'executor.ts dispatches code by language to the appropriate engine.',
+          tone: 'amber',
+        },
+        {
+          label: 'Execute',
+          detail: 'Wandbox (C++) or Web Worker (JS) produces a timeline of execution steps.',
+          tone: 'blue',
+        },
+        {
+          label: 'Analyze',
+          detail: 'complexity.ts estimates Big-O from AST or timeline data.',
+          tone: 'emerald',
+        },
+        {
+          label: 'Render',
+          detail: 'useExecutionEngine reconstructs console history and drives the React UI.',
+          tone: 'slate',
+        },
+      ],
+      notes: [
+        'Error types are categorized (transpile, runtime, timeout, worker, network, compiler) for clear UI feedback.',
+        'Console output is stored incrementally in the worker and reconstructed in the frontend.',
+        'The Wandbox path and Web Worker path produce the same Timeline data structure.',
       ],
     },
   },
