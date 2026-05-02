@@ -296,6 +296,12 @@ const App: React.FC = () => {
           e.preventDefault();
           prevStep();
           break;
+        case "Enter":
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            handleRun(code, language);
+          }
+          break;
         case "KeyR":
           if (e.metaKey || e.ctrlKey) return;
           e.preventDefault();
