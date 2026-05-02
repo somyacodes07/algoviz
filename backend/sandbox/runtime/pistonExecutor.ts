@@ -20,7 +20,7 @@ export async function executePistonCpp(
   try {
     // 1. Instrument the code
     const instrumenter = new CppInstrumenter();
-    const instrumentedCode = instrumenter.instrument(code);
+    const instrumentedCode = await instrumenter.instrument(code);
 
     // 2. Prepare Piston payload
     const payload = {
