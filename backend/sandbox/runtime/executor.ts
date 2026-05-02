@@ -1,4 +1,5 @@
 import { Timeline, ExecutionConfig, ErrorType, ComplexityAnalysis } from '../../../types';
+import { analyzeComplexity } from '../../analysis/complexity';
 
 // We use Vite's ?worker feature to correctly bundle the worker and resolve its URL
 import ExecutorWorker from './executor.worker?worker';
@@ -79,10 +80,11 @@ async function executeCpp(
       };
     }
 
-    // ── Success ──
+    // ── Success: run complexity analysis on the original C++ code + timeline ──
+    const analysis = analyzeComplexity(userCode, result.timeline);
     return {
       timeline: result.timeline,
-      analysis: null,
+      analysis,
     };
   } catch (e: any) {
     // Unexpected error → fall back to local transpiler
