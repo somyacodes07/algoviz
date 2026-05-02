@@ -239,11 +239,8 @@ const App: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (page === "editor" && timeline.length === 0) {
-      handleRun(code, language);
-    }
-  }, [page, handleRun, code, language, timeline.length]);
+  // Auto-run has been removed per user request. 
+  // Execution will only start when the user explicitly clicks the "Run" button.
 
   useEffect(() => {
     const handlePopState = () => {
@@ -352,7 +349,6 @@ const App: React.FC = () => {
     setCode(template.code);
     setIsPlaying(false);
     setTemplateMenuOpen(false);
-    setTimeout(() => handleRun(template.code, language), 100);
   };
 
   const handleCopyLink = useCallback(() => {
