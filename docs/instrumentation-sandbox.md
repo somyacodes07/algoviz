@@ -1,48 +1,41 @@
 # Instrumentation Sandbox
 
-Once AlgoViz has runnable JavaScript, the next challenge is not execution. The real challenge is **making execution observable**.
+The instrumentation sandbox is the layer that transforms ordinary code into code that continuously reports its runtime state. Without it, the UI would have no timeline to replay.
 
-That is what the instrumentation sandbox does.
+## Two Instrumentation Paths
 
-Its job is to turn ordinary code into code that continuously reports:
+AlgoViz uses different instrumentation strategies depending on the language and engine:
 
-- the current source line
-- visible variables
-- the active call stack
-- console output
-- runtime failure state
+### Path 1: JavaScript (and C++ Fallback)
 
-## Where the Sandbox Sits
-
-The sandbox comes after parsing and transformation:
-
-```text
-JavaScript source
-or transformed C++ output
-  -> Acorn AST walk
-  -> tracer injection
-  -> protected worker evaluation
-  -> timeline snapshots
-  -> visual playback in React
+```
+JavaScript source (or transpiled C++ output)
+  → Acorn AST walk
+  → __tracer.step() injection
+  → Protected Web Worker execution
+  → Timeline snapshots
+  → Visual playback in React
 ```
 
-This is the layer that makes the visualizer possible. Without instrumentation, the UI would have no timeline to replay.
+### Path 2: C++ via Wandbox
 
-## Step 1: Parse the JavaScript Shape
+```
+C++ source
+  → Tree-sitter AST walk
+  → __trace() injection (source-to-source)
+  → POST to Wandbox (real GCC)
+  → Parse __TRACE__ JSON blocks from stdout
+  → Timeline snapshots
+  → Visual playback in React
+```
 
-AlgoViz uses **Acorn** to parse the final JavaScript into an Abstract Syntax Tree.
+## JavaScript Instrumentation
 
-That gives the system precise knowledge about:
+### Step 1: Parse the JavaScript Shape
 
-- statements
-- expressions
-- loops
-- function bodies
-- nested scope boundaries
+AlgoViz uses **Acorn** to parse the final JavaScript into an Abstract Syntax Tree. That gives the system precise knowledge about statements, expressions, loops, function bodies, and nested scope boundaries.
 
-Once the code is structural, the sandbox can insert tracing behavior in deterministic places instead of relying on brittle string hacks.
-
-## Step 2: Inject Tracing Hooks
+### Step 2: Inject Tracing Hooks
 
 The `instrumenter.ts` service walks the AST and injects calls such as:
 
@@ -50,94 +43,88 @@ The `instrumenter.ts` service walks the AST and injects calls such as:
 __tracer.step(line, variables);
 ```
 
-These calls are what allow the system to record state after meaningful execution points.
-
 The sandbox also manages:
 
-1. **Expression and variable tracking**
-   Execution checkpoints capture the current scope so the UI can render variable panels and highlight changes.
+1. **Expression and variable tracking** — Execution checkpoints capture the current scope so the UI can render variable panels and highlight changes.
+2. **Loop protection** — `for`, `while`, and `do...while` flows are guarded so runaway algorithms do not freeze the product.
+3. **Call stack entry and exit** — Functions are wrapped so recursion depth and nested calls appear cleanly in the stack view.
 
-2. **Loop protection**
-   `for`, `while`, and `do...while` flows are guarded so runaway algorithms do not freeze the product.
-
-3. **Call stack entry and exit**
-   Functions are wrapped so recursion depth and nested calls appear cleanly in the stack view.
-
-## Step 3: Run in an Isolated Web Worker
+### Step 3: Run in an Isolated Web Worker
 
 After instrumentation, AlgoViz executes the final code inside `executor.worker.ts`.
 
-That worker matters for both safety and product quality:
+The worker provides:
+- Main UI thread stays responsive
+- Infinite loops can be terminated cleanly
+- Runtime failures can be converted into structured timeline errors
+- Dangerous globals are blocked (`fetch`, `WebSocket`, `XMLHttpRequest`, etc.)
 
-- the main UI thread stays responsive
-- infinite loops can be terminated cleanly
-- runtime failures can be converted into structured timeline errors
+## C++ Instrumentation
 
-The worker also blocks or shadows dangerous globals where possible so user code cannot freely treat the visualizer like a general browser environment.
+### Source-to-Source Transformation
 
-## Step 4: Build the Timeline
+The C++ instrumenter (`cppInstrumenter.ts`) takes a fundamentally different approach: instead of converting C++ to another language, it keeps the code in C++ and injects tracing calls that produce JSON output to stdout.
 
-During execution, the tracer constructs a timeline of snapshots.
+Key capabilities:
+- **Scope-aware**: Tracks variable declarations across nested scopes, including for-loop iterators
+- **STL serialization**: Converts vectors, maps, stacks, queues, and pairs to JSON strings
+- **Non-destructive**: The instrumented code is still valid C++ that compiles with any standard compiler
 
-A single timeline entry generally contains:
+### Trace Protocol
 
-- the active line number
-- a deep-cloned variable snapshot
-- a call stack array
-- newly produced console logs
-- optional error information
+Each `__trace()` call outputs a JSON block wrapped in sentinel markers:
 
-That distinction between **new logs** and **full console history** is important. The worker stores console output incrementally, and the frontend reconstructs the full history when it renders playback. This helps reduce worker memory bloat.
+```
+__TRACE__{"line": 7, "variables": {"arr": [5, 3, 8], "maxVal": 5}}__TRACE__
+```
+
+The executor strips these from stdout and parses them into Timeline entries.
+
+## Timeline Structure
+
+A single timeline entry contains:
+
+- The active line number (1-indexed)
+- A deep-cloned variable snapshot
+- A call stack array
+- Newly produced console logs (delta, not full history)
+- Optional error information
+
+The frontend reconstructs full console history during playback to minimize worker memory usage.
 
 ## Infinite Loop Protection
 
-AlgoViz defaults to a capped step count so broken logic does not lock the tab forever.
+AlgoViz defaults to a capped step count (2000 steps) so broken logic does not lock the tab:
 
-If an algorithm never terminates, the worker can:
+- **Web Worker path**: The tracer's `step()` function throws after exceeding the limit
+- **Wandbox path**: The execution timeout is handled by the API and the fetch timeout
 
-- stop execution
-- emit a structured timeout or loop-limit error
-- preserve the partial history that was already captured
-
-This is especially helpful for students because they still get diagnostic context instead of a total UI hang.
-
-## Why the Worker Model Is So Valuable
-
-The Web Worker architecture gives AlgoViz three major wins:
-
-1. **Safety**
-   The main interface is protected from blocking execution.
-
-2. **Recoverability**
-   The app can terminate or report bad runs without refreshing the page.
-
-3. **Replay**
-   The worker returns data, not UI state, so React can focus entirely on rendering and playback.
+In both cases, partial timeline data is preserved so students get diagnostic context.
 
 ## Error Handling Strategy
 
-The sandbox separates several failure modes so the product can explain what went wrong:
+The sandbox separates several failure modes:
 
-- transpilation failure
-- instrumentation failure
-- runtime failure
-- timeout or loop-limit failure
-- worker crash
+| Error Type | Description |
+|---|---|
+| `transpile` | C++ → JS transformation failed |
+| `instrument` | JS AST instrumentation failed |
+| `runtime` | Code threw during execution |
+| `timeout` | Step or time limit exceeded |
+| `worker` | Web Worker crashed |
 
-This separation is important in a teaching tool because "your code crashed" is not nearly as useful as "the transpiler could not map this C++ construct" or "the loop exceeded the safety step limit."
+For C++ via Wandbox, errors are further categorized:
+- **Network errors** → Trigger automatic fallback to local transpiler
+- **Compiler errors** → Shown directly to the user in the Console Panel
 
 ## Why This Layer Matters for Learning
 
-The instrumentation sandbox is what turns AlgoViz from a code editor into a visual teaching system.
+The instrumentation sandbox turns AlgoViz from a code editor into a visual teaching system. With it, you can:
 
-Without it, you could still run code.
-
-With it, you can:
-
-- scrub backward and forward
-- compare state between steps
-- see recursive expansion
-- understand when logs appear
-- detect exactly where logic diverges
+- Scrub backward and forward through execution
+- Compare state between steps
+- See recursive expansion
+- Understand when logs appear
+- Detect exactly where logic diverges
 
 That replayable visibility is the foundation of the entire product.
