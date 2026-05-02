@@ -1,40 +1,67 @@
 # Setup & Installation Guide
 
-AlgoViz relies on a heavily optimized React frontend powered by Vite, parsing tools like Acorn, and an encapsulated WebWorker execution engine.
-
 ## Prerequisites
 
-To run AlgoViz locally, you need a functioning Node.js environment:
+- [Node.js](https://nodejs.org/) 18 or later
+- A modern browser (Chrome, Firefox, Edge, Safari)
+- Active internet connection (for C++ Wandbox engine; offline uses local fallback)
 
-- **Node.js**: v18.0.0 or higher
-- **Package Manager**: npm or yarn
+## Quick Start
 
-## Local Installation
+```bash
+# Clone the repository
+git clone https://github.com/ssgamingop/algoviz.git
+cd algoviz
 
-1. **Clone the Source Code**
-   \`\`\`bash
-   git clone https://github.com/ssgamingop/algoviz.git
-   cd algoviz
-   \`\`\`
+# Install dependencies
+npm install
 
-2. **Install Dependencies**
-   The project has dependencies on Monaco Editor, Tailwind CSS, Framer Motion, and Acorn AST parsing libraries.
-   \`\`\`bash
-   npm install
-   \`\`\`
+# Start the development server
+npm run dev
+```
 
-3. **Start the Development Server**
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-   The application will instantly launch at \`http://localhost:3000\`.
+The app runs at `http://localhost:3000`.
 
 ## Production Build
 
-AlgoViz compiles down to purely static HTML, JS, and CSS files. The heavy C++ transpilation and Acorn AST instrumentation happens entirely client-side via Web Workers, meaning you can host this strictly as a static website on GitHub Pages, Vercel, or Netlify without any heavy backend database requirements.
-
-To assemble the production build, run:
-\`\`\`bash
+```bash
+# Build static site
 npm run build
+
+# Preview production build locally
 npm run preview
-\`\`\`
+```
+
+## Environment
+
+No environment variables or API keys are required. AlgoViz uses the public Wandbox API for C++ execution, which does not require authentication.
+
+## WASM Files
+
+AlgoViz ships two WASM files in the `public/` directory for Tree-sitter C++ parsing:
+
+- `tree-sitter.wasm` — Tree-sitter runtime
+- `tree-sitter-cpp.wasm` — C++ grammar
+
+These are loaded automatically on first use. No setup needed.
+
+## Offline Mode
+
+If you're working without internet access:
+
+- **JavaScript**: Works fully offline (all execution happens in-browser)
+- **C++**: Falls back to the local C++ → JavaScript transpiler automatically
+  - Supports a DSA-focused C++ subset (vectors, maps, loops, recursion)
+  - Full C++ features (templates, OOP, advanced STL) require the Wandbox API
+
+## Type Checking
+
+```bash
+npx tsc --noEmit
+```
+
+This validates all TypeScript without emitting files.
+
+## Project Structure
+
+See [Architecture Reference](architecture.md) for the full project tree and module breakdown.
