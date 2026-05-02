@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Code, BookOpen, Check, Link2, Play } from 'lucide-react';
+import { Code, BookOpen, Check, Link2, Play, Loader2 } from 'lucide-react';
 import CodeEditor from '../CodeEditor';
 import { ThemeColor, getThemeConfig } from '../../theme/theme';
 
@@ -10,6 +10,7 @@ interface WorkspaceEditorProps {
   code: string;
   executionError?: string | null;
   isPlaying: boolean;
+  isExecuting?: boolean;
   visualizerMode: boolean;
   currentStepLine: number;
   breakpoints: Set<number>;
@@ -28,6 +29,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   code,
   executionError,
   isPlaying,
+  isExecuting,
   visualizerMode,
   currentStepLine,
   breakpoints,
@@ -96,6 +98,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
 
           <button
             onClick={async () => {
+              if (isExecuting) return;
               setToast(null);
               const success = await onRun();
               if (success) {
@@ -105,10 +108,23 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
               }
               setTimeout(() => setToast(null), 4000);
             }}
-            className={`flex items-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none bg-blue-500 hover:bg-blue-600 ${themeColor === 'saffron' ? 'bg-saffron-500 hover:bg-saffron-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+            disabled={isExecuting}
+            className={`flex items-center justify-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none min-w-[100px] ${
+              isExecuting 
+                ? themeColor === 'saffron' 
+                  ? 'bg-saffron-600 animate-pulse cursor-wait'
+                  : 'bg-blue-600 animate-pulse cursor-wait'
+                : themeColor === 'saffron' 
+                  ? 'bg-saffron-500 hover:bg-saffron-600' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+            }`}
           >
-            <Play size={14} fill="currentColor" />
-            Run
+            {isExecuting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Play size={14} fill="currentColor" />
+            )}
+            {isExecuting ? 'Running' : 'Run'}
           </button>
         </div>
       </div>
