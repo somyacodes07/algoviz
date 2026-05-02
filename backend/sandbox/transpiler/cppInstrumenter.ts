@@ -163,6 +163,9 @@ std::string __to_json(const std::string& v);
 std::string __to_json(const char* v);
 std::string __to_json(bool v);
 
+template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p);
+template<typename K, typename V> std::string __to_json(const std::map<K, V>& m);
+
 // Implementation
 template<typename T> std::string __to_json(const T& v) {
     if constexpr (std::is_arithmetic_v<T>) {
@@ -183,6 +186,22 @@ template<typename T> std::string __to_json(const std::vector<T>& v) {
         if (i < v.size() - 1) res += ", ";
     }
     res += "]";
+    return res;
+}
+
+template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p) {
+    return "{\\"first\\": " + __to_json(p.first) + ", \\"second\\": " + __to_json(p.second) + "}";
+}
+
+template<typename K, typename V> std::string __to_json(const std::map<K, V>& m) {
+    std::string res = "{";
+    bool first = true;
+    for (auto const& [key, val] : m) {
+        if (!first) res += ", ";
+        res += __to_json(key) + ": " + __to_json(val);
+        first = false;
+    }
+    res += "}";
     return res;
 }
 
