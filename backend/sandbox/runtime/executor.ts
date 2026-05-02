@@ -13,6 +13,9 @@ export interface ExecuteResult {
   analysis?: ComplexityAnalysis | null;
 }
 
+const executionCache = new Map<string, ExecuteResult>();
+const MAX_CACHE_SIZE = 15;
+
 /**
  * Execute user code in an isolated environment.
  *
@@ -29,14 +32,30 @@ export const executeCode = async (
   config?: ExecutionConfig,
 ): Promise<ExecuteResult> => {
   const timeoutMs = config?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const cacheKey = `${language}:${userCode.trim()}:${timeoutMs}`;
+
+  if (executionCache.has(cacheKey)) {
+    return executionCache.get(cacheKey)!;
+  }
+
+  let result: ExecuteResult;
 
   // ── C++ Execution ──
   if (language === 'cpp' || language === 'c++') {
-    return executeCpp(userCode, config, timeoutMs);
+    result = await executeCpp(userCode, config, timeoutMs);
+  } else {
+    // ── Browser Web Worker (JS / Python) ──
+    result = await executeInWorker(userCode, language, config, timeoutMs);
   }
 
-  // ── Browser Web Worker (JS / Python) ──
-  return executeInWorker(userCode, language, config, timeoutMs);
+  // Save to cache (only if it didn't timeout/fail fatally, though caching errors is also fine so we don't retry same bad code)
+  if (executionCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = executionCache.keys().next().value;
+    executionCache.delete(firstKey);
+  }
+  executionCache.set(cacheKey, result);
+
+  return result;
 };
 
 /**
