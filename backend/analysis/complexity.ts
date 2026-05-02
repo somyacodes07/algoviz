@@ -390,6 +390,8 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
   const recursiveFunctions = new Set<string>();
   const loopCandidates = new Set<string>();
 
+  // Try Acorn-based AST analysis (works for JS, fails for C++)
+  let astParsed = false;
   try {
     const ast = acorn.parse(code, {
       ecmaVersion: 2020,
@@ -483,8 +485,18 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     }
 
     walk(ast);
+    astParsed = true;
   } catch {
-    // If parsing fails, keep the observed metrics and fall back to a low-confidence estimate.
+    // AST parsing failed (e.g. C++ code) — fall through to timeline heuristic
+  }
+
+  // ── Timeline-based heuristic (used when AST parsing fails, i.e. for C++) ──
+  if (!astParsed && timeline.length > 0) {
+    const heuristic = inferComplexityFromTimeline(code, timeline, hotspots);
+    maxLoopDepth = heuristic.maxLoopDepth;
+    hasLogarithmicLoop = heuristic.hasLogarithmicLoop;
+    hasArraySort = heuristic.hasArraySort;
+    for (const c of heuristic.loopCandidates) loopCandidates.add(c);
   }
 
   const estimate = buildEstimate({
@@ -511,4 +523,118 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     peakStackDepth,
     hotspots,
   };
+}
+
+// ─── Timeline-Based Complexity Heuristic ──────────────────────────────────────
+//
+// When we can't parse the source as JS (e.g. C++), we infer loop structure
+// from the runtime trace:
+//
+//  1. Count how many distinct "hot lines" appear (lines hit > 1x).
+//  2. Estimate loop nesting depth from line-repetition patterns.
+//  3. Look for geometric growth signatures (log n loops).
+//  4. Check the source text for sort() calls.
+//
+// This gives a surprisingly accurate estimate for most DSA algorithms.
+
+function inferComplexityFromTimeline(
+  code: string,
+  timeline: Timeline,
+  hotspots: { line: number; hits: number; share: number }[],
+): {
+  maxLoopDepth: number;
+  hasLogarithmicLoop: boolean;
+  hasArraySort: boolean;
+  loopCandidates: string[];
+} {
+  // Count how many lines are "hot" (hit more than once) — these are loop bodies
+  const hotLines = hotspots.filter((h) => h.hits > 1);
+  const totalOps = timeline.length;
+
+  // Estimate loop nesting from hit patterns.
+  // A single loop body line hit N times → O(n).
+  // Two hot lines where one is hit N² times → O(n²).
+  let maxLoopDepth = 0;
+  if (hotLines.length > 0) {
+    const maxHits = hotLines[0].hits; // hotspots are sorted by hits desc
+    const inputSize = estimateInputSize(timeline);
+
+    if (inputSize > 0) {
+      const ratio = maxHits / inputSize;
+      if (ratio >= inputSize * 0.5) {
+        maxLoopDepth = 3; // O(n³) or higher
+      } else if (ratio >= Math.sqrt(inputSize) * 0.8) {
+        maxLoopDepth = 2; // O(n²)
+      } else if (ratio >= 0.5) {
+        maxLoopDepth = 1; // O(n)
+      }
+    } else {
+      // Fallback: use absolute hit counts
+      if (maxHits > 100) maxLoopDepth = 2;
+      else if (maxHits > 1) maxLoopDepth = 1;
+    }
+  }
+
+  // Check for logarithmic growth: if a hot line is hit roughly log2(n) times
+  let hasLogarithmicLoop = false;
+  if (hotLines.length > 0) {
+    const inputSize = estimateInputSize(timeline);
+    if (inputSize > 2) {
+      const logN = Math.log2(inputSize);
+      const topHits = hotLines[0].hits;
+      if (topHits <= logN * 2 && topHits >= logN * 0.5 && totalOps < inputSize) {
+        hasLogarithmicLoop = true;
+        maxLoopDepth = Math.max(maxLoopDepth, 1);
+      }
+    }
+  }
+
+  // Check source for sort() calls (works for both C++ and JS)
+  const lowerCode = code.toLowerCase();
+  const hasArraySort =
+    lowerCode.includes('sort(') ||
+    lowerCode.includes('.sort(') ||
+    lowerCode.includes('sort (');
+
+  // Build loop candidates
+  const loopCandidates: string[] = [];
+  if (hasArraySort && maxLoopDepth <= 1) {
+    loopCandidates.push('n log n');
+  } else if (hasLogarithmicLoop) {
+    const terms: GrowthTerm[] = [];
+    for (let i = 0; i < Math.max(maxLoopDepth, 1); i++) terms.push('log n');
+    loopCandidates.push(formatGrowthNotation(terms));
+  } else if (maxLoopDepth > 0) {
+    const terms: GrowthTerm[] = [];
+    for (let i = 0; i < maxLoopDepth; i++) terms.push('n');
+    loopCandidates.push(formatGrowthNotation(terms));
+  }
+
+  return { maxLoopDepth, hasLogarithmicLoop, hasArraySort, loopCandidates };
+}
+
+/**
+ * Estimate the "input size" from the timeline by looking at array/vector
+ * sizes in the first step's variables.
+ */
+function estimateInputSize(timeline: Timeline): number {
+  if (timeline.length === 0) return 0;
+
+  const firstVars = timeline[0].variables;
+  let maxSize = 0;
+
+  for (const value of Object.values(firstVars)) {
+    if (Array.isArray(value)) {
+      maxSize = Math.max(maxSize, value.length);
+    } else if (typeof value === 'string') {
+      // Wandbox returns vectors as "[1, 2, 3]" strings
+      const match = value.match(/^\[.*\]$/);
+      if (match) {
+        const items = value.slice(1, -1).split(',').filter((s: string) => s.trim());
+        maxSize = Math.max(maxSize, items.length);
+      }
+    }
+  }
+
+  return maxSize;
 }
