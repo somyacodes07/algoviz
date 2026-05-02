@@ -152,6 +152,7 @@ const App: React.FC = () => {
     complexityAnalysis,
     currentStepIndex,
     isPlaying,
+    isExecuting,
     speed,
     executionError,
     breakpoints,
@@ -434,6 +435,7 @@ const App: React.FC = () => {
                 code={code}
                 executionError={executionError}
                 isPlaying={isPlaying}
+                isExecuting={isExecuting}
                 visualizerMode={visualizerMode}
                 currentStepLine={currentStep.line}
                 breakpoints={breakpoints}
