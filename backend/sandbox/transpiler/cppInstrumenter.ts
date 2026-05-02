@@ -19,7 +19,10 @@ export class CppInstrumenter {
   /**
    * Instrument C++ code with trace calls.
    */
-  public instrument(code: string): string {
+  public async instrument(code: string): Promise<string> {
+    const { initParser } = await import('./parser');
+    await initParser();
+    
     const tree = parseCpp(code);
     this.patches = [];
     this.scopeStack = [new Set()];
