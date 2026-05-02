@@ -126,13 +126,14 @@ export class CppInstrumenter {
   private injectTraceCall(node: Node, line: number) {
     const vars = this.getCurrentScopeVars();
     if (vars.length === 0) {
-        this.addPatch(node.startIndex, `__trace(${line}, "", ""); `);
-        return;
+      this.addPatch(node.endIndex, `; __trace(${line}, {});`);
+      return;
     }
 
-    // For now, let's just trace the variables as a simple key-value string
-    // In a full implementation, we'd iterate and call __to_json for each
-    const varTrace = vars.map(v => `"${v}", __to_json(${v})`).join(', ');
+    // Generate pairs for std::initializer_list<std::pair<string, string>>
+    const varTrace = vars
+      .map((v) => `{"${v}", __to_json(${v})}`)
+      .join(', ');
     this.addPatch(node.endIndex, `; __trace(${line}, {${varTrace}});`);
   }
 
