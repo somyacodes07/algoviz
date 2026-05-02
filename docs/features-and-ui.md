@@ -1,48 +1,85 @@
 # Features & UI Layouts
 
-AlgoViz has been fundamentally redesigned into a **Developer's Workbench**. We opted for a "Neo-Brutalist" architectural layout, favoring bold typography, high contrast borders, drop shadows, and absolute geometric precision over soft, generic gradients.
+AlgoViz uses a **Developer's Workbench** design with bold typography, high contrast borders, and precise geometric layouts.
 
-## 1. Algorithmic Array Pointers
+## 1. Step-by-Step Execution
 
-Instead of merely highlighting an array block when its value changes, AlgoViz uses advanced semantic extraction to map your loop limits to pointers. 
+The timeline playback system lets you:
 
-If you write:
-\`\`\`javascript
-let left = 0;
-let right = arr.length - 1;
-\`\`\`
-AlgoViz scans your active variable scope for common algorithmic pointers:
-- \`i, j, k\`
-- \`left, right, lo, hi, low, high\`
-- \`mid, pivot\`
+- **Play/Pause** through execution automatically
+- **Step forward/backward** one statement at a time
+- **Scrub** the timeline slider to jump to any point
+- **Adjust speed** from slow (detailed study) to fast (overview)
+- **Reset** to re-run with the same code
 
-It will instantly render a striking **Emerald Green Tag** above the respective Array columns. You can physically watch your sliding windows shrink, pivot elements swap, and binary searches narrow down mathematically.
+## 2. Live Variables Panel
 
-## 2. Command Palette Templates
+The Variables tab shows all in-scope variables updating in real time:
 
-Press \`Cmd+K\` to launch the **Templates Command Palette**.
-This interactive overlay filters through an expansive catalog of predefined educational algorithms spanning:
+- Scalars display with their current value
+- Arrays and vectors render as indexed blocks
+- Objects and maps display as key-value pairs
+- Changed values are highlighted on each step
+
+## 3. Algorithmic Array Pointers
+
+AlgoViz scans your variable scope for common algorithmic pointers:
+- `i`, `j`, `k`
+- `left`, `right`, `lo`, `hi`, `low`, `high`
+- `mid`, `pivot`
+
+These render as **Emerald Green Tags** above array columns, letting you physically watch sliding windows shrink, pivots swap, and binary searches narrow.
+
+## 4. Complexity Analysis Panel
+
+The Complexity tab provides live time complexity estimation:
+
+- **Big-O notation** estimated from AST analysis (JS) or timeline heuristics (C++)
+- **Operations count** showing total traced steps
+- **Unique lines** executed
+- **Peak stack depth** for recursion analysis
+- **Hot-line heatmap** showing which lines run most frequently
+- Works for **both JavaScript and C++**
+
+## 5. Command Palette Templates
+
+Press `Cmd+K` to launch the **Templates Command Palette**:
+
 - **Search & Sort**: Quick Sort, Bubble Sort, Merge Sort, Binary Search
 - **Data Structures**: Linked List traversals, Stack implementations
-- **Graphs**: Breadth-First-Search (BFS), Depth-First Search (DFS)
-- **Math**: Sieve of Eratosthenes
+- **Graphs**: BFS, DFS, Dijkstra
+- **Math**: Sieve of Eratosthenes, Fibonacci
+- Available for both JavaScript and C++
 
-## 3. High-Fidelity Monaco Code Editor
+## 6. Monaco Code Editor
 
-We utilize Microsoft's Monaco Editor internally—the exact engine powering VS Code.
-- Auto-completion and formatting.
-- The active tracing line highlights gracefully as the execution cursor steps through time.
-- Integrated Dark Mode and Light Mode (`Sun`/`Moon` Toggle) natively adapts the Monaco Theme to Saffron and Azure variants.
+Microsoft's Monaco Editor provides:
 
-## 4. Protected Call Stack and Console Layouts
+- Full syntax highlighting for JavaScript and C++
+- The active line highlights as the execution cursor steps through time
+- Dark mode support
 
-- The **Console Output Panel** gracefully truncates massive mathematical overflows (like trailing JS floats or string arrays) instead of shattering the CSS layout grid.
-- The **Call Stack Tab** dynamically visualizes recursive trees—Watch standard Fibonacci DFS or dynamic programming branches branch out and pop from memory.
+## 7. Call Stack View
 
-## 5. Automated Data Structure Visualizers
+The Call Stack tab dynamically visualizes function call depth:
 
-AlgoViz doesn't just show active variables; it interprets structure geometry. 
+- Watch recursive trees branch and collapse
+- See Fibonacci DFS or dynamic programming branches expand
+- Track which function is currently executing
 
-- **Graph Visualizer (`GraphVisualizer.tsx`)**: Analyzes adjacency matrices and maps inside the execution context to draw mathematical nodes. Directed graphs automatically display exact **SVG perimeter arrows**, while bidirectional pathways bow beautifully outward using Bezier curve physics to prevent collision!
-- **Linked Lists (`LinkedListVisualizer.tsx`)**: Infers chaining via `.next` properties to print linear memory graphs perfectly across the UI timeline, even highlighting looping cycle anomalies.
+## 8. Console Output
 
+The Console panel replays `console.log` (JS) and `cout` (C++) output:
+
+- Output appears at the exact step it was emitted
+- Error messages display with distinct styling
+- Long output is gracefully truncated
+
+## 9. Data Structure Visualizers
+
+- **Graph Visualizer**: Analyzes adjacency matrices to draw nodes with directed SVG arrows and Bezier curves for bidirectional edges
+- **Linked Lists**: Infers `.next` chaining to render linear memory graphs with cycle detection
+
+## 10. Share Feature
+
+Click the **Share** button to generate a shareable URL that encodes your current code, making it easy to share algorithms with classmates or students.
