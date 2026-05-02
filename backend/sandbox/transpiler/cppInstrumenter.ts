@@ -89,38 +89,31 @@ export class CppInstrumenter {
       'expression_statement',
       'declaration',
       'return_statement',
-      'if_statement',
-      'for_statement',
-      'while_statement',
-      'do_statement',
     ];
-    return statementTypes.includes(node.type);
+    // Only trace if it's a direct child of a block or a function body
+    // This prevents breaking for-loop headers or if-conditions
+    const isInsideBlock = node.parent?.type === 'compound_statement';
+    
+    return statementTypes.includes(node.type) && isInsideBlock;
   }
 
   private handleDeclaration(node: Node) {
-    // Basic variable detection: int x = 5;
-    // We look for init_declarator
+    // We look for init_declarator or identifiers in a declaration
     for (let i = 0; i < node.namedChildCount; i++) {
       const child = node.namedChild(i)!;
       if (child.type === 'init_declarator') {
         const declarator = child.childForFieldName('declarator');
         if (declarator) {
-          const varName = declarator.text;
-          this.scopeStack[this.scopeStack.length - 1].add(varName);
+          this.scopeStack[this.scopeStack.length - 1].add(declarator.text);
         }
       } else if (child.type === 'identifier') {
-          // e.g., int x;
           this.scopeStack[this.scopeStack.length - 1].add(child.text);
       }
     }
   }
 
   private handleAssignment(node: Node) {
-    // x = 10;
-    const left = node.childForFieldName('left');
-    if (left && left.type === 'identifier') {
-        // Variable is modified, it's already in scope (hopefully)
-    }
+    // No-op for now, variable tracking is done by name in scope
   }
 
   private injectTraceCall(node: Node, line: number) {
@@ -130,7 +123,6 @@ export class CppInstrumenter {
       return;
     }
 
-    // Generate pairs for std::initializer_list<std::pair<string, string>>
     const varTrace = vars
       .map((v) => `{"${v}", __to_json(${v})}`)
       .join(', ');
@@ -154,17 +146,21 @@ export class CppInstrumenter {
 #include <sstream>
 #include <vector>
 #include <map>
+#include <stack>
+#include <queue>
+#include <deque>
 #include <type_traits>
 
-// Forward declarations for recursion
+// Forward declarations
 template<typename T> std::string __to_json(const T& v);
 template<typename T> std::string __to_json(const std::vector<T>& v);
+template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p);
+template<typename K, typename V> std::string __to_json(const std::map<K, V>& m);
+template<typename T> std::string __to_json(const std::stack<T>& s);
+template<typename T> std::string __to_json(const std::queue<T>& q);
 std::string __to_json(const std::string& v);
 std::string __to_json(const char* v);
 std::string __to_json(bool v);
-
-template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p);
-template<typename K, typename V> std::string __to_json(const std::map<K, V>& m);
 
 // Implementation
 template<typename T> std::string __to_json(const T& v) {
@@ -203,6 +199,26 @@ template<typename K, typename V> std::string __to_json(const std::map<K, V>& m) 
     }
     res += "}";
     return res;
+}
+
+template<typename T> std::string __to_json(const std::stack<T>& s) {
+    std::stack<T> copy = s;
+    std::vector<T> v;
+    while(!copy.empty()) {
+        v.insert(v.begin(), copy.top());
+        copy.pop();
+    }
+    return __to_json(v);
+}
+
+template<typename T> std::string __to_json(const std::queue<T>& q) {
+    std::queue<T> copy = q;
+    std::vector<T> v;
+    while(!copy.empty()) {
+        v.push_back(copy.front());
+        copy.pop();
+    }
+    return __to_json(v);
 }
 
 // Helper for Tracing
