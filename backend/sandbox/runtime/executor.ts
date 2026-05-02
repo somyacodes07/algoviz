@@ -13,12 +13,14 @@ export interface ExecuteResult {
 }
 
 /**
- * Execute user code in an isolated Web Worker.
+ * Execute user code in an isolated environment.
  *
- * Features:
- * - Configurable timeout (default 5s) — kills worker if exceeded
- * - Configurable max steps and input values
- * - Categorized error types for better UI feedback
+ * For C++:
+ *   1. Primary: Wandbox API (real GCC compilation via source instrumentation)
+ *   2. Fallback: Local transpiler (C++ → JS) in Web Worker if Wandbox is unreachable
+ *
+ * For JS/Python:
+ *   - Always uses the local Web Worker with AST instrumentation.
  */
 export const executeCode = async (
   userCode: string,
@@ -27,34 +29,79 @@ export const executeCode = async (
 ): Promise<ExecuteResult> => {
   const timeoutMs = config?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  // ── Wandbox API Execution for C++ ──
+  // ── C++ Execution ──
   if (language === 'cpp' || language === 'c++') {
+    return executeCpp(userCode, config, timeoutMs);
+  }
+
+  // ── Browser Web Worker (JS / Python) ──
+  return executeInWorker(userCode, language, config, timeoutMs);
+};
+
+/**
+ * C++ execution strategy:
+ *  1. Try Wandbox API (real GCC, full STL support)
+ *  2. On network failure → fall back to the local C++→JS transpiler in a Web Worker
+ *  3. On compiler error → show the error to the user (don't fallback)
+ */
+async function executeCpp(
+  userCode: string,
+  config: ExecutionConfig | undefined,
+  timeoutMs: number,
+): Promise<ExecuteResult> {
+  try {
     const { executeWandboxCpp } = await import('./wandboxExecutor');
     const result = await executeWandboxCpp(userCode, config);
 
-    if (result.error) {
+    // ── Network / API error → fall back to local transpiler ──
+    if (result.networkError) {
+      console.warn(
+        `[Executor] Wandbox unavailable (${result.networkError}), falling back to local transpiler.`,
+      );
+      return executeInWorker(userCode, 'cpp', config, timeoutMs);
+    }
+
+    // ── Compiler error → show to user, don't fallback ──
+    if (result.compilerError) {
       return {
-        timeline: [{
-          line: 0,
-          variables: {},
-          callStack: ['main'],
-          consoleOutput: [{ type: 'error', message: result.error }],
-          isError: true,
-          errorMessage: result.error,
-        }],
+        timeline: [
+          {
+            line: 0,
+            variables: {},
+            callStack: ['main'],
+            consoleOutput: [{ type: 'error', message: result.compilerError }],
+            isError: true,
+            errorMessage: result.compilerError,
+          },
+        ],
         errorType: 'runtime',
         analysis: null,
       };
     }
 
+    // ── Success ──
     return {
       timeline: result.timeline,
       analysis: null,
     };
+  } catch (e: any) {
+    // Unexpected error → fall back to local transpiler
+    console.warn('[Executor] Unexpected Wandbox error, falling back:', e.message);
+    return executeInWorker(userCode, 'cpp', config, timeoutMs);
   }
+}
 
-  // ── Browser Web Worker Fallback (for JS/Python) ──
-  return new Promise((resolve, reject) => {
+/**
+ * Execute code inside a sandboxed Web Worker.
+ * Used for JS/Python directly, and as the C++ fallback (transpiler path).
+ */
+function executeInWorker(
+  userCode: string,
+  language: string,
+  config: ExecutionConfig | undefined,
+  timeoutMs: number,
+): Promise<ExecuteResult> {
+  return new Promise((resolve) => {
     const worker = new ExecutorWorker();
     let settled = false;
 
@@ -130,4 +177,4 @@ export const executeCode = async (
       },
     });
   });
-};
+}
