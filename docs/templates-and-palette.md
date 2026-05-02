@@ -1,19 +1,24 @@
 # Educational Template Library & Palette
 
-AlgoViz is built for learning! Writing 50 lines of Dijkstra's algorithm from scratch just to watch it execute can be tedious for students and teachers. 
-
-To solve this, we've built a robust, highly modular **Template Library** loaded with the most fundamental Data Structures and Algorithm (DSA) patterns across both **JavaScript** and **C++**.
+AlgoViz is built for learning. Writing 50 lines of Dijkstra's algorithm from scratch just to watch it execute can be tedious. The Template Library gives you instant access to runnable examples.
 
 ## Quick Search Command Palette
-The UI features a stunning, keyboard-accessible command palette (`Cmd/Ctrl + K` or by clicking the **Templates** button). 
+
+Press `Cmd/Ctrl + K` or click the **Templates** button to open the command palette.
 
 ### Intelligent Meta-Tagging
-Search isn't limited to just reading the title of the snippet. Every template in the internal system (`frontend/templates/`) is heavily annotated with a `tags: string[]` property!
-This means if a student searches for `"heap"`, the engine intelligently surfaces the **Dijkstra's Shortest Path** template, and searching `"tortoise"` will surface the **Linked List Cycle Detection** algorithm, even if the word isn't explicitly in the title!
+
+Search isn't limited to exact title matches. Every template in the system (`frontend/templates/`) is annotated with a `tags: string[]` property. This means:
+
+- Searching `"heap"` surfaces **Dijkstra's Shortest Path**
+- Searching `"tortoise"` surfaces **Linked List Cycle Detection**
+- Searching `"brute"` surfaces brute-force algorithm variants
+
+The fuzzy matching makes the palette useful even when you think in concepts rather than exact algorithm names.
 
 ## Built-in Algorithm Implementations
 
-Our categorized library currently includes more than 35 finely-tuned templates designed specifically for visual clarity in the Sandbox:
+The library includes 35+ templates designed for visual clarity, available in both **JavaScript** and **C++**:
 
 ### Arrays & Strings
 - Find Maximum
@@ -23,7 +28,7 @@ Our categorized library currently includes more than 35 finely-tuned templates d
 - Maximum Subarray (Sliding Window)
 - Longest Substring Without Repeating Characters
 
-### Structures
+### Data Structures
 - Linked List Reverse (Interactive nodes)
 - Linked List Cycle Detection
 - Valid Parentheses via Stack
@@ -32,7 +37,7 @@ Our categorized library currently includes more than 35 finely-tuned templates d
 ### Search & Sorting
 - Binary Search (O(log n))
 - Merge Sort, Quick Sort (O(n log n))
-- Selection Sort, Insertion Sort, Bubble Sort (O(n^2))
+- Selection Sort, Insertion Sort, Bubble Sort (O(n²))
 
 ### Graph & Trees
 - Breadth-First Search (BFS)
@@ -46,5 +51,17 @@ Our categorized library currently includes more than 35 finely-tuned templates d
 - 0/1 Knapsack
 - N-Queens Backtracking
 
-## Engine Tuning
-Our C++ templates are specifically authored to prioritize syntax structures that the AlgoViz `Tree-Sitter Transpiler` elegantly supports to ensure students never hit execution roadblocks!
+## C++ Template Design
+
+C++ templates work with both the Wandbox API (real GCC) and the local transpiler fallback:
+
+- **Wandbox mode**: Full C++ support — templates can use any standard STL containers, OOP, templates, and modern C++ features
+- **Fallback mode**: Templates are authored to prioritize syntax structures that the Tree-sitter transpiler handles well, ensuring they work offline too
+
+## Complexity Visibility
+
+Each template is crafted so that the **Complexity Analysis** panel can accurately detect the algorithm's time complexity. For example:
+
+- Bubble Sort templates produce clear O(n²) hotspot patterns
+- Binary Search templates show O(log n) hit distributions
+- BFS/DFS templates demonstrate linear traversal signatures
