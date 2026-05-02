@@ -140,13 +140,16 @@ export const LinkedListPanel: React.FC<{
       <div className="mt-5 flex flex-wrap items-start gap-2">
         <AnimatePresence mode="popLayout">
           {preview.nodes.map((node, index) => (
-            <React.Fragment key={node.id}>
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            <motion.div
+              key={node.id}
+              layout
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="flex items-start gap-2"
+            >
+              <div
                 className={`min-w-[96px] border-[2px] px-3 py-3 ${theme.accentBorder} ${theme.accentSoftBg}`}
               >
                 <div className="flex min-h-5 flex-wrap gap-1">
@@ -165,19 +168,16 @@ export const LinkedListPanel: React.FC<{
                 <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
                   {node.label}
                 </div>
-              </motion.div>
+              </div>
 
               {index < preview.nodes.length - 1 && (
-                <motion.div 
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
+                <div 
                   className={`mt-8 flex items-center ${theme.accentText}`}
                 >
                   <ArrowRight size={18} />
-                </motion.div>
+                </div>
               )}
-            </React.Fragment>
+            </motion.div>
           ))}
         </AnimatePresence>
       </div>
