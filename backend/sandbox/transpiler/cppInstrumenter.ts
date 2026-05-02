@@ -112,13 +112,34 @@ export class CppInstrumenter {
     );
   }
 
+  private extractIdentifier(node: Node | null): string | null {
+    if (!node) return null;
+    if (node.type === 'identifier') return node.text;
+    
+    // Check for a nested 'declarator' field (handles pointer_declarator, array_declarator, etc.)
+    const declaratorField = node.childForFieldName('declarator');
+    if (declaratorField) {
+      return this.extractIdentifier(declaratorField);
+    }
+
+    // Check named children for identifier or other declarators (handles reference_declarator which might lack a field name)
+    for (const child of node.namedChildren) {
+      if (child.type === 'identifier' || child.type.includes('declarator')) {
+        return this.extractIdentifier(child);
+      }
+    }
+
+    return node.text;
+  }
+
   private handleDeclaration(node: Node) {
     for (let i = 0; i < node.namedChildCount; i++) {
       const child = node.namedChild(i)!;
-      if (child.type === 'init_declarator') {
+      if (child.type === 'init_declarator' || child.type === 'declaration') {
         const declarator = child.childForFieldName('declarator');
         if (declarator) {
-          this.scopeStack[this.scopeStack.length - 1].add(declarator.text);
+          const id = this.extractIdentifier(declarator);
+          if (id) this.scopeStack[this.scopeStack.length - 1].add(id);
         }
       } else if (child.type === 'identifier') {
         this.scopeStack[this.scopeStack.length - 1].add(child.text);

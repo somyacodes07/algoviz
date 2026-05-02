@@ -79,7 +79,7 @@ template<typename T> std::string __to_json(const std::queue<T>& q) {
 }
 
 // Pointers (Trees / Linked Lists)
-template<typename T> std::string __to_json(T* ptr, int depth = 0) {
+template<typename T> std::string __to_json(T* ptr, int depth) {
     if (ptr == nullptr) return "null";
     if (depth > 15) return "\"<max_depth>\"";
     if constexpr (requires(T a) { a.next; }) {
@@ -135,29 +135,29 @@ struct Node {
 
 // Function to insert at beginning
 void insertAtBeginning(Node*& head, int value) {
-    Node* newNode = new Node(); __trace(12, {{"* newNode", __to_json(* newNode)}});   // create new node
-    newNode->data = value; __trace(13, {{"* newNode", __to_json(* newNode)}});        // assign data
-    newNode->next = head; __trace(14, {{"* newNode", __to_json(* newNode)}});         // point to current head
-    head = newNode; __trace(15, {{"* newNode", __to_json(* newNode)}});               // update head
+    Node* newNode = new Node(); __trace(12, {{"newNode", __to_json(newNode)}});   // create new node
+    newNode->data = value; __trace(13, {{"newNode", __to_json(newNode)}});        // assign data
+    newNode->next = head; __trace(14, {{"newNode", __to_json(newNode)}});         // point to current head
+    head = newNode; __trace(15, {{"newNode", __to_json(newNode)}});               // update head
 }
 
 // Function to insert at end
 void insertAtEnd(Node*& head, int value) {
-    Node* newNode = new Node(); __trace(20, {{"* newNode", __to_json(* newNode)}});
-    newNode->data = value; __trace(21, {{"* newNode", __to_json(* newNode)}});
-    newNode->next = NULL; __trace(22, {{"* newNode", __to_json(* newNode)}});
+    Node* newNode = new Node(); __trace(20, {{"newNode", __to_json(newNode)}});
+    newNode->data = value; __trace(21, {{"newNode", __to_json(newNode)}});
+    newNode->next = NULL; __trace(22, {{"newNode", __to_json(newNode)}});
 
     if (head == NULL) {
-        head = newNode; __trace(25, {{"* newNode", __to_json(* newNode)}});
-        __trace(26, {{"* newNode", __to_json(* newNode)}}); return;
+        head = newNode; __trace(25, {{"newNode", __to_json(newNode)}});
+        __trace(26, {{"newNode", __to_json(newNode)}}); return;
     }
 
-    Node* temp = head; __trace(29, {{"* newNode", __to_json(* newNode)}, {"* temp", __to_json(* temp)}});
+    Node* temp = head; __trace(29, {{"newNode", __to_json(newNode)}, {"temp", __to_json(temp)}});
     while (temp->next != NULL) {  // go to last node
-        temp = temp->next; __trace(31, {{"* newNode", __to_json(* newNode)}, {"* temp", __to_json(* temp)}});
+        temp = temp->next; __trace(31, {{"newNode", __to_json(newNode)}, {"temp", __to_json(temp)}});
     }
 
-    temp->next = newNode; __trace(34, {{"* newNode", __to_json(* newNode)}, {"* temp", __to_json(* temp)}}); // attach new node
+    temp->next = newNode; __trace(34, {{"newNode", __to_json(newNode)}, {"temp", __to_json(temp)}}); // attach new node
 }
 
 // Function to delete a node
@@ -166,49 +166,49 @@ void deleteNode(Node*& head, int value) {
 
     // if head is to be deleted
     if (head->data == value) {
-        Node* temp = head; __trace(43, {{"* temp", __to_json(* temp)}});
-        head = head->next; __trace(44, {{"* temp", __to_json(* temp)}});
-        delete temp; __trace(45, {{"* temp", __to_json(* temp)}});
-        __trace(46, {{"* temp", __to_json(* temp)}}); return;
+        Node* temp = head; __trace(43, {{"temp", __to_json(temp)}});
+        head = head->next; __trace(44, {{"temp", __to_json(temp)}});
+        delete temp; __trace(45, {{"temp", __to_json(temp)}});
+        __trace(46, {{"temp", __to_json(temp)}}); return;
     }
 
-    Node* temp = head; __trace(49, {{"* temp", __to_json(* temp)}});
+    Node* temp = head; __trace(49, {{"temp", __to_json(temp)}});
     while (temp->next != NULL && temp->next->data != value) {
-        temp = temp->next; __trace(51, {{"* temp", __to_json(* temp)}});
+        temp = temp->next; __trace(51, {{"temp", __to_json(temp)}});
     }
 
     if (temp->next == NULL) return; // value not found
 
-    Node* nodeToDelete = temp->next; __trace(56, {{"* temp", __to_json(* temp)}, {"* nodeToDelete", __to_json(* nodeToDelete)}});
-    temp->next = temp->next->next; __trace(57, {{"* temp", __to_json(* temp)}, {"* nodeToDelete", __to_json(* nodeToDelete)}});
-    delete nodeToDelete; __trace(58, {{"* temp", __to_json(* temp)}, {"* nodeToDelete", __to_json(* nodeToDelete)}});
+    Node* nodeToDelete = temp->next; __trace(56, {{"temp", __to_json(temp)}, {"nodeToDelete", __to_json(nodeToDelete)}});
+    temp->next = temp->next->next; __trace(57, {{"temp", __to_json(temp)}, {"nodeToDelete", __to_json(nodeToDelete)}});
+    delete nodeToDelete; __trace(58, {{"temp", __to_json(temp)}, {"nodeToDelete", __to_json(nodeToDelete)}});
 }
 
 // Function to display list
 void display(Node* head) {
-    Node* temp = head; __trace(63, {{"* temp", __to_json(* temp)}});
+    Node* temp = head; __trace(63, {{"temp", __to_json(temp)}});
     while (temp != NULL) {
-        cout << temp->data << " -> "; __trace(65, {{"* temp", __to_json(* temp)}});
-        temp = temp->next; __trace(66, {{"* temp", __to_json(* temp)}});
+        cout << temp->data << " -> "; __trace(65, {{"temp", __to_json(temp)}});
+        temp = temp->next; __trace(66, {{"temp", __to_json(temp)}});
     }
-    cout << "NULL" << endl; __trace(68, {{"* temp", __to_json(* temp)}});
+    cout << "NULL" << endl; __trace(68, {{"temp", __to_json(temp)}});
 }
 
 // Main function
 int main() {
-    Node* head = NULL; __trace(73, {{"* head", __to_json(* head)}}); // empty list
+    Node* head = NULL; __trace(73, {{"head", __to_json(head)}}); // empty list
 
-    insertAtBeginning(head, 10); __trace(75, {{"* head", __to_json(* head)}});
-    insertAtBeginning(head, 20); __trace(76, {{"* head", __to_json(* head)}});
-    insertAtEnd(head, 30); __trace(77, {{"* head", __to_json(* head)}});
-    insertAtEnd(head, 40); __trace(78, {{"* head", __to_json(* head)}});
+    insertAtBeginning(head, 10); __trace(75, {{"head", __to_json(head)}});
+    insertAtBeginning(head, 20); __trace(76, {{"head", __to_json(head)}});
+    insertAtEnd(head, 30); __trace(77, {{"head", __to_json(head)}});
+    insertAtEnd(head, 40); __trace(78, {{"head", __to_json(head)}});
 
-    cout << "Linked List: "; __trace(80, {{"* head", __to_json(* head)}});
-    display(head); __trace(81, {{"* head", __to_json(* head)}});
+    cout << "Linked List: "; __trace(80, {{"head", __to_json(head)}});
+    display(head); __trace(81, {{"head", __to_json(head)}});
 
-    deleteNode(head, 20); __trace(83, {{"* head", __to_json(* head)}});
-    cout << "After deleting 20: "; __trace(84, {{"* head", __to_json(* head)}});
-    display(head); __trace(85, {{"* head", __to_json(* head)}});
+    deleteNode(head, 20); __trace(83, {{"head", __to_json(head)}});
+    cout << "After deleting 20: "; __trace(84, {{"head", __to_json(head)}});
+    display(head); __trace(85, {{"head", __to_json(head)}});
 
-    __trace(87, {{"* head", __to_json(* head)}}); return 0;
+    __trace(87, {{"head", __to_json(head)}}); return 0;
 }
