@@ -27,10 +27,10 @@ export const executeCode = async (
 ): Promise<ExecuteResult> => {
   const timeoutMs = config?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  // ── Piston API Execution for C++ ──
+  // ── Wandbox API Execution for C++ ──
   if (language === 'cpp' || language === 'c++') {
-    const { executePistonCpp } = await import('./pistonExecutor');
-    const result = await executePistonCpp(userCode, config);
+    const { executeWandboxCpp } = await import('./wandboxExecutor');
+    const result = await executeWandboxCpp(userCode, config);
 
     if (result.error) {
       return {
