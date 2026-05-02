@@ -154,12 +154,37 @@ export class CppInstrumenter {
 #include <sstream>
 #include <vector>
 #include <map>
+#include <type_traits>
 
-// Helper to convert basics to "JSON" strings
-template<typename T> std::string __to_json(const T& v) { return std::to_string(v); }
+// Forward declarations for recursion
+template<typename T> std::string __to_json(const T& v);
+template<typename T> std::string __to_json(const std::vector<T>& v);
+std::string __to_json(const std::string& v);
+std::string __to_json(const char* v);
+std::string __to_json(bool v);
+
+// Implementation
+template<typename T> std::string __to_json(const T& v) {
+    if constexpr (std::is_arithmetic_v<T>) {
+        return std::to_string(v);
+    } else {
+        return "\\"complex type\\"";
+    }
+}
+
 std::string __to_json(const std::string& v) { return "\\"" + v + "\\""; }
 std::string __to_json(const char* v) { return "\\"" + std::string(v) + "\\""; }
 std::string __to_json(bool v) { return v ? "true" : "false"; }
+
+template<typename T> std::string __to_json(const std::vector<T>& v) {
+    std::string res = "[";
+    for (size_t i = 0; i < v.size(); ++i) {
+        res += __to_json(v[i]);
+        if (i < v.size() - 1) res += ", ";
+    }
+    res += "]";
+    return res;
+}
 
 // Helper for Tracing
 void __trace(int line, std::initializer_list<std::pair<std::string, std::string>> vars) {
