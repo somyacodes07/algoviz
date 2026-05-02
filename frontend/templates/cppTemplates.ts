@@ -125,6 +125,89 @@ int main() {
   // DATA STRUCTURES
   // ==============================
   {
+    name: 'Linked List Reversal',
+    category: 'Data Structures',
+    description: 'Reverse a singly linked list in-place using three pointers',
+    language: 'c++',
+    tags: ['linked-list', 'pointers', 'reverse', 'in-place'],
+    code: `// Reverse a Linked List
+#include <iostream>
+using namespace std;
+
+struct Node {
+    int val;
+    Node* next;
+    Node(int v) : val(v), next(nullptr) {}
+};
+
+int main() {
+    // 1 -> 2 -> 3 -> 4 -> nullptr
+    Node* head = new Node(1);
+    head->next = new Node(2);
+    head->next->next = new Node(3);
+    head->next->next->next = new Node(4);
+
+    Node* prev = nullptr;
+    Node* curr = head;
+
+    while (curr != nullptr) {
+        Node* nextTemp = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = nextTemp;
+    }
+
+    head = prev; // New head is 4
+
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Binary Search Tree',
+    category: 'Data Structures',
+    description: 'Insert nodes into a BST and perform an In-Order traversal',
+    language: 'c++',
+    tags: ['tree', 'bst', 'pointers', 'recursion', 'traversal'],
+    code: `// Binary Search Tree Insertion
+#include <iostream>
+using namespace std;
+
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int v) : val(v), left(nullptr), right(nullptr) {}
+};
+
+TreeNode* insert(TreeNode* root, int val) {
+    if (root == nullptr) {
+        return new TreeNode(val);
+    }
+    if (val < root->val) {
+        root->left = insert(root->left, val);
+    } else {
+        root->right = insert(root->right, val);
+    }
+    return root;
+}
+
+int main() {
+    TreeNode* root = nullptr;
+    
+    // Insert values
+    root = insert(root, 10);
+    insert(root, 5);
+    insert(root, 15);
+    insert(root, 3);
+    insert(root, 7);
+    insert(root, 18);
+
+    return 0;
+}
+`,
+  },
+  {
     name: 'Valid Parentheses',
     category: 'Data Structures',
     description: 'Check if string has valid bracket sequences using a stack',
