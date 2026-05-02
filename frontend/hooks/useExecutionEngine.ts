@@ -7,6 +7,7 @@ interface ExecutionState {
   complexityAnalysis: ComplexityAnalysis | null;
   currentStepIndex: number;
   isPlaying: boolean;
+  isExecuting: boolean;
   speed: number;
   executionError: string | null;
   breakpoints: Set<number>;
@@ -30,6 +31,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
   const [complexityAnalysis, setComplexityAnalysis] = useState<ComplexityAnalysis | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(-1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(800); // ms per step
   const [executionError, setExecutionError] = useState<string | null>(null);
   const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
@@ -45,6 +47,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
   const handleRun = useCallback(async (code: string, language: string): Promise<boolean> => {
     setExecutionError(null);
     setIsPlaying(false);
+    setIsExecuting(true);
     try {
       const { timeline: rawTimeline, analysis } = await executeCode(code, language);
 
@@ -69,6 +72,8 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
       setComplexityAnalysis(null);
       setCurrentStepIndex(-1);
       return false;
+    } finally {
+      setIsExecuting(false);
     }
   }, []);
 
@@ -148,6 +153,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
       complexityAnalysis,
       currentStepIndex,
       isPlaying,
+      isExecuting,
       speed,
       executionError,
       breakpoints,
