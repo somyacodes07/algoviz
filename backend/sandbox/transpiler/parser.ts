@@ -74,6 +74,14 @@ export function getCppLanguage(): Language {
 // ─── Internal ─────────────────────────────────────────────────────────────────
 
 async function doInit(): Promise<void> {
+  // Polyfill process.versions for web-tree-sitter compatibility in some browsers
+  if (typeof process === 'undefined') {
+    (window as any).process = { versions: {} };
+  }
+  if (typeof process !== 'undefined' && !process.versions) {
+    (process as any).versions = {};
+  }
+
   try {
     // Detect if running in Node.js (test environment) vs browser
     const isNode =
