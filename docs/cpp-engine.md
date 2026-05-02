@@ -1,211 +1,155 @@
-# The C++ Transpiler Engine
+# The C++ Execution Engine
 
-Visualizing C++ in a browser is hard for a very specific reason: the thing students want to see is **runtime state**, not just final machine output.
+## Overview
 
-Traditional browser-side C++ strategies usually revolve around compiling code through a heavyweight native-style toolchain into WebAssembly. That can absolutely run fast, but it is a poor fit for an educational visualizer because the program's internal variables, call stack frames, and line-by-line transitions become difficult to inspect in a friendly JavaScript UI.
+AlgoViz uses a **dual-engine architecture** for C++ execution that combines the best of both worlds: real GCC compilation for accuracy and a local transpiler for offline resilience.
 
-AlgoViz takes a different path.
+## Execution Flow
 
-Instead of trying to faithfully reproduce all of native C++ semantics, AlgoViz targets the subset of C++ that shows up constantly in Data Structures and Algorithms practice, parses it structurally, translates it into equivalent JavaScript, and then feeds that JavaScript through the exact same tracing system used by the JavaScript visualizer.
-
-## The High-Level Pipeline
-
-When you press **Run** on C++ code, AlgoViz follows this browser-native pipeline:
-
-```text
-C++ source
-  -> Tree-sitter parser in WASM
-  -> structural AST
-  -> C++ to JS transformer
-  -> generated JavaScript
-  -> instrumentation sandbox
-  -> isolated Web Worker execution
-  -> timeline snapshots for the React UI
+```
+C++ Source Code
+  ├─ PRIMARY: Wandbox API (Online)
+  │    ├─ Tree-sitter parses C++ into AST
+  │    ├─ Source-to-source instrumenter injects __trace() calls
+  │    ├─ Instrumented code sent to Wandbox (real GCC)
+  │    ├─ __TRACE__ JSON blocks parsed from stdout
+  │    └─ Timeline + Complexity Analysis returned to UI
+  │
+  └─ FALLBACK: Local Transpiler (Offline)
+       ├─ Tree-sitter parses C++ into AST
+       ├─ Transformer maps C++ → JavaScript
+       ├─ Acorn instruments the JS with tracer hooks
+       ├─ Sandboxed Web Worker executes instrumented JS
+       └─ Timeline + Complexity Analysis returned to UI
 ```
 
-This architecture is powerful because each phase stays inspectable:
+## Primary Engine: Wandbox API
 
-- The parser gives us structure instead of regex guesses.
-- The transformer gives us room to preserve algorithmic intent.
-- The JavaScript target gives us a debuggable runtime.
-- The sandbox gives us the line-by-line state history the UI needs.
+When you press **Run** on C++ code, AlgoViz follows this pipeline:
 
-## Why AlgoViz Does Not Use "Compile Native C++ and Hope"
+### 1. Source Instrumentation (`cppInstrumenter.ts`)
 
-There are two central tradeoffs:
+The instrumenter uses Tree-sitter to parse the C++ code into an AST, then injects `__trace()` calls after every statement inside block scopes. This produces instrumented C++ that is still valid, compilable C++.
 
-1. **Native-style compilation is great for execution, but not ideal for educational introspection.**
-   Once code becomes low-level output, it is much harder to explain variable snapshots and source-level logic in a browser UI.
-
-2. **Full C++ is enormous.**
-   The language, standard library, memory model, templates, and compiler behavior are far broader than what most DSA teaching flows need.
-
-AlgoViz therefore optimizes for:
-
-- recursion
-- arrays and vectors
-- loops
-- maps, sets, queues, stacks, and priority queues
-- integer arithmetic
-- control flow clarity
-
-That trade is intentional. The goal is not to become a production-grade C++ compiler. The goal is to make algorithm behavior visible and teachable.
-
-## Phase 1: WASM Parsing with Tree-sitter
-
-The browser loads Tree-sitter's WebAssembly runtime together with the C++ grammar. From there, AlgoViz parses the user's code into a queryable syntax tree.
-
-That matters because syntax trees let us reason about meaning:
-
-- where declarations happen
-- what type a variable was declared as
-- whether a loop is index-based or range-based
-- which method is being called on a container
-- whether an expression should preserve integer semantics
-
-This is a huge upgrade over regex-based rewriting. Regex can sometimes patch simple snippets, but it quickly breaks down once nesting, templates, or multi-line control flow appear.
-
-## Phase 2: AST Transformation Mapping
-
-The `transformer.ts` layer walks the syntax tree and emits JavaScript with the same algorithmic behavior.
-
-Typical examples include:
-
-- `std::vector<int> arr;` -> `let arr = [];`
-- `queue<int> q;` -> `let q = [];`
-- `for (auto x : vec)` -> `for (let x of vec)`
-- `push_back()` -> `push()`
-- `pop_back()` -> `pop()`
-- `size()` -> `length`
-- `.front()` -> `[0]`
-- queue-style `.erase(.begin())` patterns -> `.shift()`
-
-The transformer is especially useful for DSA code because those snippets tend to be structural and repetitive. Once the parser knows the shape of the source, mapping it into readable JavaScript is usually far more reliable than students expect.
-
-## Phase 3: Integer Math Preservation
-
-One of the most important jobs of the C++ engine is preserving integer behavior.
-
-C++ integer division and JavaScript number division are not the same. In JavaScript, numbers are floating point values by default, so expressions like:
-
+**Example input:**
 ```cpp
-int mid = (left + right) / 2;
-num /= 10;
+int main() {
+    vector<int> arr = {5, 3, 8};
+    int maxVal = arr[0];
+    for (int i = 1; i < arr.size(); i++) {
+        if (arr[i] > maxVal) {
+            maxVal = arr[i];
+        }
+    }
+    return maxVal;
+}
 ```
 
-would become dangerously wrong if translated naïvely. A binary search midpoint turning into `2.5` instead of `2` is enough to break loop conditions, indexing, and recursion depth logic.
-
-AlgoViz addresses this by tracking integer-like variables and wrapping the corresponding transformed arithmetic in `Math.trunc()` where needed:
-
-```javascript
-let mid = Math.trunc((left + right) / 2);
-num = Math.trunc(num / 10);
-```
-
-This keeps common algorithm behavior aligned with what students expect from C++.
-
-## Concrete Translation Example
-
-Consider this small C++ snippet:
-
+**Instrumented output (simplified):**
 ```cpp
-vector<int> nums = {5, 3, 8};
-sort(nums.begin(), nums.end());
-int mid = (left + right) / 2;
+// [Trace helper header with __to_json() and __trace() definitions]
+
+int main() {
+    vector<int> arr = {5, 3, 8}; __trace(3, {{"arr", __to_json(arr)}});
+    int maxVal = arr[0]; __trace(4, {{"arr", __to_json(arr)}, {"maxVal", __to_json(maxVal)}});
+    for (int i = 1; i < arr.size(); i++) {
+        if (arr[i] > maxVal) {
+            maxVal = arr[i]; __trace(7, {{"arr", ...}, {"maxVal", ...}, {"i", ...}});
+        }
+    }
+    __trace(10, {{"arr", ...}, {"maxVal", ...}}); return maxVal;
+}
 ```
 
-AlgoViz aims to preserve its meaning in a form closer to:
+Key design decisions:
+- **Scope tracking mirrors C++ rules**: `for(int i=...)` pushes its own scope so `i` doesn't leak into trace calls after the loop
+- **Return statements**: Trace injected *before* `return` (not after dead code)
+- **Only block-level statements traced**: Prevents injection inside for-loop headers or if-conditions
 
-```javascript
-let nums = [5, 3, 8];
-nums.sort((a, b) => a - b);
-let mid = Math.trunc((left + right) / 2);
+### 2. Remote Compilation (`wandboxExecutor.ts`)
+
+The instrumented code is sent to [Wandbox](https://wandbox.org/api/compile.json) for compilation with GCC.
+
+```json
+{
+  "compiler": "gcc-head",
+  "code": "<instrumented C++ source>",
+  "stdin": "",
+  "save": false
+}
 ```
 
-Once this JavaScript shape exists, the rest of the platform can instrument it exactly like any handwritten JS snippet.
+### 3. Trace Parsing
 
-## Phase 4: Code Generation
+The executed program's stdout contains `__TRACE__` blocks interleaved with normal output:
 
-After transformation, the engine emits a JavaScript string. This is the bridge between the C++ world and the visualizer runtime.
-
-At this point:
-
-- structural C++ constructs have been rewritten
-- key semantics like integer division have been preserved
-- the result is now compatible with the tracing sandbox
-
-The generated JavaScript is not the final student-facing product. It is an internal execution artifact that unlocks the next stage.
-
-## Phase 5: Instrumentation and Worker Execution
-
-The generated JavaScript is then handed to the instrumentation layer, which injects trace checkpoints and safety guards before execution.
-
-That means a C++ snippet ultimately becomes:
-
-```text
-C++ source
-  -> transformed JavaScript
-  -> tracer-instrumented JavaScript
-  -> worker execution
-  -> timeline frames
-  -> visual playback
+```
+__TRACE__{"line": 3, "variables": {"arr": [5, 3, 8]}}__TRACE__
+__TRACE__{"line": 4, "variables": {"arr": [5, 3, 8], "maxVal": 5}}__TRACE__
 ```
 
-This is the real reason the browser approach works: once the code is transformed into a runtime the UI can inspect, the visualizer can expose every important teaching primitive:
+These are extracted via regex and parsed into the Timeline format that the React UI consumes.
 
-- current line
-- variable snapshots
-- call stack depth
-- console output
-- error states
+### 4. Supported C++ Types
 
-## What Subset of C++ Is the Engine Targeting?
+The trace header includes `__to_json()` overloads for:
 
-AlgoViz currently focuses on the subset that dominates interview prep, homework, and classroom DSA sessions:
+| Type | Serialization |
+|---|---|
+| `int`, `double`, `float`, `bool` | Numeric/boolean JSON |
+| `std::string`, `const char*` | Quoted string |
+| `std::vector<T>` | JSON array `[1, 2, 3]` |
+| `std::pair<T, U>` | `{"first": ..., "second": ...}` |
+| `std::map<K, V>` | JSON object `{key: value, ...}` |
+| `std::stack<T>` | JSON array (copied and unwound) |
+| `std::queue<T>` | JSON array (copied and unwound) |
+| Unknown types | `"unsupported"` fallback |
 
-- primitive scalar types
-- vectors and nested vectors
-- maps and sets
-- queues, stacks, and priority queues
-- loops, branching, and recursion
-- standard algorithm patterns like sorting and traversal
+## Fallback Engine: Local Transpiler
 
-This is why the system works well for:
+If Wandbox is unreachable (no internet, API rate-limited, or server down), AlgoViz automatically falls back to the local C++ → JavaScript transpiler.
 
-- binary search
-- BFS and DFS
-- Dijkstra
-- merge sort
-- quick sort
-- dynamic programming tables
-- recursion-heavy backtracking
+### When Fallback Activates
 
-## Why This Approach Works Well for Education
+| Scenario | Engine Used |
+|---|---|
+| Online, Wandbox responds | Wandbox (GCC) |
+| No internet / Wandbox 5xx | Local transpiler |
+| Wandbox returns compiler error | Error shown to user (no fallback) |
+| Tree-sitter init fails | Local transpiler |
 
-For a teaching product, the winning question is not "Can it execute arbitrary C++?" The better question is:
+### Transpiler Pipeline
 
-> Can it show students what their algorithm is doing right now?
+1. **Parse**: Tree-sitter WASM parses C++ into a syntax tree
+2. **Transform**: Maps DSA-friendly C++ patterns to JavaScript equivalents
+3. **Instrument**: Acorn injects `__tracer.step()` hooks into the JS
+4. **Execute**: Runs in an isolated Web Worker with timeout protection
 
-The current engine says yes for the cases that matter most in learning:
+### Transpiler Mappings
 
-- state-rich algorithms
-- container-heavy code
-- recursion and stack growth
-- pointer-like index movement
-- loops whose behavior depends on integer arithmetic
+| C++ | JavaScript |
+|---|---|
+| `vector<int> arr;` | `let arr = [];` |
+| `queue<int> q;` | `let q = [];` |
+| `for (auto x : vec)` | `for (let x of vec)` |
+| `push_back()` | `push()` |
+| `size()` | `length` |
+| `.front()` | `[0]` |
+| `int mid = (l+r)/2;` | `let mid = Math.trunc((l+r)/2);` |
+| `sort(v.begin(), v.end())` | `v.sort((a,b) => a-b)` |
 
-## Current Tradeoffs
+## Complexity Analysis for C++
 
-This approach is strong, but intentionally scoped.
+Since Acorn (the JS parser) cannot parse C++ source code, AlgoViz uses a **timeline-based heuristic** to estimate complexity:
 
-You should think of the current engine as:
+1. **Hot-line detection**: Lines hit more than once are identified as loop bodies
+2. **Input size estimation**: Array/vector sizes from the first timeline step
+3. **Loop depth inference**: Compares max hit count against input size to estimate nesting
+4. **Sort detection**: Scans source text for `sort()` calls
+5. **Logarithmic detection**: Checks if hot-line hits match log₂(n) patterns
 
-- structural rather than native
-- pedagogical rather than universal
-- optimized for algorithm walkthroughs rather than systems programming
-
-That is a feature, not a bug. By staying focused, AlgoViz can provide a clean, understandable experience instead of pretending to be a complete C++ toolchain.
+This produces accurate estimates for common DSA patterns: O(n), O(n²), O(n log n), O(log n).
 
 ## In One Sentence
 
-AlgoViz achieves C++ visualization in the browser by parsing a DSA-friendly subset of C++ into a syntax tree, transforming that structure into JavaScript, instrumenting the result, and replaying its runtime state through a visual timeline.
+AlgoViz executes C++ through real GCC compilation with source-to-source instrumentation, falling back to a local transpiler when offline, and provides full variable tracing, console output, and complexity analysis for both paths.
