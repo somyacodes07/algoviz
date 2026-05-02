@@ -1,27 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <style>
     .shadow { fill: #0f172a; }
-    .box { fill: #ffffff; stroke: #0f172a; stroke-width: 5; stroke-linejoin: round; }
-    .letters { fill: none; stroke: #0f172a; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
-    .dot { fill: #f97316; }
+    .box { fill: #ffffff; stroke: #0f172a; stroke-width: 4; stroke-linejoin: round; }
+    .edge { fill: none; stroke: #0f172a; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+    .accent-edge { fill: none; stroke: #f97316; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: #ffffff; stroke: #0f172a; stroke-width: 3.5; }
+    .accent-node { fill: #ffffff; stroke: #f97316; stroke-width: 3.5; }
+    .grid { stroke: #0f172a; stroke-width: 1.5; stroke-dasharray: 2 4; opacity: 0.15; }
 
     @media (prefers-color-scheme: dark) {
       .shadow { fill: #000000; }
-      .box { fill: #111113; stroke: #444444; }
-      .letters { stroke: #f1f5f9; }
-      .dot { fill: #f97316; }
+      .box { fill: #111113; stroke: #333333; }
+      .edge { stroke: #f1f5f9; }
+      .node { fill: #111113; stroke: #f1f5f9; }
+      .accent-node { fill: #111113; stroke: #f97316; }
+      .grid { stroke: #ffffff; opacity: 0.1; }
     }
   </style>
 
   <!-- Shadow offset -->
-  <rect x="18" y="18" width="74" height="74" rx="8" class="shadow" />
-  <!-- Main bounding box centered at x=50, y=50 -->
-  <rect x="13" y="13" width="74" height="74" rx="8" class="box" />
+  <rect x="16" y="16" width="76" height="76" rx="10" class="shadow" />
+  <!-- Main bounding box -->
+  <rect x="10" y="10" width="76" height="76" rx="10" class="box" />
 
-  <!-- A centered and scaled inside perfectly -->
-  <path d="M 21,66 L 31,34 L 41,66 M 26,53 L 36,53" class="letters" />
-  <!-- V directly adjacent -->
-  <path d="M 45,34 L 55,66 L 65,34" class="letters" />
-  <!-- Saffron dot -->
-  <circle cx="74" cy="62" r="4.5" class="dot" />
+  <!-- Subtle Graph Grid Background -->
+  <path d="M 10,35 L 86,35 M 10,60 L 86,60 M 35,10 L 35,86 M 60,10 L 60,86" class="grid" />
+
+  <!-- The "A" (Graph Edges) -->
+  <path d="M 22,66 L 36,32 L 50,66" class="edge" />
+  <path d="M 27,53 L 45,53" class="edge" />
+
+  <!-- The "V" (Saffron Accent Edges) -->
+  <path d="M 52,32 L 66,66 L 80,32" class="accent-edge" />
+
+  <!-- Nodes (Vertices) -->
+  <circle cx="22" cy="66" r="4.5" class="node" />
+  <circle cx="36" cy="32" r="4.5" class="node" />
+  <circle cx="50" cy="66" r="4.5" class="node" />
+
+  <!-- V Nodes -->
+  <circle cx="52" cy="32" r="4.5" class="accent-node" />
+  <circle cx="66" cy="66" r="4.5" class="accent-node" />
+  <circle cx="80" cy="32" r="4.5" class="accent-node" />
 </svg>
