@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, ArrowRight, Repeat2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
@@ -138,37 +138,48 @@ export const LinkedListPanel: React.FC<{
       </div>
 
       <div className="mt-5 flex flex-wrap items-start gap-2">
-        {preview.nodes.map((node, index) => (
-          <React.Fragment key={node.id}>
-            <motion.div
-              layout
-              className={`min-w-[96px] border-[2px] px-3 py-3 ${theme.accentBorder} ${theme.accentSoftBg}`}
-            >
-              <div className="flex min-h-5 flex-wrap gap-1">
-                {node.pointerNames.map((pointer) => (
-                  <span
-                    key={pointer}
-                    className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
-                  >
-                    {pointer}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Node {index + 1}
-              </div>
-              <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
-                {node.label}
-              </div>
-            </motion.div>
+        <AnimatePresence mode="popLayout">
+          {preview.nodes.map((node, index) => (
+            <React.Fragment key={node.id}>
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className={`min-w-[96px] border-[2px] px-3 py-3 ${theme.accentBorder} ${theme.accentSoftBg}`}
+              >
+                <div className="flex min-h-5 flex-wrap gap-1">
+                  {node.pointerNames.map((pointer) => (
+                    <span
+                      key={pointer}
+                      className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
+                    >
+                      {pointer}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Node {index + 1}
+                </div>
+                <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
+                  {node.label}
+                </div>
+              </motion.div>
 
-            {index < preview.nodes.length - 1 && (
-              <div className={`mt-8 flex items-center ${theme.accentText}`}>
-                <ArrowRight size={18} />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
+              {index < preview.nodes.length - 1 && (
+                <motion.div 
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className={`mt-8 flex items-center ${theme.accentText}`}
+                >
+                  <ArrowRight size={18} />
+                </motion.div>
+              )}
+            </React.Fragment>
+          ))}
+        </AnimatePresence>
       </div>
 
       {preview.cycleToIndex !== null && (
