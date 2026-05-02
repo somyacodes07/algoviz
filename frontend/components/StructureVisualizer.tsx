@@ -18,7 +18,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 p-2">
+    <div className="grid grid-cols-1 gap-3">
       {linkedListPreview && <LinkedListPanel preview={linkedListPreview} themeColor={themeColor} />}
       {graphPreview && <GraphPanel preview={graphPreview} themeColor={themeColor} />}
     </div>
