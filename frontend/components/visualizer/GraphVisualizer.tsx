@@ -408,9 +408,9 @@ export const GraphPanel: React.FC<{
 
                 return (
                   <motion.g
-                    key={`${edge.from}-${edge.to}-${index}`}
-                    initial={{ opacity: 0, pathLength: 0 }}
-                    animate={{ opacity: 1, pathLength: 1 }}
+                    key={`${edge.from}-${edge.to}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.4 }}
                   >
                     <motion.path
@@ -419,6 +419,9 @@ export const GraphPanel: React.FC<{
                       strokeWidth="2.5"
                       fill="none"
                       opacity="0.65"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
                       markerEnd={preview.directed ? 'url(#arrowhead)' : undefined}
                     />
                     {edge.weight && (
