@@ -245,7 +245,7 @@ export class CppInstrumenter {
       '}',
       '',
       '// Pointers (Trees / Linked Lists)',
-      'template<typename T> std::string __to_json(T* ptr, int depth = 0) {',
+      'template<typename T> std::string __to_json(T* ptr, int depth) {',
       `    if (ptr == nullptr) return ${DQ}null${DQ};`,
       `    if (depth > 15) return ${DQ}${BSQ}<max_depth>${BSQ}${DQ};`,
       '    if constexpr (requires(T a) { a.next; }) {',
