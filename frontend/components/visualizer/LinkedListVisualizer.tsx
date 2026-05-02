@@ -99,7 +99,7 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
     }
   }
 
-  if (!bestPreview || bestPreview.nodes.length < 2) return null;
+  if (!bestPreview || bestPreview.nodes.length < 1) return null;
 
   const { score: _score, ...preview } = bestPreview;
   return preview;
