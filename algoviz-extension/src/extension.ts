@@ -5,6 +5,18 @@ import * as fs from 'fs';
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand('algoviz.start', () => {
     AlgoVizPanel.createOrShow(context.extensionUri);
+    
+    setTimeout(() => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && AlgoVizPanel.currentPanel) {
+        const languageId = editor.document.languageId;
+        if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
+          const text = editor.document.getText();
+          const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
+          AlgoVizPanel.currentPanel.sendContext(text, algovizLang);
+        }
+      }
+    }, 500);
   });
 
   let visualizeCmd = vscode.commands.registerCommand('algoviz.visualizeCurrentFile', () => {
