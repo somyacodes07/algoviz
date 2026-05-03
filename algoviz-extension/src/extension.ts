@@ -82,7 +82,7 @@ class AlgoVizPanel {
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     const distPath = vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist');
-    const htmlPath = vscode.Uri.joinPath(distPath, 'index.html');
+    const htmlPath = vscode.Uri.joinPath(distPath, 'webview', 'index.html');
 
     let html = '';
     try {
