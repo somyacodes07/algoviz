@@ -83,6 +83,18 @@ class AlgoVizPanel {
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         switch (message.command) {
+          case 'webviewReady':
+            // The React app has loaded, now we can safely send the active file code!
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+              const languageId = editor.document.languageId;
+              if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
+                const text = editor.document.getText();
+                const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
+                this.sendContext(text, algovizLang);
+              }
+            }
+            return;
           case 'runCode':
             vscode.window.showInformationMessage(`Running code for language: ${message.language}`);
             // TODO: Add local execution logic

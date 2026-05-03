@@ -257,13 +257,16 @@ const App: React.FC = () => {
     window.addEventListener('message', handleMessage);
     
     // Notify VS Code that the React app has loaded and is ready to receive context
-    if (window.parent !== window) {
+    // We use a global variable to avoid acquireVsCodeApi error on multiple calls (Strict Mode)
+    // @ts-ignore
+    if (typeof acquireVsCodeApi === 'function') {
       // @ts-ignore
-      if (typeof acquireVsCodeApi === 'function') {
+      if (!window.vscodeApi) {
         // @ts-ignore
-        const vscode = acquireVsCodeApi();
-        vscode.postMessage({ command: 'webviewReady' });
+        window.vscodeApi = acquireVsCodeApi();
       }
+      // @ts-ignore
+      window.vscodeApi.postMessage({ command: 'webviewReady' });
     }
 
     return () => window.removeEventListener('message', handleMessage);
