@@ -4,11 +4,36 @@ import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand('algoviz.start', () => {
-    AlgoVizPanel.createOrShow(context.extensionUri);
+    // Grab the active editor BEFORE the webview takes focus
+    const editor = vscode.window.activeTextEditor;
+    let initialContext: { code: string, language: string } | undefined;
+    
+    if (editor) {
+      const languageId = editor.document.languageId;
+      if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
+        const text = editor.document.getText();
+        const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
+        initialContext = { code: text, language: algovizLang };
+      }
+    }
+    
+    AlgoVizPanel.createOrShow(context.extensionUri, initialContext);
   });
 
   let visualizeCmd = vscode.commands.registerCommand('algoviz.visualizeCurrentFile', () => {
-    AlgoVizPanel.createOrShow(context.extensionUri);
+    const editor = vscode.window.activeTextEditor;
+    let initialContext: { code: string, language: string } | undefined;
+    
+    if (editor) {
+      const languageId = editor.document.languageId;
+      if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
+        const text = editor.document.getText();
+        const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
+        initialContext = { code: text, language: algovizLang };
+      }
+    }
+    
+    AlgoVizPanel.createOrShow(context.extensionUri, initialContext);
   });
 
   context.subscriptions.push(disposable, visualizeCmd);
@@ -21,13 +46,21 @@ class AlgoVizPanel {
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
+  
+  // Store the pending context to send when webview is ready
+  private _pendingContext?: { code: string, language: string };
 
-  public static createOrShow(extensionUri: vscode.Uri) {
+  public static createOrShow(extensionUri: vscode.Uri, initialContext?: { code: string, language: string }) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
     if (AlgoVizPanel.currentPanel) {
+      if (initialContext) {
+        AlgoVizPanel.currentPanel._pendingContext = initialContext;
+        // If it's already shown, it might already be ready, so send it immediately just in case
+        AlgoVizPanel.currentPanel.sendContext(initialContext.code, initialContext.language);
+      }
       AlgoVizPanel.currentPanel._panel.reveal(column);
       return;
     }
@@ -43,12 +76,13 @@ class AlgoVizPanel {
       }
     );
 
-    AlgoVizPanel.currentPanel = new AlgoVizPanel(panel, extensionUri);
+    AlgoVizPanel.currentPanel = new AlgoVizPanel(panel, extensionUri, initialContext);
   }
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, initialContext?: { code: string, language: string }) {
     this._panel = panel;
     this._extensionUri = extensionUri;
+    this._pendingContext = initialContext;
 
     this._update();
 
@@ -59,14 +93,9 @@ class AlgoVizPanel {
         switch (message.command) {
           case 'webviewReady':
             // The React app has loaded, now we can safely send the active file code!
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-              const languageId = editor.document.languageId;
-              if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
-                const text = editor.document.getText();
-                const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
-                this.sendContext(text, algovizLang);
-              }
+            if (this._pendingContext) {
+              this.sendContext(this._pendingContext.code, this._pendingContext.language);
+              this._pendingContext = undefined;
             }
             return;
           case 'runCode':

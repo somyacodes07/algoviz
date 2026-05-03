@@ -3,7 +3,7 @@
   "displayName": "AlgoViz",
   "description": "Algorithm Visualizer inside VS Code",
   "version": "0.1.0",
-  "publisher": "somyajeet",
+  "publisher": "somyacodes",
   "repository": {
     "type": "git",
     "url": "https://github.com/ssgamingop/AlgoViz.git"
@@ -15,6 +15,7 @@
     "Other"
   ],
   "license": "MIT",
+  "readme": "README.md",
   "icon": "icon.png",
   "activationEvents": [],
   "main": "./dist/extension.js",
