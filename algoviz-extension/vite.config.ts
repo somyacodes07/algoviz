@@ -24,4 +24,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, '..'),
     }
   },
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    exclude: ['web-tree-sitter'],
+  }
 });
