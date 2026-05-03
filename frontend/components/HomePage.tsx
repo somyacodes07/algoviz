@@ -273,7 +273,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </a>
               </div>
 
-              <div className="mb-4 mt-8 flex items-center gap-4">
+              <div className="mb-4 mt-8 flex items-center gap-4 flex-wrap">
                 <a
                   href={docsHref}
                   onClick={(e) => {
@@ -283,6 +283,15 @@ const HomePage: React.FC<HomePageProps> = ({
                   className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 transition-colors hover:text-slate-900 active:translate-y-[1px] dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   <BookOpen size={14} /> Read Documentation
+                </a>
+                <a
+                  href="https://github.com/ssgamingop/AlgoViz/tree/main/algoviz-extension"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-full border border-[#007acc] bg-[#007acc]/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-[#007acc] transition-colors hover:bg-[#007acc] hover:text-white active:translate-y-[1px] dark:border-[#007acc]/50 dark:text-[#3794ff] dark:hover:bg-[#007acc] dark:hover:text-white"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 17a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5H7a5 5 0 0 0-5 5v10z"></path><path d="M12 15h.01"></path><path d="M8 15h.01"></path><path d="M16 15h.01"></path><path d="M2 11h20"></path></svg>
+                  Get VS Code Extension
                 </a>
               </div>
 

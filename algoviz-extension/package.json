@@ -29,7 +29,7 @@
     "package": "npm run check-types && node esbuild.js --production",
     "check-types": "tsc --noEmit",
     "build:webview": "vite build",
-    "build:vsix": "npx vsce package"
+    "build:vsix": "npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
