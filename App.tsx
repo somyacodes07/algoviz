@@ -255,6 +255,17 @@ const App: React.FC = () => {
       }
     };
     window.addEventListener('message', handleMessage);
+    
+    // Notify VS Code that the React app has loaded and is ready to receive context
+    if (window.parent !== window) {
+      // @ts-ignore
+      if (typeof acquireVsCodeApi === 'function') {
+        // @ts-ignore
+        const vscode = acquireVsCodeApi();
+        vscode.postMessage({ command: 'webviewReady' });
+      }
+    }
+
     return () => window.removeEventListener('message', handleMessage);
   }, [setIsPlaying]);
 
