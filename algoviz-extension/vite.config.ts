@@ -26,6 +26,8 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    // In VS Code webviews, external workers often fail due to strict origin checks.
+    // Inlining the worker as a blob or base64 usually resolves this.
   },
   optimizeDeps: {
     exclude: ['web-tree-sitter'],
