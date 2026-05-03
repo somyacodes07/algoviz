@@ -2,7 +2,7 @@ import { Timeline, ExecutionConfig, ErrorType, ComplexityAnalysis } from '../../
 import { analyzeComplexity } from '../../analysis/complexity';
 
 // We use Vite's ?worker feature to correctly bundle the worker and resolve its URL
-import ExecutorWorker from './executor.worker?worker';
+import ExecutorWorker from './executor.worker?worker&inline';
 
 /** Default execution timeout (ms) */
 const DEFAULT_TIMEOUT_MS = 5000;
