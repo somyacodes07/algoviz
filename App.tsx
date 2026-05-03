@@ -375,10 +375,44 @@ const App: React.FC = () => {
 
   const handleCopyLink = useCallback(() => {
     const url = encodeShareLink(code, language);
-    navigator.clipboard.writeText(url).then(() => {
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
+    
+    // In VS Code Webviews, navigator.clipboard might be restricted or undefined.
+    // We try it first, then fallback to execCommand.
+    const copyToClipboard = async () => {
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          return true;
+        }
+      } catch (e) {
+        console.warn('navigator.clipboard failed, using fallback', e);
+      }
+      
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const success = document.execCommand('copy');
+        textArea.remove();
+        return success;
+      } catch (e) {
+        console.error('Fallback copy failed', e);
+        return false;
+      }
+    };
+
+    copyToClipboard().then((success) => {
+      if (success) {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      }
     });
+
     syncUrl("editor", language, { replace: true, preserveShareHash: true });
   }, [code, language, syncUrl]);
 
