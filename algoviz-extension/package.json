@@ -28,7 +28,8 @@
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && node esbuild.js --production",
     "check-types": "tsc --noEmit",
-    "build:webview": "vite build"
+    "build:webview": "vite build",
+    "build:vsix": "npx vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
