@@ -16,6 +16,12 @@
   },
   "exclude": [
     "node_modules",
-    ".vscode-test"
+    ".vscode-test",
+    "webview-ui",
+    "webview",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*"
   ]
 }
