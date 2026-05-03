@@ -22,6 +22,7 @@ import sandboxMd from '../../docs/instrumentation-sandbox.md?raw';
 import templateMd from '../../docs/templates-and-palette.md?raw';
 import complexityMd from '../../docs/complexity-analysis.md?raw';
 import architectureMd from '../../docs/architecture.md?raw';
+import vscodeExtensionMd from '../../docs/vscode-extension.md?raw';
 import image1 from '../../assets/image-1.png';
 import image2 from '../../assets/image-2.png';
 import image3 from '../../assets/image-3.png';
@@ -486,6 +487,45 @@ const docsStructure: DocSection[] = [
         'Error types are categorized (transpile, runtime, timeout, worker, network, compiler) for clear UI feedback.',
         'Console output is stored incrementally in the worker and reconstructed in the frontend.',
         'The Wandbox path and Web Worker path produce the same Timeline data structure.',
+      ],
+    },
+  },
+  {
+    id: 'vscode-extension',
+    title: 'VS Code Extension',
+    icon: <Terminal size={16} />,
+    content: vscodeExtensionMd,
+    visual: {
+      eyebrow: 'IDE Integration',
+      title: 'Run AlgoViz directly inside Visual Studio Code',
+      summary:
+        'The AlgoViz VS Code extension brings the entire visualizer experience offline and right next to your codebase without making any API calls.',
+      metrics: [
+        { label: 'Network Req', value: 'None (Offline)' },
+        { label: 'Environment', value: 'Webview UI' },
+        { label: 'C++ Engine', value: 'Local Transpiler' },
+      ],
+      steps: [
+        {
+          label: 'Install',
+          detail: 'Load the .vsix package directly into your VS Code extensions.',
+          tone: 'blue',
+        },
+        {
+          label: 'Launch',
+          detail: 'Use the Command Palette to open the AlgoViz workbench side-by-side with your code.',
+          tone: 'emerald',
+        },
+        {
+          label: 'Execute',
+          detail: 'Run JavaScript or C++ seamlessly inside the IDE using the embedded worker.',
+          tone: 'amber',
+        },
+      ],
+      notes: [
+        'Because the extension uses the local transpiler for C++, it works completely offline.',
+        'The user interface is identical to the web app, maintaining full parity.',
+        'It is packaged as a standard .vsix file for easy installation and distribution.',
       ],
     },
   },
