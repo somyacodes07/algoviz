@@ -52,6 +52,7 @@ Check out the `algoviz-extension/` folder or the [VS Code Extension Docs](docs/v
 - [Complexity Analysis](docs/complexity-analysis.md)
 - [Template Library & Palette](docs/templates-and-palette.md)
 - [Architecture Reference](docs/architecture.md)
+- [VS Code Extension](docs/vscode-extension.md)
 
 ---
 
