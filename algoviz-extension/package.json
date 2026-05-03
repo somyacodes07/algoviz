@@ -14,15 +14,30 @@
   "categories": [
     "Other"
   ],
+  "icon": "icon.png",
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "algoviz.start",
-        "title": "AlgoViz: Start Visualization"
+        "title": "AlgoViz: Start Visualization",
+        "icon": "$(play)"
+      },
+      {
+        "command": "algoviz.visualizeCurrentFile",
+        "title": "AlgoViz: Visualize",
+        "icon": "$(play)"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "algoviz.visualizeCurrentFile",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

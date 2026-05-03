@@ -242,6 +242,22 @@ const App: React.FC = () => {
   // Auto-run has been removed per user request. 
   // Execution will only start when the user explicitly clicks the "Run" button.
 
+  // VS Code Extension Integration
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const message = event.data;
+      if (message.command === 'setContext') {
+        const newLang = normalizeLanguage(message.language);
+        setLanguage(newLang);
+        setCode(message.code || getDefaultCode(newLang));
+        setPage('editor');
+        setIsPlaying(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [setIsPlaying]);
+
   useEffect(() => {
     const handlePopState = () => {
       const shared = decodeShareLink();
