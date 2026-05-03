@@ -5,36 +5,10 @@ import * as fs from 'fs';
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand('algoviz.start', () => {
     AlgoVizPanel.createOrShow(context.extensionUri);
-    
-    setTimeout(() => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor && AlgoVizPanel.currentPanel) {
-        const languageId = editor.document.languageId;
-        if (languageId === 'cpp' || languageId === 'c' || languageId === 'javascript') {
-          const text = editor.document.getText();
-          const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
-          AlgoVizPanel.currentPanel.sendContext(text, algovizLang);
-        }
-      }
-    }, 500);
   });
 
   let visualizeCmd = vscode.commands.registerCommand('algoviz.visualizeCurrentFile', () => {
     AlgoVizPanel.createOrShow(context.extensionUri);
-    
-    // After creating or showing the panel, wait a tiny bit to ensure the webview is ready,
-    // then send the code to it.
-    setTimeout(() => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor && AlgoVizPanel.currentPanel) {
-        const text = editor.document.getText();
-        const languageId = editor.document.languageId;
-        // Map VS Code language IDs to our internal IDs
-        const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
-        
-        AlgoVizPanel.currentPanel.sendContext(text, algovizLang);
-      }
-    }, 500);
   });
 
   context.subscriptions.push(disposable, visualizeCmd);
