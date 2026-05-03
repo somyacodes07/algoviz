@@ -513,7 +513,7 @@ const docsStructure: DocSection[] = [
         },
         {
           label: 'Launch',
-          detail: 'Use the Command Palette to open the AlgoViz workbench side-by-side with your code.',
+          detail: 'Click "AlgoViz: Visualize" from the editor Run menu to instantly load your current file.',
           tone: 'emerald',
         },
         {
@@ -523,9 +523,9 @@ const docsStructure: DocSection[] = [
         },
       ],
       notes: [
+        'The extension automatically reads your active editor and detects if it is C++ or JS.',
         'Because the extension uses the local transpiler for C++, it works completely offline.',
         'The user interface is identical to the web app, maintaining full parity.',
-        'It is packaged as a standard .vsix file for easy installation and distribution.',
       ],
     },
   },

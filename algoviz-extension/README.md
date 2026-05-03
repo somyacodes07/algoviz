@@ -13,17 +13,27 @@
 - **Multi-Language Support**: Trace and visualize execution for JavaScript and C++ seamlessly.
 - **Step-by-Step Debugging**: Pause execution, step forwards or backwards, and watch variables mutate exactly when lines evaluate.
 - **Visual Call Stack**: Demystify recursion and nested function calls by seeing the stack grow and shrink in real-time.
+- **Run Menu Integration**: Select **AlgoViz: Visualize** directly from your editor's Run/Play dropdown to instantly visualize the current file.
 - **Zero API Calls**: Execution runs locally within your IDE context, meaning you don't need to send your code to external servers for visualization.
 - **100% Offline Capability**: Runs directly inside VS Code's robust webview.
 
 ## 🚀 How to Use
 
+### Method 1: Editor Run Menu (Recommended)
+1. Open any `.js` or `.cpp` file in your editor.
+2. Click the **Play button dropdown** (Run menu) in the top-right corner of the editor.
+3. Select **`AlgoViz: Visualize`**.
+4. The visualizer will open in a split pane, automatically importing your code and language!
+
+### Method 2: Command Palette
 1. Open your command palette (`Cmd+Shift+P` on Mac or `Ctrl+Shift+P` on Windows/Linux).
 2. Type **`AlgoViz: Start Visualization`** and hit Enter.
 3. The AlgoViz workbench will open in a new split panel.
 4. Simply write your code in the visualizer's editor or copy-paste it from your current workspace.
-5. Click the **Play/Run** button to generate the execution timeline!
-6. Use the playback controls (Step Forward, Step Back, Play, Pause) to walk through the algorithm.
+
+Once the visualizer is open:
+- Click the **Play/Run** button to generate the execution timeline!
+- Use the playback controls (Step Forward, Step Back, Play, Pause) to walk through the algorithm.
 
 ## 🛠 Supported Languages
 - JavaScript (Node.js/ES6)
