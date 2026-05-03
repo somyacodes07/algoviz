@@ -4,6 +4,10 @@
   "description": "Algorithm Visualizer inside VS Code",
   "version": "0.1.0",
   "publisher": "somyajeet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssgamingop/AlgoViz.git"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
