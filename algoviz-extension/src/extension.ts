@@ -101,7 +101,7 @@ class AlgoVizPanel {
     const scriptPathOnDisk = vscode.Uri.joinPath(distPath, 'assets');
     const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
 
-    html = html.replace(/(href|src)="\/assets\//g, `$1="${scriptUri}/`);
+    html = html.replace(/(href|src)="\.\.\/assets\//g, `$1="${scriptUri}/`);
 
     return html;
   }
