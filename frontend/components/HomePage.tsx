@@ -285,7 +285,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   <BookOpen size={14} /> Read Documentation
                 </a>
                 <a
-                  href="https://github.com/ssgamingop/AlgoViz/tree/main/algoviz-extension"
+                  href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-full border border-[#007acc] bg-[#007acc]/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-[#007acc] transition-colors hover:bg-[#007acc] hover:text-white active:translate-y-[1px] dark:border-[#007acc]/50 dark:text-[#3794ff] dark:hover:bg-[#007acc] dark:hover:text-white"

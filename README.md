@@ -34,11 +34,12 @@ Write **JavaScript** or **C++**, hit Run, and scrub through execution like a vid
 
 AlgoViz is now available directly inside your IDE! You can visualize your code without ever leaving your editor.
 
+- **Available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode) and [Open VSX Registry](https://open-vsx.org/extension/somyacodes/algoviz-vscode)**
 - **Offline Execution**: Runs locally using the built-in Web Worker and transpiler (Zero API calls).
 - **Run Menu Integration**: Just click **AlgoViz: Visualize** from the editor's Play/Run dropdown menu.
 - **Side-by-Side View**: Opens the visualizer in a split pane, pulling in your active code automatically.
 
-Check out the `algoviz-extension/` folder or the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
+Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
 
 ---
 

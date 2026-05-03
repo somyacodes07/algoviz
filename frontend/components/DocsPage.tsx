@@ -508,7 +508,7 @@ const docsStructure: DocSection[] = [
       steps: [
         {
           label: 'Install',
-          detail: 'Load the .vsix package directly into your VS Code extensions.',
+          detail: 'Download and install directly from the Visual Studio Marketplace or Open VSX.',
           tone: 'blue',
         },
         {

@@ -4,11 +4,12 @@ AlgoViz can be used directly inside your Visual Studio Code editor, providing an
 
 ## Installation
 
-1. Download the **`.vsix`** file from our [GitHub Repository](https://github.com/ssgamingop/AlgoViz/tree/main/algoviz-extension) (or search for AlgoViz in the VS Code Marketplace once published).
-2. Open **Visual Studio Code**.
-3. Go to the **Extensions** view (`Cmd+Shift+X` on Mac, `Ctrl+Shift+X` on Windows/Linux).
-4. Click the `...` menu at the top right of the Extensions panel and select **Install from VSIX...**.
-5. Select the downloaded `.vsix` file.
+1. Open **Visual Studio Code** (or VSCodium).
+2. Go to the **Extensions** view (`Cmd+Shift+X` on Mac, `Ctrl+Shift+X` on Windows/Linux).
+3. Search for **AlgoViz** (or publisher `somyacodes`).
+4. Click **Install**.
+
+*Alternatively, you can install it directly from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode) or the [Open VSX Registry](https://open-vsx.org/extension/somyacodes/algoviz-vscode).*
 
 ## How to Use
 
