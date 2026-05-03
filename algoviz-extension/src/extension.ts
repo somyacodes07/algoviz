@@ -7,7 +7,25 @@ export function activate(context: vscode.ExtensionContext) {
     AlgoVizPanel.createOrShow(context.extensionUri);
   });
 
-  context.subscriptions.push(disposable);
+  let visualizeCmd = vscode.commands.registerCommand('algoviz.visualizeCurrentFile', () => {
+    AlgoVizPanel.createOrShow(context.extensionUri);
+    
+    // After creating or showing the panel, wait a tiny bit to ensure the webview is ready,
+    // then send the code to it.
+    setTimeout(() => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && AlgoVizPanel.currentPanel) {
+        const text = editor.document.getText();
+        const languageId = editor.document.languageId;
+        // Map VS Code language IDs to our internal IDs
+        const algovizLang = languageId === 'cpp' || languageId === 'c' ? 'c++' : 'javascript';
+        
+        AlgoVizPanel.currentPanel.sendContext(text, algovizLang);
+      }
+    }, 500);
+  });
+
+  context.subscriptions.push(disposable, visualizeCmd);
 }
 
 class AlgoVizPanel {
@@ -73,6 +91,14 @@ class AlgoVizPanel {
         x.dispose();
       }
     }
+  }
+
+  public sendContext(code: string, language: string) {
+    this._panel.webview.postMessage({
+      command: 'setContext',
+      code,
+      language
+    });
   }
 
   private _update() {

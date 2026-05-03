@@ -34,7 +34,7 @@
       "editor/title/run": [
         {
           "command": "algoviz.visualizeCurrentFile",
-          "group": "navigation"
+          "group": "1_run"
         }
       ]
     }
