@@ -164,6 +164,7 @@ function computeTreeLayout(preview: TreePreview) {
 
   const NODE_W = 56;
   const LEVEL_H = 88;
+  const TOP_PAD = 56; // Extra room for pointer tags above root
 
   const depths = new Map<string, number>();
   let maxDepth = 0;
@@ -180,32 +181,56 @@ function computeTreeLayout(preview: TreePreview) {
 
   assignDepth(preview.rootId, 0);
 
-  let xCursor = 0;
-
-  const assignX = (id: string): number => {
+  // Compute subtree widths for better spacing
+  const subtreeWidth = new Map<string, number>();
+  const computeWidth = (id: string): number => {
     const node = nodeById.get(id);
-    if (!node) return 0;
+    if (!node) return 1;
 
-    const childXs: number[] = [];
-    if (node.leftId) childXs.push(assignX(node.leftId));
-    node.childrenIds?.forEach((cid) => childXs.push(assignX(cid)));
-    if (node.rightId) childXs.push(assignX(node.rightId));
+    const children: string[] = [];
+    if (node.leftId) children.push(node.leftId);
+    node.childrenIds?.forEach((cid) => children.push(cid));
+    if (node.rightId) children.push(node.rightId);
 
-    let myX: number;
-    if (childXs.length >= 2) {
-      myX = (childXs[0] + childXs[childXs.length - 1]) / 2;
-    } else if (childXs.length === 1) {
-      myX = childXs[0];
-    } else {
-      myX = xCursor;
-      xCursor += NODE_W;
+    if (children.length === 0) {
+      subtreeWidth.set(id, 1);
+      return 1;
     }
 
-    positions.set(id, { x: myX, y: (depths.get(id) || 0) * LEVEL_H + 36 });
-    return myX;
+    const totalWidth = children.reduce((sum, cid) => sum + computeWidth(cid), 0);
+    subtreeWidth.set(id, totalWidth);
+    return totalWidth;
+  };
+  computeWidth(preview.rootId);
+
+  // Assign X using subtree widths for proper spacing
+  const assignX = (id: string, leftBound: number, rightBound: number) => {
+    const node = nodeById.get(id);
+    if (!node) return;
+
+    const myX = (leftBound + rightBound) / 2;
+    positions.set(id, { x: myX, y: (depths.get(id) || 0) * LEVEL_H + TOP_PAD });
+
+    const children: string[] = [];
+    if (node.leftId) children.push(node.leftId);
+    node.childrenIds?.forEach((cid) => children.push(cid));
+    if (node.rightId) children.push(node.rightId);
+
+    if (children.length === 0) return;
+
+    const totalChildWidth = children.reduce((s, cid) => s + (subtreeWidth.get(cid) || 1), 0);
+    let cursor = leftBound;
+
+    children.forEach((cid) => {
+      const childWidth = subtreeWidth.get(cid) || 1;
+      const childSlice = ((rightBound - leftBound) * childWidth) / totalChildWidth;
+      assignX(cid, cursor, cursor + childSlice);
+      cursor += childSlice;
+    });
   };
 
-  assignX(preview.rootId);
+  const totalWidth = (subtreeWidth.get(preview.rootId) || 1) * NODE_W;
+  assignX(preview.rootId, 0, Math.max(totalWidth, 300));
 
   // Normalize into SVG coordinates
   let minX = Infinity;
@@ -216,13 +241,13 @@ function computeTreeLayout(preview: TreePreview) {
   });
 
   const span = maxX - minX;
-  const svgW = Math.max(360, span + 120);
+  const svgW = Math.max(360, span > 0 ? span + 120 : 360);
 
   positions.forEach((p) => {
     p.x = span === 0 ? svgW / 2 : 60 + ((p.x - minX) / span) * (svgW - 120);
   });
 
-  const svgH = (maxDepth + 1) * LEVEL_H + 56;
+  const svgH = (maxDepth + 1) * LEVEL_H + TOP_PAD + 30;
 
   return { positions, svgW, svgH, NODE_W };
 }
