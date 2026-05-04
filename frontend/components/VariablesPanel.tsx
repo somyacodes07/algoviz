@@ -186,7 +186,7 @@ const ArrayVisualizer: React.FC<{
                   className={`w-full border-[2px] border-b-0 ${barBg} ${borderColor}`}
                   initial={false}
                   animate={{ height: `${height}%` }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 18, mass: 0.8 }}
                   style={{ minHeight: '8px' }}
                 />
               </div>
