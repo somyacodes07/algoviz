@@ -132,8 +132,8 @@ export const TreePanel: React.FC<{
     const nodeById = new Map<string, TreeNodeView>();
     preview.nodes.forEach(n => nodeById.set(n.id, n));
     
-    const levelHeight = 60;
-    const nodeWidth = 40;
+    const levelHeight = 80;
+    const nodeWidth = 60;
     
     let maxDepth = 0;
     const depths = new Map<string, number>();
@@ -195,18 +195,22 @@ export const TreePanel: React.FC<{
         maxX = Math.max(maxX, p.x);
     });
     
-    const span = maxX - minX || 1;
-    const targetWidth = 300;
+    const span = maxX - minX;
+    const targetWidth = 340;
     
     pos.forEach(p => {
-        p.x = 10 + ((p.x - minX) / span) * (targetWidth - 20);
+        if (span === 0) {
+            p.x = 200; // Center of 400
+        } else {
+            p.x = 30 + ((p.x - minX) / span) * (targetWidth - 60);
+        }
     });
     
     return pos;
   }, [preview]);
 
-  const sizeX = 320;
-  const sizeY = Math.max(200, (Math.max(...Array.from(positions.values()).map(p => p.y)) || 0) + 50);
+  const sizeX = 400;
+  const sizeY = Math.max(200, (Math.max(...Array.from(positions.values()).map(p => p.y)) || 0) + 60);
 
   return (
     <section className={`${theme.panelClass} p-4`}>
@@ -224,8 +228,8 @@ export const TreePanel: React.FC<{
         </div>
       </div>
 
-      <div className="mt-4 border-[2px] border-slate-900 bg-slate-50 p-3 dark:border-[#333] dark:bg-[#111113] flex justify-center">
-        <svg viewBox={`0 0 ${sizeX} ${sizeY}`} className="w-full max-w-[320px]" style={{ height: sizeY }}>
+      <div className="mt-4 border-[2px] border-slate-900 bg-slate-50 p-4 dark:border-[#333] dark:bg-[#111113] flex justify-center overflow-x-auto custom-scrollbar">
+        <svg viewBox={`0 0 ${sizeX} ${sizeY}`} className="w-full min-w-[320px] max-w-[400px]" style={{ height: sizeY }}>
           <AnimatePresence>
             {preview.nodes.map((node) => {
               const pos = positions.get(node.id);
@@ -247,8 +251,8 @@ export const TreePanel: React.FC<{
                       key={idx}
                       d={`M ${pos.x} ${pos.y} L ${target.x} ${target.y}`}
                       stroke={theme.accentFill}
-                      strokeWidth="2"
-                      opacity="0.5"
+                      strokeWidth="2.5"
+                      opacity="0.6"
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                     />
@@ -264,27 +268,42 @@ export const TreePanel: React.FC<{
 
               return (
                 <motion.g key={node.id} layoutId={`tree-node-${node.id}`}>
+                  {hasPointer && (
+                    <motion.circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={28}
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2"
+                      strokeDasharray="4 4"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                      style={{ originX: `${pos.x}px`, originY: `${pos.y}px` }}
+                    />
+                  )}
                   <motion.circle
                     cx={pos.x}
                     cy={pos.y}
-                    r={16}
+                    r={20}
                     fill="#ffffff"
                     stroke={hasPointer ? '#10b981' : '#0f172a'}
-                    strokeWidth={hasPointer ? 3 : 2}
+                    strokeWidth={hasPointer ? 3.5 : 3}
+                    className="dark:fill-[#111113]"
                   />
                   <motion.text
                     x={pos.x}
-                    y={pos.y + 4}
+                    y={pos.y + 4.5}
                     textAnchor="middle"
-                    className="text-[11px] font-black fill-slate-900 pointer-events-none"
+                    className="text-[12px] font-black fill-slate-900 dark:fill-slate-100 pointer-events-none"
                   >
                     {node.label}
                   </motion.text>
                   {hasPointer && (
                     <motion.text
-                      x={pos.x + 20}
-                      y={pos.y - 10}
-                      className="text-[9px] font-black fill-emerald-600"
+                      x={pos.x + 24}
+                      y={pos.y - 16}
+                      className="text-[10px] font-black fill-emerald-600 dark:fill-emerald-400"
                     >
                       {node.pointerNames.join(', ')}
                     </motion.text>
