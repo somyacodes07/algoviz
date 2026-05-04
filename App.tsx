@@ -550,6 +550,7 @@ const App: React.FC = () => {
               themeColor={themeColor}
               currentStep={currentStepIndex}
               totalSteps={timeline.length}
+              breakpointCount={breakpoints.size}
             />
 
             <TemplatePalette
