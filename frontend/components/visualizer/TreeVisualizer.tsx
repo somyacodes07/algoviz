@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch } from 'lucide-react';
 import { VariableMap } from '../../../types';
@@ -261,6 +261,20 @@ export const TreePanel: React.FC<{
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
 
+  // Track previously seen node IDs to detect insertions
+  const prevNodeIds = useRef<Set<string>>(new Set());
+  const newNodeIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentIds = new Set(preview.nodes.map((n) => n.id));
+    const inserted = new Set<string>();
+    currentIds.forEach((id) => {
+      if (!prevNodeIds.current.has(id)) inserted.add(id);
+    });
+    newNodeIds.current = inserted;
+    prevNodeIds.current = currentIds;
+  });
+
   const { positions, svgW, svgH, NODE_W } = useMemo(
     () => computeTreeLayout(preview),
     [preview],
@@ -398,18 +412,34 @@ export const TreePanel: React.FC<{
               const boxW = NODE_W;
               const boxH = 42;
 
+              const isNew = newNodeIds.current.has(node.id);
+
               return (
                 <motion.g
                   key={node.id}
-                  initial={{ opacity: 0, scale: 0.7 }}
+                  initial={{ opacity: 0, scale: isNew ? 0.4 : 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{
                     type: 'spring',
-                    stiffness: 400,
-                    damping: 28,
+                    stiffness: isNew ? 600 : 400,
+                    damping: isNew ? 18 : 28,
                     delay: index * 0.04,
                   }}
                 >
+                  {/* Insertion glow burst */}
+                  {isNew && (
+                    <motion.rect
+                      x={pos.x - boxW / 2 - 8}
+                      y={pos.y - boxH / 2 - 8}
+                      width={boxW + 16}
+                      height={boxH + 16}
+                      fill={isSaffron ? '#f97316' : '#3b82f6'}
+                      stroke="none"
+                      initial={{ opacity: 0.7, scale: 1.1 }}
+                      animate={{ opacity: 0, scale: 1.6 }}
+                      transition={{ duration: 0.7, ease: 'easeOut' }}
+                    />
+                  )}
                   {/* Pointer tags */}
                   {hasPointer && (
                     <>
