@@ -369,16 +369,22 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                       />
                     )}
 
-                    {/* Pointer tags */}
-                    {hasPointer && node.pointerNames.map((pName, pi) => (
-                      <g key={pName}>
-                        <rect x={pos.x - halfNode + pi * 3} y={pos.y - halfNode - 22 - pi * 2}
-                          width={pName.length * 7 + 10} height={15} fill="#10b981" stroke="#064e3b" strokeWidth="2" />
-                        <text x={pos.x - halfNode + pi * 3 + (pName.length * 7 + 10) / 2} y={pos.y - halfNode - 22 - pi * 2 + 11}
-                          textAnchor="middle" className="text-[8px] font-black uppercase fill-white pointer-events-none"
-                          style={{ letterSpacing: '0.12em' }}>{pName}</text>
-                      </g>
-                    ))}
+                    {/* Pointer tags — bounce in/out (#8) */}
+                    <AnimatePresence>
+                      {hasPointer && node.pointerNames.map((pName, pi) => (
+                        <motion.g key={pName}
+                          initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}>
+                          <rect x={pos.x - halfNode + pi * 3} y={pos.y - halfNode - 22 - pi * 2}
+                            width={pName.length * 7 + 10} height={15} fill="#10b981" stroke="#064e3b" strokeWidth="2" />
+                          <text x={pos.x - halfNode + pi * 3 + (pName.length * 7 + 10) / 2} y={pos.y - halfNode - 22 - pi * 2 + 11}
+                            textAnchor="middle" className="text-[8px] font-black uppercase fill-white pointer-events-none"
+                            style={{ letterSpacing: '0.12em' }}>{pName}</text>
+                        </motion.g>
+                      ))}
+                    </AnimatePresence>
 
                     {/* Shadow */}
                     <rect x={pos.x - halfNode + 2} y={pos.y - halfNode + 2} width={NODE_SIZE} height={NODE_SIZE}
