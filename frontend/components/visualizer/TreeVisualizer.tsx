@@ -53,57 +53,86 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
 
   for (const [sourceName, startNode] of entries) {
     const nodes: TreeNodeView[] = [];
-    const refToIndex = new WeakMap<object, number>();
-    const queue = [startNode as Record<string, unknown>];
     let truncated = false;
 
-    // BFS traversal
-    let i = 0;
-    while (i < queue.length) {
+    // Phase 1: BFS to collect nodes (cycle-safe via WeakMap)
+    const objToId = new WeakMap<object, string>();
+
+    // Pending links: parent-id → { left?: obj, right?: obj, children?: obj[] }
+    const pendingLinks: { parentId: string; left?: object; right?: object; children?: object[] }[] =
+      [];
+
+    const bfsQueue: Record<string, unknown>[] = [startNode as Record<string, unknown>];
+    let qi = 0;
+
+    while (qi < bfsQueue.length) {
       if (nodes.length >= 31) {
         truncated = true;
         break;
       }
 
-      const current = queue[i];
-      const currentIndex = i;
-      refToIndex.set(current, currentIndex);
+      const current = bfsQueue[qi++];
 
-      const nodeView: TreeNodeView = {
-        id: `${sourceName}-${currentIndex}`,
-        label: getNodeLabel(current, currentIndex),
+      // Cycle protection
+      if (objToId.has(current)) continue;
+
+      const nodeId = `${sourceName}-${nodes.length}`;
+      objToId.set(current, nodeId);
+
+      nodes.push({
+        id: nodeId,
+        label: getNodeLabel(current, nodes.length),
         pointerNames: [],
-      };
+      });
 
-      if (isPlainObject(current.left)) {
-        queue.push(current.left as Record<string, unknown>);
-        nodeView.leftId = `${sourceName}-${queue.length - 1}`;
+      const link: (typeof pendingLinks)[0] = { parentId: nodeId };
+
+      if (isPlainObject(current.left) && !objToId.has(current.left)) {
+        bfsQueue.push(current.left as Record<string, unknown>);
+        link.left = current.left;
       }
-      if (isPlainObject(current.right)) {
-        queue.push(current.right as Record<string, unknown>);
-        nodeView.rightId = `${sourceName}-${queue.length - 1}`;
+      if (isPlainObject(current.right) && !objToId.has(current.right)) {
+        bfsQueue.push(current.right as Record<string, unknown>);
+        link.right = current.right;
       }
       if (Array.isArray(current.children)) {
-        nodeView.childrenIds = [];
+        link.children = [];
         for (const child of current.children) {
-          if (isPlainObject(child)) {
-            queue.push(child as Record<string, unknown>);
-            nodeView.childrenIds.push(`${sourceName}-${queue.length - 1}`);
+          if (isPlainObject(child) && !objToId.has(child)) {
+            bfsQueue.push(child as Record<string, unknown>);
+            link.children.push(child);
           }
         }
       }
 
-      nodes.push(nodeView);
-      i++;
+      pendingLinks.push(link);
+    }
+
+    // Phase 2: Resolve object references → node IDs
+    const nodeMap = new Map<string, TreeNodeView>();
+    nodes.forEach((n) => nodeMap.set(n.id, n));
+
+    for (const link of pendingLinks) {
+      const parent = nodeMap.get(link.parentId);
+      if (!parent) continue;
+
+      if (link.left) parent.leftId = objToId.get(link.left);
+      if (link.right) parent.rightId = objToId.get(link.right);
+      if (link.children && link.children.length > 0) {
+        parent.childrenIds = link.children
+          .map((c) => objToId.get(c))
+          .filter((id): id is string => !!id);
+      }
     }
 
     if (nodes.length === 0) continue;
 
     for (const [name, value] of Object.entries(variables)) {
       if (value && typeof value === 'object') {
-        const mappedIndex = refToIndex.get(value as object);
-        if (mappedIndex !== undefined) {
-          nodes[mappedIndex].pointerNames.push(name);
+        const mappedId = objToId.get(value as object);
+        if (mappedId !== undefined) {
+          const node = nodeMap.get(mappedId);
+          if (node) node.pointerNames.push(name);
         }
       }
     }
