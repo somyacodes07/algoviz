@@ -61,7 +61,7 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
         break;
       }
 
-      if (nodes.length >= 10) {
+      if (nodes.length >= 16) {
         truncated = true;
         break;
       }
@@ -190,7 +190,7 @@ export const LinkedListPanel: React.FC<{
 
       {preview.truncated && (
         <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          Visualization truncated after 10 nodes to keep the panel readable.
+          Visualization truncated after 16 nodes to keep the panel readable.
         </div>
       )}
     </section>
