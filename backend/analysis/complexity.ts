@@ -620,18 +620,41 @@ function inferComplexityFromTimeline(
 function estimateInputSize(timeline: Timeline): number {
   if (timeline.length === 0) return 0;
 
-  const firstVars = timeline[0].variables;
   let maxSize = 0;
 
-  for (const value of Object.values(firstVars)) {
-    if (Array.isArray(value)) {
-      maxSize = Math.max(maxSize, value.length);
-    } else if (typeof value === 'string') {
-      // Wandbox returns vectors as "[1, 2, 3]" strings
-      const match = value.match(/^\[.*\]$/);
-      if (match) {
-        const items = value.slice(1, -1).split(',').filter((s: string) => s.trim());
-        maxSize = Math.max(maxSize, items.length);
+  for (const step of timeline) {
+    for (const [key, value] of Object.entries(step.variables)) {
+      if (Array.isArray(value)) {
+        maxSize = Math.max(maxSize, value.length);
+      } else if (typeof value === 'string') {
+        // Wandbox returns vectors as "[1, 2, 3]" strings
+        const match = value.match(/^\[.*\]$/);
+        if (match) {
+          const items = value.slice(1, -1).split(',').filter((s: string) => s.trim());
+          maxSize = Math.max(maxSize, items.length);
+        }
+      } else if (value && typeof value === 'object') {
+        // Count nodes for trees / linked lists / graphs
+        let nodeCount = 0;
+        const countNodes = (obj: any, visited = new Set()) => {
+          if (!obj || typeof obj !== 'object') return;
+          if (visited.has(obj)) return;
+          visited.add(obj);
+          nodeCount++;
+          for (const k in obj) {
+            countNodes(obj[k], visited);
+          }
+        };
+        countNodes(value);
+        // An object might have a few basic keys, so we subtract some noise if needed, 
+        // but maxSize uses the max across all objects
+        maxSize = Math.max(maxSize, nodeCount);
+      } else if (typeof value === 'number') {
+        // If it's a numeric variable like 'n', 'size', 'length', etc.
+        const lowerKey = key.toLowerCase();
+        if (lowerKey === 'n' || lowerKey === 'size' || lowerKey === 'length' || lowerKey === 'target') {
+          maxSize = Math.max(maxSize, Math.abs(value));
+        }
       }
     }
   }
