@@ -39,10 +39,22 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
   const freshLinkedList = buildLinkedListPreview(variables);
   const freshGraph = buildGraphPreview(variables);
 
+  const hasVariables = Object.keys(variables).length > 0;
+  const hasAnyFreshStructure = !!(freshTree || freshLinkedList || freshGraph);
+
   // Update refs when a fresh detection succeeds
   if (freshTree) lastTree.current = freshTree;
   if (freshLinkedList) lastLinkedList.current = freshLinkedList;
   if (freshGraph) lastGraph.current = freshGraph;
+
+  // If the scope has actual variables but NO structure was detected,
+  // clear the cache — the user likely switched to different code.
+  // Cache only persists during empty-scope steps (e.g. inside recursion).
+  if (hasVariables && !hasAnyFreshStructure) {
+    lastTree.current = null;
+    lastLinkedList.current = null;
+    lastGraph.current = null;
+  }
 
   // Use fresh values if available, otherwise fall back to last known
   const treePreview = freshTree || lastTree.current;
