@@ -137,7 +137,8 @@ export const LinkedListPanel: React.FC<{
         )}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-start gap-2">
+      <div className="mt-5 overflow-x-auto custom-scrollbar pb-2">
+        <div className="flex items-start gap-2 w-max">
         <AnimatePresence mode="popLayout">
           {preview.nodes.map((node, index) => (
             <motion.div
