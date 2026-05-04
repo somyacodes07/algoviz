@@ -181,6 +181,7 @@ export const LinkedListPanel: React.FC<{
             </motion.div>
           ))}
         </AnimatePresence>
+        </div>
       </div>
 
       {preview.cycleToIndex !== null && (
