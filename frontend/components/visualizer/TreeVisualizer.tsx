@@ -421,13 +421,17 @@ export const TreePanel: React.FC<{
               return (
                 <motion.g
                   key={node.id}
-                  initial={{ opacity: 0, scale: isNew ? 0.4 : 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  animate={{ translateX: pos.x, translateY: pos.y }}
+                  initial={
+                    isNew
+                      ? { opacity: 0, scale: 0.4, translateX: pos.x, translateY: pos.y }
+                      : { opacity: 0, scale: 0.7, translateX: pos.x, translateY: pos.y }
+                  }
                   transition={{
                     type: 'spring',
-                    stiffness: isNew ? 600 : 400,
-                    damping: isNew ? 18 : 28,
-                    delay: index * 0.04,
+                    stiffness: isNew ? 600 : 350,
+                    damping: isNew ? 18 : 30,
+                    delay: isNew ? index * 0.04 : 0,
                   }}
                 >
                   {/* Insertion glow burst */}
