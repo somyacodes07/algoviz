@@ -550,6 +550,7 @@ function inferComplexityFromTimeline(
   // Count how many lines are "hot" (hit more than once) — these are loop bodies
   const hotLines = hotspots.filter((h) => h.hits > 1);
   const totalOps = timeline.length;
+  const inputSize = estimateInputSize(timeline);
 
   // Estimate loop nesting from hit patterns.
   // A single loop body line hit N times → O(n).
@@ -557,7 +558,6 @@ function inferComplexityFromTimeline(
   let maxLoopDepth = 0;
   if (hotLines.length > 0) {
     const maxHits = hotLines[0].hits; // hotspots are sorted by hits desc
-    const inputSize = estimateInputSize(timeline);
 
     if (inputSize > 1) {
       if (maxHits >= 0.2 * Math.pow(inputSize, 3)) {
@@ -584,7 +584,6 @@ function inferComplexityFromTimeline(
   // Check for logarithmic growth: if a hot line is hit roughly log2(n) times
   let hasLogarithmicLoop = false;
   if (hotLines.length > 0) {
-    const inputSize = estimateInputSize(timeline);
     if (inputSize > 2) {
       const logN = Math.log2(inputSize);
       const topHits = hotLines[0].hits;
