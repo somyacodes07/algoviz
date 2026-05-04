@@ -243,33 +243,6 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           </div>
         ) : null}
 
-        {analysis ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-              Loop Depth {analysis.maxLoopDepth}
-            </span>
-            {analysis.recursiveFunctions.length > 0 && (
-              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-                Recursion {analysis.recursiveFunctions.join(', ')}
-              </span>
-            )}
-            {analysis.hasLogarithmicLoop && (
-              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-                Log Loop
-              </span>
-            )}
-            {analysis.hasBranchingRecursion && (
-              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-                Branching Recursion
-              </span>
-            )}
-            {analysis.hasArraySort && (
-              <span className="border-[2px] border-slate-900 bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
-                Sort Signal
-              </span>
-            )}
-          </div>
-        ) : null}
       </motion.section>
 
       <div className="grid grid-cols-2 gap-3">
