@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Network } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
@@ -206,6 +206,25 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
   const { positions, svgSize, NODE_SIZE } = useMemo(() => computeGraphLayout(preview), [preview]);
   const halfNode = NODE_SIZE / 2;
 
+  // Track newly-visited nodes for ripple animation
+  const prevVisited = useRef<Set<string>>(new Set());
+  const newlyVisited = useRef<Set<string>>(new Set());
+  const rippleKey = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const current = new Set(preview.nodes.filter((n) => n.visited).map((n) => n.id));
+    const justVisited = new Set<string>();
+    current.forEach((id) => {
+      if (!prevVisited.current.has(id)) {
+        justVisited.add(id);
+        // Bump ripple key so AnimatePresence remounts the ring each time
+        rippleKey.current.set(id, (rippleKey.current.get(id) || 0) + 1);
+      }
+    });
+    newlyVisited.current = justVisited;
+    prevVisited.current = current;
+  });
+
   const visitedCount = preview.nodes.filter((n) => n.visited).length;
   const hasWeights = preview.edges.some((e) => e.weight);
 
@@ -320,6 +339,27 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                 return (
                   <motion.g key={node.id} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 25, delay: index * 0.06 }}>
+
+                    {/* Visited ripple ring */}
+                    {node.visited && (
+                      <AnimatePresence>
+                        <motion.rect
+                          key={`ripple-${node.id}-${rippleKey.current.get(node.id) || 0}`}
+                          x={pos.x - halfNode - 4}
+                          y={pos.y - halfNode - 4}
+                          width={NODE_SIZE + 8}
+                          height={NODE_SIZE + 8}
+                          fill="none"
+                          stroke={isSaffron ? '#f97316' : '#3b82f6'}
+                          strokeWidth="3"
+                          initial={{ opacity: 0.9, scale: 1 }}
+                          animate={{ opacity: 0, scale: 1.9 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.75, ease: 'easeOut' }}
+                          style={{ originX: `${pos.x}px`, originY: `${pos.y}px` }}
+                        />
+                      </AnimatePresence>
+                    )}
 
                     {/* Active pointer ring animation */}
                     {hasPointer && (
