@@ -486,37 +486,37 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
   const keys = Object.keys(variables);
   const isSaffron = themeColor === 'saffron';
 
-  if (keys.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] m-2 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] transition-all duration-300">
-        <span
-          className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isSaffron ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
-        >
-          Scope
-        </span>
-        <span className="mt-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-400">
-          No variables in scope
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 gap-2 p-2">
+      {/* Always render — uses useRef to cache last-known structure across scopes */}
       <StructureVisualizer variables={variables} themeColor={themeColor} />
-      <AnimatePresence mode="popLayout">
-        {keys.map((key) => (
-          <VariableCard
-            key={key}
-            name={key}
-            value={variables[key]}
-            prevValue={prevVariables[key]}
-            wasPresent={key in prevVariables}
-            themeColor={themeColor}
-            variables={variables}
-          />
-        ))}
-      </AnimatePresence>
+
+      {keys.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-28 border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] transition-all duration-300">
+          <span
+            className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isSaffron ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
+          >
+            Scope
+          </span>
+          <span className="mt-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-400">
+            No variables in scope
+          </span>
+        </div>
+      ) : (
+        <AnimatePresence mode="popLayout">
+          {keys.map((key) => (
+            <VariableCard
+              key={key}
+              name={key}
+              value={variables[key]}
+              prevValue={prevVariables[key]}
+              wasPresent={key in prevVariables}
+              themeColor={themeColor}
+              variables={variables}
+            />
+          ))}
+        </AnimatePresence>
+      )}
     </div>
   );
 };
