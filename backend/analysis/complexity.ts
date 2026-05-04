@@ -559,13 +559,19 @@ function inferComplexityFromTimeline(
     const maxHits = hotLines[0].hits; // hotspots are sorted by hits desc
     const inputSize = estimateInputSize(timeline);
 
-    if (inputSize > 0) {
-      const ratio = maxHits / inputSize;
-      if (ratio >= inputSize * 0.5) {
-        maxLoopDepth = 3; // O(n³) or higher
-      } else if (ratio >= Math.sqrt(inputSize) * 0.8) {
+    if (inputSize > 1) {
+      if (maxHits >= 0.2 * Math.pow(inputSize, 3)) {
+        maxLoopDepth = 3; // O(n³)
+      } else if (maxHits >= 0.2 * Math.pow(inputSize, 2)) {
         maxLoopDepth = 2; // O(n²)
-      } else if (ratio >= 0.5) {
+      } else if (maxHits >= 0.2 * inputSize * Math.log2(inputSize)) {
+        // This is characteristic of O(n log n). We set maxLoopDepth = 1, but we will add 'n log n' to candidates below
+        maxLoopDepth = 1;
+        // In this specific case, it's n log n without array sort
+        if (maxHits > 1.5 * inputSize) {
+            // Signal strong enough to be n log n
+        }
+      } else if (maxHits >= 0.2 * inputSize) {
         maxLoopDepth = 1; // O(n)
       }
     } else {
@@ -598,7 +604,18 @@ function inferComplexityFromTimeline(
 
   // Build loop candidates
   const loopCandidates: string[] = [];
-  if (hasArraySort && maxLoopDepth <= 1) {
+  let isNLogN = hasArraySort && maxLoopDepth <= 1;
+
+  if (inputSize > 1) {
+    if (hotLines.length > 0 && hotLines[0].hits >= 0.2 * inputSize * Math.log2(inputSize) && hotLines[0].hits > 1.5 * inputSize) {
+       // if we hit something more than 1.5N times, and it matches N log N scale, it's likely N log N (like merge sort)
+       if (maxLoopDepth <= 1) {
+          isNLogN = true;
+       }
+    }
+  }
+
+  if (isNLogN) {
     loopCandidates.push('n log n');
   } else if (hasLogarithmicLoop) {
     const terms: GrowthTerm[] = [];
