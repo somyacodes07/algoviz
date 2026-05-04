@@ -364,12 +364,16 @@ export const TreePanel: React.FC<{
           className="w-full"
           style={{ minWidth: Math.min(svgW, 360), height: svgH, overflow: 'visible' }}
         >
-          {/* Edges */}
+          {/* Edges — staggered by depth level so they draw level-by-level */}
           <AnimatePresence>
             {edges.map((edge) => {
               const from = positions.get(edge.fromId);
               const to = positions.get(edge.toId);
               if (!from || !to) return null;
+
+              // Depth of parent determines draw order
+              const parentNode = nodeById.get(edge.fromId);
+              const depth = parentNode ? Math.round((from.y - 56) / 88) : 0;
 
               return (
                 <motion.line
@@ -383,7 +387,7 @@ export const TreePanel: React.FC<{
                   opacity="0.5"
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 0.5 }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  transition={{ duration: 0.4, ease: 'easeOut', delay: depth * 0.12 }}
                 />
               );
             })}
