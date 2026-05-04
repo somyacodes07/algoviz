@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../types';
 import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
@@ -223,6 +223,33 @@ const VariableCard: React.FC<{
 }> = ({ name, value, prevValue, wasPresent, themeColor, variables }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Animated counter for numeric values
+  const [displayNum, setDisplayNum] = useState<number | null>(
+    typeof value === 'number' ? value : null,
+  );
+  const counterRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof value !== 'number') { setDisplayNum(null); return; }
+    const from = typeof prevValue === 'number' ? prevValue : value;
+    const to = value;
+    if (from === to) { setDisplayNum(to); return; }
+    const steps = 18;
+    const stepTime = 20;
+    let current = 0;
+    clearInterval(counterRef.current ?? 0);
+    counterRef.current = window.setInterval(() => {
+      current++;
+      const t = 1 - Math.pow(1 - current / steps, 3); // ease-out cubic
+      setDisplayNum(Math.round(from + (to - from) * t));
+      if (current >= steps) {
+        clearInterval(counterRef.current ?? 0);
+        setDisplayNum(to);
+      }
+    }, stepTime);
+    return () => clearInterval(counterRef.current ?? 0);
+  }, [value]);
+
   const isObject = value !== null && typeof value === 'object';
   const isEmpty = isObject && Object.keys(value).length === 0;
   const isNumericArray =
@@ -280,9 +307,9 @@ const VariableCard: React.FC<{
         </span>
       );
     if (typeof value === 'number') {
-      const displayValue = Number.isInteger(value)
-        ? value
-        : Number.parseFloat(value.toPrecision(7));
+      const displayValue = displayNum !== null
+        ? (Number.isInteger(displayNum) ? displayNum : Number.parseFloat(displayNum.toPrecision(7)))
+        : (Number.isInteger(value) ? value : Number.parseFloat(value.toPrecision(7)));
       return (
         <span
           className={`${isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300'} font-black text-3xl tabular-nums truncate max-w-full inline-block`}
