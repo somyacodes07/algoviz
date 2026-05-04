@@ -437,8 +437,8 @@ export const TreePanel: React.FC<{
                   {/* Insertion glow burst */}
                   {isNew && (
                     <motion.rect
-                      x={pos.x - boxW / 2 - 8}
-                      y={pos.y - boxH / 2 - 8}
+                      x={-boxW / 2 - 8}
+                      y={-boxH / 2 - 8}
                       width={boxW + 16}
                       height={boxH + 16}
                       fill={isSaffron ? '#f97316' : '#3b82f6'}
@@ -448,49 +448,55 @@ export const TreePanel: React.FC<{
                       transition={{ duration: 0.7, ease: 'easeOut' }}
                     />
                   )}
-                  {/* Pointer tags */}
+
+                  {/* Pointer tags — bounce in/out (#8) */}
+                  <AnimatePresence>
+                    {hasPointer && node.pointerNames.map((pName, pi) => (
+                      <motion.g
+                        key={pName}
+                        initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                      >
+                        <rect
+                          x={-boxW / 2 + pi * 4}
+                          y={-boxH / 2 - 24 - pi * 2}
+                          width={pName.length * 7 + 12}
+                          height={16}
+                          fill="#10b981"
+                          stroke="#064e3b"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={-boxW / 2 + pi * 4 + (pName.length * 7 + 12) / 2}
+                          y={-boxH / 2 - 24 - pi * 2 + 12}
+                          textAnchor="middle"
+                          className="text-[9px] font-black uppercase fill-white pointer-events-none"
+                          style={{ letterSpacing: '0.12em' }}
+                        >
+                          {pName}
+                        </text>
+                      </motion.g>
+                    ))}
+                  </AnimatePresence>
                   {hasPointer && (
-                    <>
-                      {node.pointerNames.map((pName, pi) => (
-                        <g key={pName}>
-                          <rect
-                            x={pos.x - boxW / 2 + pi * 4}
-                            y={pos.y - boxH / 2 - 24 - pi * 2}
-                            width={pName.length * 7 + 12}
-                            height={16}
-                            fill="#10b981"
-                            stroke="#064e3b"
-                            strokeWidth="2"
-                          />
-                          <text
-                            x={pos.x - boxW / 2 + pi * 4 + (pName.length * 7 + 12) / 2}
-                            y={pos.y - boxH / 2 - 24 - pi * 2 + 12}
-                            textAnchor="middle"
-                            className="text-[9px] font-black uppercase fill-white pointer-events-none"
-                            style={{ letterSpacing: '0.12em' }}
-                          >
-                            {pName}
-                          </text>
-                        </g>
-                      ))}
-                      {/* Connector line */}
-                      <line
-                        x1={pos.x - boxW / 2 + 8}
-                        y1={pos.y - boxH / 2 - 8}
-                        x2={pos.x - boxW / 2 + 8}
-                        y2={pos.y - boxH / 2}
-                        stroke="#10b981"
-                        strokeWidth="2"
-                      />
-                    </>
+                    <line
+                      x1={-boxW / 2 + 8}
+                      y1={-boxH / 2 - 8}
+                      x2={-boxW / 2 + 8}
+                      y2={-boxH / 2}
+                      stroke="#10b981"
+                      strokeWidth="2"
+                    />
                   )}
 
                   {/* L/R label */}
                   {childLabel && (
                     <>
                       <rect
-                        x={pos.x + boxW / 2 + 4}
-                        y={pos.y - 8}
+                        x={boxW / 2 + 4}
+                        y={-8}
                         width={16}
                         height={16}
                         fill={isSaffron ? '#fed7aa' : '#bfdbfe'}
@@ -499,8 +505,8 @@ export const TreePanel: React.FC<{
                         className={isSaffron ? 'dark:fill-[#431407]' : 'dark:fill-[#172554]'}
                       />
                       <text
-                        x={pos.x + boxW / 2 + 12}
-                        y={pos.y + 5}
+                        x={boxW / 2 + 12}
+                        y={5}
                         textAnchor="middle"
                         className={`text-[10px] font-black pointer-events-none ${isSaffron ? 'fill-[#c2410c] dark:fill-[#fb923c]' : 'fill-[#1d4ed8] dark:fill-[#60a5fa]'}`}
                       >
@@ -510,19 +516,12 @@ export const TreePanel: React.FC<{
                   )}
 
                   {/* Shadow rect */}
-                  <rect
-                    x={pos.x - boxW / 2 + 2}
-                    y={pos.y - boxH / 2 + 2}
-                    width={boxW}
-                    height={boxH}
-                    fill="#0f172a"
-                    className="dark:fill-black"
-                  />
+                  <rect x={-boxW / 2 + 2} y={-boxH / 2 + 2} width={boxW} height={boxH} fill="#0f172a" className="dark:fill-black" />
 
                   {/* Main node rect */}
                   <rect
-                    x={pos.x - boxW / 2}
-                    y={pos.y - boxH / 2}
+                    x={-boxW / 2}
+                    y={-boxH / 2}
                     width={boxW}
                     height={boxH}
                     fill={hasPointer ? '#ecfdf5' : isLeaf ? (isSaffron ? '#fff7ed' : '#eff6ff') : '#ffffff'}
@@ -539,8 +538,8 @@ export const TreePanel: React.FC<{
 
                   {/* Value text */}
                   <text
-                    x={pos.x}
-                    y={pos.y + 6}
+                    x={0}
+                    y={6}
                     textAnchor="middle"
                     className="text-[15px] font-black fill-slate-900 dark:fill-slate-100 pointer-events-none"
                     style={{ fontFamily: 'ui-monospace, monospace' }}
@@ -548,15 +547,10 @@ export const TreePanel: React.FC<{
                     {node.label}
                   </text>
 
-                  {/* Leaf indicator dot */}
+                  {/* Leaf dot */}
                   {isLeaf && (
-                    <circle
-                      cx={pos.x + boxW / 2 - 6}
-                      cy={pos.y - boxH / 2 + 6}
-                      r={3}
-                      fill={isSaffron ? '#f97316' : '#3b82f6'}
-                      className="dark:opacity-80"
-                    />
+                    <circle cx={boxW / 2 - 6} cy={-boxH / 2 + 6} r={3}
+                      fill={isSaffron ? '#f97316' : '#3b82f6'} className="dark:opacity-80" />
                   )}
                 </motion.g>
               );
