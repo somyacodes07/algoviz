@@ -421,11 +421,11 @@ export const TreePanel: React.FC<{
               return (
                 <motion.g
                   key={node.id}
-                  animate={{ translateX: pos.x, translateY: pos.y }}
+                  animate={{ translateX: pos.x, translateY: pos.y, opacity: 1, scale: 1 }}
                   initial={
                     isNew
                       ? { opacity: 0, scale: 0.4, translateX: pos.x, translateY: pos.y }
-                      : { opacity: 0, scale: 0.7, translateX: pos.x, translateY: pos.y }
+                      : { opacity: 1, scale: 1, translateX: pos.x, translateY: pos.y }
                   }
                   transition={{
                     type: 'spring',
