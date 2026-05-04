@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layers,
@@ -8,6 +8,7 @@ import {
   Terminal as TerminalIcon,
   ChevronDown,
   ChevronUp,
+  ArrowRight,
 } from 'lucide-react';
 import VariablesPanel from '../VariablesPanel';
 import CallStackPanel from '../CallStackPanel';
@@ -58,6 +59,29 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
       : 'shadow-[inset_0_-4px_0_#3b82f6]';
   const iconTextClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
 
+  // ── Step diff (#7) ────────────────────────────────────────────────────────
+  const stepDiff = useMemo(() => {
+    const prev = prevStepVariables.variables || {};
+    const curr = currentStep.variables || {};
+    const changes: { name: string; from: unknown; to: unknown; isNew: boolean }[] = [];
+    const stringify = (v: unknown) => {
+      if (v === null) return 'null';
+      if (v === undefined) return '—';
+      if (typeof v === 'object') return Array.isArray(v) ? `[${(v as unknown[]).length}]` : '{…}';
+      return String(v);
+    };
+    for (const [key, val] of Object.entries(curr)) {
+      if (typeof val === 'function' || (typeof val === 'string' && val === '[Function]')) continue;
+      if (typeof val === 'object' && val !== null) continue; // skip objects/arrays for brevity
+      const isNew = !(key in prev);
+      const changed = !isNew && String(prev[key]) !== String(val);
+      if (isNew || changed) {
+        changes.push({ name: key, from: prev[key], to: val, isNew });
+      }
+    }
+    return changes;
+  }, [currentStep, prevStepVariables]);
+
   return (
     <div
       className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#222] shadow-[2px_2px_0_#1e293b] dark:shadow-[2px_2px_0_#000] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}
@@ -104,6 +128,46 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
             <BarChart3 size={16} /> Complexity
           </button>
         </div>
+
+        {/* Step diff annotation bar (#7) */}
+        <AnimatePresence mode="wait">
+          {stepDiff.length > 0 && activeTab === 'variables' && (
+            <motion.div
+              key={`diff-${currentStepIndex}`}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#111113] border-b-[2px] border-slate-900 dark:border-[#222] overflow-x-auto custom-scrollbar shrink-0"
+            >
+              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 shrink-0">
+                Δ Changed
+              </span>
+              {stepDiff.map((d) => (
+                <span
+                  key={d.name}
+                  className={`flex items-center gap-1 border-[2px] px-2 py-0.5 text-[10px] font-bold font-mono whitespace-nowrap shadow-[1px_1px_0_rgba(15,23,42,0.5)] ${
+                    d.isNew
+                      ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300'
+                      : isSaffron
+                      ? 'border-saffron-400 bg-saffron-50 text-saffron-800 dark:border-saffron-700 dark:bg-saffron-900/20 dark:text-saffron-300'
+                      : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                  }`}
+                >
+                  <span className="font-black">{d.name}</span>
+                  {!d.isNew && (
+                    <>
+                      <span className="opacity-50 line-through">{String(d.from)}</span>
+                      <ArrowRight size={8} className="opacity-50" />
+                    </>
+                  )}
+                  <span>{String(d.to)}</span>
+                  {d.isNew && <span className="text-[8px] opacity-60 ml-0.5">NEW</span>}
+                </span>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
