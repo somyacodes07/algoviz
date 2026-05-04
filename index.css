@@ -35,20 +35,11 @@
     }
   }
 
-  /* Vibrant mesh background pattern */
   .bg-mesh-light {
     background-color: #f8fafc;
     background-image:
-      radial-gradient(
-        at 40% 20%,
-        hsla(28, 100%, 74%, 0.15) 0px,
-        transparent 50%
-      ),
-      radial-gradient(
-        at 80% 0%,
-        hsla(189, 100%, 56%, 0.15) 0px,
-        transparent 50%
-      ),
+      radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.1) 0px, transparent 50%);
     animation: pulseMesh 20s ease-in-out infinite alternate;
   }
@@ -56,23 +47,19 @@
   .bg-mesh-dark {
     background-color: #020617;
     background-image:
-      radial-gradient(
-        at 40% 20%,
-        hsla(28, 100%, 74%, 0.05) 0px,
-        transparent 50%
-      ),
-      radial-gradient(
-        at 80% 0%,
-        hsla(189, 100%, 56%, 0.05) 0px,
-        transparent 50%
-      ),
-      radial-gradient(
-        at 0% 50%,
-        hsla(355, 100%, 93%, 0.02) 0px,
-        transparent 50%
-      );
+      radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.02) 0px, transparent 50%);
     animation: pulseMesh 20s ease-in-out infinite alternate;
   }
+}
+
+/* ─── Smooth dark/light transition (#3) ───────────────────────────────────── */
+/* Apply to all elements except SVG internals (would break visualizer animations) */
+html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 280ms;
+  transition-timing-function: ease;
 }
 
 /* Breakpoint red dot in Monaco gutter */
@@ -87,7 +74,7 @@
   cursor: pointer;
 }
 
-/* Custom scrollbar adjustments for absolute premium feel */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
