@@ -283,6 +283,27 @@ export const TreePanel: React.FC<{
     return result;
   }, [preview]);
 
+  // Compute stats for display
+  const maxDepth = useMemo(() => {
+    let md = 0;
+    const nodeById2 = new Map<string, TreeNodeView>();
+    preview.nodes.forEach((n) => nodeById2.set(n.id, n));
+    const dfs = (id: string, d: number) => {
+      md = Math.max(md, d);
+      const node = nodeById2.get(id);
+      if (!node) return;
+      if (node.leftId) dfs(node.leftId, d + 1);
+      if (node.rightId) dfs(node.rightId, d + 1);
+      node.childrenIds?.forEach((cid) => dfs(cid, d + 1));
+    };
+    dfs(preview.rootId, 0);
+    return md;
+  }, [preview]);
+
+  const leafCount = useMemo(() => {
+    return preview.nodes.filter((n) => !n.leftId && !n.rightId && (!n.childrenIds || n.childrenIds.length === 0)).length;
+  }, [preview]);
+
   return (
     <section className={`${theme.panelClass} p-4`}>
       {/* Header */}
@@ -307,12 +328,27 @@ export const TreePanel: React.FC<{
         </span>
       </div>
 
+      {/* Stats row */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${isSaffron ? 'border-saffron-300 bg-saffron-50 text-saffron-700 dark:border-saffron-800 dark:bg-saffron-900/20 dark:text-saffron-400' : 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400'}`}>
+          Depth: {maxDepth}
+        </span>
+        <span className="border-[2px] border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+          Leaves: {leafCount}
+        </span>
+        {preview.nodes.some((n) => n.childrenIds && n.childrenIds.length > 0) && (
+          <span className="border-[2px] border-purple-300 bg-purple-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+            N-ary
+          </span>
+        )}
+      </div>
+
       {/* Canvas */}
       <div className={`mt-4 ${theme.subPanelClass} p-4 overflow-x-auto custom-scrollbar`}>
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
           className="w-full"
-          style={{ minWidth: Math.min(svgW, 360), height: svgH }}
+          style={{ minWidth: Math.min(svgW, 360), height: svgH, overflow: 'visible' }}
         >
           {/* Edges */}
           <AnimatePresence>
@@ -356,6 +392,8 @@ export const TreePanel: React.FC<{
                 if (parent.leftId === node.id) childLabel = 'L';
                 else if (parent.rightId === node.id) childLabel = 'R';
               }
+
+              const isLeaf = !node.leftId && !node.rightId && (!node.childrenIds || node.childrenIds.length === 0);
 
               const boxW = NODE_W;
               const boxH = 42;
@@ -449,13 +487,15 @@ export const TreePanel: React.FC<{
                     y={pos.y - boxH / 2}
                     width={boxW}
                     height={boxH}
-                    fill={hasPointer ? '#ecfdf5' : '#ffffff'}
+                    fill={hasPointer ? '#ecfdf5' : isLeaf ? (isSaffron ? '#fff7ed' : '#eff6ff') : '#ffffff'}
                     stroke={hasPointer ? '#10b981' : '#0f172a'}
                     strokeWidth="2"
                     className={
                       hasPointer
                         ? 'dark:fill-[#022c22] dark:stroke-[#059669]'
-                        : 'dark:fill-[#161618] dark:stroke-[#333]'
+                        : isLeaf
+                          ? isSaffron ? 'dark:fill-[#1c1108] dark:stroke-[#333]' : 'dark:fill-[#0c1524] dark:stroke-[#333]'
+                          : 'dark:fill-[#161618] dark:stroke-[#333]'
                     }
                   />
 
@@ -469,6 +509,17 @@ export const TreePanel: React.FC<{
                   >
                     {node.label}
                   </text>
+
+                  {/* Leaf indicator dot */}
+                  {isLeaf && (
+                    <circle
+                      cx={pos.x + boxW / 2 - 6}
+                      cy={pos.y - boxH / 2 + 6}
+                      r={3}
+                      fill={isSaffron ? '#f97316' : '#3b82f6'}
+                      className="dark:opacity-80"
+                    />
+                  )}
                 </motion.g>
               );
             })}
