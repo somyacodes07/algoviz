@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, ArrowRight, Repeat2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
@@ -35,7 +35,6 @@ function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): st
       return String(current);
     }
   }
-
   return `Node ${fallbackIndex + 1}`;
 }
 
@@ -110,6 +109,28 @@ export const LinkedListPanel: React.FC<{
   themeColor: ThemeColor;
 }> = ({ preview, themeColor }) => {
   const theme = getThemeConfig(themeColor);
+  const isSaffron = themeColor === 'saffron';
+
+  // Track traversal trail: record which node IDs had a pointer on the previous step
+  const prevPointedIds = useRef<Set<string>>(new Set());
+  // Trail ids fade out after being "left behind"
+  const trailIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentPointedIds = new Set<string>();
+    preview.nodes.forEach((n) => {
+      if (n.pointerNames.length > 0) currentPointedIds.add(n.id);
+    });
+
+    // Nodes that HAD a pointer last step but don't now → add to trail
+    const newTrail = new Set<string>();
+    prevPointedIds.current.forEach((id) => {
+      if (!currentPointedIds.has(id)) newTrail.add(id);
+    });
+
+    trailIds.current = newTrail;
+    prevPointedIds.current = currentPointedIds;
+  });
 
   return (
     <section className={`${theme.panelClass} p-4`}>
@@ -139,48 +160,98 @@ export const LinkedListPanel: React.FC<{
 
       <div className="mt-5 overflow-x-auto custom-scrollbar pb-2">
         <div className="flex items-start gap-2 w-max">
-        <AnimatePresence mode="popLayout">
-          {preview.nodes.map((node, index) => (
-            <motion.div
-              key={node.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="flex items-start gap-2"
-            >
-              <div
-                className={`min-w-[96px] border-[2px] px-3 py-3 ${theme.accentBorder} ${theme.accentSoftBg}`}
-              >
-                <div className="flex min-h-5 flex-wrap gap-1">
-                  {node.pointerNames.map((pointer) => (
-                    <span
-                      key={pointer}
-                      className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
-                    >
-                      {pointer}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Node {index + 1}
-                </div>
-                <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
-                  {node.label}
-                </div>
-              </div>
+          <AnimatePresence mode="popLayout">
+            {preview.nodes.map((node, index) => {
+              const isPointed = node.pointerNames.length > 0;
+              const isTrail = trailIds.current.has(node.id);
 
-              {index < preview.nodes.length - 1 && (
-                <div 
-                  className={`mt-8 flex items-center ${theme.accentText}`}
+              return (
+                <motion.div
+                  key={node.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  className="flex items-start gap-2"
                 >
-                  <ArrowRight size={18} />
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                  <div className="relative">
+                    {/* Trail glow — fades from accent to nothing */}
+                    {isTrail && (
+                      <motion.div
+                        className="absolute inset-0 -m-1"
+                        initial={{ opacity: 0.5 }}
+                        animate={{ opacity: 0 }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                        style={{
+                          background: isSaffron
+                            ? 'rgba(249,115,22,0.25)'
+                            : 'rgba(59,130,246,0.25)',
+                          border: `2px solid ${isSaffron ? '#f97316' : '#3b82f6'}`,
+                        }}
+                      />
+                    )}
+
+                    {/* Pointer tag bounce-in */}
+                    <AnimatePresence>
+                      {isPointed && (
+                        <motion.div
+                          key={node.pointerNames.join(',')}
+                          className="absolute -top-6 left-0 right-0 flex justify-center gap-0.5"
+                          initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        >
+                          {node.pointerNames.map((p) => (
+                            <span
+                              key={p}
+                              className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <motion.div
+                      animate={
+                        isPointed
+                          ? { borderColor: isSaffron ? '#f97316' : '#3b82f6', scale: 1.04 }
+                          : { scale: 1 }
+                      }
+                      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                      className={`mt-6 min-w-[84px] border-[2px] px-3 py-3 ${
+                        isPointed
+                          ? `${theme.accentBorder} ${theme.accentSoftBg} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]`
+                          : isTrail
+                          ? 'border-slate-400 bg-slate-50 dark:border-slate-600 dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.3)]'
+                          : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.15)]'
+                      }`}
+                    >
+                      <div className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Node {index + 1}
+                      </div>
+                      <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
+                        {node.label}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  {index < preview.nodes.length - 1 && (
+                    <motion.div
+                      className={`mt-14 flex items-center ${theme.accentText}`}
+                      animate={{ x: [0, 3, 0] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.4 }}
+                    >
+                      <ArrowRight size={18} />
+                    </motion.div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </div>
 
