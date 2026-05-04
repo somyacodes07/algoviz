@@ -203,8 +203,9 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
         if (edges.length === 0) continue;
 
+        const matrixEdgeSet = new Set(edges.map((e) => `${e.from}->${e.to}`));
         edges.forEach((edge) => {
-          if (edges.find((e) => e.from === edge.to && e.to === edge.from)) {
+          if (matrixEdgeSet.has(`${edge.to}->${edge.from}`)) {
             edge.isBidirectional = true;
           }
         });
@@ -213,12 +214,7 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
           sourceName,
           nodes,
           edges,
-          directed: edges.some(
-            (edge) =>
-              !edges.find(
-                (candidateEdge) => candidateEdge.from === edge.to && candidateEdge.to === edge.from,
-              ),
-          ),
+          directed: edges.some((edge) => !matrixEdgeSet.has(`${edge.to}->${edge.from}`)),
           truncated: false,
         };
       }
@@ -244,8 +240,9 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
       if (!validListShape || adjacencyListEdges.length === 0) continue;
 
+      const adjEdgeSet = new Set(adjacencyListEdges.map((e) => `${e.from}->${e.to}`));
       adjacencyListEdges.forEach((edge) => {
-        if (adjacencyListEdges.find((e) => e.from === edge.to && e.to === edge.from)) {
+        if (adjEdgeSet.has(`${edge.to}->${edge.from}`)) {
           edge.isBidirectional = true;
         }
       });
