@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../types';
-import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat } from 'lucide-react';
+import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat, Pin, PinOff, ChevronDown, ChevronUp } from 'lucide-react';
 import StructureVisualizer from './StructureVisualizer';
 
 import { getThemeConfig, ThemeColor } from '../theme/theme';
@@ -10,6 +10,8 @@ interface VariablesPanelProps {
   variables: VariableMap;
   prevVariables: VariableMap;
   themeColor: ThemeColor;
+  pinnedVars?: Set<string>;
+  onTogglePin?: (name: string) => void;
 }
 
 function safeSerialize(value: unknown, maxDepth: number = 3): string {
@@ -350,6 +352,13 @@ const VariableCard: React.FC<{
         : 'bg-blue-50 dark:bg-[#11151c]'
       : 'bg-white dark:bg-[#161618]';
 
+  // ── #2 Object show-more ─────────────────────────────────────────────────
+  const expandedKeys = isExpanded && isObject ? Object.keys(value) : [];
+  const MAX_VISIBLE_KEYS = 8;
+  const [showAllKeys, setShowAllKeys] = useState(false);
+  const visibleKeys = showAllKeys ? expandedKeys : expandedKeys.slice(0, MAX_VISIBLE_KEYS);
+  const hasMoreKeys = expandedKeys.length > MAX_VISIBLE_KEYS;
+
   return (
     <motion.div
       layout
@@ -466,7 +475,7 @@ const VariableCard: React.FC<{
           </div>
         )}
 
-        {/* Expanded children for objects/arrays */}
+        {/* Expanded children for objects/arrays — #2 Show more */}
         <AnimatePresence>
           {isExpanded && isObject && (
             <motion.div
@@ -476,7 +485,7 @@ const VariableCard: React.FC<{
               className="overflow-hidden border-t border-slate-200/60 dark:border-slate-700/40"
             >
               <div className="p-2 space-y-1 bg-slate-50/50 dark:bg-slate-900/30">
-                {Object.keys(value).map((key) => {
+                {visibleKeys.map((key) => {
                   const indexChanged = prevValue && !valuesAreEqual(value[key], prevValue?.[key]);
                   return (
                     <div
@@ -496,6 +505,17 @@ const VariableCard: React.FC<{
                     </div>
                   );
                 })}
+                {hasMoreKeys && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowAllKeys(!showAllKeys); }}
+                    className="w-full mt-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    {showAllKeys ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                    {showAllKeys
+                      ? 'Show less'
+                      : `Show ${expandedKeys.length - MAX_VISIBLE_KEYS} more entries`}
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
@@ -505,42 +525,126 @@ const VariableCard: React.FC<{
   );
 };
 
+// ── Shimmer skeleton component for empty state (#4) ──────────────────────
+const ShimmerSkeleton: React.FC<{ themeColor: ThemeColor }> = ({ themeColor }) => {
+  const isSaffron = themeColor === 'saffron';
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      {[80, 60, 90, 50].map((w, i) => (
+        <div
+          key={i}
+          className="h-4 rounded-sm animate-pulse"
+          style={{
+            width: `${w}%`,
+            background: isSaffron
+              ? 'linear-gradient(90deg, #fde68a22 25%, #fb923c33 50%, #fde68a22 75%)'
+              : 'linear-gradient(90deg, #bfdbfe22 25%, #60a5fa33 50%, #bfdbfe22 75%)',
+            backgroundSize: '200% 100%',
+            animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const VariablesPanel: React.FC<VariablesPanelProps> = ({
   variables,
   prevVariables,
   themeColor,
+  pinnedVars,
+  onTogglePin,
 }) => {
   const keys = Object.keys(variables);
   const isSaffron = themeColor === 'saffron';
 
+  // Separate pinned from normal
+  const pinned = pinnedVars ? keys.filter(k => pinnedVars.has(k)) : [];
+  const unpinned = pinnedVars ? keys.filter(k => !pinnedVars.has(k)) : keys;
+
+  // Ghost pinned vars that went out of scope
+  const ghostPinned = pinnedVars
+    ? Array.from(pinnedVars).filter(k => !keys.includes(k))
+    : [];
+
   return (
     <div className="grid grid-cols-1 gap-2 p-2">
+      {/* ── #9 Watch / Pin Panel ─────────────────────────────────────────── */}
+      {pinnedVars && pinnedVars.size > 0 && (
+        <div className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700' : 'border-blue-400 dark:border-blue-700'} bg-slate-50 dark:bg-[#111113] mb-1`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-saffron-950/30' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30'}`}>
+            <Pin size={10} className={isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400'} />
+            <span className={`text-[9px] font-black uppercase tracking-[0.18em] ${isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400'}`}>Watch</span>
+          </div>
+          <div className="p-1.5 space-y-1">
+            {[...pinned, ...ghostPinned].map(k => {
+              const isGhost = ghostPinned.includes(k);
+              const val = isGhost ? prevVariables[k] : variables[k];
+              return (
+                <div key={k} className={`flex items-center justify-between px-2 py-1 text-xs font-mono border ${isGhost ? 'opacity-40 border-slate-200 dark:border-slate-700 bg-white/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#161618]'}`}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-slate-600 dark:text-slate-300">{k}</span>
+                    {isGhost && <span className="text-[8px] text-slate-400 italic">out of scope</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold ${isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300'}`}>
+                      {val === undefined ? '—' : typeof val === 'object' ? (Array.isArray(val) ? `[${val.length}]` : '{…}') : String(val)}
+                    </span>
+                    {onTogglePin && (
+                      <button onClick={() => onTogglePin(k)} className="text-slate-400 hover:text-red-400 transition-colors">
+                        <PinOff size={9} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Always render — uses useRef to cache last-known structure across scopes */}
       <StructureVisualizer variables={variables} themeColor={themeColor} />
 
       {keys.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-28 border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] transition-all duration-300">
+        /* ── #4 Shimmer empty state ──────────────────────────────────────── */
+        <div className="flex flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] transition-all duration-300">
           <span
             className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isSaffron ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
           >
             Scope
           </span>
-          <span className="mt-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-400">
+          <span className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500">
             No variables in scope
           </span>
+          <ShimmerSkeleton themeColor={themeColor} />
         </div>
       ) : (
         <AnimatePresence mode="popLayout">
-          {keys.map((key) => (
-            <VariableCard
-              key={key}
-              name={key}
-              value={variables[key]}
-              prevValue={prevVariables[key]}
-              wasPresent={key in prevVariables}
-              themeColor={themeColor}
-              variables={variables}
-            />
+          {unpinned.map((key) => (
+            <div key={key} className="relative group/card">
+              {onTogglePin && (
+                <button
+                  onClick={() => onTogglePin(key)}
+                  title={pinnedVars?.has(key) ? 'Unpin variable' : 'Pin to watch panel'}
+                  className={`absolute top-2 right-2 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity p-1 rounded ${
+                    pinnedVars?.has(key)
+                      ? isSaffron ? 'text-saffron-500' : 'text-blue-500'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Pin size={10} />
+                </button>
+              )}
+              <VariableCard
+                name={key}
+                value={variables[key]}
+                prevValue={prevVariables[key]}
+                wasPresent={key in prevVariables}
+                themeColor={themeColor}
+                variables={variables}
+              />
+            </div>
           ))}
         </AnimatePresence>
       )}
