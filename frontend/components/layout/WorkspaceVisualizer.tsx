@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layers,
@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  AlertTriangle,
 } from 'lucide-react';
 import VariablesPanel from '../VariablesPanel';
 import CallStackPanel from '../CallStackPanel';
@@ -47,6 +48,15 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   complexityAnalysis,
 }) => {
   const isSaffron = themeColor === 'saffron';
+  // ── #9 Variable watch/pin state ────────────────────────────────
+  const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
+  const handleTogglePin = useCallback((name: string) => {
+    setPinnedVars(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  }, []);
 
   const tabActiveText =
     themeColor === 'saffron'
@@ -81,6 +91,21 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
     }
     return changes;
   }, [currentStep, prevStepVariables]);
+
+  // ── #11 Loop detection ───────────────────────────────────────────
+  const loopWarning = useMemo(() => {
+    if (currentStepIndex < 100) return null;
+    const slice = timeline.slice(Math.max(0, currentStepIndex - 100), currentStepIndex + 1);
+    const firstLine = slice[0]?.line;
+    if (!firstLine) return null;
+    const allSameLine = slice.every(s => s.line === firstLine);
+    if (!allSameLine) return null;
+    // Check that variables haven't changed across the slice
+    const firstVarStr = JSON.stringify(slice[0]?.variables ?? {});
+    const lastVarStr = JSON.stringify(slice[slice.length - 1]?.variables ?? {});
+    if (firstVarStr !== lastVarStr) return null;
+    return firstLine;
+  }, [timeline, currentStepIndex]);
 
   return (
     <div
@@ -171,11 +196,23 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
+          {/* #11 Loop detection warning */}
+          {loopWarning && activeTab === 'variables' && (
+            <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_#000]">
+              <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-400">Possible Infinite Loop</p>
+                <p className="text-[10px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">Line {loopWarning} has executed 100+ times with no variable change.</p>
+              </div>
+            </div>
+          )}
           {activeTab === 'variables' ? (
             <VariablesPanel
               variables={currentStep.variables || {}}
               prevVariables={prevStepVariables.variables || {}}
               themeColor={themeColor}
+              pinnedVars={pinnedVars}
+              onTogglePin={handleTogglePin}
             />
           ) : activeTab === 'stack' ? (
             <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
