@@ -74,6 +74,58 @@ html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
   cursor: pointer;
 }
 
+/* ─── #5 VS Code-style Monaco line highlights ───────────────────────────── */
+.editor-line-active-saffron-light {
+  background: rgba(251, 146, 60, 0.08) !important;
+  border-left: 3px solid #f97316 !important;
+  box-shadow: inset 3px 0 12px rgba(249, 115, 22, 0.08);
+}
+.editor-line-active-saffron-dark {
+  background: rgba(251, 146, 60, 0.12) !important;
+  border-left: 3px solid #f97316 !important;
+  box-shadow: inset 3px 0 16px rgba(249, 115, 22, 0.15);
+}
+.editor-line-active-blue-light {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border-left: 3px solid #3b82f6 !important;
+  box-shadow: inset 3px 0 12px rgba(59, 130, 246, 0.08);
+}
+.editor-line-active-blue-dark {
+  background: rgba(59, 130, 246, 0.14) !important;
+  border-left: 3px solid #3b82f6 !important;
+  box-shadow: inset 3px 0 16px rgba(59, 130, 246, 0.18);
+}
+.editor-line-error-light {
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-left: 3px solid #ef4444 !important;
+  box-shadow: inset 3px 0 12px rgba(239, 68, 68, 0.08);
+}
+.editor-line-error-dark {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-left: 3px solid #ef4444 !important;
+  box-shadow: inset 3px 0 16px rgba(239, 68, 68, 0.18);
+}
+.editor-glyph-saffron {
+  background: #f97316;
+  width: 3px !important;
+  height: 100% !important;
+  border-radius: 0;
+  margin: 0 !important;
+}
+.editor-glyph-blue {
+  background: #3b82f6;
+  width: 3px !important;
+  height: 100% !important;
+  border-radius: 0;
+  margin: 0 !important;
+}
+
+/* ─── #4 Shimmer keyframe for empty state skeleton ──────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 12px;

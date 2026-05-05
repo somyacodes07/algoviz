@@ -63,22 +63,22 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     if (isError) {
       className =
         theme === 'dark'
-          ? 'bg-red-900/40 border-l-4 border-red-500'
-          : 'bg-red-100 border-l-4 border-red-500';
+          ? 'editor-line-error-dark'
+          : 'editor-line-error-light';
       glyphClass = 'bg-red-500 w-2';
     } else {
       if (themeColor === 'saffron') {
         className =
           theme === 'dark'
-            ? 'bg-saffron-900/30 border-l-4 border-saffron-500'
-            : 'bg-saffron-100 border-l-4 border-saffron-500';
-        glyphClass = 'bg-saffron-500 w-2';
+            ? 'editor-line-active-saffron-dark'
+            : 'editor-line-active-saffron-light';
+        glyphClass = 'editor-glyph-saffron';
       } else {
         className =
           theme === 'dark'
-            ? 'bg-blue-900/30 border-l-4 border-blue-500'
-            : 'bg-blue-100 border-l-4 border-blue-500';
-        glyphClass = 'bg-blue-500 w-2';
+            ? 'editor-line-active-blue-dark'
+            : 'editor-line-active-blue-light';
+        glyphClass = 'editor-glyph-blue';
       }
     }
 
