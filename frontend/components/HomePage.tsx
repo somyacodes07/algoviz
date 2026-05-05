@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Terminal,
@@ -80,20 +80,79 @@ const EXECUTION_STEPS = [
   },
 ];
 
-// const HERO_SIGNAL_CARDS = [
-//   {
-//     label: "Live Variables",
-//     value: "See values mutate instead of guessing what changed.",
-//   },
-//   {
-//     label: "Call Stack",
-//     value: "Follow recursion depth and frame order in real time.",
-//   },
-//   {
-//     label: "Browser C++",
-//     value: "Trace DSA-style C++ through the same visual timeline.",
-//   },
-// ];
+// ── Landing Page Enhancements ──────────────────────────────────────────────────
+
+// Hero text scramble hook
+const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
+function useScramble(target: string, delay = 100) {
+  const [display, setDisplay] = useState(target);
+  const frame = useRef(0);
+  useEffect(() => {
+    let iter = 0;
+    const totalFrames = target.length * 3;
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        setDisplay(
+          target.split('').map((ch, i) => {
+            if (ch === ' ') return ' ';
+            if (i < Math.floor(iter / 3)) return ch;
+            return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          }).join('')
+        );
+        iter++;
+        if (iter > totalFrames) { clearInterval(interval); setDisplay(target); }
+      }, 40);
+      return () => clearInterval(interval);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [target, delay]);
+  return display;
+}
+
+// Stats counter hook
+function useCountUp(target: number, duration = 1800) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      let start = 0;
+      const step = 16;
+      const steps = duration / step;
+      const increment = target / steps;
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= target) { setCount(target); clearInterval(timer); }
+        else setCount(Math.floor(start));
+      }, step);
+    }, { threshold: 0.3 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target, duration]);
+  return { count, ref };
+}
+
+const STATS = [
+  { label: 'Languages', value: 2, suffix: '+' },
+  { label: 'Algorithms', value: 50, suffix: '+' },
+  { label: 'Execution Steps', value: 10000, suffix: '+' },
+  { label: 'Open Source', value: 100, suffix: '%' },
+];
+
+const StatCard: React.FC<{ label: string; value: number; suffix: string }> = ({ label, value, suffix }) => {
+  const { count, ref } = useCountUp(value);
+  return (
+    <div ref={ref} className="flex flex-col items-center">
+      <span className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+        {count.toLocaleString()}{suffix}
+      </span>
+      <span className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{label}</span>
+    </div>
+  );
+};
 
 const HomePage: React.FC<HomePageProps> = ({
   onSelectLanguage,
@@ -106,12 +165,13 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
+  const scrambledTitle = useScramble('AlgoViz.', 600);
 
   // Auto-play the execution mock
   useEffect(() => {
     const interval = setInterval(() => {
       setStepIndex((prev) => (prev + 1) % EXECUTION_STEPS.length);
-    }, 1500); // Step every 1.5s
+    }, 1500);
     return () => clearInterval(interval);
   }, []);
 
@@ -126,7 +186,7 @@ const HomePage: React.FC<HomePageProps> = ({
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
             <Logo language={hoverLang === 'cpp' ? 'c++' : 'javascript'} className="w-[2.4rem] h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]" />
-            <span className="font-bold text-xl tracking-tight">AlgoViz.</span>
+            <span className="font-bold text-xl tracking-tight font-mono">{scrambledTitle}</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
             <a
@@ -486,73 +546,76 @@ const HomePage: React.FC<HomePageProps> = ({
         </main>
       </section>
 
-      {/* Features Section */}
+      {/* ── Stats Counter Section ───────────────────────────────────────── */}
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[#0f111a] relative z-10 py-14 px-8 md:px-16">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat) => (
+            <StatCard key={stat.label} {...stat} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features Section with stagger reveal ──────────────────────────── */}
       <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[#0f111a]/80 backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl md:text-5xl font-black tracking-tight mb-4"
+            >
               Why use AlgoViz?
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto">
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto"
+            >
               Built for students and educators to strip away the magic and show exactly how
               algorithms compute data in memory.
-            </p>
+            </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
-            >
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 border-2 border-blue-200 dark:border-blue-800/50">
-                <Terminal strokeWidth={2.5} size={24} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Multi-Language Support</h3>
-              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Whether you're learning web paradigms in JavaScript or digging into memory
-                management in C++, AlgoViz speaks your language.
-              </p>
-            </motion.div>
-
-            {/* Feature 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
-            >
-              <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6 border-2 border-amber-200 dark:border-amber-800/50">
-                <Eye strokeWidth={2.5} size={24} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Step-by-Step Debugging</h3>
-              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Control the flow of time. Pause execution, step forwards, trace backwards, and watch
-                variables mutate exactly when lines evaluate.
-              </p>
-            </motion.div>
-
-            {/* Feature 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
-            >
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-6 border-2 border-green-200 dark:border-green-800/50">
-                <Layers strokeWidth={2.5} size={24} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Visual Call Stack</h3>
-              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                Demystify recursion and nested function calls. See the stack grow and shrink in
-                real-time as frames are pushed and popped.
-              </p>
-            </motion.div>
+            {[
+              {
+                icon: Terminal,
+                color: 'blue',
+                title: 'Multi-Language Support',
+                desc: "Whether you're learning web paradigms in JavaScript or digging into memory management in C++, AlgoViz speaks your language.",
+              },
+              {
+                icon: Eye,
+                color: 'amber',
+                title: 'Step-by-Step Debugging',
+                desc: 'Control the flow of time. Pause execution, step forwards, trace backwards, and watch variables mutate exactly when lines evaluate.',
+              },
+              {
+                icon: Layers,
+                color: 'green',
+                title: 'Visual Call Stack',
+                desc: 'Demystify recursion and nested function calls. See the stack grow and shrink in real-time as frames are pushed and popped.',
+              },
+            ].map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+              >
+                <div className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}>
+                  <card.icon strokeWidth={2.5} size={24} />
+                </div>
+                <h3 className="text-xl font-bold mb-3">{card.title}</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{card.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
