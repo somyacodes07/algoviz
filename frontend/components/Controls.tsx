@@ -224,24 +224,35 @@ const Controls: React.FC<ControlsProps> = ({
         </div>
       </div>
 
-      {/* Speed Control */}
-      <div className="shrink-0 flex items-center gap-3 bg-slate-50 dark:bg-[#111113] px-3 py-2 border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+      {/* Speed Presets (#10) */}
+      <div className="shrink-0 flex items-center gap-2 bg-slate-50 dark:bg-[#111113] px-3 py-2 border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
         <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest hidden xl:block">
           Speed
         </span>
-        <input
-          type="range"
-          min="100"
-          max="2000"
-          step="100"
-          value={2100 - speed}
-          onChange={(e) => setSpeed(2100 - Number(e.target.value))}
-          className={`w-20 h-1.5 bg-slate-200 dark:bg-[#333] appearance-none cursor-pointer ${accentClass}`}
-          data-no-transition
-        />
-        <span className="text-[11px] text-slate-700 dark:text-slate-300 w-8 text-right font-mono font-bold">
-          {(1000 / speed).toFixed(1)}x
-        </span>
+        {([
+          { label: 'Slow', value: 2000 },
+          { label: 'Norm', value: 1000 },
+          { label: 'Fast', value: 400 },
+          { label: '⚡', value: 80 },
+        ] as { label: string; value: number }[]).map((preset) => {
+          const isActive = speed === preset.value;
+          return (
+            <button
+              key={preset.label}
+              data-no-transition
+              onClick={() => setSpeed(preset.value)}
+              className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border-[2px] transition-all active:translate-y-[1px] active:shadow-none ${
+                isActive
+                  ? isSaffron
+                    ? 'bg-saffron-500 text-white border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]'
+                    : 'bg-blue-500 text-white border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]'
+                  : 'bg-white dark:bg-[#161618] text-slate-600 dark:text-slate-400 border-slate-300 dark:border-[#333] hover:border-slate-900 dark:hover:border-[#555]'
+              }`}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
