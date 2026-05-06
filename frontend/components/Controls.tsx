@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { Play, Pause, StepBack, StepForward, RotateCcw, CircleDot } from 'lucide-react';
+import { Play, Pause, StepBack, StepForward, RotateCcw, CircleDot, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ControlsProps {
@@ -230,11 +230,11 @@ const Controls: React.FC<ControlsProps> = ({
           Speed
         </span>
         {([
-          { label: 'Slow', value: 2000 },
-          { label: 'Norm', value: 1000 },
-          { label: 'Fast', value: 400 },
-          { label: '⚡', value: 80 },
-        ] as { label: string; value: number }[]).map((preset) => {
+          { label: 'Slow', value: 2000, icon: null },
+          { label: 'Norm', value: 1000, icon: null },
+          { label: 'Fast', value: 400, icon: null },
+          { label: 'Instant', value: 80, icon: Zap },
+        ] as { label: string; value: number; icon: typeof Zap | null }[]).map((preset) => {
           const isActive = speed === preset.value;
           return (
             <button
@@ -249,7 +249,7 @@ const Controls: React.FC<ControlsProps> = ({
                   : 'bg-white dark:bg-[#161618] text-slate-600 dark:text-slate-400 border-slate-300 dark:border-[#333] hover:border-slate-900 dark:hover:border-[#555]'
               }`}
             >
-              {preset.label}
+              {preset.icon ? <preset.icon size={12} /> : preset.label}
             </button>
           );
         })}
