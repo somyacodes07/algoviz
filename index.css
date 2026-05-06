@@ -155,6 +155,7 @@ html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
 }
 
 html {
+  scroll-behavior: smooth;
   scrollbar-color: rgba(100, 116, 139, 0.58) #e8decb;
   scrollbar-width: thin;
 }
