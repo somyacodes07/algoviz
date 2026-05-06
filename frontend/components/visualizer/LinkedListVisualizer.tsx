@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, ArrowRight, Repeat2 } from 'lucide-react';
+import { GitBranch, ArrowRight, Repeat2, Trash2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
@@ -104,6 +104,12 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
   return preview;
 }
 
+// Extended node with deletion status for rendering
+interface RenderNode extends LinkedListNodeView {
+  deleted: boolean;
+  position: number; // original position for ordering
+}
+
 export const LinkedListPanel: React.FC<{
   preview: LinkedListPreview;
   themeColor: ThemeColor;
@@ -111,10 +117,40 @@ export const LinkedListPanel: React.FC<{
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
 
-  // Track traversal trail: record which node IDs had a pointer on the previous step
+  // Track previous nodes to detect deletions
+  const prevNodesRef = useRef<LinkedListNodeView[]>([]);
   const prevPointedIds = useRef<Set<string>>(new Set());
-  // Trail ids fade out after being "left behind"
   const trailIds = useRef<Set<string>>(new Set());
+
+  // Build the merged render list: current nodes + recently deleted ghost nodes
+  const renderNodes = useMemo<RenderNode[]>(() => {
+    const prevNodes = prevNodesRef.current;
+    const currentLabels = new Set(preview.nodes.map(n => n.label));
+    const deletedNodes: RenderNode[] = [];
+
+    // Find nodes that existed in prev but not in current (by label match)
+    for (const prev of prevNodes) {
+      if (!currentLabels.has(prev.label)) {
+        deletedNodes.push({
+          ...prev,
+          id: `deleted-${prev.id}`,
+          pointerNames: [],
+          deleted: true,
+          position: -1,
+        });
+      }
+    }
+
+    // Build merged list: insert deleted nodes near their old position
+    const result: RenderNode[] = preview.nodes.map((n, i) => ({
+      ...n,
+      deleted: false,
+      position: i,
+    }));
+
+    // Append deleted nodes (they animate out via AnimatePresence)
+    return [...result, ...deletedNodes];
+  }, [preview.nodes]);
 
   useEffect(() => {
     const currentPointedIds = new Set<string>();
@@ -122,7 +158,6 @@ export const LinkedListPanel: React.FC<{
       if (n.pointerNames.length > 0) currentPointedIds.add(n.id);
     });
 
-    // Nodes that HAD a pointer last step but don't now → add to trail
     const newTrail = new Set<string>();
     prevPointedIds.current.forEach((id) => {
       if (!currentPointedIds.has(id)) newTrail.add(id);
@@ -130,10 +165,16 @@ export const LinkedListPanel: React.FC<{
 
     trailIds.current = newTrail;
     prevPointedIds.current = currentPointedIds;
+
+    // Update prev snapshot after render
+    prevNodesRef.current = [...preview.nodes];
   });
 
+  // Count deleted nodes for the badge
+  const deletedCount = renderNodes.filter(n => n.deleted).length;
+
   return (
-    <section className={`${theme.panelClass} p-4`}>
+    <section className={`${theme.panelClass} p-3`}>
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -141,8 +182,14 @@ export const LinkedListPanel: React.FC<{
               <GitBranch size={12} />
               Linked List
             </span>
+            {deletedCount > 0 && (
+              <span className="inline-flex items-center gap-1 border-[2px] border-red-300 bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                <Trash2 size={10} />
+                {deletedCount} removed
+              </span>
+            )}
           </div>
-          <h3 className="mt-3 text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
+          <h3 className="mt-2 text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
             {preview.sourceName}
           </h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -158,10 +205,12 @@ export const LinkedListPanel: React.FC<{
         )}
       </div>
 
-      <div className="mt-5 overflow-x-auto custom-scrollbar pb-2">
+      <div className="mt-3 overflow-x-auto custom-scrollbar pb-2">
         <div className="flex items-start gap-2 w-max">
           <AnimatePresence mode="popLayout">
-            {preview.nodes.map((node, index) => {
+            {renderNodes
+              .filter(n => !n.deleted)
+              .map((node, index, arr) => {
               const isPointed = node.pointerNames.length > 0;
               const isTrail = trailIds.current.has(node.id);
 
@@ -176,7 +225,7 @@ export const LinkedListPanel: React.FC<{
                   className="flex items-start gap-2"
                 >
                   <div className="relative">
-                    {/* Trail glow — fades from accent to nothing */}
+                    {/* Trail glow */}
                     {isTrail && (
                       <motion.div
                         className="absolute inset-0 -m-1"
@@ -192,12 +241,12 @@ export const LinkedListPanel: React.FC<{
                       />
                     )}
 
-                    {/* Pointer tag bounce-in */}
+                    {/* Pointer tag */}
                     <AnimatePresence>
                       {isPointed && (
                         <motion.div
                           key={node.pointerNames.join(',')}
-                          className="absolute -top-6 left-0 right-0 flex justify-center gap-0.5"
+                          className="absolute -top-5 left-0 right-0 flex justify-center gap-0.5"
                           initial={{ opacity: 0, scale: 0.5, y: 4 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.5, y: 4 }}
@@ -222,7 +271,7 @@ export const LinkedListPanel: React.FC<{
                           : { scale: 1 }
                       }
                       transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                      className={`mt-6 min-w-[84px] border-[2px] px-3 py-3 ${
+                      className={`mt-5 min-w-[64px] border-[2px] px-2.5 py-2 ${
                         isPointed
                           ? `${theme.accentBorder} ${theme.accentSoftBg} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]`
                           : isTrail
@@ -230,27 +279,57 @@ export const LinkedListPanel: React.FC<{
                           : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.15)]'
                       }`}
                     >
-                      <div className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                         Node {index + 1}
                       </div>
-                      <div className="mt-1 text-center text-xl font-black text-slate-900 dark:text-slate-100">
+                      <div className="mt-0.5 text-center text-base font-black text-slate-900 dark:text-slate-100">
                         {node.label}
                       </div>
                     </motion.div>
                   </div>
 
-                  {index < preview.nodes.length - 1 && (
+                  {index < arr.length - 1 && (
                     <motion.div
-                      className={`mt-14 flex items-center ${theme.accentText}`}
+                      className={`mt-11 flex items-center ${theme.accentText}`}
                       animate={{ x: [0, 3, 0] }}
                       transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.4 }}
                     >
-                      <ArrowRight size={18} />
+                      <ArrowRight size={14} />
                     </motion.div>
                   )}
                 </motion.div>
               );
             })}
+
+            {/* Deleted ghost nodes */}
+            {renderNodes
+              .filter(n => n.deleted)
+              .map((node) => (
+                <motion.div
+                  key={node.id}
+                  layout
+                  initial={{ opacity: 1, scale: 1, y: 0 }}
+                  animate={{ opacity: 0, scale: 0.6, y: 28 }}
+                  exit={{ opacity: 0, scale: 0.4, y: 40 }}
+                  transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                  className="flex items-start gap-2 pointer-events-none"
+                >
+                  <div className="relative">
+                    <div className="mt-5 min-w-[64px] border-[2px] border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-900/20 px-2.5 py-2 shadow-[2px_2px_0_rgba(239,68,68,0.3)] relative overflow-hidden">
+                      {/* Strikethrough line */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-full h-[2px] bg-red-500 dark:bg-red-400 rotate-[-12deg]" />
+                      </div>
+                      <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-red-400 dark:text-red-500 line-through">
+                        Deleted
+                      </div>
+                      <div className="mt-0.5 text-center text-base font-black text-red-600 dark:text-red-400 line-through opacity-60">
+                        {node.label}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
           </AnimatePresence>
         </div>
       </div>
