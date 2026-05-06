@@ -572,7 +572,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
       {/* ── #9 Watch / Pin Panel ─────────────────────────────────────────── */}
       {pinnedVars && pinnedVars.size > 0 && (
         <div className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700' : 'border-blue-400 dark:border-blue-700'} bg-slate-50 dark:bg-[#111113] mb-1`}>
-          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-saffron-950/30' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30'}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-[#1c1208]' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c1525]'}`}>
             <Pin size={10} className={isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400'} />
             <span className={`text-[9px] font-black uppercase tracking-[0.18em] ${isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400'}`}>Watch</span>
           </div>
