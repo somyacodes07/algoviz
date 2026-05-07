@@ -228,6 +228,7 @@ async function doInit(): Promise<void> {
 
     // Dynamically import the Wasm Clang wrapper
     // This loads the actual LLVM/Clang compiled to Wasm
+    // @ts-ignore — Runtime-resolved URL from public/ directory
     const { default: createClangModule } = await import('/wasm-clang/clang-wrapper.js');
 
     clangModule = await createClangModule({

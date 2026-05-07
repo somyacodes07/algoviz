@@ -1,6 +1,5 @@
 import { analyzeComplexity } from '../../analysis/complexity';
 import { instrumentCode } from '../../tracer/instrumenter';
-import { initTranspiler, transpileCppToJs } from '../transpiler';
 import {
   Timeline,
   ConsoleLog,
@@ -8,16 +7,6 @@ import {
   ExecutionConfig,
   ComplexityAnalysis,
 } from '../../../types';
-
-// ─── Tree-sitter WASM init (once) ─────────────────────────────────────────────
-
-let initPromise: Promise<void> | null = null;
-function ensureInit(): Promise<void> {
-  if (!initPromise) {
-    initPromise = initTranspiler();
-  }
-  return initPromise;
-}
 
 // ─── Default config ───────────────────────────────────────────────────────────
 
@@ -66,13 +55,37 @@ function serializeForDisplay(value: unknown, maxDepth: number = 4): string {
 // ─── Worker message handler ───────────────────────────────────────────────────
 
 self.onmessage = async (e: MessageEvent) => {
-  await ensureInit();
-
   const { userCode, language, config } = e.data as {
     userCode: string;
     language: string;
     config?: ExecutionConfig;
   };
+
+  // C++ is no longer handled here — it uses Wasm Clang or Wandbox directly.
+  // This worker is strictly for JavaScript execution.
+  if (language === 'c++' || language === 'cpp') {
+    self.postMessage({
+      type: 'error',
+      timeline: [
+        {
+          line: 0,
+          variables: {},
+          callStack: ['main'],
+          consoleOutput: [
+            {
+              type: 'error',
+              message: 'C++ execution is handled by the Wasm Clang engine, not the Web Worker.',
+            },
+          ],
+          isError: true,
+          errorMessage: 'C++ should not be routed to the JS worker.',
+        },
+      ],
+      errorType: 'runtime',
+      analysis: null,
+    });
+    return;
+  }
 
   const MAX_STEPS = config?.maxSteps ?? DEFAULT_MAX_STEPS;
   const inputValues = config?.inputValues ?? DEFAULT_INPUT_VALUES;
@@ -81,7 +94,6 @@ self.onmessage = async (e: MessageEvent) => {
   const currentLogs: ConsoleLog[] = [];
   let logSnapshotIndex = 0; // Track where we last snapshotted logs
   let lastLine = 0;
-  let analyzedCode = userCode;
   let complexityAnalysis: ComplexityAnalysis | null = null;
 
   /** Helper: snapshot only NEW logs since last step */
@@ -92,29 +104,16 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   try {
-    let codeToInstrument = userCode;
-
-    // ── Transpile C++ ──
-    if (language === 'c++' || language === 'cpp') {
-      try {
-        codeToInstrument = transpileCppToJs(userCode);
-        analyzedCode = codeToInstrument;
-      } catch (transpileError: any) {
-        postError(`Transpilation Failed: ${transpileError.message}`, lastLine, 'transpile');
-        return;
-      }
-    }
-
-    // ── Instrument ──
+    // ── Instrument JS code ──
     let instrumented: string;
     try {
-      instrumented = instrumentCode(codeToInstrument);
+      instrumented = instrumentCode(userCode);
     } catch (instrumentError: any) {
       postError(`Instrumentation Failed: ${instrumentError.message}`, lastLine, 'instrument');
       return;
     }
 
-    complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+    complexityAnalysis = analyzeComplexity(userCode, timeline);
 
     let stepCount = 0;
 
@@ -219,7 +218,7 @@ self.onmessage = async (e: MessageEvent) => {
 
     new Function(wrappedCode).call(null, tracer);
 
-    complexityAnalysis = analyzeComplexity(codeToInstrument, timeline);
+    complexityAnalysis = analyzeComplexity(userCode, timeline);
     self.postMessage({ type: 'success', timeline, analysis: complexityAnalysis });
   } catch (e: any) {
     postError(e.message, lastLine, 'runtime');
@@ -242,7 +241,7 @@ self.onmessage = async (e: MessageEvent) => {
       },
     ];
     try {
-      complexityAnalysis = analyzeComplexity(analyzedCode, errorTimeline);
+      complexityAnalysis = analyzeComplexity(userCode, errorTimeline);
     } catch {
       // Keep the last successful analysis if the fallback pass fails.
     }
