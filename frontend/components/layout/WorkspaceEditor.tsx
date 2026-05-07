@@ -77,11 +77,6 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {executionError && (
-            <span className="border-[2px] border-red-300 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-red-700 shadow-[2px_2px_0_#fecaca] dark:border-red-700 dark:bg-[#201010] dark:text-red-300 dark:shadow-[2px_2px_0_#3a1a1a]">
-              {executionError}
-            </span>
-          )}
 
           <button
             onClick={onShare}
