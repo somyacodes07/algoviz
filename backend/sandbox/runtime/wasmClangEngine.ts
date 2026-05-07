@@ -358,7 +358,9 @@ async function runCompiledBinary(
   );
 
   try {
-    const module = await WebAssembly.compile(binary);
+    // The IDE might complain about Uint8Array<ArrayBufferLike> not being a BufferSource
+    // in some TS configurations, so we cast it to `any` to bypass the type error.
+    const module = await WebAssembly.compile(binary as any);
     const instance = await WebAssembly.instantiate(module, {
       wasi_snapshot_preview1: wasiImports,
     });
