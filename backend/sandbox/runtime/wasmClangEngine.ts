@@ -226,10 +226,25 @@ async function doInit(): Promise<void> {
       throw new Error('Wasm Clang binaries not found in /public/wasm-clang/');
     }
 
-    // Dynamically import the Wasm Clang wrapper
-    // This loads the actual LLVM/Clang compiled to Wasm
-    // @ts-ignore — Runtime-resolved URL from public/ directory
-    const { default: createClangModule } = await import('/wasm-clang/clang-wrapper.js');
+    // Dynamically load the Wasm Clang wrapper at runtime.
+    // We use fetch + Blob URL instead of import() so Rollup/Vite
+    // doesn't try to resolve this path at build time.
+    const wrapperUrl = '/wasm-clang/clang-wrapper.js';
+    const wrapperResp = await fetch(wrapperUrl);
+    if (!wrapperResp.ok) {
+      throw new Error(`Failed to fetch Clang wrapper: HTTP ${wrapperResp.status}`);
+    }
+    const wrapperText = await wrapperResp.text();
+    const wrapperBlob = new Blob([wrapperText], { type: 'application/javascript' });
+    const wrapperBlobUrl = URL.createObjectURL(wrapperBlob);
+
+    let createClangModule: any;
+    try {
+      const mod = await import(/* @vite-ignore */ wrapperBlobUrl);
+      createClangModule = mod.default || mod;
+    } finally {
+      URL.revokeObjectURL(wrapperBlobUrl);
+    }
 
     clangModule = await createClangModule({
       locateFile: (path: string) => `/wasm-clang/${path}`,
