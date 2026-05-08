@@ -33,6 +33,6 @@ One of the major benefits of using the VS Code extension is that **no external A
 
 When you run C++ or JavaScript code inside the extension:
 - **JavaScript** code is instrumented and executed inside a secure web worker entirely within the VS Code Webview context.
-- **C++** code is seamlessly transpiled to JavaScript using our built-in AST tools and executed locally, allowing you to visualize DSA logic without needing `g++` or a network connection.
+- **C++** code is natively compiled in the browser via WebAssembly Clang (Wasm Clang) and executed locally, allowing you to visualize complex C++ logic with full STL support without needing `g++` or a network connection.
 
 All the features of AlgoViz (Complexity Analysis, Variable Watch, Call Stack) are fully functional offline!
