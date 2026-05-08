@@ -212,7 +212,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
   const rippleKey = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
-    const current = new Set(preview.nodes.filter((n) => n.visited).map((n) => n.id));
+    const current = new Set<string>(preview.nodes.filter((n) => n.visited).map((n) => n.id));
     const justVisited = new Set<string>();
     current.forEach((id) => {
       if (!prevVisited.current.has(id)) {
