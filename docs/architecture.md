@@ -27,12 +27,12 @@ This document provides a technical overview of AlgoViz's internal architecture f
 └────────────┼─────────────────────────────┼───────────────────────┘
              │                             │
     ┌────────▼────────┐          ┌─────────▼─────────┐
-    │  C++ (Wandbox)  │          │  JS / C++ Fallback │
-    │                 │          │   (Web Worker)      │
-    │  Instrument C++ │          │                     │
-    │  POST to GCC    │          │  Transpile C++→JS   │
-    │  Parse traces   │          │  Instrument JS      │
-    │                 │          │  Execute sandboxed   │
+    │ C++ (Wasm Clang)│          │ JS (Web Worker) / │
+    │                 │          │ C++ Fallback API  │
+    │  Instrument C++ │          │                   │
+    │  Compile locally│          │  JS: Instrument   │
+    │  Parse traces   │          │  C++: POST to GCC │
+    │                 │          │                   │
     └────────┬────────┘          └─────────┬───────────┘
              │                             │
              └──────────┬──────────────────┘
@@ -55,8 +55,16 @@ This document provides a technical overview of AlgoViz's internal architecture f
 
 The central entry point for all code execution. Routes based on language:
 
-- **C++**: Tries Wandbox API first, falls back to Web Worker transpiler
+- **C++**: Tries local Wasm Clang engine first, falls back to Wandbox API if unsupported
 - **JavaScript**: Always uses Web Worker with Acorn instrumentation
+
+### Wasm Clang Engine (`wasmClangEngine.ts`)
+
+Handles the primary C++ pipeline:
+
+1. Instruments C++ with `CppInstrumenter`
+2. Compiles to WebAssembly directly in the browser
+3. Executes and parses `__TRACE__` blocks from stdout
 
 ### Wandbox Executor (`wandboxExecutor.ts`)
 
@@ -126,13 +134,12 @@ The worker stores console output **incrementally** (delta per step). The fronten
 
 | Error Type | Source | User Experience |
 |---|---|---|
-| `transpile` | C++→JS transformation failed | Shows transpiler error message |
 | `instrument` | JS instrumentation failed | Shows instrumentation error |
 | `runtime` | Code threw during execution | Shows runtime error with partial trace |
 | `timeout` | Exceeded step/time limit | Shows timeout message |
 | `worker` | Web Worker crashed | Shows crash message |
-| `networkError` | Wandbox unreachable | Silently falls back to local transpiler |
-| `compilerError` | GCC compilation failed | Shows compiler error in Console Panel |
+| `networkError` | Wandbox unreachable | Displays error if Wasm Clang is also unavailable |
+| `compilerError` | Clang/GCC compilation failed | Shows compiler error in Console Panel |
 
 ## Build & Deployment
 
