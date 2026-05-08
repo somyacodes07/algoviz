@@ -266,7 +266,7 @@ export const TreePanel: React.FC<{
   const newNodeIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const currentIds = new Set(preview.nodes.map((n) => n.id));
+    const currentIds = new Set<string>(preview.nodes.map((n) => n.id));
     const inserted = new Set<string>();
     currentIds.forEach((id) => {
       if (!prevNodeIds.current.has(id)) inserted.add(id);
