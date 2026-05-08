@@ -171,6 +171,15 @@ export async function executeWasmClangCpp(
     };
   }
 
+  if (execResult.exitCode !== 0) {
+    return {
+      timeline: [],
+      stdout: execResult.stdout,
+      stderr: execResult.stderr,
+      engineError: `Execution failed with exit code ${execResult.exitCode}: ${execResult.stderr || 'Runtime error'}`,
+    };
+  }
+
   // ── 4. Parse trace output from stdout ──
   const rawOutput = execResult.stdout;
   const timeline = parseTraceOutput(rawOutput);
@@ -365,6 +374,10 @@ async function runCompiledBinary(
       wasi_snapshot_preview1: wasiImports,
     });
 
+    if (instance.exports.memory) {
+      wasiImports.__setMemory(instance.exports.memory as WebAssembly.Memory);
+    }
+
     // Run with a timeout
     const timeoutMs = config?.timeoutMs ?? 5000;
     const startFn = (instance.exports._start || instance.exports.main) as Function;
@@ -391,7 +404,7 @@ async function runCompiledBinary(
       };
     }
     // A normal exit(0) in WASI throws a special error
-    if (e instanceof WebAssembly.RuntimeError || e.message?.includes('unreachable')) {
+    if (e instanceof WebAssembly.RuntimeError && e.message?.includes('unreachable')) {
       return { stdout, stderr, exitCode: 0 };
     }
     return { stdout, stderr: e.message, exitCode: 1 };
