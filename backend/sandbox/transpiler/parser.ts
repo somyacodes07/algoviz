@@ -122,6 +122,7 @@ async function doInit(): Promise<void> {
     initPromise = null;
     throw new Error(
       `Failed to initialize Tree-sitter C++ parser: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
     );
   }
 }
