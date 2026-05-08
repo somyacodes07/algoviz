@@ -69,49 +69,56 @@ async function executeCpp(
   config: ExecutionConfig | undefined,
   timeoutMs: number,
 ): Promise<ExecuteResult> {
-  // ── Strategy 1: Wasm Clang Engine (Primary) ──
-  try {
-    const { executeWasmClangCpp, isWasmClangReady } = await import('./wasmClangEngine');
+  // ── Strategy 1: Wasm Clang Engine (Primary, if enabled) ──
+  // Only attempt to load Wasm Clang if explicitly enabled via environment variable,
+  // since the 30MB binaries are not bundled by default and will cause 404 errors.
+  if (import.meta.env.VITE_ENABLE_WASM_CLANG === 'true') {
+    try {
+      const { executeWasmClangCpp } = await import('./wasmClangEngine');
 
-    const result = await executeWasmClangCpp(userCode, config);
+      const result = await executeWasmClangCpp(userCode, config);
 
-    // ── Engine error → fall back to Wandbox ──
-    if (result.engineError) {
-      console.warn(
-        `[Executor] Wasm Clang unavailable (${result.engineError}), falling back to Wandbox API.`,
-      );
+      // ── Engine error → fall back to Wandbox ──
+      if (result.engineError) {
+        console.warn(
+          `[Executor] Wasm Clang unavailable (${result.engineError}), falling back to Wandbox API.`,
+        );
+        return executeWithWandbox(userCode, config, timeoutMs);
+      }
+
+      // ── Compiler error → show to user, don't fallback ──
+      if (result.compilerError) {
+        return {
+          timeline: [
+            {
+              line: 0,
+              variables: {},
+              callStack: ['main'],
+              consoleOutput: [{ type: 'error', message: result.compilerError }],
+              isError: true,
+              errorMessage: result.compilerError,
+            },
+          ],
+          errorType: 'runtime',
+          analysis: null,
+        };
+      }
+
+      // ── Success: run complexity analysis ──
+      const analysis = analyzeComplexity(userCode, result.timeline);
+      return {
+        timeline: result.timeline,
+        analysis,
+      };
+    } catch (e: any) {
+      // Unexpected Wasm engine error → fall back to Wandbox
+      console.warn('[Executor] Unexpected Wasm Clang error, falling back to Wandbox:', e.message);
       return executeWithWandbox(userCode, config, timeoutMs);
     }
-
-    // ── Compiler error → show to user, don't fallback ──
-    if (result.compilerError) {
-      return {
-        timeline: [
-          {
-            line: 0,
-            variables: {},
-            callStack: ['main'],
-            consoleOutput: [{ type: 'error', message: result.compilerError }],
-            isError: true,
-            errorMessage: result.compilerError,
-          },
-        ],
-        errorType: 'runtime',
-        analysis: null,
-      };
-    }
-
-    // ── Success: run complexity analysis ──
-    const analysis = analyzeComplexity(userCode, result.timeline);
-    return {
-      timeline: result.timeline,
-      analysis,
-    };
-  } catch (e: any) {
-    // Unexpected Wasm engine error → fall back to Wandbox
-    console.warn('[Executor] Unexpected Wasm Clang error, falling back to Wandbox:', e.message);
-    return executeWithWandbox(userCode, config, timeoutMs);
   }
+
+  // ── Strategy 2: Wandbox API (Fallback/Default) ──
+  return executeWithWandbox(userCode, config, timeoutMs);
 }
 
 /**
