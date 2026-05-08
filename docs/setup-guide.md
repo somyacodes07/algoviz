@@ -4,7 +4,7 @@
 
 - [Node.js](https://nodejs.org/) 18 or later
 - A modern browser (Chrome, Firefox, Edge, Safari)
-- Active internet connection (for C++ Wandbox engine; offline uses local fallback)
+- Active internet connection (Optional: Wasm Clang runs completely offline; Wandbox API fallback requires internet)
 
 ## Quick Start
 
@@ -34,7 +34,7 @@ npm run preview
 
 ## Environment
 
-No environment variables or API keys are required. AlgoViz uses the public Wandbox API for C++ execution, which does not require authentication.
+No environment variables or API keys are required. AlgoViz uses the local Wasm Clang engine for C++ execution natively, and the public Wandbox API as a fallback, neither of which require authentication.
 
 ## WASM Files
 
@@ -49,10 +49,9 @@ These are loaded automatically on first use. No setup needed.
 
 If you're working without internet access:
 
-- **JavaScript**: Works fully offline (all execution happens in-browser)
-- **C++**: Falls back to the local C++ → JavaScript transpiler automatically
-  - Supports a DSA-focused C++ subset (vectors, maps, loops, recursion)
-  - Full C++ features (templates, OOP, advanced STL) require the Wandbox API
+- **JavaScript**: Works fully offline (all execution happens in-browser).
+- **C++**: Works fully offline via the local WebAssembly Clang (Wasm Clang) engine.
+  - Supports full C++ features including STL containers, templates, and OOP natively inside your browser.
 
 ## Type Checking
 
