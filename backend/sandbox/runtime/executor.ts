@@ -20,8 +20,8 @@ const MAX_CACHE_SIZE = 15;
  * Execute user code in an isolated environment.
  *
  * For C++:
- *   1. Primary: Wandbox API (real GCC compilation via source instrumentation)
- *   2. Fallback: Local transpiler (C++ → JS) in Web Worker if Wandbox is unreachable
+ *   1. Primary: Local Wasm Clang engine (in-browser compilation + execution)
+ *   2. Fallback: Wandbox API (real GCC compilation) if Wasm engine is unavailable
  *
  * For JS/Python:
  *   - Always uses the local Web Worker with AST instrumentation.
@@ -48,7 +48,7 @@ export const executeCode = async (
     result = await executeInWorker(userCode, language, config, timeoutMs);
   }
 
-  // Save to cache (only if it didn't timeout/fail fatally, though caching errors is also fine so we don't retry same bad code)
+  // Save to cache
   if (executionCache.size >= MAX_CACHE_SIZE) {
     const firstKey = executionCache.keys().next().value;
     executionCache.delete(firstKey);
@@ -60,8 +60,8 @@ export const executeCode = async (
 
 /**
  * C++ execution strategy:
- *  1. Try Wandbox API (real GCC, full STL support)
- *  2. On network failure → fall back to the local C++→JS transpiler in a Web Worker
+ *  1. Try local Wasm Clang engine (zero-latency, offline-capable)
+ *  2. On engine failure → fall back to Wandbox API (real GCC, full STL)
  *  3. On compiler error → show the error to the user (don't fallback)
  */
 async function executeCpp(
@@ -69,16 +69,18 @@ async function executeCpp(
   config: ExecutionConfig | undefined,
   timeoutMs: number,
 ): Promise<ExecuteResult> {
+  // ── Strategy 1: Wasm Clang Engine (Primary) ──
   try {
-    const { executeWandboxCpp } = await import('./wandboxExecutor');
-    const result = await executeWandboxCpp(userCode, config);
+    const { executeWasmClangCpp, isWasmClangReady } = await import('./wasmClangEngine');
 
-    // ── Network / API error → fall back to local transpiler ──
-    if (result.networkError) {
+    const result = await executeWasmClangCpp(userCode, config);
+
+    // ── Engine error → fall back to Wandbox ──
+    if (result.engineError) {
       console.warn(
-        `[Executor] Wandbox unavailable (${result.networkError}), falling back to local transpiler.`,
+        `[Executor] Wasm Clang unavailable (${result.engineError}), falling back to Wandbox API.`,
       );
-      return executeInWorker(userCode, 'cpp', config, timeoutMs);
+      return executeWithWandbox(userCode, config, timeoutMs);
     }
 
     // ── Compiler error → show to user, don't fallback ──
@@ -99,22 +101,107 @@ async function executeCpp(
       };
     }
 
-    // ── Success: run complexity analysis on the original C++ code + timeline ──
+    // ── Success: run complexity analysis ──
     const analysis = analyzeComplexity(userCode, result.timeline);
     return {
       timeline: result.timeline,
       analysis,
     };
   } catch (e: any) {
-    // Unexpected error → fall back to local transpiler
-    console.warn('[Executor] Unexpected Wandbox error, falling back:', e.message);
-    return executeInWorker(userCode, 'cpp', config, timeoutMs);
+    // Unexpected Wasm engine error → fall back to Wandbox
+    console.warn('[Executor] Unexpected Wasm Clang error, falling back to Wandbox:', e.message);
+    return executeWithWandbox(userCode, config, timeoutMs);
+  }
+}
+
+/**
+ * Fallback: Execute C++ via the Wandbox API (real GCC).
+ * Used when the local Wasm Clang engine is unavailable.
+ */
+async function executeWithWandbox(
+  userCode: string,
+  config: ExecutionConfig | undefined,
+  timeoutMs: number,
+): Promise<ExecuteResult> {
+  try {
+    const { executeWandboxCpp } = await import('./wandboxExecutor');
+    const result = await executeWandboxCpp(userCode, config);
+
+    // ── Network / API error → return error to user ──
+    if (result.networkError) {
+      return {
+        timeline: [
+          {
+            line: 0,
+            variables: {},
+            callStack: ['main'],
+            consoleOutput: [
+              {
+                type: 'error',
+                message: `Both local engine and Wandbox API are unavailable.\n\nLocal: Wasm Clang engine not loaded.\nRemote: ${result.networkError}\n\nPlease check your internet connection or reload the page.`,
+              },
+            ],
+            isError: true,
+            errorMessage: 'No C++ execution engine available',
+          },
+        ],
+        errorType: 'runtime',
+        analysis: null,
+      };
+    }
+
+    // ── Compiler error → show to user ──
+    if (result.compilerError) {
+      return {
+        timeline: [
+          {
+            line: 0,
+            variables: {},
+            callStack: ['main'],
+            consoleOutput: [{ type: 'error', message: result.compilerError }],
+            isError: true,
+            errorMessage: result.compilerError,
+          },
+        ],
+        errorType: 'runtime',
+        analysis: null,
+      };
+    }
+
+    // ── Success ──
+    const analysis = analyzeComplexity(userCode, result.timeline);
+    return {
+      timeline: result.timeline,
+      analysis,
+    };
+  } catch (e: any) {
+    // Both engines failed
+    return {
+      timeline: [
+        {
+          line: 0,
+          variables: {},
+          callStack: ['main'],
+          consoleOutput: [
+            {
+              type: 'error',
+              message: `C++ execution failed: ${e.message}\n\nBoth the local Wasm engine and the Wandbox API are unavailable.`,
+            },
+          ],
+          isError: true,
+          errorMessage: e.message,
+        },
+      ],
+      errorType: 'runtime',
+      analysis: null,
+    };
   }
 }
 
 /**
  * Execute code inside a sandboxed Web Worker.
- * Used for JS/Python directly, and as the C++ fallback (transpiler path).
+ * Used for JS/Python execution only.
+ * C++ no longer uses this path — it uses Wasm Clang or Wandbox instead.
  */
 function executeInWorker(
   userCode: string,

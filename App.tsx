@@ -3,6 +3,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
 import TemplatePalette from "./frontend/components/TemplatePalette";
+import ErrorPopup from "./frontend/components/ErrorPopup";
 import DocsPage from "./frontend/components/DocsPage";
 import WorkspaceHeader from "./frontend/components/layout/WorkspaceHeader";
 import WorkspaceEditor from "./frontend/components/layout/WorkspaceEditor";
@@ -166,6 +167,7 @@ const App: React.FC = () => {
     nextStep,
     prevStep,
     toggleBreakpoint,
+    clearError,
   } = controls;
 
   // Derived Theme Color
@@ -559,6 +561,11 @@ const App: React.FC = () => {
               templates={templates}
               onSelect={handleTemplateSelect}
               language={language}
+            />
+
+            <ErrorPopup
+              error={executionError}
+              onClose={clearError}
             />
           </motion.div>
         )}
