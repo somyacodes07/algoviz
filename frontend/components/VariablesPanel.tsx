@@ -564,7 +564,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
 
   // Ghost pinned vars that went out of scope
   const ghostPinned = pinnedVars
-    ? Array.from(pinnedVars).filter(k => !keys.includes(k))
+    ? Array.from(pinnedVars).filter((k: string) => !keys.includes(k))
     : [];
 
   return (
@@ -577,7 +577,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
             <span className={`text-[9px] font-black uppercase tracking-[0.18em] ${isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400'}`}>Watch</span>
           </div>
           <div className="p-1.5 space-y-1">
-            {[...pinned, ...ghostPinned].map(k => {
+            {[...pinned, ...ghostPinned].map((k: string) => {
               const isGhost = ghostPinned.includes(k);
               const val = isGhost ? prevVariables[k] : variables[k];
               return (
