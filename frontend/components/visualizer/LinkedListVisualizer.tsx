@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, ArrowRight, ArrowLeftRight, Repeat2, Trash2 } from 'lucide-react';
+import { GitBranch, ArrowRight, ArrowLeft, Repeat2, Trash2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
@@ -297,26 +297,33 @@ export const LinkedListPanel: React.FC<{
                     </div>
 
                     {index < arr.length - 1 && (
-                      <motion.div
-                        className={`mt-11 flex items-center ${theme.accentText}`}
-                        animate={preview.isDoublyLinked ? {} : { x: [0, 3, 0] }}
-                        transition={
-                          preview.isDoublyLinked
-                            ? {}
-                            : {
-                                duration: 1.2,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
-                                repeatDelay: 0.4,
-                              }
-                        }
-                      >
-                        {preview.isDoublyLinked ? (
-                          <ArrowLeftRight size={16} />
-                        ) : (
+                      preview.isDoublyLinked ? (
+                        <div className="mt-8 flex flex-col items-center gap-0.5">
+                          <motion.div
+                            className={theme.accentText}
+                            animate={{ x: [0, 4, 0] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6 }}
+                          >
+                            <ArrowRight size={13} strokeWidth={2.5} />
+                          </motion.div>
+                          <div className={`h-[2px] w-5 ${isSaffron ? 'bg-orange-300 dark:bg-orange-700' : 'bg-blue-300 dark:bg-blue-700'} rounded-full`} />
+                          <motion.div
+                            className={theme.accentText}
+                            animate={{ x: [0, -4, 0] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6, delay: 0.3 }}
+                          >
+                            <ArrowLeft size={13} strokeWidth={2.5} />
+                          </motion.div>
+                        </div>
+                      ) : (
+                        <motion.div
+                          className={`mt-11 flex items-center ${theme.accentText}`}
+                          animate={{ x: [0, 3, 0] }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.4 }}
+                        >
                           <ArrowRight size={14} />
-                        )}
-                      </motion.div>
+                        </motion.div>
+                      )
                     )}
                   </motion.div>
                 );
