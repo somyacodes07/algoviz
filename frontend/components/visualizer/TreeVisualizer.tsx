@@ -275,10 +275,7 @@ export const TreePanel: React.FC<{
     prevNodeIds.current = currentIds;
   });
 
-  const { positions, svgW, svgH, NODE_W } = useMemo(
-    () => computeTreeLayout(preview),
-    [preview],
-  );
+  const { positions, svgW, svgH, NODE_W } = useMemo(() => computeTreeLayout(preview), [preview]);
 
   const nodeById = useMemo(() => {
     const m = new Map<string, TreeNodeView>();
@@ -315,7 +312,9 @@ export const TreePanel: React.FC<{
   }, [preview]);
 
   const leafCount = useMemo(() => {
-    return preview.nodes.filter((n) => !n.leftId && !n.rightId && (!n.childrenIds || n.childrenIds.length === 0)).length;
+    return preview.nodes.filter(
+      (n) => !n.leftId && !n.rightId && (!n.childrenIds || n.childrenIds.length === 0),
+    ).length;
   }, [preview]);
 
   return (
@@ -344,7 +343,9 @@ export const TreePanel: React.FC<{
 
       {/* Stats row */}
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${isSaffron ? 'border-saffron-300 bg-saffron-50 text-saffron-700 dark:border-saffron-800 dark:bg-saffron-900/20 dark:text-saffron-400' : 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400'}`}>
+        <span
+          className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${isSaffron ? 'border-saffron-300 bg-saffron-50 text-saffron-700 dark:border-saffron-800 dark:bg-saffron-900/20 dark:text-saffron-400' : 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400'}`}
+        >
           Depth: {maxDepth}
         </span>
         <span className="border-[2px] border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -411,7 +412,10 @@ export const TreePanel: React.FC<{
                 else if (parent.rightId === node.id) childLabel = 'R';
               }
 
-              const isLeaf = !node.leftId && !node.rightId && (!node.childrenIds || node.childrenIds.length === 0);
+              const isLeaf =
+                !node.leftId &&
+                !node.rightId &&
+                (!node.childrenIds || node.childrenIds.length === 0);
 
               const boxW = NODE_W;
               const boxH = 42;
@@ -451,34 +455,35 @@ export const TreePanel: React.FC<{
 
                   {/* Pointer tags — bounce in/out (#8) */}
                   <AnimatePresence>
-                    {hasPointer && node.pointerNames.map((pName, pi) => (
-                      <motion.g
-                        key={pName}
-                        initial={{ opacity: 0, scale: 0.5, y: 4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.5, y: 4 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                      >
-                        <rect
-                          x={-boxW / 2 + pi * 4}
-                          y={-boxH / 2 - 24 - pi * 2}
-                          width={pName.length * 7 + 12}
-                          height={16}
-                          fill="#10b981"
-                          stroke="#064e3b"
-                          strokeWidth="2"
-                        />
-                        <text
-                          x={-boxW / 2 + pi * 4 + (pName.length * 7 + 12) / 2}
-                          y={-boxH / 2 - 24 - pi * 2 + 12}
-                          textAnchor="middle"
-                          className="text-[9px] font-black uppercase fill-white pointer-events-none"
-                          style={{ letterSpacing: '0.12em' }}
+                    {hasPointer &&
+                      node.pointerNames.map((pName, pi) => (
+                        <motion.g
+                          key={pName}
+                          initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                         >
-                          {pName}
-                        </text>
-                      </motion.g>
-                    ))}
+                          <rect
+                            x={-boxW / 2 + pi * 4}
+                            y={-boxH / 2 - 24 - pi * 2}
+                            width={pName.length * 7 + 12}
+                            height={16}
+                            fill="#10b981"
+                            stroke="#064e3b"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={-boxW / 2 + pi * 4 + (pName.length * 7 + 12) / 2}
+                            y={-boxH / 2 - 24 - pi * 2 + 12}
+                            textAnchor="middle"
+                            className="text-[9px] font-black uppercase fill-white pointer-events-none"
+                            style={{ letterSpacing: '0.12em' }}
+                          >
+                            {pName}
+                          </text>
+                        </motion.g>
+                      ))}
                   </AnimatePresence>
                   {hasPointer && (
                     <line
@@ -516,7 +521,14 @@ export const TreePanel: React.FC<{
                   )}
 
                   {/* Shadow rect */}
-                  <rect x={-boxW / 2 + 2} y={-boxH / 2 + 2} width={boxW} height={boxH} fill="#0f172a" className="dark:fill-black" />
+                  <rect
+                    x={-boxW / 2 + 2}
+                    y={-boxH / 2 + 2}
+                    width={boxW}
+                    height={boxH}
+                    fill="#0f172a"
+                    className="dark:fill-black"
+                  />
 
                   {/* Main node rect */}
                   <rect
@@ -524,14 +536,24 @@ export const TreePanel: React.FC<{
                     y={-boxH / 2}
                     width={boxW}
                     height={boxH}
-                    fill={hasPointer ? '#ecfdf5' : isLeaf ? (isSaffron ? '#fff7ed' : '#eff6ff') : '#ffffff'}
+                    fill={
+                      hasPointer
+                        ? '#ecfdf5'
+                        : isLeaf
+                          ? isSaffron
+                            ? '#fff7ed'
+                            : '#eff6ff'
+                          : '#ffffff'
+                    }
                     stroke={hasPointer ? '#10b981' : '#0f172a'}
                     strokeWidth="2"
                     className={
                       hasPointer
                         ? 'dark:fill-[#022c22] dark:stroke-[#059669]'
                         : isLeaf
-                          ? isSaffron ? 'dark:fill-[#1c1108] dark:stroke-[#333]' : 'dark:fill-[#0c1524] dark:stroke-[#333]'
+                          ? isSaffron
+                            ? 'dark:fill-[#1c1108] dark:stroke-[#333]'
+                            : 'dark:fill-[#0c1524] dark:stroke-[#333]'
                           : 'dark:fill-[#161618] dark:stroke-[#333]'
                     }
                   />
@@ -549,8 +571,13 @@ export const TreePanel: React.FC<{
 
                   {/* Leaf dot */}
                   {isLeaf && (
-                    <circle cx={boxW / 2 - 6} cy={-boxH / 2 + 6} r={3}
-                      fill={isSaffron ? '#f97316' : '#3b82f6'} className="dark:opacity-80" />
+                    <circle
+                      cx={boxW / 2 - 6}
+                      cy={-boxH / 2 + 6}
+                      r={3}
+                      fill={isSaffron ? '#f97316' : '#3b82f6'}
+                      className="dark:opacity-80"
+                    />
                   )}
                 </motion.g>
               );

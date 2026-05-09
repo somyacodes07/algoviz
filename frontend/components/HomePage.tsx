@@ -93,14 +93,20 @@ function useScramble(target: string, delay = 100) {
     const timer = setTimeout(() => {
       const interval = setInterval(() => {
         setDisplay(
-          target.split('').map((ch, i) => {
-            if (ch === ' ') return ' ';
-            if (i < Math.floor(iter / 3)) return ch;
-            return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
-          }).join('')
+          target
+            .split('')
+            .map((ch, i) => {
+              if (ch === ' ') return ' ';
+              if (i < Math.floor(iter / 3)) return ch;
+              return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+            })
+            .join(''),
         );
         iter++;
-        if (iter > totalFrames) { clearInterval(interval); setDisplay(target); }
+        if (iter > totalFrames) {
+          clearInterval(interval);
+          setDisplay(target);
+        }
       }, 40);
       return () => clearInterval(interval);
     }, delay);
@@ -116,19 +122,24 @@ function useCountUp(target: number, duration = 1800) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      observer.disconnect();
-      let start = 0;
-      const step = 16;
-      const steps = duration / step;
-      const increment = target / steps;
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= target) { setCount(target); clearInterval(timer); }
-        else setCount(Math.floor(start));
-      }, step);
-    }, { threshold: 0.3 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        let start = 0;
+        const step = 16;
+        const steps = duration / step;
+        const increment = target / steps;
+        const timer = setInterval(() => {
+          start += increment;
+          if (start >= target) {
+            setCount(target);
+            clearInterval(timer);
+          } else setCount(Math.floor(start));
+        }, step);
+      },
+      { threshold: 0.3 },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, [target, duration]);
@@ -142,14 +153,21 @@ const STATS = [
   { label: 'Open Source', value: 100, suffix: '%' },
 ];
 
-const StatCard: React.FC<{ label: string; value: number; suffix: string }> = ({ label, value, suffix }) => {
+const StatCard: React.FC<{ label: string; value: number; suffix: string }> = ({
+  label,
+  value,
+  suffix,
+}) => {
   const { count, ref } = useCountUp(value);
   return (
     <div ref={ref} className="flex flex-col items-center">
       <span className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-        {count.toLocaleString()}{suffix}
+        {count.toLocaleString()}
+        {suffix}
       </span>
-      <span className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+        {label}
+      </span>
     </div>
   );
 };
@@ -185,7 +203,10 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Top Navigation / Header */}
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
-            <Logo language={hoverLang === 'cpp' ? 'c++' : 'javascript'} className="w-[2.4rem] h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]" />
+            <Logo
+              language={hoverLang === 'cpp' ? 'c++' : 'javascript'}
+              className="w-[2.4rem] h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]"
+            />
             <span className="font-bold text-xl tracking-tight font-mono">{scrambledTitle}</span>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
@@ -350,7 +371,23 @@ const HomePage: React.FC<HomePageProps> = ({
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-full border border-[#007acc] bg-[#007acc]/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-[#007acc] transition-colors hover:bg-[#007acc] hover:text-white active:translate-y-[1px] dark:border-[#007acc]/50 dark:text-[#3794ff] dark:hover:bg-[#007acc] dark:hover:text-white"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 17a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5H7a5 5 0 0 0-5 5v10z"></path><path d="M12 15h.01"></path><path d="M8 15h.01"></path><path d="M16 15h.01"></path><path d="M2 11h20"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M2 17a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5H7a5 5 0 0 0-5 5v10z"></path>
+                    <path d="M12 15h.01"></path>
+                    <path d="M8 15h.01"></path>
+                    <path d="M16 15h.01"></path>
+                    <path d="M2 11h20"></path>
+                  </svg>
                   Get VS Code Extension
                 </a>
               </div>
@@ -609,11 +646,15 @@ const HomePage: React.FC<HomePageProps> = ({
                 transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
                 className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
               >
-                <div className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}>
+                <div
+                  className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}
+                >
                   <card.icon strokeWidth={2.5} size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{card.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{card.desc}</p>
+                <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                  {card.desc}
+                </p>
               </motion.div>
             ))}
           </div>

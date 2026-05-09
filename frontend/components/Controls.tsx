@@ -58,44 +58,54 @@ const Controls: React.FC<ControlsProps> = ({
     'border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]';
 
   // ── Scrubber drag logic (#1) ─────────────────────────────────────────────
-  const getPctFromEvent = useCallback((e: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
-    if (!trackRef.current) return null;
-    const rect = trackRef.current.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : (e as MouseEvent).clientX;
-    const raw = (clientX - rect.left) / rect.width;
-    return Math.max(0, Math.min(1, raw)) * 100;
-  }, []);
+  const getPctFromEvent = useCallback(
+    (e: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
+      if (!trackRef.current) return null;
+      const rect = trackRef.current.getBoundingClientRect();
+      const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : (e as MouseEvent).clientX;
+      const raw = (clientX - rect.left) / rect.width;
+      return Math.max(0, Math.min(1, raw)) * 100;
+    },
+    [],
+  );
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isDragging.current = true;
-    setIsDraggingState(true);
-    const pct = getPctFromEvent(e);
-    if (pct !== null) onSeek(pct);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      isDragging.current = true;
+      setIsDraggingState(true);
+      const pct = getPctFromEvent(e);
+      if (pct !== null) onSeek(pct);
 
-    const onMove = (ev: MouseEvent) => {
-      if (!isDragging.current) return;
-      const p = getPctFromEvent(ev);
-      if (p !== null) onSeek(p);
-    };
-    const onUp = () => {
-      isDragging.current = false;
-      setIsDraggingState(false);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, [getPctFromEvent, onSeek]);
+      const onMove = (ev: MouseEvent) => {
+        if (!isDragging.current) return;
+        const p = getPctFromEvent(ev);
+        if (p !== null) onSeek(p);
+      };
+      const onUp = () => {
+        isDragging.current = false;
+        setIsDraggingState(false);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [getPctFromEvent, onSeek],
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const pct = getPctFromEvent(e);
-    setHoverPct(pct);
-  }, [getPctFromEvent]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const pct = getPctFromEvent(e);
+      setHoverPct(pct);
+    },
+    [getPctFromEvent],
+  );
 
-  const hoverStep = hoverPct !== null && totalSteps > 1
-    ? Math.round((hoverPct / 100) * (totalSteps - 1)) + 1
-    : null;
+  const hoverStep =
+    hoverPct !== null && totalSteps > 1
+      ? Math.round((hoverPct / 100) * (totalSteps - 1)) + 1
+      : null;
 
   return (
     <div
@@ -112,7 +122,9 @@ const Controls: React.FC<ControlsProps> = ({
           >
             <RotateCcw size={18} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Reset</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">
+            Reset
+          </span>
         </div>
 
         <div className="w-px h-8 bg-slate-300 dark:bg-[#222] mx-2" />
@@ -125,7 +137,9 @@ const Controls: React.FC<ControlsProps> = ({
           >
             <StepBack size={20} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Prev</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">
+            Prev
+          </span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
@@ -139,7 +153,9 @@ const Controls: React.FC<ControlsProps> = ({
               <Play size={22} fill="currentColor" className="ml-1" />
             )}
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Play</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">
+            Play
+          </span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
@@ -150,7 +166,9 @@ const Controls: React.FC<ControlsProps> = ({
           >
             <StepForward size={20} />
           </button>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">Next</span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase opacity-80">
+            Next
+          </span>
         </div>
       </div>
 
@@ -159,7 +177,9 @@ const Controls: React.FC<ControlsProps> = ({
         {/* Top row */}
         <div className="flex justify-between items-center h-5">
           {totalSteps > 0 && (
-            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 border-[2px] ${stepBadgeClass}`}>
+            <span
+              className={`text-[10px] font-bold font-mono px-2 py-0.5 border-[2px] ${stepBadgeClass}`}
+            >
               Step {currentStep + 1} / {totalSteps}
             </span>
           )}
@@ -184,7 +204,10 @@ const Controls: React.FC<ControlsProps> = ({
             {/* Fill */}
             <div
               className={`absolute top-0 left-0 h-full border-r-[2px] border-slate-900/20 dark:border-white/10 ${progressFillClass}`}
-              style={{ width: `${progress}%`, transition: isDraggingState ? 'none' : 'width 80ms linear' }}
+              style={{
+                width: `${progress}%`,
+                transition: isDraggingState ? 'none' : 'width 80ms linear',
+              }}
             />
             {/* Hover preview tint */}
             {hoverPct !== null && (
@@ -229,12 +252,14 @@ const Controls: React.FC<ControlsProps> = ({
         <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest hidden xl:block">
           Speed
         </span>
-        {([
-          { label: 'Slow', value: 2000, icon: null },
-          { label: 'Norm', value: 1000, icon: null },
-          { label: 'Fast', value: 400, icon: null },
-          { label: 'Instant', value: 80, icon: Zap },
-        ] as { label: string; value: number; icon: typeof Zap | null }[]).map((preset) => {
+        {(
+          [
+            { label: 'Slow', value: 2000, icon: null },
+            { label: 'Norm', value: 1000, icon: null },
+            { label: 'Fast', value: 400, icon: null },
+            { label: 'Instant', value: 80, icon: Zap },
+          ] as { label: string; value: number; icon: typeof Zap | null }[]
+        ).map((preset) => {
           const isActive = speed === preset.value;
           return (
             <button

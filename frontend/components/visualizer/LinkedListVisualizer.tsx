@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, ArrowRight, Repeat2, Trash2 } from 'lucide-react';
+import { GitBranch, ArrowRight, ArrowLeftRight, Repeat2, Trash2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
@@ -15,6 +15,7 @@ export interface LinkedListPreview {
   nodes: LinkedListNodeView[];
   cycleToIndex: number | null;
   truncated: boolean;
+  isDoublyLinked: boolean;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -53,8 +54,10 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
     let current: unknown = startNode;
     let cycleToIndex: number | null = null;
     let truncated = false;
+    let isDoublyLinked = false;
 
     while (isPlainObject(current) && 'next' in current) {
+      if ('prev' in current) isDoublyLinked = true;
       if (refToIndex.has(current)) {
         cycleToIndex = refToIndex.get(current)!;
         break;
@@ -92,7 +95,7 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
       (cycleToIndex !== null ? 6 : 0) +
       (/head|root|start|list/i.test(sourceName) ? 20 : 0);
 
-    const preview = { sourceName, nodes, cycleToIndex, truncated, score };
+    const preview = { sourceName, nodes, cycleToIndex, truncated, isDoublyLinked, score };
     if (!bestPreview || preview.score > bestPreview.score) {
       bestPreview = preview;
     }
@@ -125,7 +128,7 @@ export const LinkedListPanel: React.FC<{
   // Build the merged render list: current nodes + recently deleted ghost nodes
   const renderNodes = useMemo<RenderNode[]>(() => {
     const prevNodes = prevNodesRef.current;
-    const currentLabels = new Set(preview.nodes.map(n => n.label));
+    const currentLabels = new Set(preview.nodes.map((n) => n.label));
     const deletedNodes: RenderNode[] = [];
 
     // Find nodes that existed in prev but not in current (by label match)
@@ -171,7 +174,7 @@ export const LinkedListPanel: React.FC<{
   });
 
   // Count deleted nodes for the badge
-  const deletedCount = renderNodes.filter(n => n.deleted).length;
+  const deletedCount = renderNodes.filter((n) => n.deleted).length;
 
   return (
     <section className={`${theme.panelClass} p-3`}>
@@ -180,7 +183,7 @@ export const LinkedListPanel: React.FC<{
           <div className="flex items-center gap-2">
             <span className={theme.badgeClass}>
               <GitBranch size={12} />
-              Linked List
+              {preview.isDoublyLinked ? 'Doubly Linked List' : 'Linked List'}
             </span>
             {deletedCount > 0 && (
               <span className="inline-flex items-center gap-1 border-[2px] border-red-300 bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
@@ -209,101 +212,114 @@ export const LinkedListPanel: React.FC<{
         <div className="flex items-start gap-2 w-max">
           <AnimatePresence mode="popLayout">
             {renderNodes
-              .filter(n => !n.deleted)
+              .filter((n) => !n.deleted)
               .map((node, index, arr) => {
-              const isPointed = node.pointerNames.length > 0;
-              const isTrail = trailIds.current.has(node.id);
+                const isPointed = node.pointerNames.length > 0;
+                const isTrail = trailIds.current.has(node.id);
 
-              return (
-                <motion.div
-                  key={node.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                  className="flex items-start gap-2"
-                >
-                  <div className="relative">
-                    {/* Trail glow */}
-                    {isTrail && (
-                      <motion.div
-                        className="absolute inset-0 -m-1"
-                        initial={{ opacity: 0.5 }}
-                        animate={{ opacity: 0 }}
-                        transition={{ duration: 1.2, ease: 'easeOut' }}
-                        style={{
-                          background: isSaffron
-                            ? 'rgba(249,115,22,0.25)'
-                            : 'rgba(59,130,246,0.25)',
-                          border: `2px solid ${isSaffron ? '#f97316' : '#3b82f6'}`,
-                        }}
-                      />
-                    )}
-
-                    {/* Pointer tag */}
-                    <AnimatePresence>
-                      {isPointed && (
+                return (
+                  <motion.div
+                    key={node.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                    className="flex items-start gap-2"
+                  >
+                    <div className="relative">
+                      {/* Trail glow */}
+                      {isTrail && (
                         <motion.div
-                          key={node.pointerNames.join(',')}
-                          className="absolute -top-5 left-0 right-0 flex justify-center gap-0.5"
-                          initial={{ opacity: 0, scale: 0.5, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, y: 4 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                        >
-                          {node.pointerNames.map((p) => (
-                            <span
-                              key={p}
-                              className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
-                            >
-                              {p}
-                            </span>
-                          ))}
-                        </motion.div>
+                          className="absolute inset-0 -m-1"
+                          initial={{ opacity: 0.5 }}
+                          animate={{ opacity: 0 }}
+                          transition={{ duration: 1.2, ease: 'easeOut' }}
+                          style={{
+                            background: isSaffron
+                              ? 'rgba(249,115,22,0.25)'
+                              : 'rgba(59,130,246,0.25)',
+                            border: `2px solid ${isSaffron ? '#f97316' : '#3b82f6'}`,
+                          }}
+                        />
                       )}
-                    </AnimatePresence>
 
-                    <motion.div
-                      animate={
-                        isPointed
-                          ? { borderColor: isSaffron ? '#f97316' : '#3b82f6', scale: 1.04 }
-                          : { scale: 1 }
-                      }
-                      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                      className={`mt-5 min-w-[64px] border-[2px] px-2.5 py-2 ${
-                        isPointed
-                          ? `${theme.accentBorder} ${theme.accentSoftBg} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]`
-                          : isTrail
-                          ? 'border-slate-400 bg-slate-50 dark:border-slate-600 dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.3)]'
-                          : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.15)]'
-                      }`}
-                    >
-                      <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                        Node {index + 1}
-                      </div>
-                      <div className="mt-0.5 text-center text-base font-black text-slate-900 dark:text-slate-100">
-                        {node.label}
-                      </div>
-                    </motion.div>
-                  </div>
+                      {/* Pointer tag */}
+                      <AnimatePresence>
+                        {isPointed && (
+                          <motion.div
+                            key={node.pointerNames.join(',')}
+                            className="absolute -top-5 left-0 right-0 flex justify-center gap-0.5"
+                            initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                          >
+                            {node.pointerNames.map((p) => (
+                              <span
+                                key={p}
+                                className={`border border-slate-900 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white ${theme.accentBg}`}
+                              >
+                                {p}
+                              </span>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                  {index < arr.length - 1 && (
-                    <motion.div
-                      className={`mt-11 flex items-center ${theme.accentText}`}
-                      animate={{ x: [0, 3, 0] }}
-                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.4 }}
-                    >
-                      <ArrowRight size={14} />
-                    </motion.div>
-                  )}
-                </motion.div>
-              );
-            })}
+                      <motion.div
+                        animate={
+                          isPointed
+                            ? { borderColor: isSaffron ? '#f97316' : '#3b82f6', scale: 1.04 }
+                            : { scale: 1 }
+                        }
+                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                        className={`mt-5 min-w-[64px] border-[2px] px-2.5 py-2 ${
+                          isPointed
+                            ? `${theme.accentBorder} ${theme.accentSoftBg} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]`
+                            : isTrail
+                              ? 'border-slate-400 bg-slate-50 dark:border-slate-600 dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.3)]'
+                              : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.15)]'
+                        }`}
+                      >
+                        <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                          Node {index + 1}
+                        </div>
+                        <div className="mt-0.5 text-center text-base font-black text-slate-900 dark:text-slate-100">
+                          {node.label}
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    {index < arr.length - 1 && (
+                      <motion.div
+                        className={`mt-11 flex items-center ${theme.accentText}`}
+                        animate={preview.isDoublyLinked ? {} : { x: [0, 3, 0] }}
+                        transition={
+                          preview.isDoublyLinked
+                            ? {}
+                            : {
+                                duration: 1.2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                                repeatDelay: 0.4,
+                              }
+                        }
+                      >
+                        {preview.isDoublyLinked ? (
+                          <ArrowLeftRight size={16} />
+                        ) : (
+                          <ArrowRight size={14} />
+                        )}
+                      </motion.div>
+                    )}
+                  </motion.div>
+                );
+              })}
 
             {/* Deleted ghost nodes */}
             {renderNodes
-              .filter(n => n.deleted)
+              .filter((n) => n.deleted)
               .map((node) => (
                 <motion.div
                   key={node.id}

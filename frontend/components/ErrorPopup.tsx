@@ -22,22 +22,25 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ error, onClose }) => {
 
   const handleCopyError = useCallback(() => {
     if (!error) return;
-    navigator.clipboard.writeText(error).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {
-      // Fallback
-      const ta = document.createElement('textarea');
-      ta.value = error;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard
+      .writeText(error)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = error;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
   }, [error]);
 
   return (
@@ -125,14 +128,16 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ error, onClose }) => {
 
               {/* ── Error Body ── */}
               <div className="px-5 py-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                <pre className="
+                <pre
+                  className="
                   text-[12px] leading-[1.65] font-mono whitespace-pre-wrap break-words
                   text-red-900 dark:text-red-200
                   bg-red-100/60 dark:bg-red-950/40
                   border-[2px] border-red-300 dark:border-red-800
                   shadow-[3px_3px_0_#fecaca] dark:shadow-[3px_3px_0_#450a0a]
                   p-4
-                ">
+                "
+                >
                   {error}
                 </pre>
               </div>

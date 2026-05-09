@@ -43,9 +43,7 @@ export class CppInstrumenter {
     let instrumentedCode = code;
     for (const patch of this.patches) {
       instrumentedCode =
-        instrumentedCode.slice(0, patch.index) +
-        patch.text +
-        instrumentedCode.slice(patch.index);
+        instrumentedCode.slice(0, patch.index) + patch.text + instrumentedCode.slice(patch.index);
     }
 
     return this.getTraceHeader() + '\n' + instrumentedCode;
@@ -101,21 +99,14 @@ export class CppInstrumenter {
    * if-condition, or other non-block contexts.
    */
   private isTraceable(node: Node): boolean {
-    const traceableTypes = [
-      'expression_statement',
-      'declaration',
-      'return_statement',
-    ];
-    return (
-      traceableTypes.includes(node.type) &&
-      node.parent?.type === 'compound_statement'
-    );
+    const traceableTypes = ['expression_statement', 'declaration', 'return_statement'];
+    return traceableTypes.includes(node.type) && node.parent?.type === 'compound_statement';
   }
 
   private extractIdentifier(node: Node | null): string | null {
     if (!node) return null;
     if (node.type === 'identifier') return node.text;
-    
+
     // Check for a nested 'declarator' field (handles pointer_declarator, array_declarator, etc.)
     const declaratorField = node.childForFieldName('declarator');
     if (declaratorField) {
@@ -150,9 +141,7 @@ export class CppInstrumenter {
   private injectTraceCall(node: Node, line: number) {
     const vars = this.getCurrentScopeVars();
     const varPairs =
-      vars.length === 0
-        ? ''
-        : vars.map((v) => `{"${v}", __to_json(${v})}`).join(', ');
+      vars.length === 0 ? '' : vars.map((v) => `{"${v}", __to_json(${v})}`).join(', ');
 
     const traceCall = `__trace(${line}, {${varPairs}});`;
 

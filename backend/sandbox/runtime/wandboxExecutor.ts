@@ -92,8 +92,7 @@ export async function executeWandboxCpp(
   // Wandbox puts compiler errors in compiler_error and runtime errors in program_error.
   // If there's a compiler error and no program output, the code didn't compile.
   if (result.status !== '0' && !result.program_output) {
-    const errorMsg =
-      result.compiler_error || result.program_error || 'Unknown compilation error';
+    const errorMsg = result.compiler_error || result.program_error || 'Unknown compilation error';
     return {
       timeline: [],
       stdout: '',
@@ -107,9 +106,7 @@ export async function executeWandboxCpp(
   const timeline = parseWandboxOutput(rawOutput);
 
   // Extract user-visible output (everything that's NOT a __TRACE__ block)
-  const userOutput = rawOutput
-    .replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '')
-    .trim();
+  const userOutput = rawOutput.replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '').trim();
 
   // Attach user cout output to the last timeline step so it shows in the console
   if (userOutput && timeline.length > 0) {

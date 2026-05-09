@@ -569,7 +569,7 @@ function inferComplexityFromTimeline(
         maxLoopDepth = 1;
         // In this specific case, it's n log n without array sort
         if (maxHits > 1.5 * inputSize) {
-            // Signal strong enough to be n log n
+          // Signal strong enough to be n log n
         }
       } else if (maxHits >= 0.2 * inputSize) {
         maxLoopDepth = 1; // O(n)
@@ -597,20 +597,22 @@ function inferComplexityFromTimeline(
   // Check source for sort() calls (works for both C++ and JS)
   const lowerCode = code.toLowerCase();
   const hasArraySort =
-    lowerCode.includes('sort(') ||
-    lowerCode.includes('.sort(') ||
-    lowerCode.includes('sort (');
+    lowerCode.includes('sort(') || lowerCode.includes('.sort(') || lowerCode.includes('sort (');
 
   // Build loop candidates
   const loopCandidates: string[] = [];
   let isNLogN = hasArraySort && maxLoopDepth <= 1;
 
   if (inputSize > 1) {
-    if (hotLines.length > 0 && hotLines[0].hits >= 0.2 * inputSize * Math.log2(inputSize) && hotLines[0].hits > 1.5 * inputSize) {
-       // if we hit something more than 1.5N times, and it matches N log N scale, it's likely N log N (like merge sort)
-       if (maxLoopDepth <= 1) {
-          isNLogN = true;
-       }
+    if (
+      hotLines.length > 0 &&
+      hotLines[0].hits >= 0.2 * inputSize * Math.log2(inputSize) &&
+      hotLines[0].hits > 1.5 * inputSize
+    ) {
+      // if we hit something more than 1.5N times, and it matches N log N scale, it's likely N log N (like merge sort)
+      if (maxLoopDepth <= 1) {
+        isNLogN = true;
+      }
     }
   }
 
@@ -646,7 +648,10 @@ function estimateInputSize(timeline: Timeline): number {
         // Wandbox returns vectors as "[1, 2, 3]" strings
         const match = value.match(/^\[.*\]$/);
         if (match) {
-          const items = value.slice(1, -1).split(',').filter((s: string) => s.trim());
+          const items = value
+            .slice(1, -1)
+            .split(',')
+            .filter((s: string) => s.trim());
           maxSize = Math.max(maxSize, items.length);
         }
       } else if (value && typeof value === 'object') {
@@ -662,13 +667,18 @@ function estimateInputSize(timeline: Timeline): number {
           }
         };
         countNodes(value);
-        // An object might have a few basic keys, so we subtract some noise if needed, 
+        // An object might have a few basic keys, so we subtract some noise if needed,
         // but maxSize uses the max across all objects
         maxSize = Math.max(maxSize, nodeCount);
       } else if (typeof value === 'number') {
         // If it's a numeric variable like 'n', 'size', 'length', etc.
         const lowerKey = key.toLowerCase();
-        if (lowerKey === 'n' || lowerKey === 'size' || lowerKey === 'length' || lowerKey === 'target') {
+        if (
+          lowerKey === 'n' ||
+          lowerKey === 'size' ||
+          lowerKey === 'length' ||
+          lowerKey === 'target'
+        ) {
           maxSize = Math.max(maxSize, Math.abs(value));
         }
       }

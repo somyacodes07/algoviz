@@ -35,7 +35,10 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         >
           <ArrowLeft size={18} />
         </a>
-        <Logo language={language} className="w-[2.2rem] h-[2.2rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]" />
+        <Logo
+          language={language}
+          className="w-[2.2rem] h-[2.2rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]"
+        />
         <div className="flex items-baseline gap-2">
           <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
             AlgoViz

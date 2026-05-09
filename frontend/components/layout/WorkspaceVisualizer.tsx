@@ -51,9 +51,10 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   // ── #9 Variable watch/pin state ────────────────────────────────
   const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
   const handleTogglePin = useCallback((name: string) => {
-    setPinnedVars(prev => {
+    setPinnedVars((prev) => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name); else next.add(name);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
       return next;
     });
   }, []);
@@ -98,7 +99,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
     const slice = timeline.slice(Math.max(0, currentStepIndex - 100), currentStepIndex + 1);
     const firstLine = slice[0]?.line;
     if (!firstLine) return null;
-    const allSameLine = slice.every(s => s.line === firstLine);
+    const allSameLine = slice.every((s) => s.line === firstLine);
     if (!allSameLine) return null;
     // Check that variables haven't changed across the slice
     const firstVarStr = JSON.stringify(slice[0]?.variables ?? {});
@@ -175,8 +176,8 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
                     d.isNew
                       ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300'
                       : isSaffron
-                      ? 'border-saffron-400 bg-saffron-50 text-saffron-800 dark:border-saffron-700 dark:bg-saffron-900/20 dark:text-saffron-300'
-                      : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                        ? 'border-saffron-400 bg-saffron-50 text-saffron-800 dark:border-saffron-700 dark:bg-saffron-900/20 dark:text-saffron-300'
+                        : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
                   }`}
                 >
                   <span className="font-black">{d.name}</span>
@@ -199,10 +200,17 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
           {/* #11 Loop detection warning */}
           {loopWarning && activeTab === 'variables' && (
             <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_#000]">
-              <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle
+                size={14}
+                className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+              />
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-400">Possible Infinite Loop</p>
-                <p className="text-[10px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">Line {loopWarning} has executed 100+ times with no variable change.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-400">
+                  Possible Infinite Loop
+                </p>
+                <p className="text-[10px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">
+                  Line {loopWarning} has executed 100+ times with no variable change.
+                </p>
               </div>
             </div>
           )}
