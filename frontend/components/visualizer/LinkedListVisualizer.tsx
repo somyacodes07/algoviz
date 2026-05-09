@@ -268,25 +268,30 @@ export const LinkedListPanel: React.FC<{
                       </AnimatePresence>
 
                       <motion.div
-                        animate={
-                          isPointed
-                            ? { borderColor: isSaffron ? '#f97316' : '#3b82f6', scale: 1.04 }
-                            : { scale: 1 }
-                        }
-                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                        className={`mt-5 min-w-[64px] border-[2px] px-2.5 py-2 ${
-                          isPointed
-                            ? `${theme.accentBorder} ${theme.accentSoftBg} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_#000]`
+                        animate={isPointed ? { scale: 1.05, y: -2 } : { scale: 1, y: 0 }}
+                        className={`mt-5 flex items-stretch border-[3px] bg-white dark:bg-[#161618] ${
+                          isPointed 
+                            ? `${theme.accentBorder} shadow-[4px_4px_0_#0f172a] dark:shadow-[4px_4px_0_#000] z-10` 
                             : isTrail
-                              ? 'border-slate-400 bg-slate-50 dark:border-slate-600 dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.3)]'
-                              : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.15)]'
+                              ? 'border-slate-500 shadow-[4px_4px_0_#64748b] dark:shadow-[4px_4px_0_#000]'
+                              : 'border-slate-900 dark:border-[#555] shadow-[4px_4px_0_rgba(15,23,42,0.2)] dark:shadow-[4px_4px_0_#000]'
                         }`}
                       >
-                        <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                          Node {index + 1}
+                        {preview.isDoublyLinked && (
+                          <div className={`flex items-center justify-center px-1.5 border-r-[3px] ${isPointed ? theme.accentBorder : 'border-slate-900 dark:border-[#555]'} bg-slate-100 dark:bg-[#222]`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${isPointed ? theme.accentBg : 'bg-slate-400 dark:bg-slate-500'}`}></div>
+                          </div>
+                        )}
+                        <div className="flex flex-col items-center justify-center min-w-[56px] px-2 py-1.5">
+                          <div className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-0.5">
+                            Node {index + 1}
+                          </div>
+                          <div className={`text-lg font-black ${isPointed ? theme.accentText : 'text-slate-900 dark:text-slate-100'}`}>
+                            {node.label}
+                          </div>
                         </div>
-                        <div className="mt-0.5 text-center text-base font-black text-slate-900 dark:text-slate-100">
-                          {node.label}
+                        <div className={`flex items-center justify-center px-1.5 border-l-[3px] ${isPointed ? theme.accentBorder : 'border-slate-900 dark:border-[#555]'} bg-slate-100 dark:bg-[#222]`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${isPointed ? theme.accentBg : 'bg-slate-400 dark:bg-slate-500'}`}></div>
                         </div>
                       </motion.div>
                     </div>
@@ -331,16 +336,27 @@ export const LinkedListPanel: React.FC<{
                   className="flex items-start gap-2 pointer-events-none"
                 >
                   <div className="relative">
-                    <div className="mt-5 min-w-[64px] border-[2px] border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-900/20 px-2.5 py-2 shadow-[2px_2px_0_rgba(239,68,68,0.3)] relative overflow-hidden">
+                    <div className="mt-5 flex items-stretch border-[3px] border-red-500 bg-red-50 dark:border-red-700 dark:bg-red-950/40 shadow-[4px_4px_0_rgba(239,68,68,0.4)] relative overflow-hidden opacity-80">
                       {/* Strikethrough line */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-full h-[2px] bg-red-500 dark:bg-red-400 rotate-[-12deg]" />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <div className="w-full h-[3px] bg-red-600 dark:bg-red-500 rotate-[-12deg]" />
                       </div>
-                      <div className="text-center text-[9px] font-bold uppercase tracking-[0.16em] text-red-400 dark:text-red-500 line-through">
-                        Deleted
+                      
+                      {preview.isDoublyLinked && (
+                        <div className="flex items-center justify-center px-1.5 border-r-[3px] border-red-500 dark:border-red-700 bg-red-100 dark:bg-red-900/50">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500"></div>
+                        </div>
+                      )}
+                      <div className="flex flex-col items-center justify-center min-w-[56px] px-2 py-1.5">
+                        <div className="text-[8px] font-black uppercase tracking-[0.2em] text-red-500 dark:text-red-400 mb-0.5">
+                          Deleted
+                        </div>
+                        <div className="text-lg font-black text-red-600 dark:text-red-400">
+                          {node.label}
+                        </div>
                       </div>
-                      <div className="mt-0.5 text-center text-base font-black text-red-600 dark:text-red-400 line-through opacity-60">
-                        {node.label}
+                      <div className="flex items-center justify-center px-1.5 border-l-[3px] border-red-500 dark:border-red-700 bg-red-100 dark:bg-red-900/50">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500"></div>
                       </div>
                     </div>
                   </div>
