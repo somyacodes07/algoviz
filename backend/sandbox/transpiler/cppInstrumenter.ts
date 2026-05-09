@@ -269,7 +269,7 @@ export class CppInstrumenter {
       '        }',
       '        // Serialize prev pointer for doubly linked lists',
       '        if constexpr (requires(T a) { a.prev; }) {',
-      `            res += ${DQ}${BSQ}prev${BSQ}: ${DQ} + (ptr->prev ? ${DQ}true${DQ} : ${DQ}null${DQ}) + ${DQ}, ${DQ};`,
+      `            res += std::string(${DQ}${BSQ}prev${BSQ}: ${DQ}) + (ptr->prev ? std::string(${DQ}true${DQ}) : std::string(${DQ}null${DQ})) + std::string(${DQ}, ${DQ});`,
       '        }',
       `        res += ${DQ}${BSQ}next${BSQ}: ${DQ} + __to_json(ptr->next, depth + 1);`,
       `        res += ${DQ}}${DQ};`,
