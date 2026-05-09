@@ -333,7 +333,6 @@ export const LinkedListPanel: React.FC<{
                       {isTrail && (
                         <motion.div
                           className="absolute inset-0 -m-1"
-                          style={{ marginTop: '14px' }}
                           initial={{ opacity: 0.5 }}
                           animate={{ opacity: 0 }}
                           transition={{ duration: 1.2, ease: 'easeOut' }}
@@ -500,7 +499,7 @@ export const LinkedListPanel: React.FC<{
           <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 mr-1 self-center">
             Pointers:
           </span>
-          {Array.from(new Set(preview.nodes.flatMap((n) => n.pointerNames))).map((name) => {
+          {Array.from(new Set<string>(preview.nodes.flatMap((n) => n.pointerNames))).map((name) => {
             const pc = getPtrColor(name);
             return (
               <div key={name} className="flex items-center gap-1">
