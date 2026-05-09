@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../types';
-import { ChevronRight, ArrowUp, ArrowDown, Sparkles, RefreshCw, Repeat, Pin, PinOff, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  ChevronRight,
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
+  RefreshCw,
+  Repeat,
+  Pin,
+  PinOff,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import StructureVisualizer from './StructureVisualizer';
 
 import { getThemeConfig, ThemeColor } from '../theme/theme';
@@ -232,10 +243,16 @@ const VariableCard: React.FC<{
   const counterRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (typeof value !== 'number') { setDisplayNum(null); return; }
+    if (typeof value !== 'number') {
+      setDisplayNum(null);
+      return;
+    }
     const from = typeof prevValue === 'number' ? prevValue : value;
     const to = value;
-    if (from === to) { setDisplayNum(to); return; }
+    if (from === to) {
+      setDisplayNum(to);
+      return;
+    }
     const steps = 18;
     const stepTime = 20;
     let current = 0;
@@ -309,9 +326,14 @@ const VariableCard: React.FC<{
         </span>
       );
     if (typeof value === 'number') {
-      const displayValue = displayNum !== null
-        ? (Number.isInteger(displayNum) ? displayNum : Number.parseFloat(displayNum.toPrecision(7)))
-        : (Number.isInteger(value) ? value : Number.parseFloat(value.toPrecision(7)));
+      const displayValue =
+        displayNum !== null
+          ? Number.isInteger(displayNum)
+            ? displayNum
+            : Number.parseFloat(displayNum.toPrecision(7))
+          : Number.isInteger(value)
+            ? value
+            : Number.parseFloat(value.toPrecision(7));
       return (
         <span
           className={`${isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300'} font-black text-3xl tabular-nums truncate max-w-full inline-block`}
@@ -507,7 +529,10 @@ const VariableCard: React.FC<{
                 })}
                 {hasMoreKeys && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowAllKeys(!showAllKeys); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAllKeys(!showAllKeys);
+                    }}
                     className="w-full mt-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     {showAllKeys ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
@@ -559,39 +584,70 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
   const isSaffron = themeColor === 'saffron';
 
   // Separate pinned from normal
-  const pinned = pinnedVars ? keys.filter(k => pinnedVars.has(k)) : [];
-  const unpinned = pinnedVars ? keys.filter(k => !pinnedVars.has(k)) : keys;
+  const pinned = pinnedVars ? keys.filter((k) => pinnedVars.has(k)) : [];
+  const unpinned = pinnedVars ? keys.filter((k) => !pinnedVars.has(k)) : keys;
 
   // Ghost pinned vars that went out of scope
   const ghostPinned = pinnedVars
-    ? Array.from(pinnedVars).filter(k => !keys.includes(k))
+    ? Array.from(pinnedVars).filter((k: string) => !keys.includes(k))
     : [];
 
   return (
     <div className="grid grid-cols-1 gap-2 p-2">
       {/* ── #9 Watch / Pin Panel ─────────────────────────────────────────── */}
       {pinnedVars && pinnedVars.size > 0 && (
-        <div className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700' : 'border-blue-400 dark:border-blue-700'} bg-slate-50 dark:bg-[#111113] mb-1`}>
-          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-[#1c1208]' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c1525]'}`}>
-            <Pin size={10} className={isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400'} />
-            <span className={`text-[9px] font-black uppercase tracking-[0.18em] ${isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400'}`}>Watch</span>
+        <div
+          className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700' : 'border-blue-400 dark:border-blue-700'} bg-slate-50 dark:bg-[#111113] mb-1`}
+        >
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-[#1c1208]' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c1525]'}`}
+          >
+            <Pin
+              size={10}
+              className={
+                isSaffron
+                  ? 'text-saffron-600 dark:text-saffron-400'
+                  : 'text-blue-600 dark:text-blue-400'
+              }
+            />
+            <span
+              className={`text-[9px] font-black uppercase tracking-[0.18em] ${isSaffron ? 'text-saffron-700 dark:text-saffron-400' : 'text-blue-700 dark:text-blue-400'}`}
+            >
+              Watch
+            </span>
           </div>
           <div className="p-1.5 space-y-1">
-            {[...pinned, ...ghostPinned].map(k => {
+            {[...pinned, ...ghostPinned].map((k: string) => {
               const isGhost = ghostPinned.includes(k);
               const val = isGhost ? prevVariables[k] : variables[k];
               return (
-                <div key={k} className={`flex items-center justify-between px-2 py-1 text-xs font-mono border ${isGhost ? 'opacity-40 border-slate-200 dark:border-slate-700 bg-white/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#161618]'}`}>
+                <div
+                  key={k}
+                  className={`flex items-center justify-between px-2 py-1 text-xs font-mono border ${isGhost ? 'opacity-40 border-slate-200 dark:border-slate-700 bg-white/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#161618]'}`}
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-slate-600 dark:text-slate-300">{k}</span>
-                    {isGhost && <span className="text-[8px] text-slate-400 italic">out of scope</span>}
+                    {isGhost && (
+                      <span className="text-[8px] text-slate-400 italic">out of scope</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold ${isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300'}`}>
-                      {val === undefined ? '—' : typeof val === 'object' ? (Array.isArray(val) ? `[${val.length}]` : '{…}') : String(val)}
+                    <span
+                      className={`font-bold ${isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300'}`}
+                    >
+                      {val === undefined
+                        ? '—'
+                        : typeof val === 'object'
+                          ? Array.isArray(val)
+                            ? `[${val.length}]`
+                            : '{…}'
+                          : String(val)}
                     </span>
                     {onTogglePin && (
-                      <button onClick={() => onTogglePin(k)} className="text-slate-400 hover:text-red-400 transition-colors">
+                      <button
+                        onClick={() => onTogglePin(k)}
+                        className="text-slate-400 hover:text-red-400 transition-colors"
+                      >
                         <PinOff size={9} />
                       </button>
                     )}
@@ -629,7 +685,9 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
                   title={pinnedVars?.has(key) ? 'Unpin variable' : 'Pin to watch panel'}
                   className={`absolute top-2 right-2 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity p-1 rounded ${
                     pinnedVars?.has(key)
-                      ? isSaffron ? 'text-saffron-500' : 'text-blue-500'
+                      ? isSaffron
+                        ? 'text-saffron-500'
+                        : 'text-blue-500'
                       : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >

@@ -50,17 +50,17 @@ Internally, AlgoViz treats source code differently based on the language:
 Source code → Acorn AST → tracer injection → Web Worker → timeline → UI
 ```
 
-### C++ (Primary: Wandbox)
+### C++ (Primary: Wasm Clang)
 ```
-Source code → Tree-sitter AST → __trace() injection → Wandbox API (GCC) → timeline → UI
-```
-
-### C++ (Fallback: Local Transpiler)
-```
-Source code → Tree-sitter AST → C++→JS transform → Acorn instrumentation → Web Worker → timeline → UI
+Source code → Tree-sitter AST → __trace() injection → Wasm Clang Engine (Local Browser) → timeline → UI
 ```
 
-The fallback activates automatically when Wandbox is unreachable, ensuring C++ visualization works offline.
+### C++ (Fallback: Wandbox API)
+```
+Source code → Tree-sitter AST → __trace() injection → Wandbox API (Remote GCC) → timeline → UI
+```
+
+The fallback activates automatically if the local WebAssembly engine is unsupported by the browser or fails to load.
 
 ## Why the Browser Matters
 
@@ -71,7 +71,7 @@ AlgoViz deliberately runs in the browser because that makes the experience:
 - deployment-light
 - classroom-friendly
 
-For JavaScript, everything runs locally. For C++, the primary engine uses the Wandbox API for real GCC compilation, while the fallback transpiler keeps the experience working without internet.
+For JavaScript, everything runs locally. For C++, the primary engine uses Wasm Clang for real in-browser native compilation with zero-latency offline, while the fallback connects to the Wandbox API if the local engine is unavailable.
 
 ## What Makes AlgoViz Different
 
@@ -81,7 +81,7 @@ Four product choices define the platform:
    Every run aims to produce a replayable history, not just a final answer.
 
 2. **Real C++ compilation with graceful fallback**
-   C++ code compiles with actual GCC for full language support, while a local transpiler ensures offline availability.
+   C++ code compiles with actual local Wasm Clang for full language support offline, while the remote Wandbox API fallback ensures execution even when Wasm is unsupported.
 
 3. **Live complexity analysis**
    Time complexity is estimated from both source structure and runtime behavior, with hotspot heatmaps showing where computation concentrates.

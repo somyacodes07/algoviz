@@ -116,7 +116,7 @@ Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
 | 📈 **Complexity analysis** | Live O(n) estimation with hotspot heatmap, peak stack depth, and hot-line detection |
 | 🧠 **Template palette** | Load tagged DSA examples quickly through the searchable template library |
 | 🟧 **JavaScript mode** | Full support for loops, recursion, arrays, objects, and interview-style problems |
-| 🔵 **C++ mode (GCC)** | Real GCC compilation via Wandbox API with automatic local transpiler fallback |
+| 🔵 **C++ mode (Clang/GCC)** | Real in-browser Wasm Clang compilation with automatic remote Wandbox API fallback |
 | 📖 **Integrated docs route** | Architecture, setup, UI, templates, and engine details accessible from the app |
 
 ---
@@ -137,22 +137,22 @@ AlgoViz uses a **dual-engine architecture** for C++:
                        │
             ┌──────────▼──────────┐
             │  PRIMARY ENGINE     │
-            │  Wandbox API (GCC)  │
-            │  Source-to-source   │
-            │  instrumentation    │
+            │  Wasm Clang Engine  │
+            │  Compiles C++ inside│
+            │  the browser locally│
             └──────────┬──────────┘
                        │
               ┌────────▼────────┐
-              │  API Available? │
+              │  Engine Ready?  │
               └───┬─────────┬───┘
                 Yes         No
                  │           │
                  ▼           ▼
         ┌────────────┐  ┌────────────────┐
-        │ Real GCC   │  │ FALLBACK       │
-        │ compiles + │  │ Local C++→JS   │
-        │ runs code  │  │ transpiler in  │
-        │ with trace │  │ Web Worker     │
+        │ Wasm Clang │  │ FALLBACK       │
+        │ runs code  │  │ Wandbox API    │
+        │ with trace │  │ Remote GCC     │
+        │ headers    │  │ compilation    │
         └─────┬──────┘  └───────┬────────┘
               │                 │
               └────────┬────────┘
@@ -169,15 +169,16 @@ AlgoViz uses a **dual-engine architecture** for C++:
               └─────────────────┘
 ```
 
-### Primary: Wandbox API
-- Sends instrumented C++ to [Wandbox](https://wandbox.org) for real **GCC compilation**
-- Full support for STL containers, OOP, templates, and any standard C++
-- `__trace()` calls injected via Tree-sitter AST produce JSON state output
+### Primary: Wasm Clang Engine
+- Compiles instrumented C++ directly in the browser using WebAssembly Clang
+- Runs completely locally in the user's world (offline-capable, zero-latency)
+- Full support for STL containers, OOP, templates, and standard C++
+- `__trace()` calls injected via Tree-sitter AST produce JSON state output natively
 
-### Fallback: Local Transpiler
-- If Wandbox is unreachable (no internet, API down), seamlessly falls back
-- Tree-sitter parses C++ → transformer maps to JavaScript → runs in Web Worker
-- Covers the DSA-focused subset: vectors, maps, loops, recursion
+### Fallback: Wandbox API
+- If the Wasm Clang binaries are unavailable or fail to load, seamlessly falls back to the network
+- Sends instrumented C++ to [Wandbox](https://wandbox.org) for remote GCC compilation
+- Ensures the platform remains functional even if local WebAssembly support is limited
 
 ---
 
@@ -196,17 +197,17 @@ algoviz/
 │   │   └── instrumenter.ts          # JS AST instrumentation (Acorn-based)
 │   └── sandbox/
 │       ├── runtime/
-│       │   ├── executor.ts          # Execution router (Wandbox → Worker fallback)
-│       │   ├── executor.worker.ts   # Sandboxed Web Worker for JS/fallback C++
+│       │   ├── executor.ts          # Execution router (Wasm Clang → Wandbox fallback)
+│       │   ├── executor.worker.ts   # Sandboxed Web Worker for JS
+│       │   ├── wasmClangEngine.ts   # Wasm Clang engine for local C++ compilation
 │       │   └── wandboxExecutor.ts   # Wandbox API client + trace parser
 │       ├── transpiler/
 │       │   ├── parser.ts            # Tree-sitter WASM C++ parser
-│       │   ├── cppInstrumenter.ts   # C++ source-to-source trace injector
-│       │   ├── transformer.ts       # C++ → JS AST transformer
-│       │   ├── generator.ts         # JS code emitter
-│       │   └── index.ts             # Transpiler public API
+│       │   └── cppInstrumenter.ts   # C++ source-to-source trace injector
 │       └── legacy/
-│           └── regexTranspiler.ts   # Regex-based fallback transpiler
+│           ├── regexTranspiler.ts   # Regex-based fallback transpiler
+│           ├── transformer.ts       # Legacy C++ → JS AST transformer
+│           └── generator.ts         # Legacy JS code emitter
 │
 ├── frontend/
 │   ├── components/
@@ -238,7 +239,7 @@ algoviz/
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
-- Active internet connection (for C++ Wandbox engine; offline uses local fallback)
+- Active internet connection (Optional: Wasm Clang runs completely offline; Wandbox API fallback requires internet)
 
 ### Installation
 

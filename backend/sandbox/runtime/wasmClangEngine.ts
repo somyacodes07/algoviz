@@ -185,9 +185,7 @@ export async function executeWasmClangCpp(
   const timeline = parseTraceOutput(rawOutput);
 
   // Extract user-visible output (everything that's NOT a __TRACE__ block)
-  const userOutput = rawOutput
-    .replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '')
-    .trim();
+  const userOutput = rawOutput.replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '').trim();
 
   // Attach user cout output to the last timeline step
   if (userOutput && timeline.length > 0) {
@@ -312,10 +310,11 @@ async function compileWithClangWasm(
       'clang++',
       '-std=c++17',
       '-O0',
-      '-o', '/tmp/output.wasm',
+      '-o',
+      '/tmp/output.wasm',
       '--target=wasm32-wasi',
       '--sysroot=/sysroot',
-      '-fno-exceptions',  // WASI limitation
+      '-fno-exceptions', // WASI limitation
       '/tmp/input.cpp',
     ];
 
@@ -323,8 +322,12 @@ async function compileWithClangWasm(
     let stderr = '';
 
     const exitCode = clangModule.callMain(compileArgs, {
-      stdout: (text: string) => { stdout += text; },
-      stderr: (text: string) => { stderr += text; },
+      stdout: (text: string) => {
+        stdout += text;
+      },
+      stderr: (text: string) => {
+        stderr += text;
+      },
     });
 
     if (exitCode !== 0) {
@@ -338,7 +341,9 @@ async function compileWithClangWasm(
     try {
       clangModule.FS.unlink('/tmp/input.cpp');
       clangModule.FS.unlink('/tmp/output.wasm');
-    } catch { /* ignore cleanup errors */ }
+    } catch {
+      /* ignore cleanup errors */
+    }
 
     return { success: true, stdout, stderr, binary };
   } catch (e: any) {
@@ -361,8 +366,12 @@ async function runCompiledBinary(
 
   // Create a simple WASI shim for stdout/stderr capture
   const wasiImports = createWasiShim(
-    (text: string) => { stdout += text; },
-    (text: string) => { stderr += text; },
+    (text: string) => {
+      stdout += text;
+    },
+    (text: string) => {
+      stderr += text;
+    },
     config?.inputValues?.join('\n') || '',
   );
 
@@ -390,7 +399,7 @@ async function runCompiledBinary(
     await Promise.race([
       Promise.resolve().then(() => startFn()),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Execution timed out')), timeoutMs)
+        setTimeout(() => reject(new Error('Execution timed out')), timeoutMs),
       ),
     ]);
 
@@ -568,12 +577,14 @@ function parseTraceOutput(stdout: string): Timeline {
  * Strips internal file paths and trace header line offsets.
  */
 function cleanCompilerError(stderr: string): string {
-  return stderr
-    // Remove /tmp/input.cpp path prefix
-    .replace(/\/tmp\/input\.cpp/g, 'main.cpp')
-    // Remove verbose note lines
-    .replace(/^note:.*$/gm, '')
-    // Trim excessive whitespace
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+  return (
+    stderr
+      // Remove /tmp/input.cpp path prefix
+      .replace(/\/tmp\/input\.cpp/g, 'main.cpp')
+      // Remove verbose note lines
+      .replace(/^note:.*$/gm, '')
+      // Trim excessive whitespace
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  );
 }

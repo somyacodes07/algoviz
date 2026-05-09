@@ -17,13 +17,13 @@ JavaScript source (or transpiled C++ output)
   → Visual playback in React
 ```
 
-### Path 2: C++ via Wandbox
+### Path 2: C++ via Wasm Clang (and Wandbox Fallback)
 
 ```
 C++ source
   → Tree-sitter AST walk
   → __trace() injection (source-to-source)
-  → POST to Wandbox (real GCC)
+  → Wasm Clang compiles locally (or POST to Wandbox API fallback)
   → Parse __TRACE__ JSON blocks from stdout
   → Timeline snapshots
   → Visual playback in React
@@ -97,7 +97,7 @@ The frontend reconstructs full console history during playback to minimize worke
 AlgoViz defaults to a capped step count (2000 steps) so broken logic does not lock the tab:
 
 - **Web Worker path**: The tracer's `step()` function throws after exceeding the limit
-- **Wandbox path**: The execution timeout is handled by the API and the fetch timeout
+- **Wasm Clang & Wandbox path**: The execution timeout is handled by the local Wasm timeout or the fetch timeout
 
 In both cases, partial timeline data is preserved so students get diagnostic context.
 
@@ -113,8 +113,8 @@ The sandbox separates several failure modes:
 | `timeout` | Step or time limit exceeded |
 | `worker` | Web Worker crashed |
 
-For C++ via Wandbox, errors are further categorized:
-- **Network errors** → Trigger automatic fallback to local transpiler
+For C++, errors are further categorized:
+- **Engine/Network errors** → Trigger automatic fallback from Wasm Clang to Wandbox API
 - **Compiler errors** → Shown directly to the user in the Console Panel
 
 ## Why This Layer Matters for Learning

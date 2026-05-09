@@ -53,10 +53,10 @@ The library includes 35+ templates designed for visual clarity, available in bot
 
 ## C++ Template Design
 
-C++ templates work with both the Wandbox API (real GCC) and the local transpiler fallback:
+C++ templates work with both the primary Wasm Clang engine and the Wandbox API fallback:
 
-- **Wandbox mode**: Full C++ support — templates can use any standard STL containers, OOP, templates, and modern C++ features
-- **Fallback mode**: Templates are authored to prioritize syntax structures that the Tree-sitter transpiler handles well, ensuring they work offline too
+- **Wasm Clang mode**: Full C++ support — templates can use standard STL containers, OOP, templates, and modern C++ features completely offline.
+- **Wandbox Fallback mode**: Ensures execution continues to work over the network if local WebAssembly support fails.
 
 ## Complexity Visibility
 

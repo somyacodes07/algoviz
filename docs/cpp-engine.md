@@ -2,28 +2,28 @@
 
 ## Overview
 
-AlgoViz uses a **dual-engine architecture** for C++ execution that combines the best of both worlds: real GCC compilation for accuracy and a local transpiler for offline resilience.
+AlgoViz uses a **dual-engine architecture** for C++ execution that brings native compilation to the browser: a local Wasm Clang engine for immediate execution and a remote Wandbox API for network fallback.
 
 ## Execution Flow
 
 ```
 C++ Source Code
-  ├─ PRIMARY: Wandbox API (Online)
+  ├─ PRIMARY: Wasm Clang Engine (Local/Browser)
   │    ├─ Tree-sitter parses C++ into AST
   │    ├─ Source-to-source instrumenter injects __trace() calls
-  │    ├─ Instrumented code sent to Wandbox (real GCC)
-  │    ├─ __TRACE__ JSON blocks parsed from stdout
+  │    ├─ Local WebAssembly Clang compiles code in-browser
+  │    ├─ Binary executes locally, printing __TRACE__ JSON
   │    └─ Timeline + Complexity Analysis returned to UI
   │
-  └─ FALLBACK: Local Transpiler (Offline)
+  └─ FALLBACK: Wandbox API (Online)
        ├─ Tree-sitter parses C++ into AST
-       ├─ Transformer maps C++ → JavaScript
-       ├─ Acorn instruments the JS with tracer hooks
-       ├─ Sandboxed Web Worker executes instrumented JS
+       ├─ Source-to-source instrumenter injects __trace() calls
+       ├─ Instrumented code POSTed to Wandbox (remote GCC)
+       ├─ __TRACE__ JSON blocks parsed from stdout
        └─ Timeline + Complexity Analysis returned to UI
 ```
 
-## Primary Engine: Wandbox API
+## Primary Engine: Wasm Clang Engine
 
 When you press **Run** on C++ code, AlgoViz follows this pipeline:
 
@@ -66,17 +66,12 @@ Key design decisions:
 - **Return statements**: Trace injected *before* `return` (not after dead code)
 - **Only block-level statements traced**: Prevents injection inside for-loop headers or if-conditions
 
-### 2. Remote Compilation (`wandboxExecutor.ts`)
+### 2. Local Browser Compilation (`wasmClangEngine.ts`)
 
-The instrumented code is sent to [Wandbox](https://wandbox.org/api/compile.json) for compilation with GCC.
+The instrumented code is compiled directly within the browser using WebAssembly Clang. This provides near-native execution speed with zero network latency.
 
-```json
-{
-  "compiler": "gcc-head",
-  "code": "<instrumented C++ source>",
-  "stdin": "",
-  "save": false
-}
+```javascript
+const result = await executeWasmClangCpp(userCode, config);
 ```
 
 ### 3. Trace Parsing
@@ -105,38 +100,23 @@ The trace header includes `__to_json()` overloads for:
 | `std::queue<T>` | JSON array (copied and unwound) |
 | Unknown types | `"unsupported"` fallback |
 
-## Fallback Engine: Local Transpiler
+## Fallback Engine: Wandbox API
 
-If Wandbox is unreachable (no internet, API rate-limited, or server down), AlgoViz automatically falls back to the local C++ → JavaScript transpiler.
+If the Wasm Clang engine is unavailable (e.g., binaries failed to load or are unsupported by the browser environment), AlgoViz automatically falls back to the Wandbox API.
 
 ### When Fallback Activates
 
 | Scenario | Engine Used |
 |---|---|
-| Online, Wandbox responds | Wandbox (GCC) |
-| No internet / Wandbox 5xx | Local transpiler |
-| Wandbox returns compiler error | Error shown to user (no fallback) |
-| Tree-sitter init fails | Local transpiler |
+| Wasm Clang initialized successfully | Wasm Clang (Local) |
+| Wasm Clang load failure | Wandbox API (Remote GCC) |
+| Wandbox returns compiler error | Error shown to user |
 
-### Transpiler Pipeline
+### Wandbox Pipeline
 
-1. **Parse**: Tree-sitter WASM parses C++ into a syntax tree
-2. **Transform**: Maps DSA-friendly C++ patterns to JavaScript equivalents
-3. **Instrument**: Acorn injects `__tracer.step()` hooks into the JS
-4. **Execute**: Runs in an isolated Web Worker with timeout protection
-
-### Transpiler Mappings
-
-| C++ | JavaScript |
-|---|---|
-| `vector<int> arr;` | `let arr = [];` |
-| `queue<int> q;` | `let q = [];` |
-| `for (auto x : vec)` | `for (let x of vec)` |
-| `push_back()` | `push()` |
-| `size()` | `length` |
-| `.front()` | `[0]` |
-| `int mid = (l+r)/2;` | `let mid = Math.trunc((l+r)/2);` |
-| `sort(v.begin(), v.end())` | `v.sort((a,b) => a-b)` |
+1. **Parse & Instrument**: Tree-sitter WASM parses and injects trace logic into C++.
+2. **Execute**: Code is sent to the Wandbox REST API.
+3. **Parse Trace**: The resulting stdout is parsed for `__TRACE__` outputs, identical to the primary path.
 
 ## Complexity Analysis for C++
 
@@ -152,4 +132,4 @@ This produces accurate estimates for common DSA patterns: O(n), O(n²), O(n log 
 
 ## In One Sentence
 
-AlgoViz executes C++ through real GCC compilation with source-to-source instrumentation, falling back to a local transpiler when offline, and provides full variable tracing, console output, and complexity analysis for both paths.
+AlgoViz executes C++ through local WebAssembly Clang compilation directly in your browser, falling back to the remote Wandbox API when necessary, providing full variable tracing, console output, and complexity analysis for both paths.

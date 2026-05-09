@@ -85,9 +85,7 @@ async function doInit(): Promise<void> {
   try {
     // Detect if running in Node.js (test environment) vs browser
     const isNode =
-      typeof process !== 'undefined' &&
-      process.versions != null &&
-      process.versions.node != null;
+      typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
     // Resolve WASM file paths based on environment
     const resolveWasmPath = (filename: string): string => {
@@ -122,6 +120,7 @@ async function doInit(): Promise<void> {
     initPromise = null;
     throw new Error(
       `Failed to initialize Tree-sitter C++ parser: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }

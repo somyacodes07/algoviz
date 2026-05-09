@@ -6,16 +6,8 @@ import {
   LinkedListPanel,
   LinkedListPreview,
 } from './visualizer/LinkedListVisualizer';
-import {
-  buildGraphPreview,
-  GraphPanel,
-  GraphPreview,
-} from './visualizer/GraphVisualizer';
-import {
-  buildTreePreview,
-  TreePanel,
-  TreePreview,
-} from './visualizer/TreeVisualizer';
+import { buildGraphPreview, GraphPanel, GraphPreview } from './visualizer/GraphVisualizer';
+import { buildTreePreview, TreePanel, TreePreview } from './visualizer/TreeVisualizer';
 
 interface StructureVisualizerProps {
   variables: VariableMap;

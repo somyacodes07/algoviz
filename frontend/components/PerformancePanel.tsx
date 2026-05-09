@@ -115,40 +115,43 @@ function getComplexityPoints(notation: string, pts = 20): string {
   let ys: number[];
   const norm = notation.toLowerCase();
   if (norm.includes('log')) {
-    ys = xs.map(x => Math.log2(x + 1));
+    ys = xs.map((x) => Math.log2(x + 1));
   } else if (norm.includes('n^2') || norm.includes('n²')) {
-    ys = xs.map(x => x * x);
+    ys = xs.map((x) => x * x);
   } else if (norm.includes('n^3') || norm.includes('n³')) {
-    ys = xs.map(x => x * x * x);
+    ys = xs.map((x) => x * x * x);
   } else if (norm.includes('2^n') || norm.includes('exponential')) {
-    ys = xs.map(x => Math.pow(2, x / 3));
+    ys = xs.map((x) => Math.pow(2, x / 3));
   } else if (norm.includes('n log') || norm.includes('n\u00b7log') || norm.includes('nlog')) {
-    ys = xs.map(x => x * Math.log2(x + 1));
+    ys = xs.map((x) => x * Math.log2(x + 1));
   } else {
     // linear O(n)
-    ys = xs.map(x => x);
+    ys = xs.map((x) => x);
   }
-  const W = 48, H = 24;
+  const W = 48,
+    H = 24;
   const maxY = Math.max(...ys, 1);
-  const points = xs.map((x, i) => {
-    const px = ((x - 1) / (n - 1)) * W;
-    const py = H - (ys[i] / maxY) * (H - 2);
-    return `${px.toFixed(1)},${py.toFixed(1)}`;
-  }).join(' ');
+  const points = xs
+    .map((x, i) => {
+      const px = ((x - 1) / (n - 1)) * W;
+      const py = H - (ys[i] / maxY) * (H - 2);
+      return `${px.toFixed(1)},${py.toFixed(1)}`;
+    })
+    .join(' ');
   return points;
 }
 
-const ComplexitySparkline: React.FC<{ notation: string; stroke: string; fill: string }> = ({ notation, stroke, fill }) => {
+const ComplexitySparkline: React.FC<{ notation: string; stroke: string; fill: string }> = ({
+  notation,
+  stroke,
+  fill,
+}) => {
   const points = getComplexityPoints(notation);
-  const W = 48, H = 24;
+  const W = 48,
+    H = 24;
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="shrink-0">
-      <polyline
-        points={`0,${H} ${points} ${W},${H}`}
-        fill={fill}
-        stroke="none"
-        opacity={0.3}
-      />
+      <polyline points={`0,${H} ${points} ${W},${H}`} fill={fill} stroke="none" opacity={0.3} />
       <polyline
         points={points}
         fill="none"
@@ -302,7 +305,6 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             ))}
           </div>
         ) : null}
-
       </motion.section>
 
       <div className="grid grid-cols-2 gap-3">

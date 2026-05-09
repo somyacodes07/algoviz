@@ -86,7 +86,11 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
             const next = prev + 1;
             const nextLine = timeline[next]?.line;
             // If the next step hits a breakpoint, advance to it then pause
-            if (breakpointsRef.current.size > 0 && nextLine && breakpointsRef.current.has(nextLine)) {
+            if (
+              breakpointsRef.current.size > 0 &&
+              nextLine &&
+              breakpointsRef.current.has(nextLine)
+            ) {
               setTimeout(() => setIsPlaying(false), 0);
               return next;
             }

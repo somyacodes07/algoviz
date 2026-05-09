@@ -275,7 +275,8 @@ const docsStructure: DocSection[] = [
         },
         {
           label: 'Compile',
-          detail: 'Instrumented code is sent to Wandbox API for real GCC compilation and execution.',
+          detail:
+            'Instrumented code is sent to Wandbox API for real GCC compilation and execution.',
           tone: 'amber',
         },
         {
@@ -285,7 +286,8 @@ const docsStructure: DocSection[] = [
         },
         {
           label: 'Fallback',
-          detail: 'If Wandbox is down, automatically use the local C++→JS transpiler in a Web Worker.',
+          detail:
+            'If Wandbox is down, automatically use the local C++→JS transpiler in a Web Worker.',
           tone: 'slate',
         },
       ],
@@ -425,7 +427,8 @@ const docsStructure: DocSection[] = [
       steps: [
         {
           label: 'Detect',
-          detail: 'Identify loops, recursion, and sort calls from source structure or runtime traces.',
+          detail:
+            'Identify loops, recursion, and sort calls from source structure or runtime traces.',
           tone: 'blue',
         },
         {
@@ -513,7 +516,8 @@ const docsStructure: DocSection[] = [
         },
         {
           label: 'Launch',
-          detail: 'Click "AlgoViz: Visualize" from the editor Run menu to instantly load your current file.',
+          detail:
+            'Click "AlgoViz: Visualize" from the editor Run menu to instantly load your current file.',
           tone: 'emerald',
         },
         {

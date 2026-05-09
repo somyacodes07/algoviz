@@ -87,7 +87,9 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
   // Scroll into view on selection change
   useEffect(() => {
     if (listRef.current) {
-      const selectedEl = listRef.current.querySelector(`[data-index="${selectedIndex}"]`) as HTMLElement;
+      const selectedEl = listRef.current.querySelector(
+        `[data-index="${selectedIndex}"]`,
+      ) as HTMLElement;
       if (selectedEl) {
         // Only scroll if out of view
         const topOfEl = selectedEl.offsetTop;
@@ -213,13 +215,13 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                               </span>
                             </div>
                           )}
-                            <div
-                              data-index={index}
-                              onMouseEnter={() => setSelectedIndex(index)}
-                              onClick={() => {
-                                onSelect(template);
-                                onClose();
-                              }}
+                          <div
+                            data-index={index}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            onClick={() => {
+                              onSelect(template);
+                              onClose();
+                            }}
                             className={`group flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
                               isSelected
                                 ? isSaffron
