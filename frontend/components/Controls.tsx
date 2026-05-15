@@ -127,7 +127,7 @@ const Controls: React.FC<ControlsProps> = ({
           </span>
         </div>
 
-        <div className="w-px h-8 bg-slate-300 dark:bg-[#222] mx-2" />
+        <div className="w-px h-8 bg-slate-300 dark:bg-[var(--dark-border-dim)] mx-2" />
 
         <div className="flex flex-col items-center gap-1">
           <button

@@ -586,7 +586,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                   onClick={() => setActiveDoc(doc.id)}
                   className={`flex w-full items-center gap-3 rounded border px-3 py-2.5 text-left text-sm font-bold transition-all active:translate-y-[1px] ${
                     activeDoc === doc.id
-                      ? 'border-saffron-400 bg-saffron-50 text-saffron-700 shadow-[2px_2px_0_#fbd38d] dark:border-saffron-600 dark:bg-[#1A1A1C] dark:text-saffron-500 dark:shadow-[2px_2px_0_#9c4221]'
+                      ? 'border-saffron-400 bg-saffron-50 text-saffron-700 shadow-[2px_2px_0_#fbd38d] dark:border-saffron-600 dark:bg-[var(--dark-surface-3)] dark:text-saffron-500 dark:shadow-[2px_2px_0_#9c4221]'
                       : 'border-slate-200 bg-white text-slate-600 shadow-[1px_1px_0_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 dark:shadow-[1px_1px_0_var(--dark-shadow)] dark:hover:bg-[var(--dark-surface-3)]'
                   }`}
                 >
@@ -598,13 +598,13 @@ const DocsPage: React.FC<DocsPageProps> = ({
             <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-[var(--dark-border)]">
               <a
                 href={javascriptHref}
-                className="flex w-full items-center justify-center rounded border border-slate-900 bg-saffron-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-saffron-700 dark:border-slate-700 dark:bg-[#1A1A1C] dark:text-saffron-400"
+                className="flex w-full items-center justify-center rounded border border-slate-900 bg-saffron-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-saffron-700 dark:border-slate-700 dark:bg-[var(--dark-surface-3)] dark:text-saffron-400"
               >
                 Open JS Visualizer
               </a>
               <a
                 href={cppHref}
-                className="flex w-full items-center justify-center rounded border border-slate-900 bg-blue-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:border-slate-700 dark:bg-[#1A1A1C] dark:text-blue-400"
+                className="flex w-full items-center justify-center rounded border border-slate-900 bg-blue-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:border-slate-700 dark:bg-[var(--dark-surface-3)] dark:text-blue-400"
               >
                 Open C++ Visualizer
               </a>
