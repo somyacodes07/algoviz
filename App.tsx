@@ -442,7 +442,18 @@ const App: React.FC = () => {
   }, [code, language, syncUrl]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    // Disable CSS transitions so there's no competing fade
+    document.documentElement.style.setProperty('--theme-transition-duration', '0s');
+    // Schedule the actual theme swap after the wave has expanded
+    setTimeout(() => {
+      setTheme((prev) => (prev === "light" ? "dark" : "light"));
+      // Re-enable transitions after the swap
+      requestAnimationFrame(() => {
+        document.documentElement.style.removeProperty('--theme-transition-duration');
+      });
+    }, 800);
+    // Immediately trigger the wave by toggling a pending state
+    setTheme((prev) => prev); // force re-render for wave detection
   };
 
   const currentStep = timeline[currentStepIndex] || {
@@ -464,7 +475,7 @@ const App: React.FC = () => {
 
   return (
     <div
-      className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
+      className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 ${
         page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-screen overflow-hidden"
       } ${
         page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (effectiveThemeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
