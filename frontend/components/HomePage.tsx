@@ -421,7 +421,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Right Side: Visualizer abstract graphic */}
-          <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[#08111d]/30">
+          <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[var(--dark-surface)]/30">
             <div className="absolute inset-0 bg-dot-pattern opacity-60 dark:opacity-40" />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -523,7 +523,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
               {/* Variables Panel Mini */}
               <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] flex flex-col">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[var(--dark-surface-3)] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
                   <span>Variables / Watch</span>
                   <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
