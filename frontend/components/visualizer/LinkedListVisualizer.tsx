@@ -242,7 +242,7 @@ export const LinkedListPanel: React.FC<{
         <div className="flex items-start gap-1 w-max pt-12 pb-2">
           {/* NULL sentinel — start */}
           <div className="flex items-center gap-1">
-            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-[#1a1a1c] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
               NULL
             </div>
             <motion.div
@@ -350,19 +350,19 @@ export const LinkedListPanel: React.FC<{
                       <motion.div
                         animate={isPointed ? { scale: 1.06, y: -1 } : { scale: 1, y: 0 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                        className={`mt-4 flex items-stretch border-[3px] bg-white dark:bg-[#161618] ${
+                        className={`mt-4 flex items-stretch border-[3px] bg-white dark:bg-[var(--dark-surface-2)] ${
                           isPointed
-                            ? `border-slate-900 dark:border-slate-300 shadow-[4px_4px_0_#0f172a] dark:shadow-[4px_4px_0_#000] z-10`
+                            ? `border-slate-900 dark:border-slate-300 shadow-[4px_4px_0_#0f172a] dark:shadow-[4px_4px_0_var(--dark-shadow)] z-10`
                             : isTrail
-                              ? 'border-slate-500 dark:border-slate-500 shadow-[4px_4px_0_#64748b] dark:shadow-[4px_4px_0_#000]'
-                              : 'border-slate-900 dark:border-[#555] shadow-[4px_4px_0_rgba(15,23,42,0.2)] dark:shadow-[4px_4px_0_#000]'
+                              ? 'border-slate-500 dark:border-slate-500 shadow-[4px_4px_0_#64748b] dark:shadow-[4px_4px_0_var(--dark-shadow)]'
+                              : 'border-slate-900 dark:border-[var(--dark-border-bright)] shadow-[4px_4px_0_rgba(15,23,42,0.2)] dark:shadow-[4px_4px_0_var(--dark-shadow)]'
                         }`}
                       >
                         {/* Prev pointer slot (DLL only) */}
                         {preview.isDoublyLinked && (
                           <div className={`flex items-center justify-center px-2 border-r-[3px] ${
                             isPointed ? 'border-slate-900 dark:border-slate-300' : 'border-slate-900 dark:border-[#555]'
-                          } bg-slate-100 dark:bg-[#222]`}>
+                          } bg-slate-100 dark:bg-[var(--dark-surface-3)]`}>
                             <div className="flex flex-col items-center gap-0.5">
                               <div className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                                 prev
@@ -388,8 +388,8 @@ export const LinkedListPanel: React.FC<{
 
                         {/* Next pointer slot */}
                         <div className={`flex items-center justify-center px-2 border-l-[3px] ${
-                          isPointed ? 'border-slate-900 dark:border-slate-300' : 'border-slate-900 dark:border-[#555]'
-                        } bg-slate-100 dark:bg-[#222]`}>
+                          isPointed ? 'border-slate-900 dark:border-slate-300' : 'border-slate-900 dark:border-[var(--dark-border-bright)]'
+                        } bg-slate-100 dark:bg-[var(--dark-surface-3)]`}>
                           <div className="flex flex-col items-center gap-0.5">
                             <div className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                               next
@@ -486,7 +486,7 @@ export const LinkedListPanel: React.FC<{
             >
               <ArrowRight size={12} strokeWidth={2.5} />
             </motion.div>
-            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-[#1a1a1c] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
               NULL
             </div>
           </div>
@@ -495,7 +495,7 @@ export const LinkedListPanel: React.FC<{
 
       {/* ── Pointer Legend ── */}
       {preview.nodes.some((n) => n.pointerNames.length > 0) && (
-        <div className="mt-3 flex flex-wrap gap-2 border-t-[2px] border-slate-200 dark:border-[#333] pt-3">
+        <div className="mt-3 flex flex-wrap gap-2 border-t-[2px] border-slate-200 dark:border-[var(--dark-border-dim)] pt-3">
           <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 mr-1 self-center">
             Pointers:
           </span>
