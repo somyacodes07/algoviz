@@ -458,7 +458,7 @@ const App: React.FC = () => {
       className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
         page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-screen overflow-hidden"
       } ${
-        page === "home" ? "bg-[#f7f0e3] dark:bg-[#08121f]" : theme === "dark" ? "bg-mesh-dark" : "bg-mesh-light"
+        page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? "bg-mesh-dark" : "bg-mesh-light"
       }`}
     >
       <AnimatePresence initial={false} mode="wait">
@@ -495,7 +495,7 @@ const App: React.FC = () => {
               toggleTheme={toggleTheme}
             />
 
-            <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[#0A0A0B] z-10 relative">
+            <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)]/95 z-10 relative">
               <WorkspaceEditor
                 language={language}
                 theme={theme}
