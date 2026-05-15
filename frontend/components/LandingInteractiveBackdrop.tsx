@@ -97,7 +97,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
   useEffect(() => {
     if (theme && prevTheme.current && theme !== prevTheme.current) {
       setThemeWave({ active: true, type: theme });
-      themeWaveRadius.jump(0);
+      themeWaveRadius.set(0);
       setTimeout(() => themeWaveRadius.set(3500), 10);
       
       const timer = setTimeout(() => {
