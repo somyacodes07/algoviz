@@ -203,7 +203,7 @@ const HomePage: React.FC<HomePageProps> = ({
         <LandingInteractiveBackdrop />
 
         {/* Top Navigation / Header */}
-        <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/20">
+        <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-[var(--dark-border)] dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
             <Logo
               language={hoverLang === 'cpp' ? 'c++' : 'javascript'}
@@ -243,7 +243,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
         <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
           {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[var(--dark-surface-a40)]">
+          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-a40)]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
