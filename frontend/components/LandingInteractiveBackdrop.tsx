@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import InteractiveGrid from './InteractiveGrid';
-import { useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 type SignalTone = 'amber' | 'blue' | 'emerald' | 'slate';
 
