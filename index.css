@@ -44,10 +44,33 @@
     animation: pulseMesh 20s ease-in-out infinite alternate;
   }
 
-  .bg-mesh-dark {
-    background-color: #0c1220;
+  /* ─── Warm dark mesh (Saffron / JS) ─────────────────────────────────────── */
+  .bg-mesh-dark-saffron {
+    background-color: var(--dark-base);
     background-image:
-      radial-gradient(at 40% 20%, hsla(28, 100%, 55%, 0.12) 0px, transparent 55%),
+      radial-gradient(at 40% 20%, hsla(28, 100%, 55%, 0.14) 0px, transparent 55%),
+      radial-gradient(at 80% 0%, hsla(35, 100%, 45%, 0.08) 0px, transparent 55%),
+      radial-gradient(at 0% 50%, hsla(15, 80%, 50%, 0.06) 0px, transparent 50%),
+      radial-gradient(at 60% 80%, hsla(40, 100%, 40%, 0.05) 0px, transparent 45%);
+    animation: pulseMesh 20s ease-in-out infinite alternate;
+  }
+
+  /* ─── Cool dark mesh (Blue / C++) ───────────────────────────────────────── */
+  .bg-mesh-dark-blue {
+    background-color: var(--dark-base);
+    background-image:
+      radial-gradient(at 40% 20%, hsla(220, 100%, 50%, 0.12) 0px, transparent 55%),
+      radial-gradient(at 80% 0%, hsla(200, 100%, 50%, 0.10) 0px, transparent 55%),
+      radial-gradient(at 0% 50%, hsla(250, 80%, 60%, 0.06) 0px, transparent 50%),
+      radial-gradient(at 60% 80%, hsla(210, 100%, 40%, 0.06) 0px, transparent 45%);
+    animation: pulseMesh 20s ease-in-out infinite alternate;
+  }
+
+  /* Legacy fallback — maps to saffron by default */
+  .bg-mesh-dark {
+    background-color: var(--dark-base);
+    background-image:
+      radial-gradient(at 40% 20%, hsla(28, 100%, 55%, 0.14) 0px, transparent 55%),
       radial-gradient(at 80% 0%, hsla(220, 100%, 50%, 0.10) 0px, transparent 55%),
       radial-gradient(at 0% 50%, hsla(280, 80%, 60%, 0.06) 0px, transparent 50%),
       radial-gradient(at 60% 80%, hsla(200, 100%, 40%, 0.06) 0px, transparent 45%);
@@ -145,16 +168,16 @@ html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
   background-color: rgba(71, 85, 105, 0.75);
 }
 
-/* Custom scrollbar — Dark */
+/* Custom scrollbar — Dark (inherits from theme warmth) */
 .dark ::-webkit-scrollbar-track {
-  background: #131a2b;
+  background: var(--dark-scrollbar-track);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(120, 140, 170, 0.45);
-  border-color: #131a2b;
+  background-color: var(--dark-scrollbar-thumb);
+  border-color: var(--dark-scrollbar-track);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.65);
+  background-color: var(--dark-scrollbar-thumb-hover);
 }
 
 html {
@@ -164,7 +187,7 @@ html {
 }
 
 .dark {
-  scrollbar-color: rgba(120, 140, 170, 0.45) #131a2b;
+  scrollbar-color: var(--dark-scrollbar-thumb) var(--dark-scrollbar-track);
 }
 
 @layer utilities {
@@ -178,19 +201,57 @@ html {
   }
 }
 
-/* ─── Dark Mode Depth Layers ────────────────────────────────────────────── */
-/* These CSS custom properties create visual depth in dark mode              */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── Dark Mode Depth Layers — Language-Adaptive Warmth ───────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Fallback / default — cool blue (matches C++ theme) */
 :root {
-  --dark-base:         #0c1220;    /* deepest background                    */
-  --dark-surface:      #111827;    /* main surface / panels                 */
-  --dark-surface-2:    #162032;    /* elevated surface (cards, modals)      */
-  --dark-surface-3:    #1a2740;    /* highest elevation                     */
-  --dark-border:       #253552;    /* primary border                        */
-  --dark-border-dim:   #1e2d46;   /* subtle border                         */
-  --dark-border-bright:#3a5070;   /* active border                         */
-  --dark-shadow:       rgba(0, 0, 0, 0.45); /* shadow color                */
-  --dark-glow-saffron: rgba(249, 115, 22, 0.15);
-  --dark-glow-blue:    rgba(59, 130, 246, 0.15);
+  --dark-base:              #0c1220;
+  --dark-surface:           #111827;
+  --dark-surface-2:         #162032;
+  --dark-surface-3:         #1a2740;
+  --dark-border:            #253552;
+  --dark-border-dim:        #1e2d46;
+  --dark-border-bright:     #3a5070;
+  --dark-shadow:            rgba(0, 0, 0, 0.45);
+  --dark-glow-saffron:      rgba(249, 115, 22, 0.15);
+  --dark-glow-blue:         rgba(59, 130, 246, 0.15);
+  --dark-scrollbar-track:   #131a2b;
+  --dark-scrollbar-thumb:   rgba(120, 140, 170, 0.45);
+  --dark-scrollbar-thumb-hover: rgba(148, 163, 184, 0.65);
+}
+
+/* ─── WARM palette (JavaScript / Saffron) ──────────────────────────────── */
+/* Amber-tinted darks with earthy warmth                                    */
+.theme-saffron {
+  --dark-base:              #12100a;
+  --dark-surface:           #1a1610;
+  --dark-surface-2:         #221c14;
+  --dark-surface-3:         #2c241a;
+  --dark-border:            #3d3525;
+  --dark-border-dim:        #302818;
+  --dark-border-bright:     #554830;
+  --dark-shadow:            rgba(0, 0, 0, 0.50);
+  --dark-scrollbar-track:   #18140e;
+  --dark-scrollbar-thumb:   rgba(180, 140, 90, 0.40);
+  --dark-scrollbar-thumb-hover: rgba(200, 160, 100, 0.60);
+}
+
+/* ─── COOL palette (C++ / Blue) ────────────────────────────────────────── */
+/* Navy-tinted darks with icy precision                                     */
+.theme-blue {
+  --dark-base:              #0a0e1a;
+  --dark-surface:           #0f1524;
+  --dark-surface-2:         #141c30;
+  --dark-surface-3:         #1a253e;
+  --dark-border:            #233050;
+  --dark-border-dim:        #1a2540;
+  --dark-border-bright:     #354d72;
+  --dark-shadow:            rgba(0, 0, 0, 0.50);
+  --dark-scrollbar-track:   #0c1220;
+  --dark-scrollbar-thumb:   rgba(100, 140, 200, 0.40);
+  --dark-scrollbar-thumb-hover: rgba(130, 170, 220, 0.60);
 }
 
 /* ─── Neo-brutalist dark mode glow on interactive elements ────────────── */
