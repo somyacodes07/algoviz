@@ -31,6 +31,14 @@ export default defineConfig(({ mode }) => {
             visualizerJavascript: path.resolve(__dirname, 'visualizer/javascript/index.html'),
             visualizerCpp: path.resolve(__dirname, 'visualizer/cpp/index.html'),
           },
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-framer': ['framer-motion'],
+              'vendor-monaco': ['@monaco-editor/react'],
+              'vendor-icons': ['lucide-react']
+            }
+          }
         },
       },
       optimizeDeps: {

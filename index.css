@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 /* ─── View Transition: Theme Toggle Circle Reveal ───────────────────────── */
+::view-transition {
+  pointer-events: none;
+}
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+  pointer-events: none;
 }
 ::view-transition-new(root) {
   z-index: 999;
