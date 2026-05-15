@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import InteractiveGrid from './InteractiveGrid';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 type SignalTone = 'amber' | 'blue' | 'emerald' | 'slate';
 
@@ -61,11 +61,25 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
       {/* ── Base gradient backgrounds ────────────────────────────────── */}
       <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none" />
 
-      {/* Dark gradient — switches dynamically on hover via View Transitions */}
+      {/* ── Base Dark Gradient (No Hover) ────────────────────────────── */}
       <div
-        className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
-        style={!hoverLang ? { background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' } : undefined}
+        className="absolute inset-0 hidden dark:block"
+        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
       />
+
+      {/* ── Hover Dark Gradient (Fades In) ───────────────────────────── */}
+      <AnimatePresence>
+        {hoverLang && (
+          <motion.div
+            key={hoverLang}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Theme toggle + hover reveal handled by View Transitions API in App.tsx */}
 
