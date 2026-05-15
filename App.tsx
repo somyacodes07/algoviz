@@ -172,6 +172,8 @@ const App: React.FC = () => {
 
   // Derived Theme Color
   const themeColor = language === "c++" ? "blue" : "saffron";
+  const [hoverThemeColor, setHoverThemeColor] = useState<"saffron" | "blue" | null>(null);
+  const effectiveThemeColor = hoverThemeColor || themeColor;
   const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
   const seoConfig = getSeoConfig(window.location.origin, page, language);
 
@@ -216,8 +218,8 @@ const App: React.FC = () => {
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("theme-saffron", "theme-blue");
-    root.classList.add(`theme-${themeColor}`);
-  }, [themeColor]);
+    root.classList.add(`theme-${effectiveThemeColor}`);
+  }, [effectiveThemeColor]);
 
   useEffect(() => {
     if (
@@ -465,7 +467,7 @@ const App: React.FC = () => {
       className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
         page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-screen overflow-hidden"
       } ${
-        page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (themeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
+        page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (effectiveThemeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
       }`}
     >
       <AnimatePresence initial={false} mode="wait">
@@ -479,6 +481,7 @@ const App: React.FC = () => {
               cppHref={ROUTES.visualizerCpp}
               toggleTheme={toggleTheme}
               theme={theme}
+              onHoverLanguage={(lang) => setHoverThemeColor(lang === 'javascript' ? 'saffron' : lang === 'c++' ? 'blue' : null)}
             />
           </motion.div>
         ) : page === "docs" ? (
