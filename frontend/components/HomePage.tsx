@@ -241,7 +241,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
         <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
           {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[var(--dark-surface)]/40">
+          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[var(--dark-surface)]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -421,7 +421,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Right Side: Visualizer abstract graphic */}
-          <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[var(--dark-surface)]/30">
+          <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[var(--dark-base)]">
             <div className="absolute inset-0 bg-dot-pattern opacity-60 dark:opacity-40" />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -593,7 +593,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ── Features Section with stagger reveal ──────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[var(--dark-surface)]/80 backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[var(--dark-surface)] backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2
