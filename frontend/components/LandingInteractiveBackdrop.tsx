@@ -92,7 +92,11 @@ const LandingInteractiveBackdrop: React.FC = () => {
 
   return (
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-[linear-gradient(135deg,#07111e_0%,#0b1728_48%,#091a2e_100%)]" />
+      <div
+        className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none"
+        style={{ '--dark-grad': 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' } as React.CSSProperties}
+      />
+      <div className="absolute inset-0 hidden dark:block" style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }} />
 
       <motion.div
         className="absolute inset-0 opacity-90 dark:opacity-70"
