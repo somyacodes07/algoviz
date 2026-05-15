@@ -733,7 +733,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
       </div>
 
       {preview.truncated && (
-        <div className="mt-3 border-[2px] border-slate-900 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+        <div className="mt-3 border-[2px] border-slate-900 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:text-slate-400">
           Visualization truncated to keep the graph readable.
         </div>
       )}
