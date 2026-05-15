@@ -243,7 +243,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
         <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
           {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[var(--dark-surface)]">
+          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -586,7 +586,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ── Stats Counter Section ───────────────────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[var(--dark-surface)] relative z-10 py-14 px-8 md:px-16">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] relative z-10 py-14 px-8 md:px-16">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {STATS.map((stat) => (
             <StatCard key={stat.label} {...stat} />
@@ -595,7 +595,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ── Features Section with stagger reveal ──────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[var(--dark-surface)] backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2
@@ -663,7 +663,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-14">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
@@ -677,7 +677,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
+            <article className="bg-[#faf9f6] dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
               <img
                 src={homepagePreview}
                 alt="AlgoViz homepage showing the algorithm visualizer landing page and launch options for JavaScript and C++."
@@ -693,7 +693,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </p>
             </article>
 
-            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
+            <article className="bg-[#faf9f6] dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
               <img
                 src={editorPreview}
                 alt="AlgoViz code visualizer workbench with a Monaco editor, execution controls, variable watch panel, and call stack."
@@ -712,7 +712,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6] dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6] dark:bg-[color-mix(in_srgb,var(--dark-surface)_40%,transparent)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-5xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
