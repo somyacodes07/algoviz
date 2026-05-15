@@ -520,14 +520,13 @@ export const TreePanel: React.FC<{
                     </>
                   )}
 
-                  {/* Shadow rect */}
                   <rect
                     x={-boxW / 2 + 2}
                     y={-boxH / 2 + 2}
                     width={boxW}
                     height={boxH}
                     fill="#0f172a"
-                    className="dark:fill-black"
+                    className="dark:fill-[rgba(0,0,0,0.4)]"
                   />
 
                   {/* Main node rect */}
@@ -549,12 +548,12 @@ export const TreePanel: React.FC<{
                     strokeWidth="2"
                     className={
                       hasPointer
-                        ? 'dark:fill-[#022c22] dark:stroke-[#059669]'
+                        ? 'dark:fill-[#062920] dark:stroke-[#059669]'
                         : isLeaf
                           ? isSaffron
-                            ? 'dark:fill-[#1c1108] dark:stroke-[#333]'
-                            : 'dark:fill-[#0c1524] dark:stroke-[#333]'
-                          : 'dark:fill-[#161618] dark:stroke-[#333]'
+                            ? 'dark:fill-[#1c1108] dark:stroke-[var(--dark-border)]'
+                            : 'dark:fill-[#0c1524] dark:stroke-[var(--dark-border)]'
+                          : 'dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border)]'
                     }
                   />
 
