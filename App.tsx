@@ -529,6 +529,7 @@ const App: React.FC = () => {
         {page === "home" ? (
           <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative h-full w-full will-change-transform">
             <HomePage
+              language={language}
               onSelectLanguage={handleLanguageSelect}
               onOpenDocs={handleOpenDocs}
               docsHref={ROUTES.docs}

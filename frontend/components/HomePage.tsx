@@ -22,6 +22,7 @@ import LandingInteractiveBackdrop from './LandingInteractiveBackdrop.tsx';
 import Logo from './Logo';
 
 interface HomePageProps {
+  language: string;
   onSelectLanguage: (lang: string) => void;
   onOpenDocs: () => void;
   docsHref: string;
@@ -174,6 +175,7 @@ const StatCard: React.FC<{ label: string; value: number; suffix: string }> = ({
 };
 
 const HomePage: React.FC<HomePageProps> = ({
+  language,
   onSelectLanguage,
   onOpenDocs,
   docsHref,
@@ -200,7 +202,7 @@ const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[var(--dark-base)] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
       <section className="relative flex min-h-screen flex-col overflow-hidden">
-        <LandingInteractiveBackdrop hoverLang={hoverLang} theme={theme} />
+        <LandingInteractiveBackdrop hoverLang={hoverLang} defaultLang={language} theme={theme} />
 
         {/* Top Navigation / Header */}
         <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-[var(--dark-border)] dark:bg-slate-950/20">
