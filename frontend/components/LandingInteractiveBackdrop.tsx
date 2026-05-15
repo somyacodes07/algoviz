@@ -38,10 +38,9 @@ const toneClasses = {
 interface LandingInteractiveBackdropProps {
   hoverLang?: string | null;
   theme?: 'light' | 'dark';
-  pendingTheme?: 'light' | 'dark' | null;
 }
 
-const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang, theme, pendingTheme }) => {
+const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang, theme }) => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
@@ -84,33 +83,6 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
       setAuroraState((prev) => ({ ...prev, active: false }));
     }
   }, [hoverLang]);
-
-  // ── Neo-Brutalist Theme Toggle Wave ─────────────────────────────────
-  // Triggered by pendingTheme (BEFORE actual theme swap)
-  const [themeWave, setThemeWave] = useState<{
-    active: boolean;
-    type: 'dark' | 'light';
-    originX: number;
-    originY: number;
-    key: number;
-  }>({ active: false, type: 'light', originX: 720, originY: 450, key: 0 });
-
-  useEffect(() => {
-    if (pendingTheme) {
-      const pos = lastCursorPos.current;
-      setThemeWave({
-        active: true,
-        type: pendingTheme, // show the INCOMING theme
-        originX: pos.x,
-        originY: pos.y,
-        key: Date.now(),
-      });
-      const timer = setTimeout(() => {
-        setThemeWave((prev) => ({ ...prev, active: false }));
-      }, 5000); // keep alive long enough for slow animation + fade
-      return () => clearTimeout(timer);
-    }
-  }, [pendingTheme]);
 
   // Compute the max radius to fully cover the viewport from any origin
   const computeMaxRadius = useCallback(
@@ -188,74 +160,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
         })()}
       </AnimatePresence>
 
-      {/* ── Theme Toggle Wave (full-screen reveal, fixed) ───────────── */}
-      <AnimatePresence>
-        {themeWave.active && (() => {
-          const maxR = computeMaxRadius(themeWave.originX, themeWave.originY) * 2.6;
-          return (
-            <motion.div
-              key={themeWave.key}
-              className="fixed inset-0 pointer-events-none z-[100]"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ exit: { duration: 1.2, ease: 'easeOut' } }}
-            >
-              {/* Opaque disc — fully covers the page as it expands */}
-              <motion.div
-                className={`absolute pointer-events-none ${
-                  themeWave.type === 'dark' ? 'bg-[#0a0e1a]' : 'bg-[#f7f0e3]'
-                }`}
-                style={{
-                  top: themeWave.originY,
-                  left: themeWave.originX,
-                  x: '-50%',
-                  y: '-50%',
-                  borderRadius: '50%',
-                }}
-                initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{
-                  width: maxR,
-                  height: maxR,
-                  // Stay fully opaque while expanding, then slowly fade AFTER theme swaps
-                  opacity: [1, 1, 1, 1, 0.6, 0],
-                }}
-                transition={{
-                  // Fast initial expansion — covers screen within ~1s
-                  width: { duration: 2.5, ease: [0.05, 0.7, 0.1, 1] },
-                  height: { duration: 2.5, ease: [0.05, 0.7, 0.1, 1] },
-                  opacity: { duration: 4, times: [0, 0.15, 0.3, 0.5, 0.75, 1], ease: 'easeOut' },
-                }}
-              />
-              {/* Border ring */}
-              <motion.div
-                className={`absolute pointer-events-none border-[3px] ${
-                  themeWave.type === 'dark' ? 'border-slate-400/50' : 'border-amber-700/30'
-                }`}
-                style={{
-                  top: themeWave.originY,
-                  left: themeWave.originX,
-                  x: '-50%',
-                  y: '-50%',
-                  borderRadius: '50%',
-                  backgroundColor: 'transparent',
-                }}
-                initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{
-                  width: maxR,
-                  height: maxR,
-                  opacity: [1, 0.7, 0.3, 0],
-                }}
-                transition={{
-                  width: { duration: 2.5, ease: [0.05, 0.7, 0.1, 1] },
-                  height: { duration: 2.5, ease: [0.05, 0.7, 0.1, 1] },
-                  opacity: { duration: 3, ease: 'easeOut' },
-                }}
-              />
-            </motion.div>
-          );
-        })()}
-      </AnimatePresence>
+      {/* Theme toggle is handled by View Transitions API in App.tsx */}
 
       {/* ── InteractiveGrid (sole mouse interaction layer) ──────────── */}
       <InteractiveGrid
