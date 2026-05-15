@@ -175,7 +175,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
   if (timeline.length === 0 || currentStepIndex < 0) {
     return (
       <div className="h-full flex items-center justify-center p-6">
-        <div className="max-w-sm w-full border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] p-6 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+        <div className="max-w-sm w-full border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] p-6 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
           <div
             className={`mx-auto mb-3 inline-flex border-[2px] px-3 py-2 ${theme.accentBorder} ${theme.accentSoftBg}`}
           >
@@ -278,7 +278,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           </div>
 
           <div
-            className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] ${theme.accentBorder} ${theme.accentSoftBg}`}
+            className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] ${theme.accentBorder} ${theme.accentSoftBg}`}
           >
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Trace Slice
@@ -380,7 +380,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
               <span className="text-xs font-black text-slate-700 dark:text-slate-300">
                 Line {entry.line}
               </span>
-              <div className="h-4 overflow-hidden border-[2px] border-slate-900 bg-slate-100 dark:border-[#333] dark:bg-[#111113]">
+              <div className="h-4 overflow-hidden border-[2px] border-slate-900 bg-slate-100 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)]">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${entry.share * 100}%` }}
