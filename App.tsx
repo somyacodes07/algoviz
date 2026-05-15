@@ -531,7 +531,6 @@ const App: React.FC = () => {
               cppHref={ROUTES.visualizerCpp}
               toggleTheme={toggleTheme}
               theme={theme}
-              pendingTheme={pendingTheme}
               onHoverLanguage={(lang) => setHoverThemeColor(lang === 'javascript' ? 'saffron' : lang === 'c++' ? 'blue' : null)}
             />
           </motion.div>
