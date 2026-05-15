@@ -441,19 +441,58 @@ const App: React.FC = () => {
     syncUrl("editor", language, { replace: true, preserveShareHash: true });
   }, [code, language, syncUrl]);
 
-  // Pending theme for the wave reveal (the INCOMING theme shown by the wave)
-  const [pendingTheme, setPendingTheme] = useState<'light' | 'dark' | null>(null);
+  // Track cursor position for the theme circle reveal origin
+  const lastMousePos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  useEffect(() => {
+    const track = (e: MouseEvent) => { lastMousePos.current = { x: e.clientX, y: e.clientY }; };
+    window.addEventListener('mousemove', track, { passive: true });
+    return () => window.removeEventListener('mousemove', track);
+  }, []);
+
+  const isTransitioning = useRef(false);
 
   const toggleTheme = () => {
-    if (pendingTheme) return; // ignore rapid clicks
+    if (isTransitioning.current) return;
     const target = theme === 'light' ? 'dark' : 'light';
-    setPendingTheme(target); // triggers the wave in Backdrop
+    const { x, y } = lastMousePos.current;
 
-    // After wave covers the screen, actually swap the theme
-    setTimeout(() => {
+    // Use View Transitions API for dynamic color reveal
+    if (document.startViewTransition) {
+      isTransitioning.current = true;
+      const transition = document.startViewTransition(() => {
+        setTheme(target);
+        // Force synchronous DOM update
+        document.documentElement.classList.toggle('dark', target === 'dark');
+      });
+
+      transition.ready.then(() => {
+        const maxRadius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
+
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${maxRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 1800,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      });
+
+      transition.finished.then(() => {
+        isTransitioning.current = false;
+      });
+    } else {
+      // Fallback for unsupported browsers
       setTheme(target);
-      setPendingTheme(null);
-    }, 900);
+    }
   };
 
   const currentStep = timeline[currentStepIndex] || {
