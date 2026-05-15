@@ -209,7 +209,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                       return (
                         <React.Fragment key={template.name}>
                           {showHeader && (
-                            <div className="sticky top-0 z-10 px-4 py-1.5 mt-2 mb-1 bg-slate-100/90 dark:bg-[var(--dark-surface-2)]/95 backdrop-blur-sm border-y border-slate-200 dark:border-[var(--dark-border-dim)]">
+                            <div className="sticky top-0 z-10 px-4 py-1.5 mt-2 mb-1 bg-slate-100/90 dark:bg-[var(--dark-surface-2)] backdrop-blur-sm border-y border-slate-200 dark:border-[var(--dark-border-dim)]">
                               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                                 {template.category}
                               </span>
