@@ -110,9 +110,9 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
   return (
     <div
-      className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#222] shadow-[2px_2px_0_#1e293b] dark:shadow-[2px_2px_0_#000] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}
+      className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}
     >
-      <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[#161618] border-b-[2px] border-slate-900 dark:border-[#222]">
+      <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)]">
         <button
           onClick={() => setVisualizerMode(!visualizerMode)}
           className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all active:translate-y-[2px] active:shadow-none ${
@@ -120,7 +120,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               ? isSaffron
                 ? 'bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-500 dark:border-saffron-700'
                 : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-500 dark:border-blue-700'
-              : 'bg-slate-100 dark:bg-[#1a1a1c] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[#333] hover:bg-slate-200 dark:hover:bg-[#222]'
+              : 'bg-slate-100 dark:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[var(--dark-border)] hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)]'
           }`}
           title={visualizerMode ? 'Exit focus mode' : 'Enter focus mode (60/40 split)'}
         >
@@ -134,22 +134,22 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}
       >
         {/* Tabs */}
-        <div className="flex border-b-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#111113]">
+        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]">
           <button
             onClick={() => setActiveTab('variables')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === 'variables' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]'}`}
+            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'variables' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
             <Layers size={16} /> Variables
           </button>
           <button
             onClick={() => setActiveTab('stack')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[#222] ${activeTab === 'stack' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]'}`}
+            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'stack' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
             <Layers size={16} className="rotate-180" /> Call Stack
           </button>
           <button
             onClick={() => setActiveTab('performance')}
-            className={`flex-1 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === 'performance' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[#161618]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#161618]'}`}
+            className={`flex-1 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === 'performance' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
             <BarChart3 size={16} /> Complexity
           </button>
@@ -164,7 +164,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#111113] border-b-[2px] border-slate-900 dark:border-[#222] overflow-x-auto custom-scrollbar shrink-0"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[var(--dark-surface)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] overflow-x-auto custom-scrollbar shrink-0"
             >
               <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 shrink-0">
                 Δ Changed
@@ -199,7 +199,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
           {/* #11 Loop detection warning */}
           {loopWarning && activeTab === 'variables' && (
-            <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_#000]">
+            <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
               <AlertTriangle
                 size={14}
                 className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
@@ -237,10 +237,10 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
       {/* Bottom half: Console */}
       <div
-        className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[#222] bg-white dark:bg-[#0A0A0B] transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3] min-h-[150px]' : 'h-10'}`}
+        className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3] min-h-[150px]' : 'h-10'}`}
       >
         <button
-          className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[#161618] transition-colors cursor-pointer w-full"
+          className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-2)] transition-colors cursor-pointer w-full"
           onClick={() => setConsoleExpanded(!consoleExpanded)}
         >
           <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
             {!consoleExpanded &&
               currentStep.consoleOutput &&
               currentStep.consoleOutput.length > 0 && (
-                <span className="ml-2 border-[2px] border-slate-900 dark:border-[#333] bg-slate-200 dark:bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
+                <span className="ml-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-200 dark:bg-[var(--dark-surface-3)] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
                   {currentStep.consoleOutput.length}
                 </span>
               )}
