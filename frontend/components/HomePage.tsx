@@ -224,14 +224,14 @@ const HomePage: React.FC<HomePageProps> = ({
               href="https://github.com/ssgamingop/AlgoViz"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-slate-700 rounded-full transition-colors group cursor-pointer backdrop-blur-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm"
             >
               <Star size={14} className="group-hover:text-amber-500 transition-colors" />
               <span>Star us on GitHub</span>
             </a>
             <button
               onClick={toggleTheme}
-              className="p-2 border border-slate-300 dark:border-slate-700 rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
+              className="p-2 border border-slate-300 dark:border-[var(--dark-border)] rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
@@ -427,10 +427,10 @@ const HomePage: React.FC<HomePageProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-slate-700 dark:bg-[#1e1e1e] dark:shadow-[8px_8px_0px_#000] lg:h-[460px]"
+              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[#1e1e1e] dark:shadow-[8px_8px_0px_#000] lg:h-[460px]"
             >
               {/* Terminal Header */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#252526]">
+              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[#252526]">
                 <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
                 <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
                 <div className="w-3 h-3 rounded-full bg-green-400 border border-slate-900/20"></div>
@@ -522,8 +522,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               {/* Variables Panel Mini */}
-              <div className="h-[140px] border-t-2 border-slate-900 dark:border-slate-700 bg-slate-50 dark:bg-[#1e1e1e] flex flex-col">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-slate-700 flex justify-between items-center text-slate-700 dark:text-slate-300">
+              <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[#1e1e1e] flex flex-col">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
                   <span>Variables / Watch</span>
                   <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
@@ -644,7 +644,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-slate-700 p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+                className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-[var(--dark-border)] p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
               >
                 <div
                   className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}
@@ -675,11 +675,11 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-slate-700 p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
+            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
               <img
                 src={homepagePreview}
                 alt="AlgoViz homepage showing the algorithm visualizer landing page and launch options for JavaScript and C++."
-                className="w-full border-2 border-slate-900 dark:border-slate-700"
+                className="w-full border-2 border-slate-900 dark:border-[var(--dark-border)]"
                 loading="lazy"
               />
               <h3 className="text-xl font-bold mt-5 mb-2">
@@ -691,11 +691,11 @@ const HomePage: React.FC<HomePageProps> = ({
               </p>
             </article>
 
-            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-slate-700 p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
+            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
               <img
                 src={editorPreview}
                 alt="AlgoViz code visualizer workbench with a Monaco editor, execution controls, variable watch panel, and call stack."
-                className="w-full border-2 border-slate-900 dark:border-slate-700"
+                className="w-full border-2 border-slate-900 dark:border-[var(--dark-border)]"
                 loading="lazy"
               />
               <h3 className="text-xl font-bold mt-5 mb-2">
@@ -726,7 +726,7 @@ const HomePage: React.FC<HomePageProps> = ({
             {HOME_FAQ_ITEMS.map((item) => (
               <details
                 key={item.question}
-                className="group bg-white dark:bg-[#161618] border-2 border-slate-900 dark:border-slate-700 p-6 shadow-[5px_5px_0px_#0f172a] dark:shadow-[5px_5px_0px_#000]"
+                className="group bg-white dark:bg-[var(--dark-surface-2)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-6 shadow-[5px_5px_0px_#0f172a] dark:shadow-[5px_5px_0px_var(--dark-shadow)]"
               >
                 <summary className="cursor-pointer list-none text-lg font-bold pr-8 relative">
                   {item.question}
@@ -758,7 +758,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 e.preventDefault();
                 onOpenDocs();
               }}
-              className="inline-flex items-center justify-center px-5 py-3 bg-white dark:bg-[#161618] text-slate-900 dark:text-slate-100 font-bold border-2 border-slate-900 dark:border-slate-700 transition-colors"
+              className="inline-flex items-center justify-center px-5 py-3 bg-white dark:bg-[var(--dark-surface-2)] text-slate-900 dark:text-slate-100 font-bold border-2 border-slate-900 dark:border-[var(--dark-border)] transition-colors"
             >
               Explore the documentation
             </a>

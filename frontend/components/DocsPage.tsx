@@ -554,9 +554,9 @@ const DocsPage: React.FC<DocsPageProps> = ({
     <div
       ref={scrollContainerRef}
       data-theme={theme}
-      className="flex h-full w-full flex-col overflow-y-auto bg-[#faf9f6] text-slate-900 dark:bg-[#0A0A0B] dark:text-slate-100"
+      className="flex h-full w-full flex-col overflow-y-auto bg-[#faf9f6] text-slate-900 dark:bg-[var(--dark-base)] dark:text-slate-100"
     >
-      <header className="h-14 flex items-center px-6 border-b border-slate-900 dark:border-[#222] bg-white dark:bg-[#0A0A0B] shrink-0 sticky top-0 z-30">
+      <header className="h-14 flex items-center px-6 border-b border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] shrink-0 sticky top-0 z-30">
         <a
           href={homeHref}
           onClick={(e) => {
@@ -575,7 +575,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
 
       <main className="mx-auto flex w-full max-w-[1520px] flex-1 flex-col gap-4 px-4 py-6 md:px-6 lg:flex-row lg:items-start lg:gap-5 lg:px-8">
         <aside className="w-full shrink-0 lg:sticky lg:top-[5.25rem] lg:w-[17.5rem]">
-          <div className="relative z-10 flex flex-col gap-2 rounded border-[2px] border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_#94a3b8] dark:border-[#222] dark:bg-[#111113] dark:shadow-[2px_2px_0_#000]">
+          <div className="relative z-10 flex flex-col gap-2 rounded border-[2px] border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_#94a3b8] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             <h2 className="mb-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">
               Documentation
             </h2>
@@ -587,7 +587,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                   className={`flex w-full items-center gap-3 rounded border px-3 py-2.5 text-left text-sm font-bold transition-all active:translate-y-[1px] ${
                     activeDoc === doc.id
                       ? 'border-saffron-400 bg-saffron-50 text-saffron-700 shadow-[2px_2px_0_#fbd38d] dark:border-saffron-600 dark:bg-[#1A1A1C] dark:text-saffron-500 dark:shadow-[2px_2px_0_#9c4221]'
-                      : 'border-slate-200 bg-white text-slate-600 shadow-[1px_1px_0_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400 dark:shadow-[1px_1px_0_#000] dark:hover:bg-[#1A1A1C]'
+                      : 'border-slate-200 bg-white text-slate-600 shadow-[1px_1px_0_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 dark:shadow-[1px_1px_0_var(--dark-shadow)] dark:hover:bg-[var(--dark-surface-3)]'
                   }`}
                 >
                   {doc.icon}
@@ -595,7 +595,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                 </button>
               ))}
             </nav>
-            <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-[#222]">
+            <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-[var(--dark-border)]">
               <a
                 href={javascriptHref}
                 className="flex w-full items-center justify-center rounded border border-slate-900 bg-saffron-50 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-saffron-700 dark:border-slate-700 dark:bg-[#1A1A1C] dark:text-saffron-400"
@@ -621,7 +621,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
               transition={{ duration: 0.3 }}
               className="mb-20 w-full max-w-[1120px] space-y-6"
             >
-              <section className="overflow-hidden rounded border-[2px] border-slate-900 bg-slate-900 text-white shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:shadow-[4px_4px_0_#000]">
+              <section className="overflow-hidden rounded border-[2px] border-slate-900 bg-slate-900 text-white shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:shadow-[4px_4px_0_var(--dark-shadow)]">
                 <div className="relative bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.28),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.35),transparent_38%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#172554_100%)] p-8 md:p-10">
                   <p className="mb-3 text-[11px] font-black uppercase tracking-[0.28em] text-saffron-300">
                     {activeSection.visual.eyebrow}
@@ -649,7 +649,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
               </section>
 
               <div className="grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
-                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000] md:p-7">
+                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-7">
                   <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-500">
@@ -685,7 +685,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                   </div>
                 </section>
 
-                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000] md:p-7">
+                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-7">
                   <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-500">
                     Why It Matters
                   </p>
@@ -696,7 +696,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                     {activeSection.visual.notes.map((note) => (
                       <div
                         key={note}
-                        className="rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-relaxed text-slate-700 dark:border-[#2a2a2d] dark:bg-[#111113] dark:text-slate-300"
+                        className="rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-relaxed text-slate-700 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface)] dark:text-slate-300"
                       >
                         {note}
                       </div>
@@ -706,7 +706,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
               </div>
 
               {activeSection.visual.gallery && (
-                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000] md:p-7">
+                <section className="rounded border-[2px] border-slate-900 bg-white p-6 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-7">
                   <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-500">
@@ -729,9 +729,9 @@ const DocsPage: React.FC<DocsPageProps> = ({
                     {activeSection.visual.gallery.map((item) => (
                       <figure
                         key={item.label}
-                        className="overflow-hidden rounded border border-slate-200 bg-[#faf9f6] dark:border-[#2a2a2d] dark:bg-[#111113]"
+                        className="overflow-hidden rounded border border-slate-200 bg-[#faf9f6] dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface)]"
                       >
-                        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-[#2a2a2d] dark:bg-[#161618]">
+                        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface-2)]">
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] ${toneClasses[item.tone]}`}
                           >
@@ -741,7 +741,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                         <img
                           src={item.src}
                           alt={item.alt}
-                          className="w-full border-b border-slate-200 dark:border-[#2a2a2d]"
+                          className="w-full border-b border-slate-200 dark:border-[var(--dark-border-dim)]"
                           loading="lazy"
                         />
                         <figcaption className="px-4 py-4 text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-300">
@@ -755,26 +755,26 @@ const DocsPage: React.FC<DocsPageProps> = ({
 
               {activeSection.visual.pair && (
                 <section className="grid gap-5 md:grid-cols-2">
-                  <div className="overflow-hidden rounded border-[2px] border-slate-900 bg-white shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000]">
-                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:border-[#2a2a2d] dark:bg-[#111113]">
+                  <div className="overflow-hidden rounded border-[2px] border-slate-900 bg-white shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)]">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface)]">
                       {activeSection.visual.pair.leftLabel}
                     </div>
-                    <pre className="overflow-x-auto bg-white p-5 text-[13px] leading-6 text-slate-800 dark:bg-[#161618] dark:text-slate-200">
+                    <pre className="overflow-x-auto bg-white p-5 text-[13px] leading-6 text-slate-800 dark:bg-[var(--dark-surface-2)] dark:text-slate-200">
                       <code>{activeSection.visual.pair.leftCode}</code>
                     </pre>
                   </div>
-                  <div className="overflow-hidden rounded border-[2px] border-slate-900 bg-white shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000]">
-                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:border-[#2a2a2d] dark:bg-[#111113]">
+                  <div className="overflow-hidden rounded border-[2px] border-slate-900 bg-white shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)]">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface)]">
                       {activeSection.visual.pair.rightLabel}
                     </div>
-                    <pre className="overflow-x-auto bg-white p-5 text-[13px] leading-6 text-slate-800 dark:bg-[#161618] dark:text-slate-200">
+                    <pre className="overflow-x-auto bg-white p-5 text-[13px] leading-6 text-slate-800 dark:bg-[var(--dark-surface-2)] dark:text-slate-200">
                       <code>{activeSection.visual.pair.rightCode}</code>
                     </pre>
                   </div>
                 </section>
               )}
 
-              <section className="rounded border-[2px] border-slate-900 bg-white p-8 shadow-[4px_4px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[4px_4px_0_#000] md:p-12">
+              <section className="rounded border-[2px] border-slate-900 bg-white p-8 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-12">
                 <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-saffron-600 prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-rose-600 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-strong:text-slate-900 prose-table:text-sm prose-th:text-[11px] prose-th:uppercase prose-th:tracking-wider hover:prose-a:text-saffron-500 dark:prose-invert dark:prose-headings:text-slate-100 dark:prose-p:text-slate-300 dark:prose-a:text-saffron-500 dark:prose-code:bg-[#222] dark:prose-code:text-rose-400 dark:prose-strong:text-slate-100">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeSection.content}</ReactMarkdown>
                 </article>
