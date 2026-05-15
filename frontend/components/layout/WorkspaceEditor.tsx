@@ -45,11 +45,11 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
 
   const iconTextClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
   const toolbarBtnClass =
-    'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:bg-white dark:hover:bg-[#1a1a1c] active:translate-y-[2px] active:shadow-none';
+    'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:bg-white dark:hover:bg-[var(--dark-surface-3)] active:translate-y-[2px] active:shadow-none';
 
   return (
     <div
-      className={`flex flex-col h-full w-full md:min-w-[300px] bg-white dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_#000] p-4 md:p-5 transition-all duration-200 ease-out ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}
+      className={`flex flex-col h-full w-full md:min-w-[300px] bg-white dark:bg-[var(--dark-surface-2)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] p-4 md:p-5 transition-all duration-200 ease-out ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             >
               <BookOpen size={12} />
               Templates
-              <span className="ml-1 border-[2px] border-slate-300 dark:border-[#333] bg-white dark:bg-[#161618] px-1 text-[9px] leading-4 text-slate-500 dark:text-slate-400">
+              <span className="ml-1 border-[2px] border-slate-300 dark:border-[var(--dark-border-dim)] bg-white dark:bg-[var(--dark-surface-2)] px-1 text-[9px] leading-4 text-slate-500 dark:text-slate-400">
                 ⌘K
               </span>
             </button>
@@ -81,7 +81,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             onClick={onShare}
             className={`${toolbarBtnClass} ${
               linkCopied
-                ? 'border-green-300 bg-green-100 text-green-700 shadow-[2px_2px_0_#bbf7d0] dark:border-green-700 dark:bg-[#111113] dark:text-green-400 dark:shadow-[2px_2px_0_#14532d]'
+                ? 'border-green-300 bg-green-100 text-green-700 shadow-[2px_2px_0_#bbf7d0] dark:border-green-700 dark:bg-green-950/30 dark:text-green-400 dark:shadow-[2px_2px_0_rgba(20,83,45,0.5)]'
                 : ''
             }`}
             title="Copy shareable link"
@@ -104,7 +104,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             }}
             disabled={isExecuting}
             title="Run Code (Cmd/Ctrl + Enter)"
-            className={`flex items-center justify-center gap-2 border-[2px] border-slate-900 dark:border-[#333] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none min-w-[100px] ${
+            className={`flex items-center justify-center gap-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none min-w-[100px] ${
               isExecuting
                 ? themeColor === 'saffron'
                   ? 'bg-saffron-600 animate-pulse cursor-wait'
@@ -123,7 +123,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
           </button>
         </div>
       </div>
-      <div className="flex-1 relative border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] overflow-hidden bg-white dark:bg-transparent">
+      <div className="flex-1 relative border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] overflow-hidden bg-white dark:bg-transparent">
         <CodeEditor
           code={code}
           language={language}
