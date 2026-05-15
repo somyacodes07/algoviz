@@ -136,24 +136,24 @@ const ArrayVisualizer: React.FC<{
           const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
 
           // Structural Neo-brutalist colors
-          let barBg = 'bg-slate-300 dark:bg-[#333]';
-          let cellBg = 'bg-white dark:bg-[#111113]';
+          let barBg = 'bg-slate-300 dark:bg-slate-600/40';
+          let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
           let cellText = 'text-slate-800 dark:text-slate-200';
-          let borderColor = 'border-slate-900 dark:border-[#444]';
+          let borderColor = 'border-slate-900 dark:border-[var(--dark-border)]';
 
           const pointers = activePointers.get(i) || [];
           const isPointer = pointers.length > 0;
 
           if (isSwapped) {
             barBg = 'bg-yellow-400 dark:bg-yellow-500';
-            cellBg = 'bg-yellow-50 dark:bg-[#2a2400]';
+            cellBg = 'bg-yellow-50 dark:bg-yellow-900/25';
             cellText = 'text-yellow-900 dark:text-yellow-200';
             borderColor = 'border-yellow-500 dark:border-yellow-600';
           } else if (isChanged) {
             barBg = isSaffron
               ? 'bg-saffron-400 dark:bg-saffron-500'
               : 'bg-blue-400 dark:bg-blue-500';
-            cellBg = isSaffron ? 'bg-saffron-50 dark:bg-[#1e1300]' : 'bg-blue-50 dark:bg-[#00132a]';
+            cellBg = isSaffron ? 'bg-saffron-50 dark:bg-saffron-900/20' : 'bg-blue-50 dark:bg-blue-900/20';
             cellText = isSaffron
               ? 'text-saffron-900 dark:text-saffron-200'
               : 'text-blue-900 dark:text-blue-200';
@@ -163,7 +163,7 @@ const ArrayVisualizer: React.FC<{
           } else if (isPointer) {
             barBg = 'bg-emerald-300 dark:bg-emerald-700';
             borderColor = 'border-emerald-500 dark:border-emerald-600';
-            cellBg = 'bg-emerald-50 dark:bg-emerald-900/30';
+            cellBg = 'bg-emerald-50 dark:bg-emerald-900/25';
             cellText = 'text-emerald-900 dark:text-emerald-300';
           }
 
@@ -206,7 +206,7 @@ const ArrayVisualizer: React.FC<{
 
               {/* Value cell */}
               <div
-                className={`w-full text-center py-2 border-[2px] text-sm font-mono font-black transition-all ${cellBg} ${borderColor} ${cellText} drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] group-hover:-translate-y-[1px] relative z-10`}
+                className={`w-full text-center py-2 border-[2px] text-sm font-mono font-black transition-all ${cellBg} ${borderColor} ${cellText} shadow-[2px_2px_0_rgba(15,23,42,0.5)] dark:shadow-[2px_2px_0_var(--dark-shadow)] group-hover:-translate-y-[1px] relative z-10`}
               >
                 {v}
               </div>
@@ -364,15 +364,15 @@ const VariableCard: React.FC<{
       ? isSaffron
         ? 'border-[2px] border-saffron-400 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221]'
         : 'border-[2px] border-blue-400 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a]'
-      : 'border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_#000]';
+      : 'border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]';
 
   const cardBg = isNew
-    ? 'bg-yellow-50 dark:bg-[#1a1c11]'
+    ? 'bg-yellow-50 dark:bg-yellow-950/25'
     : hasChanged
       ? isSaffron
-        ? 'bg-orange-50 dark:bg-[#1c1411]'
-        : 'bg-blue-50 dark:bg-[#11151c]'
-      : 'bg-white dark:bg-[#161618]';
+        ? 'bg-orange-50 dark:bg-saffron-950/25'
+        : 'bg-blue-50 dark:bg-blue-950/25'
+      : 'bg-white dark:bg-[var(--dark-surface-2)]';
 
   // ── #2 Object show-more ─────────────────────────────────────────────────
   const expandedKeys = isExpanded && isObject ? Object.keys(value) : [];
@@ -597,10 +597,10 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
       {/* ── #9 Watch / Pin Panel ─────────────────────────────────────────── */}
       {pinnedVars && pinnedVars.size > 0 && (
         <div
-          className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700' : 'border-blue-400 dark:border-blue-700'} bg-slate-50 dark:bg-[#111113] mb-1`}
+          className={`border-[2px] ${isSaffron ? 'border-saffron-400 dark:border-saffron-700/60' : 'border-blue-400 dark:border-blue-700/60'} bg-slate-50 dark:bg-[var(--dark-surface)] mb-1`}
         >
           <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900 bg-saffron-50 dark:bg-[#1c1208]' : 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c1525]'}`}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${isSaffron ? 'border-saffron-200 dark:border-saffron-900/60 bg-saffron-50 dark:bg-saffron-950/25' : 'border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/25'}`}
           >
             <Pin
               size={10}
@@ -623,7 +623,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
               return (
                 <div
                   key={k}
-                  className={`flex items-center justify-between px-2 py-1 text-xs font-mono border ${isGhost ? 'opacity-40 border-slate-200 dark:border-slate-700 bg-white/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#161618]'}`}
+                  className={`flex items-center justify-between px-2 py-1 text-xs font-mono border ${isGhost ? 'opacity-40 border-slate-200 dark:border-slate-700/40 bg-white/30' : 'border-slate-200 dark:border-[var(--dark-border-dim)] bg-white dark:bg-[var(--dark-surface-2)]'}`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="font-black text-slate-600 dark:text-slate-300">{k}</span>
@@ -664,7 +664,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
 
       {keys.length === 0 ? (
         /* ── #4 Shimmer empty state ──────────────────────────────────────── */
-        <div className="flex flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] transition-all duration-300">
+        <div className="flex flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all duration-300">
           <span
             className={`border px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isSaffron ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
           >
