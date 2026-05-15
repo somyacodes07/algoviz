@@ -45,11 +45,12 @@
   }
 
   .bg-mesh-dark {
-    background-color: #020617;
+    background-color: #0c1220;
     background-image:
-      radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.02) 0px, transparent 50%);
+      radial-gradient(at 40% 20%, hsla(28, 100%, 55%, 0.12) 0px, transparent 55%),
+      radial-gradient(at 80% 0%, hsla(220, 100%, 50%, 0.10) 0px, transparent 55%),
+      radial-gradient(at 0% 50%, hsla(280, 80%, 60%, 0.06) 0px, transparent 50%),
+      radial-gradient(at 60% 80%, hsla(200, 100%, 40%, 0.06) 0px, transparent 45%);
     animation: pulseMesh 20s ease-in-out infinite alternate;
   }
 }
@@ -126,7 +127,7 @@ html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
   100% { background-position: -200% 0; }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — Light */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -143,15 +144,17 @@ html body *:not(svg):not(svg *):not(canvas):not([data-no-transition]) {
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(71, 85, 105, 0.75);
 }
+
+/* Custom scrollbar — Dark */
 .dark ::-webkit-scrollbar-track {
-  background: #08121f;
+  background: #131a2b;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 116, 139, 0.75);
-  border-color: #08121f;
+  background-color: rgba(120, 140, 170, 0.45);
+  border-color: #131a2b;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.9);
+  background-color: rgba(148, 163, 184, 0.65);
 }
 
 html {
@@ -161,7 +164,7 @@ html {
 }
 
 .dark {
-  scrollbar-color: rgba(100, 116, 139, 0.75) #08121f;
+  scrollbar-color: rgba(120, 140, 170, 0.45) #131a2b;
 }
 
 @layer utilities {
@@ -171,6 +174,47 @@ html {
   }
 
   .dark .bg-dot-pattern {
-    background-image: radial-gradient(circle, #334155 1.5px, transparent 1.5px);
+    background-image: radial-gradient(circle, #2a3550 1.5px, transparent 1.5px);
   }
+}
+
+/* ─── Dark Mode Depth Layers ────────────────────────────────────────────── */
+/* These CSS custom properties create visual depth in dark mode              */
+:root {
+  --dark-base:         #0c1220;    /* deepest background                    */
+  --dark-surface:      #111827;    /* main surface / panels                 */
+  --dark-surface-2:    #162032;    /* elevated surface (cards, modals)      */
+  --dark-surface-3:    #1a2740;    /* highest elevation                     */
+  --dark-border:       #253552;    /* primary border                        */
+  --dark-border-dim:   #1e2d46;   /* subtle border                         */
+  --dark-border-bright:#3a5070;   /* active border                         */
+  --dark-shadow:       rgba(0, 0, 0, 0.45); /* shadow color                */
+  --dark-glow-saffron: rgba(249, 115, 22, 0.15);
+  --dark-glow-blue:    rgba(59, 130, 246, 0.15);
+}
+
+/* ─── Neo-brutalist dark mode glow on interactive elements ────────────── */
+.dark .neo-glow-saffron {
+  box-shadow:
+    3px 3px 0 var(--dark-shadow),
+    0 0 20px var(--dark-glow-saffron),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .neo-glow-blue {
+  box-shadow:
+    3px 3px 0 var(--dark-shadow),
+    0 0 20px var(--dark-glow-blue),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ─── SVG dark mode gradient definitions ────────────────────────────────── */
+@keyframes nodeGlowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+/* ─── Array bar gradient animation ──────────────────────────────────────── */
+@keyframes barShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
