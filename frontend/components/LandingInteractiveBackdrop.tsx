@@ -38,9 +38,10 @@ const toneClasses = {
 interface LandingInteractiveBackdropProps {
   hoverLang?: string | null;
   theme?: 'light' | 'dark';
+  pendingTheme?: 'light' | 'dark' | null;
 }
 
-const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang, theme }) => {
+const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang, theme, pendingTheme }) => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
@@ -85,6 +86,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
   }, [hoverLang]);
 
   // ── Neo-Brutalist Theme Toggle Wave ─────────────────────────────────
+  // Triggered by pendingTheme (BEFORE actual theme swap)
   const [themeWave, setThemeWave] = useState<{
     active: boolean;
     type: 'dark' | 'light';
@@ -93,26 +95,22 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     key: number;
   }>({ active: false, type: 'light', originX: 720, originY: 450, key: 0 });
 
-  const prevTheme = useRef(theme);
-
   useEffect(() => {
-    if (theme && prevTheme.current && theme !== prevTheme.current) {
+    if (pendingTheme) {
       const pos = lastCursorPos.current;
       setThemeWave({
         active: true,
-        type: theme,
+        type: pendingTheme, // show the INCOMING theme
         originX: pos.x,
         originY: pos.y,
         key: Date.now(),
       });
       const timer = setTimeout(() => {
         setThemeWave((prev) => ({ ...prev, active: false }));
-      }, 4000);
-      prevTheme.current = theme;
+      }, 5000); // keep alive long enough for slow animation + fade
       return () => clearTimeout(timer);
     }
-    prevTheme.current = theme;
-  }, [theme]);
+  }, [pendingTheme]);
 
   // Compute the max radius to fully cover the viewport from any origin
   const computeMaxRadius = useCallback(
@@ -191,10 +189,10 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
         })()}
       </AnimatePresence>
 
-      {/* ── Neo-Brutalist Theme Toggle Wave ─────────────────────────── */}
+      {/* ── Neo-Brutalist Theme Toggle Wave (true reveal) ──────────── */}
       <AnimatePresence>
         {themeWave.active && (() => {
-          const maxR = computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4;
+          const maxR = computeMaxRadius(themeWave.originX, themeWave.originY) * 2.5;
           return (
             <motion.div
               key={themeWave.key}
@@ -202,12 +200,12 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
               initial={{ opacity: 1 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ exit: { duration: 0.8 } }}
             >
-              {/* Fill disc */}
+              {/* Opaque fill disc — paints the new theme as it grows */}
               <motion.div
                 className={`absolute pointer-events-none ${
-                  themeWave.type === 'dark' ? 'bg-slate-950' : 'bg-[#f7f0e3]'
+                  themeWave.type === 'dark' ? 'bg-[#0a0e1a]' : 'bg-[#f7f0e3]'
                 }`}
                 style={{
                   top: themeWave.originY,
@@ -216,22 +214,22 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                   y: '-50%',
                   borderRadius: '50%',
                 }}
-                initial={{ width: 0, height: 0, opacity: 0.9 }}
+                initial={{ width: 0, height: 0, opacity: 1 }}
                 animate={{
                   width: maxR,
                   height: maxR,
-                  opacity: [0.9, 0.5, 0],
+                  opacity: [1, 1, 1, 0.8, 0],
                 }}
                 transition={{
-                  width: { duration: 2.8, ease: slowEase },
-                  height: { duration: 2.8, ease: slowEase },
-                  opacity: { duration: 3.5, ease: 'easeOut' },
+                  width: { duration: 3.2, ease: slowEase },
+                  height: { duration: 3.2, ease: slowEase },
+                  opacity: { duration: 4.5, times: [0, 0.25, 0.45, 0.7, 1], ease: 'easeOut' },
                 }}
               />
-              {/* Thick border ring */}
+              {/* Border ring — trails behind the fill disc */}
               <motion.div
-                className={`absolute pointer-events-none border-[4px] ${
-                  themeWave.type === 'dark' ? 'border-slate-400/40' : 'border-amber-800/25'
+                className={`absolute pointer-events-none border-[3px] ${
+                  themeWave.type === 'dark' ? 'border-slate-400/50' : 'border-amber-700/30'
                 }`}
                 style={{
                   top: themeWave.originY,
@@ -245,12 +243,12 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                 animate={{
                   width: maxR,
                   height: maxR,
-                  opacity: [1, 0.4, 0],
+                  opacity: [1, 0.8, 0.3, 0],
                 }}
                 transition={{
-                  width: { duration: 2.8, ease: slowEase },
-                  height: { duration: 2.8, ease: slowEase },
-                  opacity: { duration: 3, ease: 'easeOut' },
+                  width: { duration: 3.2, ease: slowEase },
+                  height: { duration: 3.2, ease: slowEase },
+                  opacity: { duration: 3.5, ease: 'easeOut' },
                 }}
               />
             </motion.div>
