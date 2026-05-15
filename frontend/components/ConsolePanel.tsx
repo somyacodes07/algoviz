@@ -46,7 +46,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               key={index}
-              className={`flex items-start gap-2.5 p-2.5 border-[2px] transition-all shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] ${
+              className={`flex items-start gap-2.5 p-2.5 border-[2px] transition-all shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] ${
                 isError
                   ? 'bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800/50'
                   : isWarn
