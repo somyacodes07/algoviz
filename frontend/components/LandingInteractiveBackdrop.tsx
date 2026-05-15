@@ -1,10 +1,6 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import InteractiveGrid from './InteractiveGrid';
-import {
-  motion,
-  useReducedMotion,
-  AnimatePresence,
-} from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 
 type SignalTone = 'amber' | 'blue' | 'emerald' | 'slate';
 
@@ -44,123 +40,34 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
-  // Track cursor position for wave origins
-  const lastCursorPos = useRef({ x: 720, y: 450 });
-
   useEffect(() => {
     const syncViewport = () => {
       setViewport({ width: window.innerWidth, height: Math.max(window.innerHeight, 720) });
     };
-    const handlePointerMove = (e: PointerEvent | MouseEvent) => {
-      lastCursorPos.current = { x: e.clientX, y: e.clientY };
-    };
     syncViewport();
     window.addEventListener('resize', syncViewport);
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    return () => {
-      window.removeEventListener('resize', syncViewport);
-      window.removeEventListener('pointermove', handlePointerMove);
-    };
+    return () => window.removeEventListener('resize', syncViewport);
   }, []);
 
-  // ── Neo-Brutalist Hover Aurora ──────────────────────────────────────
-  const [auroraState, setAuroraState] = useState<{
-    active: boolean;
-    lang: string | null;
-    originX: number;
-    originY: number;
-  }>({ active: false, lang: null, originX: 720, originY: 450 });
-
-  useEffect(() => {
-    if (hoverLang) {
-      setAuroraState({
-        active: true,
-        lang: hoverLang,
-        originX: lastCursorPos.current.x,
-        originY: lastCursorPos.current.y,
-      });
-    } else {
-      setAuroraState((prev) => ({ ...prev, active: false }));
-    }
-  }, [hoverLang]);
-
-  // Compute the max radius to fully cover the viewport from any origin
-  const computeMaxRadius = useCallback(
-    (ox: number, oy: number) => {
-      const corners = [[0, 0], [viewport.width, 0], [0, viewport.height], [viewport.width, viewport.height]];
-      return Math.ceil(Math.max(...corners.map(([cx, cy]) => Math.sqrt((cx - ox) ** 2 + (cy - oy) ** 2))));
-    },
-    [viewport]
-  );
-
-  const getAuroraColors = (lang: string | null) => {
-    if (lang === 'js') return { bg: 'bg-mesh-dark-saffron', ring: 'border-amber-500/50' };
-    if (lang === 'cpp') return { bg: 'bg-mesh-dark-blue', ring: 'border-sky-500/50' };
-    return { bg: '', ring: 'border-slate-500/40' };
-  };
-
-  // Slow, cinematic easing — long acceleration, gentle deceleration
-  const slowEase = [0.12, 0.8, 0.2, 1] as const;
+  // Determine which dark gradient to show based on hover
+  const darkGradientClass = hoverLang === 'js'
+    ? 'bg-mesh-dark-saffron'
+    : hoverLang === 'cpp'
+    ? 'bg-mesh-dark-blue'
+    : '';
 
   return (
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
       {/* ── Base gradient backgrounds ────────────────────────────────── */}
       <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none" />
+
+      {/* Dark gradient — switches dynamically on hover via View Transitions */}
       <div
-        className="absolute inset-0 hidden dark:block"
-        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
+        className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
+        style={!hoverLang ? { background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' } : undefined}
       />
 
-      {/* ── Neo-Brutalist Hover Aurora (hard circle + border ring) ──── */}
-      {/* ── Hover Aurora (full-screen, fixed) ────────────────────────── */}
-      <AnimatePresence>
-        {auroraState.active && auroraState.lang && (() => {
-          const maxR = computeMaxRadius(auroraState.originX, auroraState.originY) * 2.5;
-          const colors = getAuroraColors(auroraState.lang);
-          return (
-            <motion.div
-              key={`aurora-${auroraState.lang}`}
-              className="fixed inset-0 pointer-events-none z-[100] hidden dark:block"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <motion.div
-                className={`absolute pointer-events-none ${colors.bg}`}
-                style={{
-                  top: auroraState.originY,
-                  left: auroraState.originX,
-                  x: '-50%',
-                  y: '-50%',
-                  borderRadius: '50%',
-                }}
-                initial={{ width: 0, height: 0 }}
-                animate={{ width: maxR, height: maxR }}
-                exit={{ width: 0, height: 0 }}
-                transition={{ duration: 2.2, ease: slowEase }}
-              />
-              <motion.div
-                className={`absolute pointer-events-none border-[3px] ${colors.ring}`}
-                style={{
-                  top: auroraState.originY,
-                  left: auroraState.originX,
-                  x: '-50%',
-                  y: '-50%',
-                  borderRadius: '50%',
-                  backgroundColor: 'transparent',
-                }}
-                initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{ width: maxR, height: maxR, opacity: [1, 0.6, 0.2] }}
-                exit={{ width: 0, height: 0, opacity: 0 }}
-                transition={{ duration: 2.2, ease: slowEase }}
-              />
-            </motion.div>
-          );
-        })()}
-      </AnimatePresence>
-
-      {/* Theme toggle is handled by View Transitions API in App.tsx */}
+      {/* Theme toggle + hover reveal handled by View Transitions API in App.tsx */}
 
       {/* ── InteractiveGrid (sole mouse interaction layer) ──────────── */}
       <InteractiveGrid
