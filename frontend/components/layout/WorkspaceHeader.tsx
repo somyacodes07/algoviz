@@ -22,7 +22,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 }) => {
   return (
     <header
-      className={`h-14 flex items-center px-6 justify-between bg-white dark:bg-[#0A0A0B] border-b border-slate-900 dark:border-[#222] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0`}
+      className={`h-14 flex items-center px-6 justify-between bg-white dark:bg-[var(--dark-surface)] border-b border-slate-900 dark:border-[var(--dark-border)] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0`}
     >
       <div className="flex items-center gap-4">
         <a
@@ -31,25 +31,25 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             e.preventDefault();
             onGoHome();
           }}
-          className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-500 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
+          className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)] text-slate-500 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-colors hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] active:translate-y-[2px] active:shadow-none"
         >
           <ArrowLeft size={18} />
         </a>
         <Logo
           language={language}
-          className="w-[2.2rem] h-[2.2rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_#000]"
+          className="w-[2.2rem] h-[2.2rem] drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_rgba(0,0,0,0.6)]"
         />
         <div className="flex items-baseline gap-2">
           <h1 className="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-slate-100">
             AlgoViz
           </h1>
-          <span className="text-slate-500 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">
+          <span className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">
             Workbench
           </span>
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <div className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
+        <div className="hidden sm:flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
           <span>{langLabel}</span>
         </div>
         <a
@@ -58,14 +58,14 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             e.preventDefault();
             onOpenDocs();
           }}
-          className="hidden sm:inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-slate-50 dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] hover:text-slate-900 dark:hover:text-slate-200 active:translate-y-[2px] active:shadow-none"
+          className="hidden sm:inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] px-3 py-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] hover:text-slate-900 dark:hover:text-slate-200 active:translate-y-[2px] active:shadow-none"
         >
           <BookOpen size={12} />
           Docs
         </a>
         <button
           onClick={toggleTheme}
-          className="p-1.5 border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#111113] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-colors hover:bg-slate-100 dark:hover:bg-[#161618] active:translate-y-[2px] active:shadow-none"
+          className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)] text-slate-600 dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-colors hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] active:translate-y-[2px] active:shadow-none"
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
