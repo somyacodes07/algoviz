@@ -336,7 +336,7 @@ export const TreePanel: React.FC<{
             <code className="font-mono">right</code> pointers in runtime state.
           </p>
         </div>
-        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
+        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
           {preview.nodes.length} Nodes
         </span>
       </div>
@@ -586,7 +586,7 @@ export const TreePanel: React.FC<{
       </div>
 
       {preview.truncated && (
-        <div className="mt-3 border-[2px] border-slate-900 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+        <div className="mt-3 border-[2px] border-slate-900 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:text-slate-400">
           Visualization truncated after 31 nodes to keep the panel readable.
         </div>
       )}
