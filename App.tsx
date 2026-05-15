@@ -495,38 +495,11 @@ const App: React.FC = () => {
     }
   };
 
-  // ── View Transition: Hover Language Color Change ──────────────────
+  // ── Hover Language Color Change ──────────────────
   const handleHoverLanguage = useCallback((lang: string | null) => {
     const newColor = lang === 'javascript' ? 'saffron' : lang === 'c++' ? 'blue' : null;
-    // Only use View Transition for entering hover (not leaving, which should be instant)
-    if (newColor && theme === 'dark' && document.startViewTransition) {
-      const { x, y } = lastMousePos.current;
-      const transition = document.startViewTransition(() => {
-        setHoverThemeColor(newColor as 'saffron' | 'blue');
-      });
-      transition.ready.then(() => {
-        const maxRadius = Math.hypot(
-          Math.max(x, window.innerWidth - x),
-          Math.max(y, window.innerHeight - y)
-        );
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${maxRadius}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 1200,
-            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            pseudoElement: '::view-transition-new(root)',
-          }
-        );
-      });
-    } else {
-      setHoverThemeColor(newColor as 'saffron' | 'blue' | null);
-    }
-  }, [theme]);
+    setHoverThemeColor(newColor);
+  }, []);
   const currentStep = timeline[currentStepIndex] || {
     line: 0,
     variables: {},
