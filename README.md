@@ -267,9 +267,10 @@ npm run preview
 |---|---|
 | **React 19** | UI and route-driven app shell |
 | **TypeScript** | Type safety across frontend and backend code |
-| **Vite** | Dev server and production build |
+| **Vite** | Dev server, production build, and aggressive manual chunk code splitting |
+| **View Transitions API** | Hardware-accelerated, seamless Neo-Brutalist dark/light theme toggling |
 | **Monaco Editor** | VS Code-grade code editing surface |
-| **Framer Motion** | UI motion and route transitions |
+| **Framer Motion** | Complex UI motion, route transitions, and hover states |
 | **Acorn** | JavaScript AST instrumentation |
 | **web-tree-sitter** | Browser C++ parsing (WASM) |
 | **Wandbox API** | Remote GCC compilation for C++ |

@@ -56,18 +56,20 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     ? 'bg-mesh-dark-blue'
     : '';
 
+  const lightGradientClass = hoverLang === 'js'
+    ? 'bg-amber-100/60'
+    : hoverLang === 'cpp'
+    ? 'bg-blue-100/60'
+    : '';
+
   return (
-    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* ── Base gradient backgrounds ────────────────────────────────── */}
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none" />
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none transition-colors duration-700 ease-out"
+         style={{ backgroundColor: hoverLang === 'js' ? (theme === 'dark' ? 'rgba(217, 119, 6, 0.1)' : 'rgba(253, 230, 138, 0.5)') : hoverLang === 'cpp' ? (theme === 'dark' ? 'rgba(37, 99, 235, 0.1)' : 'rgba(191, 219, 254, 0.5)') : 'transparent' }}>
+      
+      {/* ── Base Background (Transparent so App.tsx solid background shines through) ────────────────────────────── */}
+      <div className="absolute inset-0" />
 
-      {/* ── Base Dark Gradient (No Hover) ────────────────────────────── */}
-      <div
-        className="absolute inset-0 hidden dark:block"
-        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
-      />
-
-      {/* ── Hover Dark Gradient (Fades In) ───────────────────────────── */}
+      {/* ── Hover Gradient (Fades In) ───────────────────────────── */}
       <AnimatePresence>
         {hoverLang && (
           <motion.div
@@ -76,7 +78,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
+            className={`absolute inset-0 ${theme === 'dark' ? darkGradientClass : lightGradientClass}`}
           />
         )}
       </AnimatePresence>

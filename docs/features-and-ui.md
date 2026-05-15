@@ -1,6 +1,6 @@
 # Features & UI Layouts
 
-AlgoViz uses a **Developer's Workbench** design with bold typography, high contrast borders, and precise geometric layouts.
+AlgoViz uses a **Neo-Brutalist Developer's Workbench** design with bold typography, high contrast borders, and precise geometric layouts. The UI leverages the **Native View Transitions API** for seamless, hardware-accelerated dark/light mode toggling, creating a stunning visual experience without sacrificing performance.
 
 ## 1. Step-by-Step Execution
 
