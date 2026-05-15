@@ -441,19 +441,19 @@ const App: React.FC = () => {
     syncUrl("editor", language, { replace: true, preserveShareHash: true });
   }, [code, language, syncUrl]);
 
+  // Pending theme for the wave reveal (the INCOMING theme shown by the wave)
+  const [pendingTheme, setPendingTheme] = useState<'light' | 'dark' | null>(null);
+
   const toggleTheme = () => {
-    // Disable CSS transitions so there's no competing fade
-    document.documentElement.style.setProperty('--theme-transition-duration', '0s');
-    // Schedule the actual theme swap after the wave has expanded
+    if (pendingTheme) return; // ignore rapid clicks
+    const target = theme === 'light' ? 'dark' : 'light';
+    setPendingTheme(target); // triggers the wave in Backdrop
+
+    // After wave covers the screen, actually swap the theme
     setTimeout(() => {
-      setTheme((prev) => (prev === "light" ? "dark" : "light"));
-      // Re-enable transitions after the swap
-      requestAnimationFrame(() => {
-        document.documentElement.style.removeProperty('--theme-transition-duration');
-      });
-    }, 800);
-    // Immediately trigger the wave by toggling a pending state
-    setTheme((prev) => prev); // force re-render for wave detection
+      setTheme(target);
+      setPendingTheme(null);
+    }, 900);
   };
 
   const currentStep = timeline[currentStepIndex] || {
@@ -492,6 +492,7 @@ const App: React.FC = () => {
               cppHref={ROUTES.visualizerCpp}
               toggleTheme={toggleTheme}
               theme={theme}
+              pendingTheme={pendingTheme}
               onHoverLanguage={(lang) => setHoverThemeColor(lang === 'javascript' ? 'saffron' : lang === 'c++' ? 'blue' : null)}
             />
           </motion.div>
