@@ -220,6 +220,10 @@ html {
   --dark-scrollbar-track:   #131a2b;
   --dark-scrollbar-thumb:   rgba(120, 140, 170, 0.45);
   --dark-scrollbar-thumb-hover: rgba(148, 163, 184, 0.65);
+
+  --dark-surface-a30:       color-mix(in srgb, var(--dark-surface) 30%, transparent);
+  --dark-surface-a40:       color-mix(in srgb, var(--dark-surface) 40%, transparent);
+  --dark-surface-a80:       color-mix(in srgb, var(--dark-surface) 80%, transparent);
 }
 
 /* ─── WARM palette (JavaScript / Saffron) ──────────────────────────────── */
