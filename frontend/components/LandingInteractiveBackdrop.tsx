@@ -2,11 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import InteractiveGrid from './InteractiveGrid';
 import {
   motion,
-  useMotionTemplate,
-  useMotionValue,
   useReducedMotion,
-  useSpring,
-  useTransform,
   AnimatePresence,
 } from 'framer-motion';
 
@@ -48,55 +44,32 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
-  const pointerX = useMotionValue(720);
-  const pointerY = useMotionValue(320);
-
-  // Track last known cursor position for the wave origin
-  const lastCursorPos = useRef({ x: 720, y: 320 });
+  // Track cursor position for wave origins
+  const lastCursorPos = useRef({ x: 720, y: 450 });
 
   useEffect(() => {
     const syncViewport = () => {
-      const width = window.innerWidth;
-      const height = Math.max(window.innerHeight, 720);
-      setViewport({ width, height });
+      setViewport({ width: window.innerWidth, height: Math.max(window.innerHeight, 720) });
     };
-
-    const handlePointerMove = (event: PointerEvent | MouseEvent) => {
-      pointerX.set(event.clientX);
-      pointerY.set(event.clientY);
-      lastCursorPos.current = { x: event.clientX, y: event.clientY };
+    const handlePointerMove = (e: PointerEvent | MouseEvent) => {
+      lastCursorPos.current = { x: e.clientX, y: e.clientY };
     };
-
     syncViewport();
     window.addEventListener('resize', syncViewport);
-    window.addEventListener('mousemove', handlePointerMove, { passive: true });
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
-
     return () => {
       window.removeEventListener('resize', syncViewport);
-      window.removeEventListener('mousemove', handlePointerMove);
       window.removeEventListener('pointermove', handlePointerMove);
     };
-  }, [pointerX, pointerY]);
+  }, []);
 
-  const smoothX = useSpring(pointerX, {
-    stiffness: 110,
-    damping: 24,
-    mass: 0.7,
-  });
-  const smoothY = useSpring(pointerY, {
-    stiffness: 110,
-    damping: 24,
-    mass: 0.7,
-  });
-
-  // ── Neo-Brutalist Aurora (hard-edged expanding circle with border ring) ──
+  // ── Neo-Brutalist Hover Aurora ──────────────────────────────────────
   const [auroraState, setAuroraState] = useState<{
     active: boolean;
     lang: string | null;
     originX: number;
     originY: number;
-  }>({ active: false, lang: null, originX: 720, originY: 320 });
+  }>({ active: false, lang: null, originX: 720, originY: 450 });
 
   useEffect(() => {
     if (hoverLang) {
@@ -111,14 +84,14 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     }
   }, [hoverLang]);
 
-  // ── Neo-Brutalist Theme Wave (hard-edged disc with a thick border ring) ──
+  // ── Neo-Brutalist Theme Toggle Wave ─────────────────────────────────
   const [themeWave, setThemeWave] = useState<{
     active: boolean;
     type: 'dark' | 'light';
     originX: number;
     originY: number;
-    key: number; // unique key to force re-mount on each toggle
-  }>({ active: false, type: 'light', originX: 720, originY: 320, key: 0 });
+    key: number;
+  }>({ active: false, type: 'light', originX: 720, originY: 450, key: 0 });
 
   const prevTheme = useRef(theme);
 
@@ -132,212 +105,182 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
         originY: pos.y,
         key: Date.now(),
       });
-
       const timer = setTimeout(() => {
         setThemeWave((prev) => ({ ...prev, active: false }));
-      }, 1400);
+      }, 2800);
       prevTheme.current = theme;
       return () => clearTimeout(timer);
     }
     prevTheme.current = theme;
   }, [theme]);
 
-  // Compute the max radius needed to cover the entire viewport from the origin point
+  // Compute the max radius to fully cover the viewport from any origin
   const computeMaxRadius = useCallback(
     (ox: number, oy: number) => {
-      const corners = [
-        [0, 0],
-        [viewport.width, 0],
-        [0, viewport.height],
-        [viewport.width, viewport.height],
-      ];
-      return Math.ceil(
-        Math.max(...corners.map(([cx, cy]) => Math.sqrt((cx - ox) ** 2 + (cy - oy) ** 2)))
-      );
+      const corners = [[0, 0], [viewport.width, 0], [0, viewport.height], [viewport.width, viewport.height]];
+      return Math.ceil(Math.max(...corners.map(([cx, cy]) => Math.sqrt((cx - ox) ** 2 + (cy - oy) ** 2))));
     },
     [viewport]
   );
 
-  const glowLayer = useMotionTemplate`
-    radial-gradient(34rem 34rem at ${smoothX}px ${smoothY}px, rgba(249, 115, 22, 0.24), transparent 52%),
-    radial-gradient(28rem 28rem at calc(${smoothX}px + 220px) calc(${smoothY}px - 120px), rgba(56, 189, 248, 0.18), transparent 56%),
-    radial-gradient(26rem 26rem at calc(${smoothX}px - 250px) calc(${smoothY}px + 160px), rgba(16, 185, 129, 0.12), transparent 58%)
-  `;
-
-  const haloX = useTransform(smoothX, (value) => value - 144);
-  const haloY = useTransform(smoothY, (value) => value - 144);
-
-  // Aurora mesh colors for the neo-brutalist ring
   const getAuroraColors = (lang: string | null) => {
-    if (lang === 'js') return { bg: 'bg-mesh-dark-saffron', ring: 'border-amber-500/60' };
-    if (lang === 'cpp') return { bg: 'bg-mesh-dark-blue', ring: 'border-sky-500/60' };
+    if (lang === 'js') return { bg: 'bg-mesh-dark-saffron', ring: 'border-amber-500/50' };
+    if (lang === 'cpp') return { bg: 'bg-mesh-dark-blue', ring: 'border-sky-500/50' };
     return { bg: '', ring: 'border-slate-500/40' };
   };
 
+  // Slow, cinematic easing
+  const slowEase = [0.16, 1, 0.3, 1] as const;
+
   return (
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Base gradient backgrounds */}
+      {/* ── Base gradient backgrounds ────────────────────────────────── */}
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none" />
       <div
-        className="absolute inset-0 bg-[linear-gradient(135deg,#f8ecd8_0%,#f8fafc_42%,#dbeafe_100%)] dark:bg-none"
-        style={{ '--dark-grad': 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' } as React.CSSProperties}
+        className="absolute inset-0 hidden dark:block"
+        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
       />
-      <div className="absolute inset-0 hidden dark:block" style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }} />
 
-      {/* ── Neo-Brutalist Hover Aurora ─────────────────────────────────── */}
+      {/* ── Neo-Brutalist Hover Aurora (hard circle + border ring) ──── */}
       <AnimatePresence>
-        {auroraState.active && auroraState.lang && (
-          <motion.div
-            key={`aurora-${auroraState.lang}`}
-            className="absolute inset-0 pointer-events-none hidden dark:block"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {/* The expanding hard-edged disc */}
+        {auroraState.active && auroraState.lang && (() => {
+          const maxR = computeMaxRadius(auroraState.originX, auroraState.originY) * 2.4;
+          const colors = getAuroraColors(auroraState.lang);
+          return (
             <motion.div
-              className={`absolute pointer-events-none ${getAuroraColors(auroraState.lang).bg}`}
-              style={{
-                top: auroraState.originY,
-                left: auroraState.originX,
-                x: '-50%',
-                y: '-50%',
-                borderRadius: '50%',
-              }}
-              initial={{ width: 0, height: 0 }}
-              animate={{
-                width: computeMaxRadius(auroraState.originX, auroraState.originY) * 2.4,
-                height: computeMaxRadius(auroraState.originX, auroraState.originY) * 2.4,
-              }}
-              exit={{ width: 0, height: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            />
-            {/* The hard border ring (neo-brutalist outline that follows the edge) */}
-            <motion.div
-              className={`absolute pointer-events-none border-[3px] ${getAuroraColors(auroraState.lang).ring}`}
-              style={{
-                top: auroraState.originY,
-                left: auroraState.originX,
-                x: '-50%',
-                y: '-50%',
-                borderRadius: '50%',
-                backgroundColor: 'transparent',
-              }}
-              initial={{ width: 0, height: 0 }}
-              animate={{
-                width: computeMaxRadius(auroraState.originX, auroraState.originY) * 2.4,
-                height: computeMaxRadius(auroraState.originX, auroraState.originY) * 2.4,
-              }}
-              exit={{ width: 0, height: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </motion.div>
-        )}
+              key={`aurora-${auroraState.lang}`}
+              className="absolute inset-0 pointer-events-none hidden dark:block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Fill disc */}
+              <motion.div
+                className={`absolute pointer-events-none ${colors.bg}`}
+                style={{
+                  top: auroraState.originY,
+                  left: auroraState.originX,
+                  x: '-50%',
+                  y: '-50%',
+                  borderRadius: '50%',
+                }}
+                initial={{ width: 0, height: 0 }}
+                animate={{ width: maxR, height: maxR }}
+                exit={{ width: 0, height: 0 }}
+                transition={{ duration: 1.4, ease: slowEase }}
+              />
+              {/* Hard border ring */}
+              <motion.div
+                className={`absolute pointer-events-none border-[3px] ${colors.ring}`}
+                style={{
+                  top: auroraState.originY,
+                  left: auroraState.originX,
+                  x: '-50%',
+                  y: '-50%',
+                  borderRadius: '50%',
+                  backgroundColor: 'transparent',
+                }}
+                initial={{ width: 0, height: 0, opacity: 1 }}
+                animate={{ width: maxR, height: maxR, opacity: [1, 0.6, 0.2] }}
+                exit={{ width: 0, height: 0, opacity: 0 }}
+                transition={{ duration: 1.4, ease: slowEase }}
+              />
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
-      {/* ── Neo-Brutalist Theme Toggle Wave ────────────────────────────── */}
+      {/* ── Neo-Brutalist Theme Toggle Wave ─────────────────────────── */}
       <AnimatePresence>
-        {themeWave.active && (
-          <motion.div
-            key={themeWave.key}
-            className="absolute inset-0 pointer-events-none z-[5]"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {/* Hard-edged disc for theme transition */}
+        {themeWave.active && (() => {
+          const maxR = computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4;
+          return (
             <motion.div
-              className={`absolute pointer-events-none ${
-                themeWave.type === 'dark' ? 'bg-slate-950' : 'bg-[#f7f0e3]'
-              }`}
-              style={{
-                top: themeWave.originY,
-                left: themeWave.originX,
-                x: '-50%',
-                y: '-50%',
-                borderRadius: '50%',
-              }}
-              initial={{ width: 0, height: 0, opacity: 0.85 }}
-              animate={{
-                width: computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4,
-                height: computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4,
-                opacity: [0.85, 0.6, 0],
-              }}
-              transition={{
-                width: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
-                height: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
-                opacity: { duration: 1.2, ease: 'easeOut' },
-              }}
-            />
-            {/* Thick neo-brutalist border ring */}
-            <motion.div
-              className={`absolute pointer-events-none border-[4px] ${
-                themeWave.type === 'dark'
-                  ? 'border-slate-400/50'
-                  : 'border-amber-800/30'
-              }`}
-              style={{
-                top: themeWave.originY,
-                left: themeWave.originX,
-                x: '-50%',
-                y: '-50%',
-                borderRadius: '50%',
-                backgroundColor: 'transparent',
-              }}
-              initial={{ width: 0, height: 0, opacity: 1 }}
-              animate={{
-                width: computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4,
-                height: computeMaxRadius(themeWave.originX, themeWave.originY) * 2.4,
-                opacity: [1, 0.5, 0],
-              }}
-              transition={{
-                width: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
-                height: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
-                opacity: { duration: 1, ease: 'easeOut' },
-              }}
-            />
-          </motion.div>
-        )}
+              key={themeWave.key}
+              className="absolute inset-0 pointer-events-none z-[5]"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Fill disc */}
+              <motion.div
+                className={`absolute pointer-events-none ${
+                  themeWave.type === 'dark' ? 'bg-slate-950' : 'bg-[#f7f0e3]'
+                }`}
+                style={{
+                  top: themeWave.originY,
+                  left: themeWave.originX,
+                  x: '-50%',
+                  y: '-50%',
+                  borderRadius: '50%',
+                }}
+                initial={{ width: 0, height: 0, opacity: 0.9 }}
+                animate={{
+                  width: maxR,
+                  height: maxR,
+                  opacity: [0.9, 0.5, 0],
+                }}
+                transition={{
+                  width: { duration: 1.6, ease: slowEase },
+                  height: { duration: 1.6, ease: slowEase },
+                  opacity: { duration: 2.4, ease: 'easeOut' },
+                }}
+              />
+              {/* Thick border ring */}
+              <motion.div
+                className={`absolute pointer-events-none border-[4px] ${
+                  themeWave.type === 'dark' ? 'border-slate-400/40' : 'border-amber-800/25'
+                }`}
+                style={{
+                  top: themeWave.originY,
+                  left: themeWave.originX,
+                  x: '-50%',
+                  y: '-50%',
+                  borderRadius: '50%',
+                  backgroundColor: 'transparent',
+                }}
+                initial={{ width: 0, height: 0, opacity: 1 }}
+                animate={{
+                  width: maxR,
+                  height: maxR,
+                  opacity: [1, 0.4, 0],
+                }}
+                transition={{
+                  width: { duration: 1.6, ease: slowEase },
+                  height: { duration: 1.6, ease: slowEase },
+                  opacity: { duration: 2, ease: 'easeOut' },
+                }}
+              />
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
-      {/* Mouse-follow ambient glow */}
-      <motion.div
-        className="absolute inset-0 opacity-90 dark:opacity-70"
-        style={{ backgroundImage: glowLayer }}
+      {/* ── InteractiveGrid (sole mouse interaction layer) ──────────── */}
+      <InteractiveGrid
+        gridSize={55}
+        radius={350}
+        dotSize={2.5}
+        gridThickness={1}
+        baseOpacity={theme === 'dark' ? 0.18 : 0.08}
+        repulsionStrength={-0.55}
+        clickInteraction={true}
+        cursorTrail={false}
+        backgroundColor="transparent"
+        gridColor={theme === 'dark' ? 'rgba(148, 163, 184, 0.35)' : 'rgba(15, 23, 42, 0.12)'}
+        dotColor={theme === 'dark' ? 'rgba(148, 163, 184, 0.5)' : 'rgba(15, 23, 42, 0.25)'}
+        hoverColor={theme === 'dark' ? 'rgba(56, 189, 248, 0.9)' : 'rgba(15, 23, 42, 0.7)'}
+        clickProps={{ clickForce: 0.5, motionSpeed: 0.7 }}
       />
 
-      {/* Interactive Kinetic Grid */}
-      <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.35]">
-        <InteractiveGrid
-          gridSize={50}
-          radius={300}
-          dotSize={2}
-          gridThickness={1.5}
-          baseOpacity={0.05}
-          repulsionStrength={-0.65}
-          clickInteraction={true}
-          cursorTrail={false}
-          backgroundColor="transparent"
-          gridColor="var(--dark-border)"
-          dotColor={theme === 'dark' ? "var(--dark-surface-2)" : "rgba(15, 23, 42, 0.4)"}
-          hoverColor={theme === 'dark' ? "var(--dark-scrollbar-thumb-hover)" : "rgba(15, 23, 42, 0.8)"}
-          clickProps={{ clickForce: 0.5, motionSpeed: 0.8 }}
-        />
-      </div>
-
-      {/* Mouse-follow halo */}
-      <motion.div
-        className="absolute h-72 w-72 rounded-full border border-white/50 bg-white/20 blur-2xl dark:border-sky-300/20 dark:bg-sky-400/10"
-        style={{ x: haloX, y: haloY }}
-      />
-
-      {/* Decorative neo-brutalist lines */}
+      {/* ── Decorative lines ───────────────────────────────────────── */}
       <div className="absolute inset-x-0 top-[18%] h-px bg-gradient-to-r from-transparent via-slate-900/15 to-transparent dark:via-slate-100/10" />
       <div className="absolute inset-x-[12%] top-[48%] h-px bg-gradient-to-r from-transparent via-slate-900/10 to-transparent dark:via-slate-100/10" />
       <div className="absolute right-[18%] top-[12%] bottom-[18%] w-px bg-gradient-to-b from-transparent via-slate-900/10 to-transparent dark:via-slate-100/10" />
 
-      {/* Floating signal labels */}
+      {/* ── Floating signal labels ─────────────────────────────────── */}
       {floatingSignals.map((signal, index) => (
         <motion.div
           key={signal.label}

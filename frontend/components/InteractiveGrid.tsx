@@ -28,6 +28,7 @@ export default function KineticGrid(props: any) {
   const mousePosRef = useRef<{ x: number; y: number } | null>(null);
   const trailPointsRef = useRef<any[]>([]);
   const isMouseDownRef = useRef(false);
+  const isVisibleRef = useRef(true);
   const [mounted, setMounted] = useState(false);
 
   const colorsRef = useRef({
@@ -350,7 +351,36 @@ export default function KineticGrid(props: any) {
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    // Only run animation when visible
+    const startLoop = () => {
+      if (!animationRef.current) {
+        lastTime = performance.now();
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+    const stopLoop = () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+
+    // IntersectionObserver to pause when off-screen
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          startLoop();
+        } else {
+          stopLoop();
+          mousePosRef.current = null;
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(canvas);
+
+    if (isVisibleRef.current) startLoop();
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -405,6 +435,7 @@ export default function KineticGrid(props: any) {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
       resizeObserver.disconnect();
+      observer.disconnect();
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [mounted]);
