@@ -13,7 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import StructureVisualizer from './StructureVisualizer';
+
 
 import { getThemeConfig, ThemeColor } from '../theme/theme';
 
@@ -659,8 +659,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
         </div>
       )}
 
-      {/* Always render — uses useRef to cache last-known structure across scopes */}
-      <StructureVisualizer variables={variables} themeColor={themeColor} />
+
 
       {keys.length === 0 ? (
         /* ── #4 Shimmer empty state ──────────────────────────────────────── */

@@ -8,10 +8,12 @@ import {
 } from './visualizer/LinkedListVisualizer';
 import { buildGraphPreview, GraphPanel, GraphPreview } from './visualizer/GraphVisualizer';
 import { buildTreePreview, TreePanel, TreePreview } from './visualizer/TreeVisualizer';
+import { Network } from 'lucide-react';
 
 interface StructureVisualizerProps {
   variables: VariableMap;
   themeColor: ThemeColor;
+  currentStepIndex: number;
 }
 
 /**
@@ -21,7 +23,7 @@ interface StructureVisualizerProps {
  * variable (e.g. inside a recursive call).  This prevents the visualizer
  * from flickering / vanishing on every step.
  */
-const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, themeColor }) => {
+const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, themeColor, currentStepIndex }) => {
   const lastTree = useRef<TreePreview | null>(null);
   const lastLinkedList = useRef<LinkedListPreview | null>(null);
   const lastGraph = useRef<GraphPreview | null>(null);
@@ -31,18 +33,13 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
   const freshLinkedList = buildLinkedListPreview(variables);
   const freshGraph = buildGraphPreview(variables);
 
-  const hasVariables = Object.keys(variables).length > 0;
-  const hasAnyFreshStructure = !!(freshTree || freshLinkedList || freshGraph);
-
   // Update refs when a fresh detection succeeds
   if (freshTree) lastTree.current = freshTree;
   if (freshLinkedList) lastLinkedList.current = freshLinkedList;
   if (freshGraph) lastGraph.current = freshGraph;
 
-  // If the scope has actual variables but NO structure was detected,
-  // clear the cache — the user likely switched to different code.
-  // Cache only persists during empty-scope steps (e.g. inside recursion).
-  if (hasVariables && !hasAnyFreshStructure) {
+  // Clear cache ONLY when execution fully restarts
+  if (currentStepIndex === 0) {
     lastTree.current = null;
     lastLinkedList.current = null;
     lastGraph.current = null;
@@ -54,7 +51,22 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
   const graphPreview = freshGraph || lastGraph.current;
 
   if (!treePreview && !linkedListPreview && !graphPreview) {
-    return null;
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all duration-300">
+        <span
+          className={`border px-2 py-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] ${themeColor === 'saffron' ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
+        >
+          <Network size={12} />
+          Visualizer
+        </span>
+        <span className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500 text-center">
+          No Graph, Tree, or Linked List detected.
+        </span>
+        <span className="text-xs font-medium text-slate-400 dark:text-slate-600 max-w-[250px] text-center">
+          Standard variables will appear in the Variables tab. Data structures will render here automatically.
+        </span>
+      </div>
+    );
   }
 
   return (

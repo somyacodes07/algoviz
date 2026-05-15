@@ -10,17 +10,19 @@ import {
   ChevronUp,
   ArrowRight,
   AlertTriangle,
+  Network,
 } from 'lucide-react';
 import VariablesPanel from '../VariablesPanel';
 import CallStackPanel from '../CallStackPanel';
 import PerformancePanel from '../PerformancePanel';
 import ConsolePanel from '../ConsolePanel';
+import StructureVisualizer from '../StructureVisualizer';
 import { ThemeColor, getThemeConfig } from '../../theme/theme';
 import { ExecutionStep, Timeline, ComplexityAnalysis } from '../../../types';
 
 interface WorkspaceVisualizerProps {
-  activeTab: 'variables' | 'stack' | 'performance';
-  setActiveTab: (tab: 'variables' | 'stack' | 'performance') => void;
+  activeTab: 'variables' | 'stack' | 'performance' | 'diagrams';
+  setActiveTab: (tab: 'variables' | 'stack' | 'performance' | 'diagrams') => void;
   consoleExpanded: boolean;
   setConsoleExpanded: (expanded: boolean) => void;
   visualizerMode: boolean;
@@ -110,7 +112,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
   return (
     <div
-      className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[480px]'}`}
+      className={`min-h-[50vh] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[540px]'}`}
     >
       <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)]">
         <button
@@ -122,7 +124,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
                 : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-500 dark:border-blue-700'
               : 'bg-slate-100 dark:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[var(--dark-border)] hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)]'
           }`}
-          title={visualizerMode ? 'Exit focus mode' : 'Enter focus mode (60/40 split)'}
+          title={visualizerMode ? 'Exit focus mode' : 'Enter focus mode'}
         >
           {visualizerMode ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
           {visualizerMode ? 'Focus' : 'Expand'}
@@ -134,24 +136,30 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}
       >
         {/* Tabs */}
-        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]">
+        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] overflow-x-auto custom-scrollbar">
+          <button
+            onClick={() => setActiveTab('diagrams')}
+            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'diagrams' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
+          >
+            <Network size={16} /> Diagrams
+          </button>
           <button
             onClick={() => setActiveTab('variables')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'variables' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
+            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'variables' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
             <Layers size={16} /> Variables
           </button>
           <button
             onClick={() => setActiveTab('stack')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'stack' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
+            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'stack' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
-            <Layers size={16} className="rotate-180" /> Call Stack
+            <Layers size={16} className="rotate-180" /> Stack
           </button>
           <button
             onClick={() => setActiveTab('performance')}
-            className={`flex-1 py-3.5 text-sm font-black uppercase tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === 'performance' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
+            className={`flex-1 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === 'performance' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
           >
-            <BarChart3 size={16} /> Complexity
+            <BarChart3 size={16} /> Perf
           </button>
         </div>
 
@@ -214,6 +222,15 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               </div>
             </div>
           )}
+          {/* Diagrams Tab Content - rendered persistently to preserve cache */}
+          <div className={activeTab === 'diagrams' ? 'block h-full' : 'hidden'}>
+            <StructureVisualizer 
+              variables={currentStep.variables || {}} 
+              themeColor={themeColor} 
+              currentStepIndex={currentStepIndex}
+            />
+          </div>
+
           {activeTab === 'variables' ? (
             <VariablesPanel
               variables={currentStep.variables || {}}
@@ -224,14 +241,14 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
             />
           ) : activeTab === 'stack' ? (
             <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
-          ) : (
+          ) : activeTab === 'performance' ? (
             <PerformancePanel
               timeline={timeline}
               currentStepIndex={currentStepIndex}
               analysis={complexityAnalysis}
               themeColor={themeColor}
             />
-          )}
+          ) : null}
         </div>
       </div>
 

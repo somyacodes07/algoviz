@@ -141,7 +141,7 @@ const App: React.FC = () => {
   });
 
   const [code, setCode] = useState<string>(initialAppState.code);
-  const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance">("variables");
+  const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance" | "diagrams">("diagrams");
   const [linkCopied, setLinkCopied] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [visualizerMode, setVisualizerMode] = useState(false);

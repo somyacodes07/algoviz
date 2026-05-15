@@ -112,15 +112,60 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     );
   }, [breakpoints, monaco]);
 
+  // Define Custom IDE Themes
+  useEffect(() => {
+    if (!monaco) return;
+
+    // Light Theme
+    monaco.editor.defineTheme('algoviz-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#ffffff', // matches our bg-white
+        'editor.lineHighlightBackground': '#f1f5f9', // slate-100
+        'editorLineNumber.foreground': '#94a3b8', // slate-400
+        'editorGutter.background': '#ffffff',
+      },
+    });
+
+    // Dark Saffron Theme
+    monaco.editor.defineTheme('algoviz-dark-saffron', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#221c14', // matches --dark-surface-2 for saffron
+        'editor.lineHighlightBackground': '#2c241a', // --dark-surface-3
+        'editorLineNumber.foreground': '#78716c', // stone-500
+        'editorGutter.background': '#221c14',
+      },
+    });
+
+    // Dark Blue Theme
+    monaco.editor.defineTheme('algoviz-dark-blue', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#141c30', // matches --dark-surface-2 for blue
+        'editor.lineHighlightBackground': '#1a253e', // --dark-surface-3
+        'editorLineNumber.foreground': '#475569', // slate-600
+        'editorGutter.background': '#141c30',
+      },
+    });
+  }, [monaco]);
+
   // Map our language IDs to Monaco's
   const monacoLanguage = language === 'c++' ? 'cpp' : 'javascript';
+  const activeTheme = theme === 'light' ? 'algoviz-light' : `algoviz-dark-${themeColor}`;
 
   return (
     <div className="h-full w-full">
       <Editor
         height="100%"
         language={monacoLanguage}
-        theme={theme === 'dark' ? 'vs-dark' : 'light'}
+        theme={activeTheme}
         value={code}
         onChange={onChange}
         onMount={handleEditorDidMount}
@@ -133,7 +178,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           scrollBeyondLastLine: false,
           smoothScrolling: true,
           cursorBlinking: 'smooth',
-          renderLineHighlight: 'none',
+          renderLineHighlight: 'all',
           overviewRulerLanes: 0,
           hideCursorInOverviewRuler: true,
           overviewRulerBorder: false,
