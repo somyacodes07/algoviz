@@ -196,7 +196,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const currentStep = EXECUTION_STEPS[stepIndex];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[#08121f] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
+    <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[var(--dark-base)] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
       <section className="relative flex min-h-screen flex-col overflow-hidden">
         <LandingInteractiveBackdrop />
 
@@ -241,7 +241,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
         <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
           {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[#091323]/40">
+          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-slate-800 dark:bg-[var(--dark-surface)]/40">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -427,10 +427,10 @@ const HomePage: React.FC<HomePageProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[#1e1e1e] dark:shadow-[8px_8px_0px_#000] lg:h-[460px]"
+              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[8px_8px_0px_var(--dark-shadow)] lg:h-[460px]"
             >
               {/* Terminal Header */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[#252526]">
+              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-3)]">
                 <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
                 <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
                 <div className="w-3 h-3 rounded-full bg-green-400 border border-slate-900/20"></div>
@@ -445,9 +445,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               {/* Editor Body */}
-              <div className="flex-1 flex bg-white dark:bg-[#1e1e1e]">
+              <div className="flex-1 flex bg-white dark:bg-[var(--dark-surface-2)]">
                 {/* Lines */}
-                <div className="w-12 bg-slate-50 dark:bg-[#1e1e1e] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
+                <div className="w-12 bg-slate-50 dark:bg-[var(--dark-surface-2)] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
                   <motion.div
                     className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
                     initial={false}
@@ -522,7 +522,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               {/* Variables Panel Mini */}
-              <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[#1e1e1e] flex flex-col">
+              <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] flex flex-col">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[#2d2d30] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
                   <span>Variables / Watch</span>
                   <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
@@ -584,7 +584,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ── Stats Counter Section ───────────────────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[#0f111a] relative z-10 py-14 px-8 md:px-16">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[var(--dark-surface)] relative z-10 py-14 px-8 md:px-16">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {STATS.map((stat) => (
             <StatCard key={stat.label} {...stat} />
@@ -593,7 +593,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ── Features Section with stagger reveal ──────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[#0f111a]/80 backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6]/80 dark:bg-[var(--dark-surface)]/80 backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2
@@ -644,7 +644,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-white dark:bg-[#1e1e1e] border-2 border-slate-900 dark:border-[var(--dark-border)] p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
+                className="bg-white dark:bg-[var(--dark-surface-2)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_#000] transition-all"
               >
                 <div
                   className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}
@@ -661,7 +661,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[#11131a] relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-white dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-14">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
@@ -675,7 +675,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
+            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
               <img
                 src={homepagePreview}
                 alt="AlgoViz homepage showing the algorithm visualizer landing page and launch options for JavaScript and C++."
@@ -691,7 +691,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </p>
             </article>
 
-            <article className="bg-[#faf9f6] dark:bg-[#0f111a] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_#000]">
+            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
               <img
                 src={editorPreview}
                 alt="AlgoViz code visualizer workbench with a Monaco editor, execution controls, variable watch panel, and call stack."
@@ -710,7 +710,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6] dark:bg-[#0f111a] relative z-10 py-24 px-8 md:px-16 lg:px-24">
+      <section className="border-t-2 border-slate-900 dark:border-slate-800 bg-[#faf9f6] dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
         <div className="max-w-5xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
