@@ -19,7 +19,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
   if (logs.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-slate-500/80 font-mono">
-        <div className="border-[2px] border-dashed border-slate-900 dark:border-[#333] bg-slate-100 dark:bg-[#111113] px-6 py-5 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+        <div className="border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] px-6 py-5 text-center shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
           <Terminal size={28} className={`mx-auto mb-3 ${accentIconClass}`} />
           <p className="text-[11px] font-bold tracking-[0.2em] uppercase opacity-80">
             Console idle
@@ -48,10 +48,10 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
               key={index}
               className={`flex items-start gap-2.5 p-2.5 border-[2px] transition-all shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] ${
                 isError
-                  ? 'bg-red-50 dark:bg-[#201010] text-red-800 dark:text-red-300 border-red-300 dark:border-[#3a1a1a]'
+                  ? 'bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800/50'
                   : isWarn
-                    ? 'bg-yellow-50 dark:bg-[#201c10] text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-[#3a301a]'
-                    : 'bg-white dark:bg-[#111113] text-slate-700 dark:text-slate-300 border-slate-900 dark:border-[#333]'
+                    ? 'bg-yellow-50 dark:bg-yellow-950/25 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800/50'
+                    : 'bg-white dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-300 border-slate-900 dark:border-[var(--dark-border)]'
               }`}
             >
               {isError ? (
