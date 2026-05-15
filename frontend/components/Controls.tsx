@@ -49,13 +49,13 @@ const Controls: React.FC<ControlsProps> = ({
   const progressFillClass = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
   const accentClass = isSaffron ? 'accent-saffron-500' : 'accent-blue-500';
   const hoverStepClass = isSaffron
-    ? 'hover:bg-saffron-50 dark:hover:bg-[#1a1a1c] hover:border-saffron-500 dark:hover:border-saffron-600'
-    : 'hover:bg-blue-50 dark:hover:bg-[#1a1a1c] hover:border-blue-500 dark:hover:border-blue-600';
+    ? 'hover:bg-saffron-50 dark:hover:bg-[var(--dark-surface-3)] hover:border-saffron-500 dark:hover:border-saffron-600'
+    : 'hover:bg-blue-50 dark:hover:bg-[var(--dark-surface-3)] hover:border-blue-500 dark:hover:border-blue-600';
   const stepBadgeClass = isSaffron
-    ? 'text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[#161618] border-saffron-500 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_#9c4221]'
-    : 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-[#161618] border-blue-500 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_#1e3a8a]';
+    ? 'text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[var(--dark-surface-2)] border-saffron-500 dark:border-saffron-600 shadow-[2px_2px_0_#fbd38d] dark:shadow-[2px_2px_0_rgba(156,66,33,0.5)]'
+    : 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-[var(--dark-surface-2)] border-blue-500 dark:border-blue-600 shadow-[2px_2px_0_#93c5fd] dark:shadow-[2px_2px_0_rgba(30,58,138,0.5)]';
   const toolButtonClass =
-    'border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]';
+    'border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]';
 
   // ── Scrubber drag logic (#1) ─────────────────────────────────────────────
   const getPctFromEvent = useCallback(
@@ -110,7 +110,7 @@ const Controls: React.FC<ControlsProps> = ({
   return (
     <div
       data-no-transition
-      className="h-auto px-6 py-4 flex flex-col md:flex-row items-center gap-6 shrink-0 z-20 bg-white dark:bg-[#0A0A0B] border-t-[2px] border-slate-900 dark:border-[#222]"
+      className="h-auto px-6 py-4 flex flex-col md:flex-row items-center gap-6 shrink-0 z-20 bg-white dark:bg-[var(--dark-surface)] border-t-[2px] border-slate-900 dark:border-[var(--dark-border)]"
     >
       {/* Playback Buttons */}
       <div className="flex items-center justify-center gap-3 shrink-0">
@@ -133,7 +133,7 @@ const Controls: React.FC<ControlsProps> = ({
           <button
             onClick={onPrev}
             disabled={!canPrev}
-            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[#161618] dark:disabled:hover:border-[#333] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
+            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[var(--dark-surface-2)] dark:disabled:hover:border-[var(--dark-border)] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
           >
             <StepBack size={20} />
           </button>
@@ -145,7 +145,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={onPlayPause}
-            className={`p-3 text-white shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] border-[2px] border-slate-900 dark:border-[#333] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${playBtnClass}`}
+            className={`p-3 text-white shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none ${playBtnClass}`}
           >
             {isPlaying ? (
               <Pause size={22} fill="currentColor" />
@@ -162,7 +162,7 @@ const Controls: React.FC<ControlsProps> = ({
           <button
             onClick={onNext}
             disabled={!canNext}
-            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[#161618] dark:disabled:hover:border-[#333] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
+            className={`p-2 ${toolButtonClass} ${hoverStepClass} disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-900 dark:disabled:hover:bg-[var(--dark-surface-2)] dark:disabled:hover:border-[var(--dark-border)] text-slate-700 dark:text-slate-300 transition-all active:translate-y-[2px] active:shadow-none`}
           >
             <StepForward size={20} />
           </button>
@@ -200,7 +200,7 @@ const Controls: React.FC<ControlsProps> = ({
           onMouseLeave={() => setHoverPct(null)}
         >
           {/* Track */}
-          <div className="absolute left-0 right-0 h-3 bg-slate-200 dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] overflow-hidden shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
+          <div className="absolute left-0 right-0 h-3 bg-slate-200 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] overflow-hidden shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             {/* Fill */}
             <div
               className={`absolute top-0 left-0 h-full border-r-[2px] border-slate-900/20 dark:border-white/10 ${progressFillClass}`}
@@ -220,7 +220,7 @@ const Controls: React.FC<ControlsProps> = ({
 
           {/* Draggable thumb */}
           <motion.div
-            className={`absolute h-5 w-5 bg-white dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] shadow-[3px_3px_0_rgba(15,23,42,1)] dark:shadow-[3px_3px_0_#000] z-10 cursor-grab ${isDraggingState ? 'cursor-grabbing scale-110' : ''}`}
+            className={`absolute h-5 w-5 bg-white dark:bg-[var(--dark-surface-3)] border-[2px] border-slate-900 dark:border-[var(--dark-border-bright)] shadow-[3px_3px_0_rgba(15,23,42,1)] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 cursor-grab ${isDraggingState ? 'cursor-grabbing scale-110' : ''}`}
             style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
             animate={{ scale: isDraggingState ? 1.2 : hoverPct !== null ? 1.1 : 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -238,7 +238,7 @@ const Controls: React.FC<ControlsProps> = ({
                 className="absolute -top-8 z-20 pointer-events-none"
                 style={{ left: `${hoverPct ?? 0}%`, transform: 'translateX(-50%)' }}
               >
-                <div className="border-[2px] border-slate-900 dark:border-[#333] bg-white dark:bg-[#161618] px-2 py-0.5 text-[10px] font-bold font-mono text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000] whitespace-nowrap">
+                <div className="border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)] px-2 py-0.5 text-[10px] font-bold font-mono text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] whitespace-nowrap">
                   Step {hoverStep}
                 </div>
               </motion.div>
@@ -248,7 +248,7 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Speed Presets (#10) */}
-      <div className="shrink-0 flex items-center gap-2 bg-slate-50 dark:bg-[#111113] px-3 py-2 border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]">
+      <div className="shrink-0 flex items-center gap-2 bg-slate-50 dark:bg-[var(--dark-surface)] px-3 py-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
         <span className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-widest hidden xl:block">
           Speed
         </span>
@@ -269,9 +269,9 @@ const Controls: React.FC<ControlsProps> = ({
               className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border-[2px] transition-all active:translate-y-[1px] active:shadow-none ${
                 isActive
                   ? isSaffron
-                    ? 'bg-saffron-500 text-white border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]'
-                    : 'bg-blue-500 text-white border-slate-900 dark:border-[#333] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_#000]'
-                  : 'bg-white dark:bg-[#161618] text-slate-600 dark:text-slate-400 border-slate-300 dark:border-[#333] hover:border-slate-900 dark:hover:border-[#555]'
+                    ? 'bg-saffron-500 text-white border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]'
+                    : 'bg-blue-500 text-white border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]'
+                  : 'bg-white dark:bg-[var(--dark-surface-2)] text-slate-600 dark:text-slate-400 border-slate-300 dark:border-[var(--dark-border-dim)] hover:border-slate-900 dark:hover:border-[var(--dark-border-bright)]'
               }`}
             >
               {preset.icon ? <preset.icon size={12} /> : preset.label}
