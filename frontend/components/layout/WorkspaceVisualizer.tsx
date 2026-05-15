@@ -115,7 +115,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
       <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)]">
         <button
           onClick={() => setVisualizerMode(!visualizerMode)}
-          className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] transition-all active:translate-y-[2px] active:shadow-none ${
+          className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all active:translate-y-[2px] active:shadow-none ${
             visualizerMode
               ? isSaffron
                 ? 'bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-500 dark:border-saffron-700'
