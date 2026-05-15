@@ -333,14 +333,14 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
             Auto-detected from adjacency-style runtime data.
           </p>
         </div>
-        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000]">
+        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
           {preview.directed ? 'Directed' : 'Undirected'}
         </span>
       </div>
 
       {/* Stats */}
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600 dark:border-[#333] dark:bg-[#111113] dark:text-slate-400">
+        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400">
           {preview.nodes.length} Nodes
         </span>
         <span
@@ -446,7 +446,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                           width="22"
                           height="18"
                           fill="#0f172a"
-                          className="dark:fill-black"
+                          className="dark:fill-[rgba(0,0,0,0.35)]"
                           opacity="0.2"
                         />
                         <rect
@@ -457,7 +457,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                           fill="#ffffff"
                           stroke="#0f172a"
                           strokeWidth="2"
-                          className="dark:fill-[#161618] dark:stroke-[#333]"
+                          className="dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border)]"
                         />
                         <text
                           x={midX}
@@ -565,14 +565,13 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                         ))}
                     </AnimatePresence>
 
-                    {/* Shadow */}
                     <rect
                       x={pos.x - halfNode + 2}
                       y={pos.y - halfNode + 2}
                       width={NODE_SIZE}
                       height={NODE_SIZE}
                       fill="#0f172a"
-                      className="dark:fill-black"
+                      className="dark:fill-[rgba(0,0,0,0.35)]"
                     />
 
                     {/* Main rect */}
@@ -606,8 +605,8 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                             ? 'dark:fill-[#431407] dark:stroke-[#ea580c]'
                             : 'dark:fill-[#172554] dark:stroke-[#2563eb]'
                           : hasPointer
-                            ? 'dark:fill-[#022c22] dark:stroke-[#059669]'
-                            : 'dark:fill-[#161618] dark:stroke-[#333]'
+                            ? 'dark:fill-[#062920] dark:stroke-[#059669]'
+                            : 'dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border)]'
                       }
                     />
 
@@ -642,7 +641,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                           fill={theme.accentFill}
                           stroke="#0f172a"
                           strokeWidth="1.5"
-                          className="dark:stroke-[#333]"
+                          className="dark:stroke-[var(--dark-border)]"
                         />
                       </motion.g>
                     )}
@@ -656,7 +655,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                           width={14}
                           height={12}
                           fill="#0f172a"
-                          className="dark:fill-[#333]"
+                          className="dark:fill-[var(--dark-border)]"
                         />
                         <text
                           x={pos.x + halfNode - 7}
@@ -689,7 +688,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                 className={`border-[2px] px-3 py-2 ${
                   node.visited
                     ? `${theme.accentSoftBg} ${theme.accentBorder} shadow-[2px_2px_0_rgba(15,23,42,0.3)] dark:shadow-[2px_2px_0_rgba(0,0,0,0.5)]`
-                    : 'border-slate-900 bg-white dark:border-[#333] dark:bg-[#161618] shadow-[2px_2px_0_rgba(15,23,42,0.1)] dark:shadow-[2px_2px_0_rgba(0,0,0,0.3)]'
+                    : 'border-slate-900 bg-white dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] shadow-[2px_2px_0_rgba(15,23,42,0.1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
