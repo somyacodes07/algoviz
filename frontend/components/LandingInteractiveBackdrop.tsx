@@ -37,7 +37,11 @@ const toneClasses = {
     'border-slate-300/80 bg-white/80 text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/45 dark:text-slate-200',
 } as const;
 
-const LandingInteractiveBackdrop: React.FC = () => {
+interface LandingInteractiveBackdropProps {
+  hoverLang?: string | null;
+}
+
+const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang }) => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
@@ -79,6 +83,22 @@ const LandingInteractiveBackdrop: React.FC = () => {
     mass: 0.7,
   });
 
+  // Aurora effect state
+  const auroraRadius = useSpring(0, { stiffness: 45, damping: 15, mass: 0.8 });
+  const [activeAuroraLang, setActiveAuroraLang] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (hoverLang) {
+      setActiveAuroraLang(hoverLang);
+      auroraRadius.set(3000); // large enough to cover the screen
+    } else {
+      auroraRadius.set(0);
+      // We don't clear activeAuroraLang immediately so it can shrink back in the same color
+    }
+  }, [hoverLang, auroraRadius]);
+
+  const auroraClip = useMotionTemplate`circle(${auroraRadius}px at ${smoothX}px ${smoothY}px)`;
+
   const glowLayer = useMotionTemplate`
     radial-gradient(34rem 34rem at ${smoothX}px ${smoothY}px, rgba(249, 115, 22, 0.24), transparent 52%),
     radial-gradient(28rem 28rem at calc(${smoothX}px + 220px) calc(${smoothY}px - 120px), rgba(56, 189, 248, 0.18), transparent 56%),
@@ -97,6 +117,14 @@ const LandingInteractiveBackdrop: React.FC = () => {
         style={{ '--dark-grad': 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' } as React.CSSProperties}
       />
       <div className="absolute inset-0 hidden dark:block" style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }} />
+
+      {/* Aurora Expanding Effect */}
+      <motion.div
+        className={`absolute inset-0 hidden dark:block pointer-events-none transition-colors duration-0 ${
+          activeAuroraLang === 'js' ? 'bg-mesh-dark-saffron' : activeAuroraLang === 'cpp' ? 'bg-mesh-dark-blue' : ''
+        }`}
+        style={{ clipPath: auroraClip }}
+      />
 
       <motion.div
         className="absolute inset-0 opacity-90 dark:opacity-70"
