@@ -139,13 +139,13 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="w-full max-w-4xl h-[75vh] min-h-[600px] max-h-[850px] bg-white dark:bg-[#111113] border-[2px] border-slate-900 dark:border-[#222] shadow-[8px_8px_0_#0f172a] dark:shadow-[8px_8px_0_#000] rounded-none overflow-hidden flex flex-col md:flex-row pointer-events-auto"
+              className="w-full max-w-4xl h-[75vh] min-h-[600px] max-h-[850px] bg-white dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[8px_8px_0_#0f172a] dark:shadow-[8px_8px_0_var(--dark-shadow)] rounded-none overflow-hidden flex flex-col md:flex-row pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Left Side: Search & List (Fixed Width) */}
-              <div className="w-full md:w-[350px] shrink-0 flex flex-col h-full border-r-[2px] border-transparent md:border-slate-900 md:dark:border-[#222] overflow-hidden">
+              <div className="w-full md:w-[350px] shrink-0 flex flex-col h-full border-r-[2px] border-transparent md:border-slate-900 md:dark:border-[var(--dark-border)] overflow-hidden">
                 {/* Search Header */}
-                <div className="flex flex-col border-b-[2px] border-slate-900 dark:border-[#222] shrink-0 bg-slate-50 dark:bg-[#0A0A0B]">
+                <div className="flex flex-col border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] shrink-0 bg-slate-50 dark:bg-[var(--dark-base)]">
                   <div className="flex items-center gap-3 px-4 h-14">
                     <Search size={18} className="text-slate-400 dark:text-slate-500" />
                     <input
@@ -157,7 +157,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                       className="flex-1 bg-transparent border-none outline-none text-slate-800 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     />
                     <div className="flex items-center gap-1.5 opacity-50">
-                      <span className="text-[10px] font-bold border border-slate-300 dark:border-[#333] px-1.5 py-0.5 rounded text-slate-500">
+                      <span className="text-[10px] font-bold border border-slate-300 dark:border-[var(--dark-border-dim)] px-1.5 py-0.5 rounded text-slate-500">
                         ESC
                       </span>
                       <span className="text-[10px] font-bold leading-none">to close</span>
@@ -173,7 +173,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                           ? isSaffron
                             ? 'bg-saffron-500 text-white'
                             : 'bg-blue-500 text-white'
-                          : 'bg-slate-200 dark:bg-[#161618] text-slate-500 hover:bg-slate-300 dark:hover:bg-[#222]'
+                          : 'bg-slate-200 dark:bg-[var(--dark-surface-2)] text-slate-500 hover:bg-slate-300 dark:hover:bg-[var(--dark-surface-3)]'
                       }`}
                     >
                       All
@@ -187,7 +187,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                             ? isSaffron
                               ? 'bg-saffron-500 text-white'
                               : 'bg-blue-500 text-white'
-                            : 'bg-slate-200 dark:bg-[#161618] text-slate-500 hover:bg-slate-300 dark:hover:bg-[#222]'
+                            : 'bg-slate-200 dark:bg-[var(--dark-surface-2)] text-slate-500 hover:bg-slate-300 dark:hover:bg-[var(--dark-surface-3)]'
                         }`}
                       >
                         {cat}
@@ -199,7 +199,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                 {/* Templates List */}
                 <div
                   ref={listRef}
-                  className="flex-1 overflow-y-auto h-full custom-scrollbar bg-white dark:bg-[#111113] p-2 space-y-1 relative"
+                  className="flex-1 overflow-y-auto h-full custom-scrollbar bg-white dark:bg-[var(--dark-surface)] p-2 space-y-1 relative"
                 >
                   {filteredTemplates.length > 0 ? (
                     filteredTemplates.map((template, index) => {
@@ -209,7 +209,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                       return (
                         <React.Fragment key={template.name}>
                           {showHeader && (
-                            <div className="sticky top-0 z-10 px-4 py-1.5 mt-2 mb-1 bg-slate-100/90 dark:bg-[#161618]/95 backdrop-blur-sm border-y border-slate-200 dark:border-[#222]">
+                            <div className="sticky top-0 z-10 px-4 py-1.5 mt-2 mb-1 bg-slate-100/90 dark:bg-[var(--dark-surface-2)]/95 backdrop-blur-sm border-y border-slate-200 dark:border-[var(--dark-border-dim)]">
                               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                                 {template.category}
                               </span>
@@ -225,9 +225,9 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                             className={`group flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
                               isSelected
                                 ? isSaffron
-                                  ? 'bg-saffron-50 dark:bg-[#1a1a1c] border-l-4 border-saffron-500'
-                                  : 'bg-blue-50 dark:bg-[#1a1a1c] border-l-4 border-blue-500'
-                                : 'bg-transparent border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-[#161618]'
+                                  ? 'bg-saffron-50 dark:bg-saffron-900/20 border-l-4 border-saffron-500'
+                                  : 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
+                                : 'bg-transparent border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-2)]'
                             }`}
                           >
                             <div className="flex flex-col gap-1 pr-4">
@@ -244,7 +244,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                             <div
                               className={`shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${isSelected ? 'opacity-100' : ''}`}
                             >
-                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 border border-slate-200 dark:border-[#333] px-2 py-1 rounded bg-white dark:bg-[#0A0A0B]">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 border border-slate-200 dark:border-[var(--dark-border-dim)] px-2 py-1 rounded bg-white dark:bg-[var(--dark-base)]">
                                 Enter ↵
                               </span>
                             </div>
@@ -263,8 +263,8 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
               </div>
 
               {/* Right Side: Instant Preview (40%) */}
-              <div className="hidden md:flex flex-[2] flex-col h-full bg-slate-50 dark:bg-[#0A0A0B]">
-                <div className="h-14 border-b-[2px] border-slate-900 dark:border-[#222] px-6 flex items-center shrink-0">
+              <div className="hidden md:flex flex-[2] flex-col h-full bg-slate-50 dark:bg-[var(--dark-base)]">
+                <div className="h-14 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] px-6 flex items-center shrink-0">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                     <FileCode2 size={14} /> Preview
                   </span>
@@ -282,7 +282,7 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
                         </p>
                       </div>
 
-                      <div className="bg-white dark:bg-[#161618] border-[2px] border-slate-900 dark:border-[#333] shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_#000] p-4 font-mono text-xs overflow-x-auto">
+                      <div className="bg-white dark:bg-[var(--dark-surface-2)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_var(--dark-shadow)] p-4 font-mono text-xs overflow-x-auto">
                         <pre className="text-slate-700 dark:text-slate-300 leading-relaxed">
                           <code>{activeTemplate.code}</code>
                         </pre>
