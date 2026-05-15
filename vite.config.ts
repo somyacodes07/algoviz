@@ -36,7 +36,9 @@ export default defineConfig(({ mode }) => {
               'vendor-react': ['react', 'react-dom'],
               'vendor-framer': ['framer-motion'],
               'vendor-monaco': ['@monaco-editor/react'],
-              'vendor-icons': ['lucide-react']
+              'vendor-icons': ['lucide-react'],
+              'vendor-markdown': ['react-markdown', 'remark-gfm'],
+              'vendor-acorn': ['acorn']
             }
           }
         },
