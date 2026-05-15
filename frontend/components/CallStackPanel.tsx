@@ -14,12 +14,12 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
 
   const activeClass = theme.panelClass + ` ${theme.accentSoftBg} ${theme.accentBorder}`;
   const inactiveClass =
-    'border-[2px] border-slate-900 dark:border-[#333] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_#000] bg-white dark:bg-[#111113]';
+    'border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] bg-white dark:bg-[var(--dark-surface)]';
   const accentBadge = theme.badgeClass;
 
   return (
     <div className="flex flex-col p-4 min-h-[100px] pb-10">
-      <div className="mb-4 flex items-center justify-between border-[2px] border-slate-900 bg-white px-3 py-2 shadow-[2px_2px_0_#0f172a] dark:border-[#333] dark:bg-[#161618] dark:shadow-[2px_2px_0_#000]">
+      <div className="mb-4 flex items-center justify-between border-[2px] border-slate-900 bg-white px-3 py-2 shadow-[2px_2px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
             Active Stack
@@ -33,7 +33,7 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
 
       <AnimatePresence>
         {displayStack.length === 0 ? (
-          <div className="mt-8 border-[2px] border-dashed border-slate-900 bg-slate-100 p-6 text-center shadow-[2px_2px_0_#0f172a] dark:border-[#333] dark:bg-[#111113] dark:shadow-[2px_2px_0_#000]">
+          <div className="mt-8 border-[2px] border-dashed border-slate-900 bg-slate-100 p-6 text-center shadow-[2px_2px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
               No active frames
             </div>
@@ -65,7 +65,7 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                     className={
                       isTop
                         ? accentBadge
-                        : 'border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] border-slate-300 bg-slate-100 text-slate-500 dark:border-[#333] dark:bg-[#161618] dark:text-slate-400'
+                        : 'border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] border-slate-300 bg-slate-100 text-slate-500 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400'
                     }
                   >
                     {isTop ? 'Top frame' : `Frame ${stack.length - 1 - index}`}
