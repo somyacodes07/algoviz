@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import InteractiveGrid from './InteractiveGrid';
 import {
   motion,
   useMotionTemplate,
@@ -39,9 +40,10 @@ const toneClasses = {
 
 interface LandingInteractiveBackdropProps {
   hoverLang?: string | null;
+  theme?: 'light' | 'dark';
 }
 
-const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang }) => {
+const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({ hoverLang, theme }) => {
   const prefersReducedMotion = useReducedMotion();
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
 
@@ -83,9 +85,28 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     mass: 0.7,
   });
 
-  // Aurora effect state
-  const auroraRadius = useSpring(0, { stiffness: 45, damping: 15, mass: 0.8 });
+  // Hover Aurora effect state
+  const auroraRadius = useSpring(0, { stiffness: 35, damping: 18, mass: 1 });
   const [activeAuroraLang, setActiveAuroraLang] = useState<string | null>(null);
+
+  // Theme Toggle Wave state
+  const themeWaveRadius = useSpring(0, { stiffness: 40, damping: 22, mass: 1 });
+  const [themeWave, setThemeWave] = useState<{ active: boolean; type: 'dark' | 'light' }>({ active: false, type: 'light' });
+  const prevTheme = useRef(theme);
+
+  useEffect(() => {
+    if (theme && prevTheme.current && theme !== prevTheme.current) {
+      setThemeWave({ active: true, type: theme });
+      themeWaveRadius.jump(0);
+      setTimeout(() => themeWaveRadius.set(3500), 10);
+      
+      const timer = setTimeout(() => {
+        setThemeWave((prev) => ({ ...prev, active: false }));
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+    prevTheme.current = theme;
+  }, [theme, themeWaveRadius]);
 
   useEffect(() => {
     if (hoverLang) {
@@ -97,7 +118,9 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     }
   }, [hoverLang, auroraRadius]);
 
-  const auroraClip = useMotionTemplate`circle(${auroraRadius}px at ${smoothX}px ${smoothY}px)`;
+  // Soft-edged masks for the Aurora effect
+  const auroraMask = useMotionTemplate`radial-gradient(circle ${auroraRadius}px at ${smoothX}px ${smoothY}px, black 40%, transparent 100%)`;
+  const themeWaveMask = useMotionTemplate`radial-gradient(circle ${themeWaveRadius}px at ${smoothX}px ${smoothY}px, black 30%, transparent 100%)`;
 
   const glowLayer = useMotionTemplate`
     radial-gradient(34rem 34rem at ${smoothX}px ${smoothY}px, rgba(249, 115, 22, 0.24), transparent 52%),
@@ -118,42 +141,46 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
       />
       <div className="absolute inset-0 hidden dark:block" style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }} />
 
-      {/* Aurora Expanding Effect */}
+      {/* Hover Aurora Expanding Effect */}
       <motion.div
         className={`absolute inset-0 hidden dark:block pointer-events-none transition-colors duration-0 ${
           activeAuroraLang === 'js' ? 'bg-mesh-dark-saffron' : activeAuroraLang === 'cpp' ? 'bg-mesh-dark-blue' : ''
         }`}
-        style={{ clipPath: auroraClip }}
+        style={{ WebkitMaskImage: auroraMask, maskImage: auroraMask }}
       />
+
+      {/* Theme Toggle Aurora Wave */}
+      {themeWave.active && (
+        <motion.div
+          className={`absolute inset-0 pointer-events-none z-10 ${
+            themeWave.type === 'dark' ? 'bg-slate-950' : 'bg-[#f7f0e3]'
+          }`}
+          style={{ WebkitMaskImage: themeWaveMask, maskImage: themeWaveMask, opacity: 0.8 }}
+        />
+      )}
 
       <motion.div
         className="absolute inset-0 opacity-90 dark:opacity-70"
         style={{ backgroundImage: glowLayer }}
       />
 
-      <motion.div
-        className="absolute inset-[-6%] dark:hidden"
-        style={{
-          x: gridShiftX,
-          y: gridShiftY,
-          backgroundImage:
-            'linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px)',
-          backgroundSize: '72px 72px',
-          maskImage: 'radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)',
-        }}
-      />
-
-      <motion.div
-        className="absolute inset-[-6%] hidden dark:block"
-        style={{
-          x: gridShiftX,
-          y: gridShiftY,
-          backgroundImage:
-            'linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px)',
-          backgroundSize: '72px 72px',
-          maskImage: 'radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 88%)',
-        }}
-      />
+      <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.35]">
+        <InteractiveGrid
+          gridSize={50}
+          radius={300}
+          dotSize={2}
+          gridThickness={1.5}
+          baseOpacity={0.05}
+          repulsionStrength={-0.65}
+          clickInteraction={true}
+          cursorTrail={false}
+          backgroundColor="transparent"
+          gridColor="var(--dark-border)"
+          dotColor={theme === 'dark' ? "var(--dark-surface-2)" : "rgba(15, 23, 42, 0.4)"}
+          hoverColor={theme === 'dark' ? "var(--dark-scrollbar-thumb-hover)" : "rgba(15, 23, 42, 0.8)"}
+          clickProps={{ clickForce: 0.5, motionSpeed: 0.8 }}
+        />
+      </div>
 
       <motion.div
         className="absolute h-72 w-72 rounded-full border border-white/50 bg-white/20 blur-2xl dark:border-sky-300/20 dark:bg-sky-400/10"
