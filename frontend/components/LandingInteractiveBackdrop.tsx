@@ -107,7 +107,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
       });
       const timer = setTimeout(() => {
         setThemeWave((prev) => ({ ...prev, active: false }));
-      }, 2800);
+      }, 4000);
       prevTheme.current = theme;
       return () => clearTimeout(timer);
     }
@@ -129,8 +129,8 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     return { bg: '', ring: 'border-slate-500/40' };
   };
 
-  // Slow, cinematic easing
-  const slowEase = [0.16, 1, 0.3, 1] as const;
+  // Slow, cinematic easing — long acceleration, gentle deceleration
+  const slowEase = [0.12, 0.8, 0.2, 1] as const;
 
   return (
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -153,7 +153,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4 }}
             >
               {/* Fill disc */}
               <motion.div
@@ -168,7 +168,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                 initial={{ width: 0, height: 0 }}
                 animate={{ width: maxR, height: maxR }}
                 exit={{ width: 0, height: 0 }}
-                transition={{ duration: 1.4, ease: slowEase }}
+                transition={{ duration: 2.2, ease: slowEase }}
               />
               {/* Hard border ring */}
               <motion.div
@@ -184,7 +184,7 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                 initial={{ width: 0, height: 0, opacity: 1 }}
                 animate={{ width: maxR, height: maxR, opacity: [1, 0.6, 0.2] }}
                 exit={{ width: 0, height: 0, opacity: 0 }}
-                transition={{ duration: 1.4, ease: slowEase }}
+                transition={{ duration: 2.2, ease: slowEase }}
               />
             </motion.div>
           );
@@ -223,9 +223,9 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                   opacity: [0.9, 0.5, 0],
                 }}
                 transition={{
-                  width: { duration: 1.6, ease: slowEase },
-                  height: { duration: 1.6, ease: slowEase },
-                  opacity: { duration: 2.4, ease: 'easeOut' },
+                  width: { duration: 2.8, ease: slowEase },
+                  height: { duration: 2.8, ease: slowEase },
+                  opacity: { duration: 3.5, ease: 'easeOut' },
                 }}
               />
               {/* Thick border ring */}
@@ -248,9 +248,9 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
                   opacity: [1, 0.4, 0],
                 }}
                 transition={{
-                  width: { duration: 1.6, ease: slowEase },
-                  height: { duration: 1.6, ease: slowEase },
-                  opacity: { duration: 2, ease: 'easeOut' },
+                  width: { duration: 2.8, ease: slowEase },
+                  height: { duration: 2.8, ease: slowEase },
+                  opacity: { duration: 3, ease: 'easeOut' },
                 }}
               />
             </motion.div>
