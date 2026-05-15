@@ -29,6 +29,7 @@ interface HomePageProps {
   cppHref: string;
   toggleTheme: () => void;
   theme: 'light' | 'dark';
+  onHoverLanguage?: (lang: string | null) => void;
 }
 
 // Animation Data for fake execution tracking
@@ -180,6 +181,7 @@ const HomePage: React.FC<HomePageProps> = ({
   cppHref,
   toggleTheme,
   theme,
+  onHoverLanguage,
 }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -325,8 +327,8 @@ const HomePage: React.FC<HomePageProps> = ({
                     e.preventDefault();
                     onSelectLanguage('javascript');
                   }}
-                  onMouseEnter={() => setHoverLang('js')}
-                  onMouseLeave={() => setHoverLang(null)}
+                  onMouseEnter={() => { setHoverLang('js'); onHoverLanguage?.('javascript'); }}
+                  onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
                   className="group relative flex items-center justify-between border-2 border-slate-900 bg-yellow-400 px-6 py-4 text-lg font-bold text-slate-900 shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-yellow-300 active:translate-y-1 dark:bg-yellow-500 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-yellow-400"
                 >
                   <span className="flex items-center gap-3">
@@ -342,8 +344,8 @@ const HomePage: React.FC<HomePageProps> = ({
                     e.preventDefault();
                     onSelectLanguage('c++');
                   }}
-                  onMouseEnter={() => setHoverLang('cpp')}
-                  onMouseLeave={() => setHoverLang(null)}
+                  onMouseEnter={() => { setHoverLang('cpp'); onHoverLanguage?.('c++'); }}
+                  onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
                   className="group relative flex items-center justify-between border-2 border-slate-900 bg-blue-500 px-6 py-4 text-lg font-bold text-white shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-blue-400 active:translate-y-1 dark:border-white/10 dark:bg-blue-600 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-blue-500"
                 >
                   <span className="flex items-center gap-3">
