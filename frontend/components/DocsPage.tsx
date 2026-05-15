@@ -10,6 +10,8 @@ import {
   LayoutTemplate,
   BarChart3,
   Cpu,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -33,6 +35,7 @@ import image6 from '../../assets/image-6.png';
 interface DocsPageProps {
   onBack: () => void;
   theme: 'light' | 'dark';
+  toggleTheme: () => void;
   homeHref: string;
   javascriptHref: string;
   cppHref: string;
@@ -538,6 +541,7 @@ const docsStructure: DocSection[] = [
 const DocsPage: React.FC<DocsPageProps> = ({
   onBack,
   theme,
+  toggleTheme,
   homeHref,
   javascriptHref,
   cppHref,
@@ -571,6 +575,14 @@ const DocsPage: React.FC<DocsPageProps> = ({
           <BookOpen size={18} className="text-saffron-500" />
           <h1 className="font-black text-lg tracking-tight leading-none uppercase">AlgoViz Docs</h1>
         </div>
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 rounded border-2 border-slate-900 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#94a3b8] transition-all hover:shadow-[3px_3px_0_#94a3b8] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-300 dark:shadow-[2px_2px_0_var(--dark-shadow)] dark:hover:shadow-[3px_3px_0_var(--dark-shadow)]"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+          {theme === 'dark' ? 'Light' : 'Dark'}
+        </button>
       </header>
 
       <main className="mx-auto flex w-full max-w-[1520px] flex-1 flex-col gap-4 px-4 py-6 md:px-6 lg:flex-row lg:items-start lg:gap-5 lg:px-8">
