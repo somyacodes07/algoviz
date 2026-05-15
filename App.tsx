@@ -212,6 +212,13 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
+  // Sync the language-based warmth class on the root element
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("theme-saffron", "theme-blue");
+    root.classList.add(`theme-${themeColor}`);
+  }, [themeColor]);
+
   useEffect(() => {
     if (
       page === "editor" &&
@@ -458,7 +465,7 @@ const App: React.FC = () => {
       className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 transition-colors duration-500 ${
         page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-screen overflow-hidden"
       } ${
-        page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? "bg-mesh-dark" : "bg-mesh-light"
+        page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (themeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
       }`}
     >
       <AnimatePresence initial={false} mode="wait">
