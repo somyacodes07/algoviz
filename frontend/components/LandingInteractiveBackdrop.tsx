@@ -49,19 +49,12 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     return () => window.removeEventListener('resize', syncViewport);
   }, []);
 
-  // Determine which dark gradient to show based on hover
-  const darkGradientClass = hoverLang === 'js'
-    ? 'bg-mesh-dark-saffron'
-    : hoverLang === 'cpp'
-    ? 'bg-mesh-dark-blue'
-    : '';
-
   const isDark = theme === 'dark';
 
   // Dynamic Hover Glow
-  let hoverGlowColor = isDark ? '' : ''; // Default neutral slate
+  let hoverGlowColor = isDark ? 'rgba(249, 115, 22, 0.6)' : 'rgba(234, 88, 12, 0.6)'; // Default orangish saffron
   if (hoverLang === 'js') hoverGlowColor = isDark ? 'rgba(245, 158, 11, 0.9)' : 'rgba(245, 158, 11, 0.8)'; // Saffron
-  if (hoverLang === 'cpp') hoverGlowColor = isDark ? 'rgba(56, 189, 248, 0.9)' : 'rgba(14, 165, 233, 0.8)'; // Blue
+  if (hoverLang === 'cpp') hoverGlowColor = isDark ? 'rgba(56, 189, 248, 0.9)' : 'rgba(14, 165, 233, 0.8)'; // Intense Blue
 
   // Light mode uses a mix of blue dots and saffron lines to create the requested gradient effect
   const gridDotColor = isDark ? 'rgba(148, 163, 184, 0.5)' : 'rgba(56, 189, 248, 0.4)';
@@ -72,24 +65,18 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
       {/* ── Base gradient backgrounds ────────────────────────────────── */}
       <div className="absolute inset-0 bg-[linear-gradient(135deg,#fde68a_0%,#f8fafc_45%,#bae6fd_100%)] opacity-40 dark:opacity-100 dark:bg-none" />
 
-      {/* ── Base Dark Gradient (No Hover) ────────────────────────────── */}
-      <div
-        className="absolute inset-0 hidden dark:block"
-        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
-      />
-
-      {/* ── Hover Dark Gradient (Fades In) ───────────────────────────── */}
+      {/* ── Dark Gradients ───────────────────────────── */}
+      {/* In Dark mode, default to Saffron (orange warmth) and switch to Blue only when hovering C++ */}
+      <div className="absolute inset-0 hidden dark:block bg-[var(--dark-base)]" />
       <AnimatePresence>
-        {hoverLang && (
-          <motion.div
-            key={hoverLang}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
-          />
-        )}
+        <motion.div
+          key={hoverLang === 'cpp' ? 'blue' : 'saffron'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`absolute inset-0 hidden dark:block ${hoverLang === 'cpp' ? 'bg-mesh-dark-blue' : 'bg-mesh-dark-saffron'}`}
+        />
       </AnimatePresence>
 
       {/* ── InteractiveGrid (sole mouse interaction layer) ──────────── */}

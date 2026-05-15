@@ -623,19 +623,19 @@ const HomePage: React.FC<HomePageProps> = ({
             {[
               {
                 icon: Terminal,
-                color: 'blue',
+                iconClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-800/50',
                 title: 'Multi-Language Support',
                 desc: "Whether you're learning web paradigms in JavaScript or digging into memory management in C++, AlgoViz speaks your language.",
               },
               {
                 icon: Eye,
-                color: 'amber',
+                iconClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800/50',
                 title: 'Step-by-Step Debugging',
                 desc: 'Control the flow of time. Pause execution, step forwards, trace backwards, and watch variables mutate exactly when lines evaluate.',
               },
               {
                 icon: Layers,
-                color: 'green',
+                iconClass: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-2 border-green-200 dark:border-green-800/50',
                 title: 'Visual Call Stack',
                 desc: 'Demystify recursion and nested function calls. See the stack grow and shrink in real-time as frames are pushed and popped.',
               },
@@ -648,9 +648,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
                 className="bg-white dark:bg-[var(--dark-surface-2)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_var(--dark-shadow)] transition-all"
               >
-                <div
-                  className={`w-12 h-12 bg-${card.color}-100 dark:bg-${card.color}-900/30 text-${card.color}-600 dark:text-${card.color}-400 flex items-center justify-center mb-6 border-2 border-${card.color}-200 dark:border-${card.color}-800/50`}
-                >
+                <div className={`w-12 h-12 flex items-center justify-center mb-6 ${card.iconClass}`}>
                   <card.icon strokeWidth={2.5} size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{card.title}</h3>
