@@ -56,20 +56,29 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
     ? 'bg-mesh-dark-blue'
     : '';
 
-  const lightGradientClass = hoverLang === 'js'
-    ? 'bg-amber-100/60'
-    : hoverLang === 'cpp'
-    ? 'bg-blue-100/60'
-    : '';
+  const isDark = theme === 'dark';
+
+  // Dynamic Hover Glow
+  let hoverGlowColor = isDark ? '' : ''; // Default neutral slate
+  if (hoverLang === 'js') hoverGlowColor = isDark ? 'rgba(245, 158, 11, 0.9)' : 'rgba(245, 158, 11, 0.8)'; // Saffron
+  if (hoverLang === 'cpp') hoverGlowColor = isDark ? 'rgba(56, 189, 248, 0.9)' : 'rgba(14, 165, 233, 0.8)'; // Blue
+
+  // Light mode uses a mix of blue dots and saffron lines to create the requested gradient effect
+  const gridDotColor = isDark ? 'rgba(148, 163, 184, 0.5)' : 'rgba(56, 189, 248, 0.4)';
+  const gridLineColor = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(245, 158, 11, 0.25)';
 
   return (
-    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none transition-colors duration-700 ease-out"
-         style={{ backgroundColor: hoverLang === 'js' ? (theme === 'dark' ? 'rgba(217, 119, 6, 0.1)' : 'rgba(253, 230, 138, 0.5)') : hoverLang === 'cpp' ? (theme === 'dark' ? 'rgba(37, 99, 235, 0.1)' : 'rgba(191, 219, 254, 0.5)') : 'transparent' }}>
-      
-      {/* ── Base Background (Transparent so App.tsx solid background shines through) ────────────────────────────── */}
-      <div className="absolute inset-0" />
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* ── Base gradient backgrounds ────────────────────────────────── */}
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#fde68a_0%,#f8fafc_45%,#bae6fd_100%)] opacity-40 dark:opacity-100 dark:bg-none" />
 
-      {/* ── Hover Gradient (Fades In) ───────────────────────────── */}
+      {/* ── Base Dark Gradient (No Hover) ────────────────────────────── */}
+      <div
+        className="absolute inset-0 hidden dark:block"
+        style={{ background: 'linear-gradient(135deg, var(--dark-base) 0%, var(--dark-surface) 48%, var(--dark-surface-2) 100%)' }}
+      />
+
+      {/* ── Hover Dark Gradient (Fades In) ───────────────────────────── */}
       <AnimatePresence>
         {hoverLang && (
           <motion.div
@@ -78,12 +87,10 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`absolute inset-0 ${theme === 'dark' ? darkGradientClass : lightGradientClass}`}
+            className={`absolute inset-0 hidden dark:block ${darkGradientClass}`}
           />
         )}
       </AnimatePresence>
-
-      {/* Theme toggle + hover reveal handled by View Transitions API in App.tsx */}
 
       {/* ── InteractiveGrid (sole mouse interaction layer) ──────────── */}
       <InteractiveGrid
@@ -91,14 +98,14 @@ const LandingInteractiveBackdrop: React.FC<LandingInteractiveBackdropProps> = ({
         radius={350}
         dotSize={2.5}
         gridThickness={1}
-        baseOpacity={theme === 'dark' ? 0.18 : 0.08}
+        baseOpacity={isDark ? 0.18 : 0.15}
         repulsionStrength={-0.55}
         clickInteraction={true}
         cursorTrail={false}
         backgroundColor="transparent"
-        gridColor={theme === 'dark' ? 'rgba(148, 163, 184, 0.35)' : 'rgba(15, 23, 42, 0.12)'}
-        dotColor={theme === 'dark' ? 'rgba(148, 163, 184, 0.5)' : 'rgba(15, 23, 42, 0.25)'}
-        hoverColor={theme === 'dark' ? 'rgba(56, 189, 248, 0.9)' : 'rgba(15, 23, 42, 0.7)'}
+        gridColor={gridLineColor}
+        dotColor={gridDotColor}
+        hoverColor={hoverGlowColor}
         clickProps={{ clickForce: 0.5, motionSpeed: 0.7 }}
       />
 
