@@ -431,9 +431,13 @@ const HomePage: React.FC<HomePageProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[8px_8px_0px_var(--dark-shadow)] lg:h-[460px]"
+              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] lg:h-[460px]"
+              style={{
+                boxShadow: theme === 'dark'
+                  ? `8px 8px 0px var(--dark-shadow), 0 0 40px ${(hoverLang === 'cpp' || (!hoverLang && language === 'c++')) ? 'var(--dark-glow-blue)' : 'var(--dark-glow-saffron)'}`
+                  : '8px 8px 0px #0f172a',
+              }}
             >
-              {/* Terminal Header */}
               <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-3)]">
                 <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
                 <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
