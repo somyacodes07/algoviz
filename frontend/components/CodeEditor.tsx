@@ -112,19 +112,17 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     );
   }, [breakpoints, monaco]);
 
-  // Define Custom IDE Themes
-  useEffect(() => {
-    if (!monaco) return;
-
+  // Define Custom IDE Themes before the editor mounts to prevent light theme flash
+  const handleEditorWillMount = (monaco: any) => {
     // Light Theme
     monaco.editor.defineTheme('algoviz-light', {
       base: 'vs',
       inherit: true,
       rules: [],
       colors: {
-        'editor.background': '#ffffff', // matches our bg-white
-        'editor.lineHighlightBackground': '#f1f5f9', // slate-100
-        'editorLineNumber.foreground': '#94a3b8', // slate-400
+        'editor.background': '#ffffff',
+        'editor.lineHighlightBackground': '#f1f5f9',
+        'editorLineNumber.foreground': '#94a3b8',
         'editorGutter.background': '#ffffff',
       },
     });
@@ -135,9 +133,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       inherit: true,
       rules: [],
       colors: {
-        'editor.background': '#221c14', // matches --dark-surface-2 for saffron
-        'editor.lineHighlightBackground': '#2c241a', // --dark-surface-3
-        'editorLineNumber.foreground': '#78716c', // stone-500
+        'editor.background': '#221c14',
+        'editor.lineHighlightBackground': '#2c241a',
+        'editorLineNumber.foreground': '#78716c',
         'editorGutter.background': '#221c14',
       },
     });
@@ -148,13 +146,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       inherit: true,
       rules: [],
       colors: {
-        'editor.background': '#141c30', // matches --dark-surface-2 for blue
-        'editor.lineHighlightBackground': '#1a253e', // --dark-surface-3
-        'editorLineNumber.foreground': '#475569', // slate-600
+        'editor.background': '#141c30',
+        'editor.lineHighlightBackground': '#1a253e',
+        'editorLineNumber.foreground': '#475569',
         'editorGutter.background': '#141c30',
       },
     });
-  }, [monaco]);
+  };
 
   // Map our language IDs to Monaco's
   const monacoLanguage = language === 'c++' ? 'cpp' : 'javascript';
@@ -168,6 +166,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         theme={activeTheme}
         value={code}
         onChange={onChange}
+        beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
         options={{
           minimap: { enabled: false },
