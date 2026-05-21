@@ -94,6 +94,9 @@ async function doInit(): Promise<void> {
         // @ts-ignore — process.cwd() is Node-only
         return `${process.cwd()}/public/${filename}`;
       }
+      if (typeof window !== 'undefined' && (window as any).__WEBVIEW_URI__) {
+        return `${(window as any).__WEBVIEW_URI__}/${filename}`;
+      }
       // In browser: Vite serves public/ assets from root
       return `/${filename}`;
     };

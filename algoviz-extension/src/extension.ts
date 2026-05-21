@@ -76,6 +76,8 @@ class AlgoVizPanel {
       }
     );
 
+    panel.iconPath = vscode.Uri.joinPath(extensionUri, 'icon.png');
+
     AlgoVizPanel.currentPanel = new AlgoVizPanel(panel, extensionUri, initialContext);
   }
 
@@ -153,8 +155,10 @@ class AlgoVizPanel {
     // Rewrite relative paths to vscode-webview-resource URIs
     const scriptPathOnDisk = vscode.Uri.joinPath(distPath, 'assets');
     const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+    const baseUri = webview.asWebviewUri(distPath).toString();
 
     html = html.replace(/(href|src)="\.\.\/assets\//g, `$1="${scriptUri}/`);
+    html = html.replace('<head>', `<head>\n    <script>window.__WEBVIEW_URI__ = "${baseUri}";</script>`);
 
     return html;
   }
