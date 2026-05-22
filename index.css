@@ -300,3 +300,46 @@ html {
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
+
+/* ─── Premium Redesign Styles ───────────────────────────────────────────── */
+
+@layer utilities {
+  .glass-panel-premium {
+    @apply bg-white/40 dark:bg-slate-950/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/40 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)];
+  }
+
+  .glass-card-premium {
+    @apply bg-white/60 dark:bg-slate-900/45 backdrop-blur-lg border border-white/30 dark:border-slate-800/50 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  .border-glow-saffron {
+    @apply hover:border-saffron-500/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.15)] transition-all duration-300;
+  }
+
+  .border-glow-blue {
+    @apply hover:border-blue-500/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] transition-all duration-300;
+  }
+
+  .text-gradient-purple {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-500 dark:from-violet-400 dark:to-indigo-300;
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-3deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 6s ease-in-out infinite;
+}
+
