@@ -19,6 +19,7 @@ import ConsolePanel from '../ConsolePanel';
 import StructureVisualizer from '../StructureVisualizer';
 import { ThemeColor, getThemeConfig } from '../../theme/theme';
 import { ExecutionStep, Timeline, ComplexityAnalysis } from '../../../types';
+import { AppSettings } from '../SettingsModal';
 
 interface WorkspaceVisualizerProps {
   activeTab: 'variables' | 'stack' | 'performance' | 'diagrams';
@@ -33,6 +34,7 @@ interface WorkspaceVisualizerProps {
   timeline: Timeline;
   currentStepIndex: number;
   complexityAnalysis: ComplexityAnalysis | null;
+  settings: AppSettings;
 }
 
 const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
@@ -48,6 +50,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   timeline,
   currentStepIndex,
   complexityAnalysis,
+  settings,
 }) => {
   const isSaffron = themeColor === 'saffron';
   // ── #9 Variable watch/pin state ────────────────────────────────
@@ -229,6 +232,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               prevVariables={prevStepVariables.variables || {}}
               themeColor={themeColor} 
               currentStepIndex={currentStepIndex}
+              arrayViewType={settings.arrayViewType}
             />
           </div>
 
@@ -239,9 +243,16 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               themeColor={themeColor}
               pinnedVars={pinnedVars}
               onTogglePin={handleTogglePin}
+              timeline={timeline}
+              currentStepIndex={currentStepIndex}
             />
           ) : activeTab === 'stack' ? (
-            <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} />
+            <CallStackPanel
+              stack={currentStep.callStack || []}
+              themeColor={themeColor}
+              timeline={timeline}
+              currentStepIndex={currentStepIndex}
+            />
           ) : activeTab === 'performance' ? (
             <PerformancePanel
               timeline={timeline}
