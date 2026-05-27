@@ -87,19 +87,27 @@ Click the **Share** button to generate a shareable URL that encodes your current
 ## 11. Preferences & Settings Panel
 
 Click the gear icon in the Workbench header to open the Preferences dialog:
-- **Permanent Theme Accent**: Toggle between Auto (Language-adaptive saffron/blue), Saffron (JavaScript orange theme), or Blue (C++ blue theme).
-- **C++ Compiler Strategy**: Toggle between remote GCC Wandbox API and offline-ready local WebAssembly compiler (online vs offline trade-offs explained on hover).
-- **Default Array Rendering**: Configure array visualizers to display standard memory cells or clean numeric bar charts.
+- **Permanent Theme Accent**: Toggle between **Auto** (language-adaptive saffron/blue theme transition), **Saffron** (JavaScript-styled orange Neo-Brutalist look), or **Blue** (C++ styled blue look) to pin your preferred layout style.
+- **C++ Compiler Strategy**: Toggle between **Wandbox Remote API** (runs compilation on external high-performance compilers over the network) and **WebAssembly Clang Engine** (runs a 30MB Clang compiler bundle directly inside your browser's local sandbox, offline-ready). Hovering over each option reveals a custom tooltip explaining trade-offs.
+- **Default Array Rendering**: Configure 1D array visualizers to display standard **Memory Cells** or clean numeric **Bar Charts** (height proportional to value).
 
-## 12. Enlarged Diagram View
+## 12. Enlarged Diagram View (Zoomable & Pannable Modal)
 
-Click the Maximize icon (`Maximize2`) on visualizers (Tree, Graph, List, Grid) to open a full-screen, blurred-backdrop modal view, making it easy to inspect large data structures on high-resolution screens.
+Click the Maximize icon (`Maximize2`) on visualizers (Tree, Graph, List, Grid/Matrix) to open a high-resolution, full-screen overlay modal with a blurred background:
+- **Interactive Panning**: Click and drag your mouse cursor to slide and reposition large tree node structures or matrix grids.
+- **Dynamic Zooming**: Scroll your mouse wheel or use trackpad pinch-to-zoom to scale the diagrams up and down smoothly.
+- **Floating HUD controls**: Use the on-screen buttons to **Zoom In**, **Zoom Out**, **Reset Pan/Zoom**, and **Close** the modal.
+- **Keyboard Shortcuts**: Focus the modal and use:
+  - `Escape` key to close the overlay.
+  - `+` / `-` keys to zoom in and out.
+  - `0` key to reset translation and scale.
+  - `Arrow Keys` (`Up`, `Down`, `Left`, `Right`) to pan the viewport step-by-step.
 
 ## 13. Variables Sparkline Graphing
 
-Traces the history of numeric variables over the execution timeline, drawing mini inline SVG sparkline trendlines with gradient area fills next to variable values.
+Traces the historical value of numeric variables over the execution timeline, drawing mini inline SVG sparkline trendlines with gradient area fills next to variable values. Helps quickly identify sorting swaps, monotonic trends, and nested loops counters.
 
 ## 14. Virtual Stack Frame Variables
 
-Reconstructs local variables inside Call Stack frame cards by searching backward dynamically, allowing you to trace recursive parameter states across every call stack frame simultaneously.
+Reconstructs local variables inside Call Stack frame cards by walking backward dynamically. Traces recursive parameters (e.g., recursive `low`, `high`, `mid` values in binary searches, or coordinates in DFS backtracking) across every stack frame simultaneously.
 
