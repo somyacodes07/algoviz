@@ -337,7 +337,7 @@ export const LinkedListPanel: React.FC<{
       </div>
 
       {/* ── Visualization ── */}
-      <div className="mt-4 overflow-x-auto custom-scrollbar pb-2 relative" ref={containerRef}>
+      <div className="mt-4 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2 relative" ref={containerRef}>
         {/* Dynamic Cycle Path SVG overlay */}
         {cyclePath && (
           <svg className="absolute inset-0 pointer-events-none w-full h-full overflow-visible z-20">
