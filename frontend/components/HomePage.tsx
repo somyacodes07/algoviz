@@ -84,6 +84,39 @@ const EXECUTION_STEPS = [
 
 // ── Landing Page Enhancements ──────────────────────────────────────────────────
 
+const T = {
+  docs: 'Docs',
+  githubStar: 'Star us on GitHub',
+  interactiveVisualizer: 'Interactive Code Visualizer',
+  see: 'See',
+  how: 'how',
+  your: 'your',
+  code: 'code',
+  really: 'really',
+  works: 'works.',
+  heroSub: 'Stop guessing. Step through your logic line-by-line, watch variables mutate in real-time, and untangle the call stack.',
+  selectFile: 'Select a file to begin execution session.',
+  editorFunction: 'function',
+  editorFibonacci: 'fibonacci',
+  editorReturn: 'return',
+  editorConsole: 'console.',
+  editorLog: 'log',
+  variablesWatch: 'Variables / Watch',
+  callStack: 'Call Stack',
+  whyTitle: 'Why use AlgoViz?',
+  whySub: 'Built for students and educators to strip away the magic and show exactly how algorithms compute data in memory.',
+  featureTitle: 'See the algorithm visualizer interface before you start',
+  featureSub: 'AlgoViz combines a code editor, variable inspector, console playback, and call stack timeline into one place so students can understand how JavaScript and C++ algorithms actually execute.',
+  launchTitle: 'Launch into JavaScript or C++ visual debugging',
+  launchDesc: 'The homepage is built to get students into the right visualizer fast, whether they want to trace JavaScript logic or inspect C++ algorithm flow.',
+  followTitle: 'Follow variables, stack frames, and console output',
+  followDesc: 'The workbench focuses on the exact runtime state students care about during recursion, sorting, graph traversal, and debugging.',
+  faqTitle: 'Frequently asked questions about AlgoViz',
+  faqSub: 'If you are comparing code visualization tools for teaching data structures, recursion, or debugging practice, these are the questions people usually ask first.',
+  tryJs: 'Try the JavaScript visualizer',
+  exploreDocs: 'Explore the documentation',
+};
+
 // Hero text scramble hook
 const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
 function useScramble(target: string, delay = 100) {
@@ -100,7 +133,7 @@ function useScramble(target: string, delay = 100) {
             .map((ch, i) => {
               if (ch === ' ') return ' ';
               if (i < Math.floor(iter / 3)) return ch;
-              return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+              return SCRAMBLE_CHARS.charAt(Math.floor(Math.random() * SCRAMBLE_CHARS.length));
             })
             .join(''),
         );
@@ -197,7 +230,7 @@ const HomePage: React.FC<HomePageProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const currentStep = EXECUTION_STEPS[stepIndex];
+  const currentStep = EXECUTION_STEPS.find((_, idx) => idx === stepIndex) || EXECUTION_STEPS[0];
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[var(--dark-base)] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
@@ -222,7 +255,7 @@ const HomePage: React.FC<HomePageProps> = ({
               }}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              Docs
+              {T.docs}
             </a>
             <a
               href="https://github.com/ssgamingop/AlgoViz"
@@ -231,7 +264,7 @@ const HomePage: React.FC<HomePageProps> = ({
               className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm"
             >
               <Star size={14} className="group-hover:text-amber-500 transition-colors" />
-              <span>Star us on GitHub</span>
+              <span>{T.githubStar}</span>
             </a>
             <button
               onClick={toggleTheme}
@@ -253,7 +286,7 @@ const HomePage: React.FC<HomePageProps> = ({
               className="max-w-2xl"
             >
               <div className="inline-block px-3 py-1 mb-6 border-2 border-slate-900 dark:border-white/20 rounded-full font-mono text-xs font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300">
-                Interactive Code Visualizer
+                {T.interactiveVisualizer}
               </div>
               <motion.h1
                 initial={{ opacity: 0 }}
@@ -266,21 +299,21 @@ const HomePage: React.FC<HomePageProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  See
+                  {T.see}
                 </motion.span>
                 <motion.span
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  how
+                  {T.how}
                 </motion.span>
                 <motion.span
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  your
+                  {T.your}
                 </motion.span>
                 <div className="h-0 w-full" />
                 <motion.span
@@ -296,7 +329,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   className="group relative mb-2 mt-2 inline-block cursor-pointer"
                 >
                   <span className="relative z-10 inline-block transform -skew-x-6 bg-slate-900 px-4 py-1.5 leading-none text-white transition-colors group-hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:group-hover:bg-slate-200">
-                    code
+                    {T.code}
                   </span>
                   <span className="absolute inset-0 -z-10 translate-x-2 translate-y-2 transform skew-x-6 bg-amber-400 transition-transform group-hover:translate-x-3 group-hover:translate-y-3 dark:bg-amber-500"></span>
                 </motion.span>
@@ -306,20 +339,19 @@ const HomePage: React.FC<HomePageProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.5 }}
                 >
-                  really
+                  {T.really}
                 </motion.span>
                 <motion.span
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.6 }}
                 >
-                  works.
+                  {T.works}
                 </motion.span>
               </motion.h1>
 
               <p className="mb-10 max-w-md text-lg font-medium leading-relaxed text-slate-600 md:text-xl dark:text-slate-400">
-                Stop guessing. Step through your logic line-by-line, watch variables mutate in
-                real-time, and untangle the call stack.
+                {T.heroSub}
               </p>
 
               <div className="mb-4 flex flex-col gap-4 sm:flex-row">
@@ -398,7 +430,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
               <div className="mt-4 flex items-center gap-2 font-mono text-sm text-slate-500">
                 <Terminal size={14} />
-                <span>Select a file to begin execution session.</span>
+                <span>{T.selectFile}</span>
               </div>
             </motion.div>
 
@@ -490,8 +522,8 @@ const HomePage: React.FC<HomePageProps> = ({
                       opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
                     }}
                   >
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">function</span>{' '}
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">fibonacci</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{T.editorFunction}</span>{' '}
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorFibonacci}</span>
                     (n) {'{'}
                   </motion.div>
                   <motion.div
@@ -499,17 +531,17 @@ const HomePage: React.FC<HomePageProps> = ({
                   >
                     <span className="text-blue-600 dark:text-blue-400 font-semibold">if</span> (n{' '}
                     {'<='} 1){' '}
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">return</span>{' '}
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{T.editorReturn}</span>{' '}
                     n;
                   </motion.div>
                   <motion.div
                     className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? 'font-bold text-slate-900 dark:text-white' : 'opacity-80'}`}
                   >
                     <span>
-                      <span className="text-blue-700 dark:text-blue-400">return</span>{' '}
-                      <span className="text-amber-700 dark:text-amber-400">fibonacci</span>
+                      <span className="text-blue-700 dark:text-blue-400">{T.editorReturn}</span>{' '}
+                      <span className="text-amber-700 dark:text-amber-400">{T.editorFibonacci}</span>
                       (n - 1) +{' '}
-                      <span className="text-amber-700 dark:text-amber-400">fibonacci</span>
+                      <span className="text-amber-700 dark:text-amber-400">{T.editorFibonacci}</span>
                       (n - 2);
                     </span>
                   </motion.div>
@@ -520,9 +552,9 @@ const HomePage: React.FC<HomePageProps> = ({
                       opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
                     }}
                   >
-                    console.
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">log</span>(
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">fibonacci</span>(
+                    {T.editorConsole}
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorLog}</span>(
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorFibonacci}</span>(
                     <span className="text-green-600 dark:text-green-400 font-bold">6</span>
                     ));
                   </motion.div>
@@ -532,7 +564,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {/* Variables Panel Mini */}
               <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] flex flex-col">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[var(--dark-surface-3)] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
-                  <span>Variables / Watch</span>
+                  <span>{T.variablesWatch}</span>
                   <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
                   </span>
@@ -557,7 +589,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   </div>
                   <div className="flex-1 flex flex-col p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800/50 transition-colors overflow-hidden relative">
                     <span className="text-blue-600 dark:text-blue-400 font-bold mb-1 border-b border-amber-200/50 dark:border-amber-800/50 pb-0.5 z-10 bg-inherit">
-                      Call Stack
+                      {T.callStack}
                     </span>
                     <div className="flex-1 overflow-hidden relative">
                       <AnimatePresence initial={false}>
@@ -595,7 +627,7 @@ const HomePage: React.FC<HomePageProps> = ({
       <section className="border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] relative z-10 py-14 px-8 md:px-16">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {STATS.map((stat) => (
-            <StatCard key={stat.label} {...stat} />
+            <StatCard key={stat.label} label={stat.label} value={stat.value} suffix={stat.suffix} />
           ))}
         </div>
       </section>
@@ -611,7 +643,7 @@ const HomePage: React.FC<HomePageProps> = ({
               transition={{ duration: 0.5 }}
               className="text-3xl md:text-5xl font-black tracking-tight mb-4"
             >
-              Why use AlgoViz?
+              {T.whyTitle}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -620,8 +652,7 @@ const HomePage: React.FC<HomePageProps> = ({
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto"
             >
-              Built for students and educators to strip away the magic and show exactly how
-              algorithms compute data in memory.
+              {T.whySub}
             </motion.p>
           </div>
 
@@ -671,12 +702,10 @@ const HomePage: React.FC<HomePageProps> = ({
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-14">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-              See the algorithm visualizer interface before you start
+              {T.featureTitle}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              AlgoViz combines a code editor, variable inspector, console playback, and call stack
-              timeline into one place so students can understand how JavaScript and C++ algorithms
-              actually execute.
+              {T.featureSub}
             </p>
           </div>
 
@@ -689,11 +718,10 @@ const HomePage: React.FC<HomePageProps> = ({
                 loading="lazy"
               />
               <h3 className="text-xl font-bold mt-5 mb-2">
-                Launch into JavaScript or C++ visual debugging
+                {T.launchTitle}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                The homepage is built to get students into the right visualizer fast, whether they
-                want to trace JavaScript logic or inspect C++ algorithm flow.
+                {T.launchDesc}
               </p>
             </article>
 
@@ -705,11 +733,10 @@ const HomePage: React.FC<HomePageProps> = ({
                 loading="lazy"
               />
               <h3 className="text-xl font-bold mt-5 mb-2">
-                Follow variables, stack frames, and console output
+                {T.followTitle}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                The workbench focuses on the exact runtime state students care about during
-                recursion, sorting, graph traversal, and debugging.
+                {T.followDesc}
               </p>
             </article>
           </div>
@@ -720,11 +747,10 @@ const HomePage: React.FC<HomePageProps> = ({
         <div className="max-w-5xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-              Frequently asked questions about AlgoViz
+              {T.faqTitle}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              If you are comparing code visualization tools for teaching data structures, recursion,
-              or debugging practice, these are the questions people usually ask first.
+              {T.faqSub}
             </p>
           </div>
 
@@ -756,7 +782,7 @@ const HomePage: React.FC<HomePageProps> = ({
               }}
               className="inline-flex items-center justify-center px-5 py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold border-2 border-slate-900 transition-colors"
             >
-              Try the JavaScript visualizer
+              {T.tryJs}
             </a>
             <a
               href={docsHref}
@@ -766,7 +792,7 @@ const HomePage: React.FC<HomePageProps> = ({
               }}
               className="inline-flex items-center justify-center px-5 py-3 bg-white dark:bg-[var(--dark-surface-2)] text-slate-900 dark:text-slate-100 font-bold border-2 border-slate-900 dark:border-[var(--dark-border)] transition-colors"
             >
-              Explore the documentation
+              {T.exploreDocs}
             </a>
           </div>
         </div>
