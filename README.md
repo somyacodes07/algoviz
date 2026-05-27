@@ -118,6 +118,10 @@ Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
 | 🟧 **JavaScript mode** | Full support for loops, recursion, arrays, objects, and interview-style problems |
 | 🔵 **C++ mode (Clang/GCC)** | Real in-browser Wasm Clang compilation with automatic remote Wandbox API fallback |
 | 📖 **Integrated docs route** | Architecture, setup, UI, templates, and engine details accessible from the app |
+| ⚙️ **User preferences** | Toggle permanent theme accents, memory cells vs bar charts, and C++ compiler strategies |
+| 🔍 **Enlarged diagrams** | Maximize tree, graph, list, and matrix visualizers in high-resolution full-screen modals |
+| 📉 **Variables sparklines** | View variable value history inline via animated SVG trendline sparklines |
+| 🧩 **Virtual stack frames** | Inspect historical local variables across all recursive call stack frames simultaneously |
 
 ---
 

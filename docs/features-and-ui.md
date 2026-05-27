@@ -83,3 +83,23 @@ The Console panel replays `console.log` (JS) and `cout` (C++) output:
 ## 10. Share Feature
 
 Click the **Share** button to generate a shareable URL that encodes your current code, making it easy to share algorithms with classmates or students.
+
+## 11. Preferences & Settings Panel
+
+Click the gear icon in the Workbench header to open the Preferences dialog:
+- **Permanent Theme Accent**: Toggle between Auto (Language-adaptive saffron/blue), Saffron (JavaScript orange theme), or Blue (C++ blue theme).
+- **C++ Compiler Strategy**: Toggle between remote GCC Wandbox API and offline-ready local WebAssembly compiler (online vs offline trade-offs explained on hover).
+- **Default Array Rendering**: Configure array visualizers to display standard memory cells or clean numeric bar charts.
+
+## 12. Enlarged Diagram View
+
+Click the Maximize icon (`Maximize2`) on visualizers (Tree, Graph, List, Grid) to open a full-screen, blurred-backdrop modal view, making it easy to inspect large data structures on high-resolution screens.
+
+## 13. Variables Sparkline Graphing
+
+Traces the history of numeric variables over the execution timeline, drawing mini inline SVG sparkline trendlines with gradient area fills next to variable values.
+
+## 14. Virtual Stack Frame Variables
+
+Reconstructs local variables inside Call Stack frame cards by searching backward dynamically, allowing you to trace recursive parameter states across every call stack frame simultaneously.
+
