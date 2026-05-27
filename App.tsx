@@ -371,20 +371,20 @@ const App: React.FC = () => {
         case "Enter":
           if (e.metaKey || e.ctrlKey) {
             e.preventDefault();
-            handleRun(code, language);
+            handleRun(code, language, { cppCompiler: settings.cppCompiler });
           }
           break;
         case "KeyR":
           if (e.metaKey || e.ctrlKey) return;
           e.preventDefault();
-          reset(code, language);
+          reset(code, language, { cppCompiler: settings.cppCompiler });
           break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [page, togglePlayPause, nextStep, prevStep, reset, code, language]);
+  }, [page, togglePlayPause, nextStep, prevStep, reset, code, language, settings.cppCompiler]);
 
   useEffect(() => {
     if (!templateMenuOpen) return;
