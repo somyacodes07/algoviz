@@ -92,6 +92,38 @@ int main() {
 `,
   },
   {
+    name: 'Matrix Traversal',
+    category: 'Arrays & Strings',
+    description: 'Traverse a 2D vector matrix in row-major order with index tracking',
+    language: 'c++',
+    tags: ['array', 'vector', 'matrix', 'nested-loops', 'grid', 'traversal'],
+    code: `// C++ 2D Matrix Traversal
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    vector<vector<int>> grid = {
+        {1, 2, 3, 4},
+        {5, 6, 7, 8},
+        {9, 10, 11, 12}
+    };
+
+    int rowCount = grid.size();
+    int colCount = grid[0].size();
+
+    for (int r = 0; r < rowCount; r++) {
+        for (int c = 0; c < colCount; c++) {
+            int val = grid[r][c];
+            cout << "Visiting cell (" << r << "," << c << ") = " << val << endl;
+        }
+    }
+
+    return 0;
+}
+`,
+  },
+  {
     name: 'Max Subarray',
     category: 'Arrays & Strings',
     description: 'Find contiguous subarray with largest sum (Kadane’s Algo)',
