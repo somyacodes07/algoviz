@@ -6,3 +6,5 @@ Allow: /og-image.png
 Allow: /apple-touch-icon.png
 Allow: /favicon-32x32.png
 Allow: /favicon-16x16.png
+
+Sitemap: https://algoviz.app/sitemap.xml
