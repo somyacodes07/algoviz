@@ -69,10 +69,9 @@ async function executeCpp(
   config: ExecutionConfig | undefined,
   timeoutMs: number,
 ): Promise<ExecuteResult> {
-  // ── Strategy 1: Wasm Clang Engine (Primary, if enabled) ──
-  // Only attempt to load Wasm Clang if explicitly enabled via environment variable,
-  // since the 30MB binaries are not bundled by default and will cause 404 errors.
-  if (import.meta.env.VITE_ENABLE_WASM_CLANG === 'true') {
+  // ── Strategy 1: Wasm Clang Engine (If explicitly chosen) ──
+  const useWasm = config?.cppCompiler === 'wasm';
+  if (useWasm) {
     try {
       const { executeWasmClangCpp } = await import('./wasmClangEngine');
 
@@ -117,7 +116,7 @@ async function executeCpp(
     }
   }
 
-  // ── Strategy 2: Wandbox API (Fallback/Default) ──
+  // ── Strategy 2: Wandbox API (Chosen or Fallback) ──
   return executeWithWandbox(userCode, config, timeoutMs);
 }
 
