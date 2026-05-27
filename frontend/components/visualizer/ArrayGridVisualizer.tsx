@@ -48,11 +48,12 @@ export function buildArrayGridPreview(variables: VariableMap, prevVariables: Var
   if (matrixEntries.length > 0) {
     // Prioritize name with 'grid', 'matrix', 'board', 'table'
     const best = matrixEntries.find(([name]) => /grid|matrix|board|table/i.test(name)) || matrixEntries[0];
+    const prevVal = Object.entries(prevVariables).find(([k]) => k === best[0])?.[1];
     return {
       type: 'matrix',
       sourceName: best[0],
       value: best[1] as any[][],
-      prevValue: prevVariables[best[0]] as any[][],
+      prevValue: prevVal as any[][],
     };
   }
 
@@ -62,11 +63,12 @@ export function buildArrayGridPreview(variables: VariableMap, prevVariables: Var
   );
   if (arrayEntries.length > 0) {
     const best = arrayEntries.find(([name]) => /arr|nums|list|values/i.test(name)) || arrayEntries[0];
+    const prevVal = Object.entries(prevVariables).find(([k]) => k === best[0])?.[1];
     return {
       type: 'array',
       sourceName: best[0],
       value: best[1] as any[],
-      prevValue: prevVariables[best[0]] as any[],
+      prevValue: prevVal as any[],
     };
   }
 
@@ -109,7 +111,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     const changedIndices = new Set<number>();
     if (prevArr && prevArr.length === arr.length) {
       for (let idx = 0; idx < arr.length; idx++) {
-        if (prevArr[idx] !== arr[idx]) changedIndices.add(idx);
+        if (prevArr.at(idx) !== arr.at(idx)) changedIndices.add(idx);
       }
     }
 
@@ -117,7 +119,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     let swapIndices: [number, number] | null = null;
     if (changedIndices.size === 2 && prevArr) {
       const [a, b] = Array.from(changedIndices);
-      if (prevArr[a] === arr[b] && prevArr[b] === arr[a]) {
+      if (prevArr.at(a) === arr.at(b) && prevArr.at(b) === arr.at(a)) {
         swapIndices = [a, b];
       }
     }
@@ -329,10 +331,10 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
   // Find cell differences
   const changedCells = new Set<string>();
-  if (prevMatrix && prevMatrix.length === rowsCount && prevMatrix[0].length === colsCount) {
+  if (prevMatrix && prevMatrix.length === rowsCount && prevMatrix.at(0)?.length === colsCount) {
     for (let r = 0; r < rowsCount; r++) {
       for (let c = 0; c < colsCount; c++) {
-        if (prevMatrix[r][c] !== matrix[r][c]) {
+        if (prevMatrix.at(r)?.at(c) !== matrix.at(r)?.at(c)) {
           changedCells.add(`${r},${c}`);
         }
       }
