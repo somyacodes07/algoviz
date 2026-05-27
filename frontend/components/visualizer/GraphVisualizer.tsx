@@ -67,7 +67,9 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
     namedCandidates.length > 0
       ? namedCandidates
       : Object.entries(variables).filter(
-          ([, value]) => Array.isArray(value) || isPlainObject(value),
+          ([name, value]) =>
+            (Array.isArray(value) || isPlainObject(value)) &&
+            !/grid|matrix|board|table|nums|arr/i.test(name),
         );
 
   const visitedIds = collectVisitedNodeIds(variables);
