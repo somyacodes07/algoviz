@@ -347,9 +347,20 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             <Grid size={12} /> Grid/Matrix Visualizer
           </span>
         </div>
-        <h3 className="text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
-          {preview.sourceName}
-        </h3>
+        <div className="flex items-center gap-2 shrink-0">
+          <h3 className="text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
+            {preview.sourceName}
+          </h3>
+          {onEnlarge && (
+            <button
+              onClick={onEnlarge}
+              className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none"
+              title="Enlarge diagram"
+            >
+              <Maximize2 size={14} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 overflow-auto custom-scrollbar pb-3 max-h-[360px] flex justify-center">
