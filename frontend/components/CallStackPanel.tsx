@@ -1,21 +1,55 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { Timeline } from '../types';
 import { getThemeConfig, ThemeColor } from '../theme/theme';
 
 interface CallStackPanelProps {
   stack: string[];
   themeColor: ThemeColor;
+  timeline?: Timeline;
+  currentStepIndex?: number;
 }
 
-const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) => {
+const CallStackPanel: React.FC<CallStackPanelProps> = ({
+  stack,
+  themeColor,
+  timeline = [],
+  currentStepIndex = -1,
+}) => {
   const displayStack = [...stack].reverse();
   const theme = getThemeConfig(themeColor);
+  const isSaffron = themeColor === 'saffron';
 
   const activeClass = theme.panelClass + ` ${theme.accentSoftBg} ${theme.accentBorder}`;
   const inactiveClass =
     'border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] bg-white dark:bg-[var(--dark-surface)]';
   const accentBadge = theme.badgeClass;
+
+  // Helper to walk backward and reconstruct historical variables for stack frame at depth
+  const getVariablesForDepth = (depth: number) => {
+    if (depth < 0 || timeline.length === 0 || currentStepIndex < 0) return {};
+    const currentStep = timeline[currentStepIndex];
+    if (!currentStep) return {};
+
+    if (depth === currentStep.callStack.length - 1) {
+      return currentStep.variables || {};
+    }
+
+    for (let i = currentStepIndex - 1; i >= 0; i--) {
+      const step = timeline[i];
+      if (step && step.callStack.length === depth + 1) {
+        let match = true;
+        for (let j = 0; j <= depth; j++) {
+          if (step.callStack[j] !== currentStep.callStack[j]) {
+            match = false;
+            break;
+          }
+        }
+        if (match) return step.variables || {};
+      }
+    }
+    return {};
+  };
 
   return (
     <div className="flex flex-col p-4 min-h-[100px] pb-10">
@@ -48,6 +82,8 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
             const scale = 1 - depth * 0.05;
             const translateY = isTop ? 0 : -(depth * 14);
             const zIndex = displayStack.length - index;
+            const frameDepth = stack.length - 1 - index;
+            const frameVars = getVariablesForDepth(frameDepth);
 
             return (
               <motion.div
@@ -68,7 +104,7 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                         : 'border-[2px] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] border-slate-300 bg-slate-100 text-slate-500 dark:border-[var(--dark-border-dim)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400'
                     }
                   >
-                    {isTop ? 'Top frame' : `Frame ${stack.length - 1 - index}`}
+                    {isTop ? 'Top frame' : `Frame ${frameDepth}`}
                   </span>
                   {isTop && <span className={accentBadge}>Live</span>}
                 </div>
@@ -77,6 +113,34 @@ const CallStackPanel: React.FC<CallStackPanelProps> = ({ stack, themeColor }) =>
                 >
                   {frame}()
                 </span>
+
+                {/* Frame Variables display */}
+                {Object.keys(frameVars).length > 0 && (
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-900/10 dark:border-slate-100/10 flex flex-wrap gap-1.5">
+                    {Object.entries(frameVars).map(([key, val]) => {
+                      if (typeof val === 'function' || val === '[Function]') return null;
+                      const displayVal = typeof val === 'object'
+                        ? Array.isArray(val)
+                          ? `[${val.length}]`
+                          : '{…}'
+                        : String(val);
+                      return (
+                        <span
+                          key={key}
+                          className={`px-1.5 py-0.5 border text-[10px] font-mono font-bold whitespace-nowrap ${
+                            isTop
+                              ? isSaffron
+                                ? 'border-saffron-300 bg-saffron-50 text-saffron-700 dark:border-saffron-800 dark:bg-saffron-950/40 dark:text-saffron-400'
+                                : 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-400'
+                              : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-400'
+                          }`}
+                        >
+                          <span className="opacity-60">{key}:</span> {displayVal}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </motion.div>
             );
           })

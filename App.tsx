@@ -13,6 +13,7 @@ import { useSeoMetadata } from "./frontend/hooks/useSeoMetadata";
 import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from "./frontend/codeTemplates";
 import { getSeoConfig } from "./frontend/seo";
 import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
+import { SettingsModal, AppSettings } from "./frontend/components/SettingsModal";
 
 const JS_DEFAULT_CODE = `// Welcome to AlgoViz!
 // Edit this code and click the Play button below.
