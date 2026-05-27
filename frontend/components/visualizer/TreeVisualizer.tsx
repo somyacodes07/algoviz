@@ -354,6 +354,7 @@ export const TreePanel: React.FC<{
             Auto-detected from <code className="font-mono">left</code>/
             <code className="font-mono">right</code> pointers in runtime state.
           </p>
+        </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             {preview.nodes.length} Nodes
