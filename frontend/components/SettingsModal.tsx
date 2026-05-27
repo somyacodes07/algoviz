@@ -71,7 +71,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="p-5 space-y-5 text-slate-800 dark:text-slate-200">
               {/* Theme Selection */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
                   Permanent Theme Accent
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -86,9 +86,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       className={`border-[2px] py-1.5 text-xs font-bold uppercase tracking-wider transition-all active:translate-y-[1px] ${
                         settings.themeColor === opt.val
                           ? activeThemeColor === 'saffron'
-                            ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-700'
-                            : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-700'
-                          : 'border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                            ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-500'
+                            : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-500'
+                          : 'border-slate-300 dark:border-[var(--dark-border-bright)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-3)]'
                       }`}
                     >
                       {opt.label}
@@ -99,7 +99,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               {/* Array view Selection */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
                   Default Array Rendering
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -113,9 +113,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       className={`border-[2px] py-1.5 text-xs font-bold uppercase tracking-wider transition-all active:translate-y-[1px] ${
                         settings.arrayViewType === opt.val
                           ? activeThemeColor === 'saffron'
-                            ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-700'
-                            : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-700'
-                          : 'border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                            ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-500'
+                            : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-500'
+                          : 'border-slate-300 dark:border-[var(--dark-border-bright)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-3)]'
                       }`}
                     >
                       {opt.label}
@@ -127,10 +127,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* C++ Compiler Selection with Tooltips */}
               <div className="flex flex-col gap-2 relative">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
                     C++ Compiler Strategy
                   </label>
-                  <HelpCircle size={12} className="text-slate-400" />
+                  <HelpCircle
+                    size={12}
+                    className={
+                      activeThemeColor === 'saffron' ? 'text-saffron-500 dark:text-saffron-400' : 'text-blue-500 dark:text-blue-400'
+                    }
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {/* Wandbox API Option */}
@@ -141,9 +146,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     className={`border-[2px] py-2 text-xs font-bold uppercase tracking-wider transition-all active:translate-y-[1px] flex flex-col items-center justify-center ${
                       settings.cppCompiler === 'api'
                         ? activeThemeColor === 'saffron'
-                          ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-700'
-                          : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-700'
-                        : 'border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                          ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-500'
+                          : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-500'
+                        : 'border-slate-300 dark:border-[var(--dark-border-bright)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-3)]'
                     }`}
                   >
                     <span>Wandbox API</span>
@@ -158,9 +163,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     className={`border-[2px] py-2 text-xs font-bold uppercase tracking-wider transition-all active:translate-y-[1px] flex flex-col items-center justify-center ${
                       settings.cppCompiler === 'wasm'
                         ? activeThemeColor === 'saffron'
-                          ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-700'
-                          : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-700'
-                        : 'border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                          ? 'bg-saffron-100 border-saffron-500 text-saffron-700 dark:bg-saffron-950/20 dark:text-saffron-400 dark:border-saffron-500'
+                          : 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-500'
+                        : 'border-slate-300 dark:border-[var(--dark-border-bright)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-3)]'
                     }`}
                   >
                     <span>Local Wasm Clang</span>
@@ -169,9 +174,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* Compiler Custom Tooltip Container */}
-                <div className="h-16 relative mt-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 flex items-start gap-2 rounded-sm overflow-hidden">
-                  <Info size={12} className="text-slate-400 mt-0.5 shrink-0" />
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                <div className="h-16 relative mt-1 bg-slate-50 dark:bg-[var(--dark-surface-3)] border border-slate-200 dark:border-[var(--dark-border-bright)] p-2.5 flex items-start gap-2 rounded-sm overflow-hidden">
+                  <Info
+                    size={12}
+                    className={`mt-0.5 shrink-0 ${
+                      activeThemeColor === 'saffron' ? 'text-saffron-500 dark:text-saffron-400' : 'text-blue-500 dark:text-blue-400'
+                    }`}
+                  />
+                  <p className="text-[10px] font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
                     {hoveredOption === 'api' ? (
                       <strong>Remote GCC API</strong>
                     ) : hoveredOption === 'wasm' ? (
@@ -190,10 +200,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="h-14 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end px-5 bg-slate-50 dark:bg-[var(--dark-surface-2)] shrink-0">
+            <div className="h-14 border-t border-slate-200 dark:border-[var(--dark-border-dim)] flex items-center justify-end px-5 bg-slate-50 dark:bg-[var(--dark-surface-2)] shrink-0">
               <button
                 onClick={onClose}
-                className={`flex items-center gap-1.5 border-[2px] border-slate-900 px-4 py-1.5 text-xs font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none ${
+                className={`flex items-center gap-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] px-4 py-1.5 text-xs font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none ${
                   activeThemeColor === 'saffron' ? 'bg-saffron-400 text-slate-950' : 'bg-blue-500 text-white'
                 }`}
               >
