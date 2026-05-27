@@ -3,6 +3,7 @@ import { Network } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
+import { getPointerSvgColor } from './TreeVisualizer';
 
 export interface GraphNodeView {
   id: string;
