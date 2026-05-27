@@ -383,7 +383,7 @@ export const GraphPanel: React.FC<{
         <div className={`${theme.subPanelClass} p-3 flex justify-center overflow-hidden`}>
           <svg
             viewBox={`0 0 ${svgSize} ${svgSize}`}
-            className="h-[300px] w-full max-w-[340px]"
+            className={onEnlarge ? "h-[300px] w-full max-w-[340px]" : "h-[550px] w-full max-w-[580px]"}
             style={{ overflow: 'visible' }}
           >
             <defs>
