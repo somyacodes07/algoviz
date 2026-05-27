@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { VariableMap } from '../../types';
 import { ThemeColor } from '../theme/theme';
 import {
@@ -13,6 +13,7 @@ import {
   ArrayGridVisualizer,
   ArrayGridPreview,
 } from './visualizer/ArrayGridVisualizer';
+import { DiagramModal } from './visualizer/DiagramModal';
 import { Network } from 'lucide-react';
 
 interface StructureVisualizerProps {
@@ -20,6 +21,7 @@ interface StructureVisualizerProps {
   prevVariables: VariableMap;
   themeColor: ThemeColor;
   currentStepIndex: number;
+  arrayViewType?: 'cells' | 'bars';
 }
 
 /**
@@ -33,7 +35,9 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   prevVariables,
   themeColor,
   currentStepIndex,
+  arrayViewType = 'cells',
 }) => {
+  const [enlargedType, setEnlargedType] = useState<'tree' | 'list' | 'graph' | 'array' | null>(null);
   const lastTree = useRef<TreePreview | null>(null);
   const lastLinkedList = useRef<LinkedListPreview | null>(null);
   const lastGraph = useRef<GraphPreview | null>(null);
@@ -86,16 +90,72 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      {treePreview && <TreePanel preview={treePreview} themeColor={themeColor} />}
+      {treePreview && (
+        <TreePanel
+          preview={treePreview}
+          themeColor={themeColor}
+          onEnlarge={() => setEnlargedType('tree')}
+        />
+      )}
       {!treePreview && linkedListPreview && (
-        <LinkedListPanel preview={linkedListPreview} themeColor={themeColor} />
+        <LinkedListPanel
+          preview={linkedListPreview}
+          themeColor={themeColor}
+          onEnlarge={() => setEnlargedType('list')}
+        />
       )}
       {!treePreview && !linkedListPreview && graphPreview && (
-        <GraphPanel preview={graphPreview} themeColor={themeColor} />
+        <GraphPanel
+          preview={graphPreview}
+          themeColor={themeColor}
+          onEnlarge={() => setEnlargedType('graph')}
+        />
       )}
       {!treePreview && !linkedListPreview && !graphPreview && arrayGridPreview && (
-        <ArrayGridVisualizer variables={variables} prevVariables={prevVariables} themeColor={themeColor} />
+        <ArrayGridVisualizer
+          variables={variables}
+          prevVariables={prevVariables}
+          themeColor={themeColor}
+          arrayViewType={arrayViewType}
+          onEnlarge={() => setEnlargedType('array')}
+        />
       )}
+
+      {/* Enlarged Diagram Modal Overlay */}
+      <DiagramModal
+        isOpen={enlargedType !== null}
+        onClose={() => setEnlargedType(null)}
+        title={
+          enlargedType === 'tree'
+            ? treePreview?.sourceName || 'Tree'
+            : enlargedType === 'list'
+            ? linkedListPreview?.sourceName || 'Linked List'
+            : enlargedType === 'graph'
+            ? graphPreview?.sourceName || 'Graph'
+            : arrayGridPreview?.sourceName || 'Array/Matrix'
+        }
+        themeColor={themeColor}
+      >
+        <div className="w-full p-2">
+          {enlargedType === 'tree' && treePreview && (
+            <TreePanel preview={treePreview} themeColor={themeColor} />
+          )}
+          {enlargedType === 'list' && linkedListPreview && (
+            <LinkedListPanel preview={linkedListPreview} themeColor={themeColor} />
+          )}
+          {enlargedType === 'graph' && graphPreview && (
+            <GraphPanel preview={graphPreview} themeColor={themeColor} />
+          )}
+          {enlargedType === 'array' && arrayGridPreview && (
+            <ArrayGridVisualizer
+              variables={variables}
+              prevVariables={prevVariables}
+              themeColor={themeColor}
+              arrayViewType={arrayViewType}
+            />
+          )}
+        </div>
+      </DiagramModal>
     </div>
   );
 };
