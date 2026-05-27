@@ -340,6 +340,7 @@ export const GraphPanel: React.FC<{
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Auto-detected from adjacency-style runtime data.
           </p>
+        </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             {preview.directed ? 'Directed' : 'Undirected'}
