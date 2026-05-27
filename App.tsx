@@ -591,6 +591,7 @@ const App: React.FC = () => {
               onGoHome={handleGoHome}
               onOpenDocs={handleOpenDocs}
               toggleTheme={toggleTheme}
+              onOpenSettings={() => setIsSettingsOpen(true)}
             />
 
             <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
@@ -609,7 +610,7 @@ const App: React.FC = () => {
                 onCodeChange={handleCodeChange}
                 onRun={async () => {
                   setIsPlaying(false);
-                  return await handleRun(code, language);
+                  return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
                 }}
                 onShare={handleCopyLink}
                 onOpenTemplates={() => setTemplateMenuOpen(true)}
@@ -629,6 +630,7 @@ const App: React.FC = () => {
                 timeline={timeline}
                 currentStepIndex={currentStepIndex}
                 complexityAnalysis={complexityAnalysis}
+                settings={settings}
               />
             </main>
 
@@ -637,7 +639,7 @@ const App: React.FC = () => {
               onPlayPause={togglePlayPause}
               onNext={nextStep}
               onPrev={prevStep}
-              onReset={() => reset(code, language)}
+              onReset={() => reset(code, language, { cppCompiler: settings.cppCompiler })}
               canNext={currentStepIndex < timeline.length - 1}
               canPrev={currentStepIndex > 0}
               speed={speed}
@@ -664,6 +666,14 @@ const App: React.FC = () => {
             <ErrorPopup
               error={executionError}
               onClose={clearError}
+            />
+
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+              settings={settings}
+              onUpdateSettings={setSettings}
+              activeThemeColor={themeColor}
             />
           </motion.div>
         )}
