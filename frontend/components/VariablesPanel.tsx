@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { VariableMap } from '../../types';
+import { VariableMap, Timeline } from '../../types';
 import {
   ChevronRight,
   ArrowUp,
@@ -23,6 +23,8 @@ interface VariablesPanelProps {
   themeColor: ThemeColor;
   pinnedVars?: Set<string>;
   onTogglePin?: (name: string) => void;
+  timeline?: Timeline;
+  currentStepIndex?: number;
 }
 
 function safeSerialize(value: unknown, maxDepth: number = 3): string {
@@ -225,6 +227,61 @@ const ArrayVisualizer: React.FC<{
   );
 };
 
+// Sparkline helper for numeric variables
+const Sparkline: React.FC<{
+  history: number[];
+  themeColor: ThemeColor;
+}> = ({ history, themeColor }) => {
+  const isSaffron = themeColor === 'saffron';
+  const width = 80;
+  const height = 24;
+  const padding = 2;
+
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min === 0 ? 1 : max - min;
+
+  const points = history.map((val, index) => {
+    const x = padding + (index / (history.length - 1)) * (width - 2 * padding);
+    const y = height - padding - ((val - min) / range) * (height - 2 * padding);
+    return `${x},${y}`;
+  }).join(' ');
+
+  const strokeColor = isSaffron ? '#f97316' : '#3b82f6';
+  const fillGradientId = `sparkline-grad-${Math.random().toString(36).substr(2, 9)}`;
+  const areaPoints = `${padding},${height - padding} ${points} ${width - padding},${height - padding}`;
+
+  return (
+    <svg width={width} height={height} className="overflow-visible shrink-0 ml-1.5" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+      <defs>
+        <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${fillGradientId})`} />
+      <polyline
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+      {history.length > 0 && (
+        <circle
+          cx={padding + (history.length - 1) * (width - 2 * padding) / (history.length - 1)}
+          cy={height - padding - ((history[history.length - 1] - min) / range) * (height - 2 * padding)}
+          r="2.5"
+          fill={strokeColor}
+          stroke="#ffffff"
+          strokeWidth="1"
+        />
+      )}
+    </svg>
+  );
+};
+
 // Card-style variable display
 const VariableCard: React.FC<{
   name: string;
@@ -233,8 +290,23 @@ const VariableCard: React.FC<{
   wasPresent: boolean;
   themeColor: ThemeColor;
   variables: VariableMap;
-}> = ({ name, value, prevValue, wasPresent, themeColor, variables }) => {
+  timeline?: Timeline;
+  currentStepIndex?: number;
+}> = ({ name, value, prevValue, wasPresent, themeColor, variables, timeline, currentStepIndex }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Compute numeric history for sparkline
+  const valueHistory = useMemo(() => {
+    if (typeof value !== 'number' || !timeline || currentStepIndex === undefined) return [];
+    const history: number[] = [];
+    for (let i = 0; i <= currentStepIndex; i++) {
+      const val = timeline[i]?.variables?.[name];
+      if (typeof val === 'number') {
+        history.push(val);
+      }
+    }
+    return history;
+  }, [timeline, currentStepIndex, name, value]);
 
   // Animated counter for numeric values
   const [displayNum, setDisplayNum] = useState<number | null>(
@@ -438,6 +510,9 @@ const VariableCard: React.FC<{
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic uppercase tracking-wider opacity-80">
                 {typeLabel}
               </span>
+              {valueHistory.length > 1 && (
+                <Sparkline history={valueHistory} themeColor={themeColor} />
+              )}
 
               {changeDir && !isNumericArray && (
                 <div className="flex items-center">
@@ -579,6 +654,8 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
   themeColor,
   pinnedVars,
   onTogglePin,
+  timeline,
+  currentStepIndex,
 }) => {
   const keys = Object.keys(variables);
   const isSaffron = themeColor === 'saffron';
@@ -700,6 +777,8 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
                 wasPresent={key in prevVariables}
                 themeColor={themeColor}
                 variables={variables}
+                timeline={timeline}
+                currentStepIndex={currentStepIndex}
               />
             </div>
           ))}
