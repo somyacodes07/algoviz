@@ -4,6 +4,24 @@ import { GitBranch } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
+export const POINTER_SVG_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
+  root:    { fill: '#10b981', stroke: '#064e3b', text: '#ffffff' },
+  head:    { fill: '#10b981', stroke: '#064e3b', text: '#ffffff' },
+  tail:    { fill: '#8b5cf6', stroke: '#5b21b6', text: '#ffffff' },
+  curr:    { fill: '#f59e0b', stroke: '#b45309', text: '#000000' },
+  current: { fill: '#f59e0b', stroke: '#b45309', text: '#000000' },
+  parent:  { fill: '#f97316', stroke: '#c2410c', text: '#ffffff' },
+  temp:    { fill: '#f43f5e', stroke: '#be123c', text: '#ffffff' },
+  prev:    { fill: '#06b6d4', stroke: '#0e7490', text: '#000000' },
+  left:    { fill: '#0ea5e9', stroke: '#0369a1', text: '#ffffff' },
+  right:   { fill: '#6366f1', stroke: '#4338ca', text: '#ffffff' },
+};
+const DEFAULT_SVG_COLOR = { fill: '#6366f1', stroke: '#4338ca', text: '#ffffff' };
+
+export function getPointerSvgColor(name: string) {
+  return POINTER_SVG_COLORS[name] || DEFAULT_SVG_COLOR;
+}
+
 export interface TreeNodeView {
   id: string;
   label: string;
@@ -456,42 +474,48 @@ export const TreePanel: React.FC<{
                   {/* Pointer tags — bounce in/out (#8) */}
                   <AnimatePresence>
                     {hasPointer &&
-                      node.pointerNames.map((pName, pi) => (
-                        <motion.g
-                          key={pName}
-                          initial={{ opacity: 0, scale: 0.5, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, y: 4 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                        >
-                          <rect
-                            x={-boxW / 2 + pi * 4}
-                            y={-boxH / 2 - 24 - pi * 2}
-                            width={pName.length * 7 + 12}
-                            height={16}
-                            fill="#10b981"
-                            stroke="#064e3b"
-                            strokeWidth="2"
-                          />
-                          <text
-                            x={-boxW / 2 + pi * 4 + (pName.length * 7 + 12) / 2}
-                            y={-boxH / 2 - 24 - pi * 2 + 12}
-                            textAnchor="middle"
-                            className="text-[9px] font-black uppercase fill-white pointer-events-none"
-                            style={{ letterSpacing: '0.12em' }}
+                      node.pointerNames.map((pName, pi) => {
+                        const pc = getPointerSvgColor(pName);
+                        const tagW = pName.length * 7 + 12;
+                        const rectY = -boxH / 2 - 22 - (pi * 18);
+                        return (
+                          <motion.g
+                            key={pName}
+                            initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                           >
-                            {pName}
-                          </text>
-                        </motion.g>
-                      ))}
+                            <rect
+                              x={-tagW / 2}
+                              y={rectY}
+                              width={tagW}
+                              height={16}
+                              fill={pc.fill}
+                              stroke={pc.stroke}
+                              strokeWidth="2"
+                            />
+                            <text
+                              x={0}
+                              y={rectY + 11}
+                              textAnchor="middle"
+                              className="text-[9px] font-black uppercase pointer-events-none"
+                              fill={pc.text}
+                              style={{ letterSpacing: '0.12em' }}
+                            >
+                              {pName}
+                            </text>
+                          </motion.g>
+                        );
+                      })}
                   </AnimatePresence>
                   {hasPointer && (
                     <line
-                      x1={-boxW / 2 + 8}
-                      y1={-boxH / 2 - 8}
-                      x2={-boxW / 2 + 8}
+                      x1={0}
+                      y1={-boxH / 2 - 6}
+                      x2={0}
                       y2={-boxH / 2}
-                      stroke="#10b981"
+                      stroke={getPointerSvgColor(node.pointerNames[0]).fill}
                       strokeWidth="2"
                     />
                   )}
