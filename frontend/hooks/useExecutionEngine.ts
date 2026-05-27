@@ -1,6 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { executeCode } from '../../backend/sandbox/runtime/executor';
-import { Timeline, ComplexityAnalysis } from '../../types';
+import { Timeline, ComplexityAnalysis, ExecutionConfig } from '../../types';
 
 interface ExecutionState {
   timeline: Timeline;
@@ -14,12 +12,12 @@ interface ExecutionState {
 }
 
 interface ExecutionControls {
-  handleRun: (code: string, language: string) => Promise<boolean>;
+  handleRun: (code: string, language: string, config?: ExecutionConfig) => Promise<boolean>;
   setIsPlaying: (playing: boolean) => void;
   setSpeed: (speed: number) => void;
   setCurrentStepIndex: (index: number | ((prev: number) => number)) => void;
   togglePlayPause: () => void;
-  reset: (code: string, language: string) => void;
+  reset: (code: string, language: string, config?: ExecutionConfig) => void;
   nextStep: () => void;
   prevStep: () => void;
   jumpToStep: (index: number) => void;
@@ -45,12 +43,12 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
     breakpointsRef.current = breakpoints;
   }, [breakpoints]);
 
-  const handleRun = useCallback(async (code: string, language: string): Promise<boolean> => {
+  const handleRun = useCallback(async (code: string, language: string, config?: ExecutionConfig): Promise<boolean> => {
     setExecutionError(null);
     setIsPlaying(false);
     setIsExecuting(true);
     try {
-      const { timeline: rawTimeline, analysis } = await executeCode(code, language);
+      const { timeline: rawTimeline, analysis } = await executeCode(code, language, config);
 
       // Reconstruct full console history from deltas to reduce worker memory bloat
       let currentLogs: import('../../types').ConsoleLog[] = [];
@@ -114,10 +112,10 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
   }, []);
 
   const reset = useCallback(
-    (code: string, language: string) => {
+    (code: string, language: string, config?: ExecutionConfig) => {
       setIsPlaying(false);
       setCurrentStepIndex(0);
-      handleRun(code, language);
+      handleRun(code, language, config);
     },
     [handleRun],
   );
