@@ -720,245 +720,514 @@ int main() {
   },
 
   // ==============================
-  // AARTI MAM TEMPLATES
+  // SEARCH & SORT
   // ==============================
   {
-    name: '1. Pair Sum (Brute Force)',
-    category: 'Aarti Mam',
-    description: 'Find a pair in an array whose sum equals z',
+    name: 'Binary Search',
+    category: 'Search & Sort',
+    description: 'Find target value in sorted vector using low/high/mid pointers',
     language: 'c++',
-    tags: ['array', 'pair', 'sum', 'brute-force', 'aarti-mam'],
-    code: `// Pair Sum (Brute Force)
+    tags: ['search', 'binary-search', 'divide-and-conquer', 'pointers'],
+    code: `// C++ Binary Search
 #include <iostream>
+#include <vector>
 using namespace std;
 
-// Function to find a pair in the given array whose sum is equal to z
-bool findPair(int a[], int n, int z)
-{
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++)
-            if (i != j && a[i] + a[j] == z)
-                return true;
+int binarySearch(const vector<int>& arr, int target) {
+    int low = 0;
+    int high = arr.size() - 1;
 
-    return false;
-}
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        cout << "Low: " << low << ", High: " << high << ", Mid: " << mid << ", Val: " << arr[mid] << endl;
 
-int main()
-{
-    int a[] = {1, -2, 1, 0, 5};
-    int z = 0;
-    int n = sizeof(a) / sizeof(a[0]);
-
-    if (findPair(a, n, z))
-        cout << "True" << endl;
-    else
-        cout << "False" << endl;
-
-    return 0;
-}
-`,
-  },
-  {
-    name: '2. Frequency Count (Hash Map)',
-    category: 'Aarti Mam',
-    description: 'Count frequencies of array items using an unordered_map',
-    language: 'c++',
-    tags: ['array', 'frequency', 'map', 'hash', 'aarti-mam'],
-    code: `// Frequency Count using Hash Map
-#include <iostream>
-#include <unordered_map>
-using namespace std;
-
-// Function to count frequencies of array items
-void countFreq(int arr[], int n)
-{
-    unordered_map<int, int> freq;
-
-    for (int i = 0; i < n; i++)
-        freq[arr[i]]++;
-
-    for (auto x : freq)
-        cout << x.first << " occurs " << x.second << " times." << endl;
-}
-
-int main()
-{
-    int arr[] = {10, 20, 20, 10, 10, 20, 5, 20};
-    int n = sizeof(arr) / sizeof(arr[0]);
-
-    countFreq(arr, n);
-
-    return 0;
-}
-`,
-  },
-  {
-    name: '3. Function Growth Table',
-    category: 'Aarti Mam',
-    description:
-      'Compare computational growth functions mathematically (log, linear, quadratic, exponential)',
-    language: 'c++',
-    tags: ['math', 'growth', 'complexity', 'table', 'aarti-mam'],
-    code: `// Function Growth Table (log, n, n², nⁿ, eⁿ)
-#include <iostream>
-#include <cmath>
-#include <iomanip>
-using namespace std;
-
-int main() {
-    cout << setw(5) << "n"
-         << setw(10) << "log(n)"
-         << setw(10) << "n"
-         << setw(10) << "n^2"
-         << setw(15) << "n^n"
-         << setw(15) << "e^n" << endl;
-
-    cout << "---------------------------------------------------------------" << endl;
-
-    for (int n = 1; n <= 10; n++) {
-        double logn = log(n);
-        double square = pow(n, 2);
-        double nn = pow(n, n);
-        double en = exp(n);
-
-        cout << setw(5) << n
-             << setw(10) << fixed << setprecision(2) << logn
-             << setw(10) << n
-             << setw(10) << square
-             << setw(15) << nn
-             << setw(15) << en << endl;
-    }
-
-    return 0;
-}
-`,
-  },
-  {
-    name: '4. Frequency Count (Simulated Array)',
-    category: 'Aarti Mam',
-    description: 'Frequency count simulation expanding from class psuedo-code',
-    language: 'c++',
-    tags: ['array', 'frequency', 'pseudo-code', 'aarti-mam'],
-    code: `// Frequency Count (Pseudo-Code Array Translation)
-#include <iostream>
-using namespace std;
-
-int main() {
-    int n = 7;
-    int a[] = {5, 2, 8, 5, 2, 2, 9};
-    
-    // Initializing frequency bucket array up to a safe magnitude (e.g. 15 for safety)
-    int freq[15] = {0};
-
-    cout << "Calculating frequencies for elements..." << endl;
-    for(int i = 0; i < n; i++) {
-        // Pseudo-code called for 'cin >> a[i]'
-        // We simulate reading inputs by incrementing from predefined array 'a'
-        freq[a[i]]++;
-    }
-
-    // Output the results
-    for(int i = 0; i < 15; i++) {
-        if(freq[i] > 0) {
-            cout << "Value " << i << " occurs " << freq[i] << " times." << endl;
+        if (arr[mid] == target) {
+            cout << "Target " << target << " found at index " << mid << "!" << endl;
+            return mid;
+        }
+        if (arr[mid] < target) {
+            cout << arr[mid] << " < " << target << ", search right half." << endl;
+            low = mid + 1;
+        } else {
+            cout << arr[mid] << " > " << target << ", search left half." << endl;
+            high = mid - 1;
         }
     }
-    
+    cout << "Target " << target << " not found in array." << endl;
+    return -1;
+}
+
+int main() {
+    vector<int> arr = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+    int target = 23;
+    binarySearch(arr, target);
     return 0;
 }
 `,
   },
   {
-    name: '5. Pair Sum (Simulated Arrays)',
-    category: 'Aarti Mam',
-    description: 'Pair sum simulation evaluating from class pseudo-code',
+    name: 'Bubble Sort',
+    category: 'Search & Sort',
+    description: 'Sort vector elements through repeated adjacent swaps',
     language: 'c++',
-    tags: ['array', 'pair', 'sum', 'pseudo-code', 'aarti-mam'],
-    code: `// Pair Sum (Pseudo-Code Array Translation)
+    tags: ['sort', 'bubble-sort', 'array', 'nested-loops'],
+    code: `// C++ Bubble Sort
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int main() {
-    int n = 6;
-    int a[] = {3, 1, 4, 1, 5, 9};
-    int z = 10; // Target sum
-    bool foundPair = false;
-
-    // First pseudo-loop logic for reading constraints into memory
-    /* 
-    for(int i = 0; i < n; i++)
-        cin >> a[i];  (Pre-defined in 'a[]' above instead for visualizer simulation)
-    */
-
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < n; j++) {
-            if(i != j && a[i] + a[j] == z) {
-                foundPair = true;
+    vector<int> arr = {64, 34, 25, 12, 22, 11, 90};
+    int n = arr.size();
+    
+    cout << "Starting Bubble Sort..." << endl;
+    for (int i = 0; i < n - 1; i++) {
+        bool swapped = false;
+        for (int j = 0; j < n - i - 1; j++) {
+            cout << "Comparing arr[" << j << "]=" << arr[j] << " and arr[" << j+1 << "]=" << arr[j+1] << endl;
+            if (arr[j] > arr[j + 1]) {
+                // Swap
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+                swapped = true;
+                cout << "-> Swapped: " << arr[j] << " and " << arr[j+1] << endl;
             }
         }
-    }
-
-    if(foundPair) {
-        cout << "Pair evaluating to " << z << " was found!" << endl;
-    } else {
-        cout << "No pair computes to " << z << "!" << endl;
-    }
-
-    return 0;
-}
-`,
-  },
-  {
-    name: '6. Loop Complexity (O(N*logN))',
-    category: 'Aarti Mam',
-    description: 'Visualizing geometric iteration progression demonstrating computational loops',
-    language: 'c++',
-    tags: ['complexity', 'loops', 'big-o', 'aarti-mam'],
-    code: `// Loop Complexity Example Simulation (O(N * log N))
-#include <iostream>
-using namespace std;
-
-int main() {
-    int N = 32;
-    int count = 0;
-
-    cout << "Analyzing exponential loop scaling for N=" << N << endl;
-    
-    for (int i = N; i > 0; i /= 2) {
-        int innerLoopsCount = 0;
-        for (int j = 0; j < i; j++) {
-            count++;
-            innerLoopsCount++;
+        if (!swapped) {
+            cout << "Array is sorted. Breaking early." << endl;
+            break;
         }
-        cout << "- Inner bounded execute operations: " << innerLoopsCount << " (for i: " << i << ")" << endl;
     }
     
-    cout << "Total computation complexity evaluated to: " << count << " iterations." << endl;
+    cout << "Sorted array: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
     return 0;
 }
 `,
   },
   {
-    name: '7. Add Two Numbers',
-    category: 'Aarti Mam',
-    description: 'Simple arithmetic translating from pseudo-code assignments',
+    name: 'Insertion Sort',
+    category: 'Search & Sort',
+    description: 'Insert vector values into sorted position sequentially',
     language: 'c++',
-    tags: ['arithmetic', 'sum', 'pseudo-code', 'aarti-mam'],
-    code: `// Add Two Numbers (Pseudo-Code Expansion)
+    tags: ['sort', 'insertion-sort', 'array', 'insertion'],
+    code: `// C++ Insertion Sort
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int main() {
-    int A = 1450;
-    int B = 550;
+    vector<int> arr = {12, 11, 13, 5, 6};
+    int n = arr.size();
 
-    cout << "Assigning pseudo values A=" << A << " & B=" << B << endl;
+    cout << "Starting Insertion Sort..." << endl;
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        cout << "Inserting key=" << key << " from index " << i << endl;
 
-    int C = A + B;
+        while (j >= 0 && arr[j] > key) {
+            cout << "Moving arr[" << j << "]=" << arr[j] << " to index " << j + 1 << endl;
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+        cout << "Placed key=" << key << " at index " << j + 1 << endl;
+    }
 
-    cout << "Final Calculation (C) = " << C << endl;
+    cout << "Sorted array: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Merge Sort',
+    category: 'Search & Sort',
+    description: 'Recursive divide-and-conquer sorting with list merging',
+    language: 'c++',
+    tags: ['sort', 'merge-sort', 'divide-and-conquer', 'recursion'],
+    code: `// C++ Merge Sort
+#include <iostream>
+#include <vector>
+using namespace std;
+
+void merge(vector<int>& arr, int l, int m, int r) {
+    int n1 = m - l + 1;
+    int n2 = r - m;
+
+    vector<int> L(n1), R(n2);
+    for (int i = 0; i < n1; i++) L[i] = arr[l + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
+
+    int i = 0, j = 0, k = l;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k] = L[i];
+            i++;
+        } else {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+
+    while (j < n2) {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+void mergeSort(vector<int>& arr, int l, int r) {
+    if (l >= r) return;
+    int m = l + (r - l) / 2;
+    cout << "Dividing array: left index " << l << " to " << m << ", right " << m+1 << " to " << r << endl;
+    
+    mergeSort(arr, l, m);
+    mergeSort(arr, m + 1, r);
+    
+    cout << "Merging range: " << l << " to " << r << endl;
+    merge(arr, l, m, r);
+}
+
+int main() {
+    vector<int> arr = {38, 27, 43, 3, 9, 82, 10};
+    cout << "Starting Merge Sort..." << endl;
+    mergeSort(arr, 0, arr.size() - 1);
+    
+    cout << "Sorted array: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Quick Sort',
+    category: 'Search & Sort',
+    description: 'Pivot-based vector partitioning with recursive sorting',
+    language: 'c++',
+    tags: ['sort', 'quick-sort', 'divide-and-conquer', 'recursion'],
+    code: `// C++ Quick Sort
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int partition(vector<int>& arr, int low, int high) {
+    int pivot = arr[high];
+    cout << "Partitioning with pivot=" << pivot << " at index " << high << endl;
+    int i = (low - 1);
+
+    for (int j = low; j < high; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            swap(arr[i], arr[j]);
+            cout << "Swapped arr[" << i << "]=" << arr[i] << " and arr[" << j << "]=" << arr[j] << endl;
+        }
+    }
+    swap(arr[i + 1], arr[high]);
+    cout << "Placed pivot at index " << i + 1 << endl;
+    return (i + 1);
+}
+
+void quickSort(vector<int>& arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        cout << "Pivot split index: " << pi << endl;
+        
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+
+int main() {
+    vector<int> arr = {10, 7, 8, 9, 1, 5};
+    cout << "Starting Quick Sort..." << endl;
+    quickSort(arr, 0, arr.size() - 1);
+    
+    cout << "Sorted array: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
+    return 0;
+}
+`,
+  },
+  {
+    name: 'BST Insertion & Traversal',
+    category: 'Graphs & Trees',
+    description: 'Build BST and traverse via Inorder, Preorder, and Postorder recursion',
+    language: 'c++',
+    tags: ['tree', 'bst', 'binary-tree', 'traversal', 'recursion'],
+    code: `// C++ Binary Search Tree Insertion and Traversal
+#include <iostream>
+using namespace std;
+
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+};
+
+TreeNode* insert(TreeNode* root, int val) {
+    if (root == nullptr) {
+        cout << "Creating root/node with value: " << val << endl;
+        return new TreeNode(val);
+    }
+    if (val < root->val) {
+        cout << val << " < " << root->val << ", inserting left." << endl;
+        root->left = insert(root->left, val);
+    } else {
+        cout << val << " >= " << root->val << ", inserting right." << endl;
+        root->right = insert(root->right, val);
+    }
+    return root;
+}
+
+void inorder(TreeNode* root) {
+    if (root == nullptr) return;
+    inorder(root->left);
+    cout << root->val << " ";
+    inorder(root->right);
+}
+
+void preorder(TreeNode* root) {
+    if (root == nullptr) return;
+    cout << root->val << " ";
+    preorder(root->left);
+    preorder(root->right);
+}
+
+void postorder(TreeNode* root) {
+    if (root == nullptr) return;
+    postorder(root->left);
+    postorder(root->right);
+    cout << root->val << " ";
+}
+
+int main() {
+    TreeNode* root = nullptr;
+    root = insert(root, 50);
+    insert(root, 30);
+    insert(root, 70);
+    insert(root, 20);
+    insert(root, 40);
+    
+    cout << "\nInorder traversal: ";
+    inorder(root);
+    cout << "\nPreorder traversal: ";
+    preorder(root);
+    cout << "\nPostorder traversal: ";
+    postorder(root);
+    cout << endl;
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Flood Fill (Grid DFS)',
+    category: 'Graphs & Trees',
+    description: 'DFS traversal to change matching connected components on 2D grid',
+    language: 'c++',
+    tags: ['matrix', 'grid', 'dfs', 'flood-fill', 'recursion'],
+    code: `// C++ Grid Flood Fill (DFS)
+#include <iostream>
+#include <vector>
+using namespace std;
+
+void dfs(vector<vector<int>>& grid, int r, int c, int oldColor, int newColor) {
+    int rows = grid.size();
+    int cols = grid[0].size();
+
+    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+    if (grid[r][c] != oldColor || grid[r][c] == newColor) return;
+
+    cout << "Filling cell (" << r << "," << c << ") from color " << oldColor << " to " << newColor << endl;
+    grid[r][c] = newColor;
+
+    dfs(grid, r + 1, c, oldColor, newColor);
+    dfs(grid, r - 1, c, oldColor, newColor);
+    dfs(grid, r, c + 1, oldColor, newColor);
+    dfs(grid, r, c - 1, oldColor, newColor);
+}
+
+int main() {
+    vector<vector<int>> grid = {
+        {1, 1, 1, 0, 0},
+        {1, 1, 0, 1, 1},
+        {1, 0, 0, 1, 0},
+        {0, 0, 1, 1, 1}
+    };
+
+    cout << "Initial grid color at (1,1): " << grid[1][1] << endl;
+    dfs(grid, 1, 1, 1, 2);
+
+    cout << "Flood fill completed." << endl;
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Queue using Stacks',
+    category: 'Stacks & Queues',
+    description: 'Simulate LIFO-based queue operations utilizing two stack buffers',
+    language: 'c++',
+    tags: ['stack', 'queue', 'data-structure', 'buffer'],
+    code: `// C++ Queue implementation using Stacks
+#include <iostream>
+#include <stack>
+using namespace std;
+
+class Queue {
+    stack<int> s1;
+    stack<int> s2;
+public:
+    void enqueue(int x) {
+        cout << "Enqueuing: " << x << endl;
+        s1.push(x);
+    }
+    
+    int dequeue() {
+        if (s1.empty() && s2.empty()) {
+            cout << "Queue is empty!" << endl;
+            return -1;
+        }
+        
+        if (s2.empty()) {
+            cout << "Moving elements from Stack 1 to Stack 2..." << endl;
+            while (!s1.empty()) {
+                s2.push(s1.top());
+                s1.pop();
+            }
+        }
+        
+        int val = s2.top();
+        s2.pop();
+        cout << "Dequeued: " << val << endl;
+        return val;
+    }
+};
+
+int main() {
+    Queue q;
+    q.enqueue(10);
+    q.enqueue(20);
+    q.enqueue(30);
+    
+    q.dequeue();
+    q.enqueue(40);
+    q.dequeue();
+    q.dequeue();
+    q.dequeue();
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Merge Two Sorted Lists',
+    category: 'Linked List',
+    description: 'Merge two sorted linked lists recursively',
+    language: 'c++',
+    tags: ['linked-list', 'merge', 'pointers', 'recursion'],
+    code: `// C++ Merge Two Sorted Lists
+#include <iostream>
+using namespace std;
+
+struct Node {
+    int val;
+    Node* next;
+    Node(int x) : val(x), next(nullptr) {}
+};
+
+Node* mergeLists(Node* l1, Node* l2) {
+    if (l1 == nullptr) return l2;
+    if (l2 == nullptr) return l1;
+    
+    cout << "Comparing Node(" << l1->val << ") and Node(" << l2->val << ")" << endl;
+    if (l1->val <= l2->val) {
+        cout << l1->val << " <= " << l2->val << ", choosing " << l1->val << " and merging remaining next" << endl;
+        l1->next = mergeLists(l1->next, l2);
+        return l1;
+    } else {
+        cout << l1->val << " > " << l2->val << ", choosing " << l2->val << " and merging remaining next" << endl;
+        l2->next = mergeLists(l1, l2->next);
+        return l2;
+    }
+}
+
+int main() {
+    Node* l1 = new Node(1);
+    l1->next = new Node(3);
+    l1->next->next = new Node(5);
+
+    Node* l2 = new Node(2);
+    l2->next = new Node(4);
+    l2->next->next = new Node(6);
+
+    cout << "Merging lists..." << endl;
+    Node* mergedHead = mergeLists(l1, l2);
+
+    return 0;
+}
+`,
+  },
+  {
+    name: 'Minimum Size Subarray Sum',
+    category: 'Arrays & Strings',
+    description: 'Sliding window window O(N) evaluation finding smallest subarray summing >= target',
+    language: 'c++',
+    tags: ['sliding-window', 'array', 'optimization', 'minimum'],
+    code: `// C++ Minimum Size Subarray Sum (Sliding Window)
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int minSubArrayLen(int target, const vector<int>& nums) {
+    int n = nums.size();
+    int minLen = n + 1;
+    int left = 0;
+    int currentSum = 0;
+
+    cout << "Target sum: " << target << endl;
+    for (int right = 0; right < n; right++) {
+        currentSum += nums[right];
+        cout << "Right pointer at index " << right << ", num=" << nums[right] << ", currentSum=" << currentSum << endl;
+
+        while (currentSum >= target) {
+            int len = right - left + 1;
+            cout << "-> CurrentSum >= Target! Subarray found from index " << left << " to " << right << " (len=" << len << ")" << endl;
+            minLen = min(minLen, len);
+            
+            cout << "-> Shrinking window: subtracting index " << left << " value " << nums[left] << endl;
+            currentSum -= nums[left];
+            left++;
+        }
+    }
+
+    int result = (minLen == n + 1) ? 0 : minLen;
+    cout << "Minimum length of subarray sum >= target is: " << result << endl;
+    return result;
+}
+
+int main() {
+    vector<int> nums = {2, 3, 1, 2, 4, 3};
+    int target = 7;
+    minSubArrayLen(target, nums);
     return 0;
 }
 `,
   },
 ];
+
