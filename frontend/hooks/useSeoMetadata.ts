@@ -44,7 +44,9 @@ export function useSeoMetadata(config: SeoConfig) {
   const schemaJson = JSON.stringify(config.schema);
 
   useEffect(() => {
+    // Dynamic head tags
     document.title = config.title;
+    document.documentElement.lang = 'en';
 
     upsertMetaByName('description', config.description);
     upsertMetaByName('keywords', keywords);
@@ -53,6 +55,8 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('author', 'Somyajeet');
     upsertMetaByName('application-name', 'AlgoViz');
     upsertMetaByName('apple-mobile-web-app-title', 'AlgoViz');
+    upsertMetaByName('apple-mobile-web-app-capable', 'yes');
+    upsertMetaByName('apple-mobile-web-app-status-bar-style', 'black-translucent');
     upsertMetaByName('theme-color', '#f97316');
     upsertMetaByName('referrer', 'strict-origin-when-cross-origin');
 
@@ -62,11 +66,14 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByProperty('og:url', config.canonicalUrl);
     upsertMetaByProperty('og:image', config.imageUrl);
     upsertMetaByProperty('og:site_name', 'AlgoViz');
+    upsertMetaByProperty('og:locale', 'en_US');
 
     upsertMetaByName('twitter:card', 'summary_large_image');
     upsertMetaByName('twitter:title', config.title);
     upsertMetaByName('twitter:description', config.description);
     upsertMetaByName('twitter:image', config.imageUrl);
+    upsertMetaByName('twitter:site', '@algoviz');
+    upsertMetaByName('twitter:creator', '@somyajeet');
 
     upsertLink('canonical', config.canonicalUrl);
     upsertLink('manifest', '/site.webmanifest');

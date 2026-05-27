@@ -50,29 +50,48 @@ function getEditorLabels(language: AppLanguage): {
 } {
   if (language === 'c++') {
     return {
-      title: 'C++ Code Visualizer and Algorithm Debugger',
+      title: 'C++ Code Visualizer, Tree & Linked List Simulator | AlgoViz',
       description:
-        'Visualize C++ algorithms line by line in the browser. Step through recursion, variables, arrays, STL-style logic, and the call stack with AlgoViz.',
+        'Step through C++ execution line-by-line in your browser. Visualize binary search trees, doubly linked lists, vectors, call stacks, recursion, and O(N) complexity in real-time.',
       keywords: [
         'c++ code visualizer',
         'c++ algorithm visualizer',
-        'c++ debugger for students',
+        'c++ debugger online',
         'c++ recursion visualizer',
         'c++ call stack visualizer',
+        'c++ tree visualizer',
+        'c++ linked list visualizer',
+        'c++ stack queue visualizer',
+        'cpp visualizer',
+        'cpp compiler online visualizer',
+        'binary search tree visualizer c++',
+        'dsa visualizer tool c++',
+        'web clang c++ execution trace',
+        'sorting algorithm animator c++',
+        'interactive code debugger students'
       ],
     };
   }
 
   return {
-    title: 'JavaScript Code Visualizer and Algorithm Debugger',
+    title: 'JavaScript Code Visualizer, Stack, Queue & Recursion Animator | AlgoViz',
     description:
-      'Visualize JavaScript code execution step by step. Track variables, recursion, loops, console output, and the call stack with AlgoViz.',
+      'Animate JavaScript code execution step-by-step. Track recursive call stacks, binary search trees, singly linked lists, loops, variables, and runtime console output.',
     keywords: [
       'javascript code visualizer',
       'javascript algorithm visualizer',
-      'javascript debugger for students',
+      'javascript debugger online',
       'javascript recursion visualizer',
       'javascript call stack visualizer',
+      'javascript tree visualizer',
+      'javascript linked list visualizer',
+      'javascript stack queue visualizer',
+      'js visualizer',
+      'binary search tree visualizer javascript',
+      'dsa visualizer tool javascript',
+      'sorting algorithm animator javascript',
+      'interactive code debugger js',
+      'visualize recursion online'
     ],
   };
 }
@@ -83,9 +102,9 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
 
   if (page === 'docs') {
     const canonicalUrl = buildAbsoluteUrl(origin, ROUTES.docs);
-    const title = 'AlgoViz Documentation for JavaScript and C++ Visualization';
+    const title = 'AlgoViz Docs | Learn Code Visualization, Transpilation & DSA Mechanics';
     const description =
-      'Read the AlgoViz docs covering setup, architecture, template workflows, the C++ transpiler, and the execution sandbox used for code visualization.';
+      'Read the AlgoViz technical documentation. Discover how our C++ Wasm compiler, AST instrumentation, dynamic tree/graph visualization, and complexity analyzer work.';
 
     return {
       title,
@@ -100,6 +119,11 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
         'javascript execution visualizer docs',
         'c++ transpiler docs',
         'algorithm visualizer architecture',
+        'data structures and algorithms animation guide',
+        'wasm clang compiling in browser',
+        'how does code visualization work',
+        'tree visualizer source code',
+        'linked list visualizer implementation'
       ],
       schema: [
         {
@@ -202,9 +226,9 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
   }
 
   const canonicalUrl = buildAbsoluteUrl(origin, ROUTES.home);
-  const title = 'AlgoViz | Algorithm, JavaScript, and C++ Code Visualizer';
+  const title = 'AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer';
   const description =
-    'AlgoViz is an interactive algorithm and code execution visualizer for JavaScript and C++. Step through recursion, loops, variables, and the call stack in real time.';
+    'AlgoViz is the ultimate interactive algorithm and code execution visualizer for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, and sorting in real time.';
 
   return {
     title,
@@ -224,6 +248,27 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
       'debugger for students',
       'programming education tool',
       'algoviz',
+      'tree visualizer',
+      'linked list visualizer',
+      'binary search tree visualizer',
+      'stack visualizer',
+      'queue visualizer',
+      'graph visualizer',
+      'sorting visualizer',
+      'matrix path visualizer',
+      'bubble sort visualizer',
+      'insertion sort visualizer',
+      'merge sort visualizer',
+      'quick sort visualizer',
+      'dfs visualizer',
+      'bfs visualizer',
+      'interactive code execution visualizer',
+      'visualize code online',
+      'c++ compiler online visualizer',
+      'dsa animator',
+      'binary tree simulator',
+      'dsa visualization website',
+      'coding execution visualizer'
     ],
     schema: [
       {
@@ -248,11 +293,16 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
         image: imageUrl,
         sameAs: ['https://github.com/ssgamingop/AlgoViz'],
         featureList: [
-          'Visualize JavaScript execution',
-          'Visualize C++ execution',
-          'Track variables line by line',
-          'Inspect the call stack',
-          'Use algorithm templates for learning',
+          'Visualize JavaScript code execution step-by-step',
+          'Visualize C++ code compilation and run locally using Wasm Clang',
+          'Interactive Tree Visualizer for Binary Trees and BSTs',
+          'Linked List Visualizer with cyclic nodes detection and pointer trackers',
+          'Stack and Queue visualizer tracking LIFO and FIFO states',
+          'Live Variables panel with SVG trendline sparklines',
+          'Complexity Analysis estimating Big-O complexity, hot lines, and operations count',
+          'Zoomable and pannable full-screen diagrams using floating HUD control modals',
+          'Simultaneous local variables tracking across recursive call stack frames',
+          'Searchable template library loaded with 35+ DSA templates'
         ],
         description,
       },
