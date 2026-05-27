@@ -389,7 +389,7 @@ export const TreePanel: React.FC<{
       </div>
 
       {/* Canvas */}
-      <div className={`mt-4 ${theme.subPanelClass} p-4 overflow-x-auto custom-scrollbar`}>
+      <div className={`mt-4 ${theme.subPanelClass} p-4 overflow-x-auto overflow-y-hidden custom-scrollbar`}>
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
           className="w-full"
