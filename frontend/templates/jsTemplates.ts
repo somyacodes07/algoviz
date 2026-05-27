@@ -158,6 +158,30 @@ for (let right = 0; right < s.length; right++) {
 console.log("Final Maximum Length:", maxLength);
 `,
   },
+  {
+    name: 'Matrix Traversal',
+    category: 'Arrays & Strings',
+    description: 'Traverse a 2D matrix in row-major order with index tracking',
+    language: 'javascript',
+    tags: ['array', 'matrix', 'nested-loops', 'grid', 'traversal'],
+    code: `// 2D Matrix Traversal with row/col pointers
+let grid = [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]
+];
+
+let rowCount = grid.length;
+let colCount = grid[0].length;
+
+for (let r = 0; r < rowCount; r++) {
+  for (let c = 0; c < colCount; c++) {
+    let val = grid[r][c];
+    console.log("Visiting cell at row:", r, "col:", c, "Value:", val);
+  }
+}
+`,
+  },
 
   // ==============================
   // DATA STRUCTURES
