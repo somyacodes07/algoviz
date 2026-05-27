@@ -800,4 +800,162 @@ solveNQueens(0);
 console.log("Total Solutions:", solutions.length);
 `,
   },
+  {
+    name: 'Minimum Size Subarray Sum',
+    category: 'Arrays & Strings',
+    description: 'Sliding window O(N) evaluation finding smallest subarray summing >= target',
+    language: 'javascript',
+    tags: ['array', 'sliding-window', 'optimization', 'minimum'],
+    code: `// Minimum Size Subarray Sum (Sliding Window)
+let target = 7;
+let nums = [2, 3, 1, 2, 4, 3];
+let n = nums.length;
+let minLen = n + 1;
+let left = 0;
+let currentSum = 0;
+
+console.log("Target sum:", target);
+for (let right = 0; right < n; right++) {
+  currentSum += nums[right];
+  console.log("Right pointer at index", right, "value", nums[right], "currentSum:", currentSum);
+
+  while (currentSum >= target) {
+    let len = right - left + 1;
+    console.log("-> CurrentSum >= Target! Subarray found from index", left, "to", right, "(len=" + len + ")");
+    minLen = Math.min(minLen, len);
+    
+    console.log("-> Shrinking window: subtracting index", left, "value", nums[left]);
+    currentSum -= nums[left];
+    left++;
+  }
+}
+
+let result = minLen === n + 1 ? 0 : minLen;
+console.log("Minimum length of subarray sum >= target is:", result);
+`,
+  },
+  {
+    name: 'Queue using Stacks',
+    category: 'Data Structures',
+    description: 'Simulate LIFO-based queue operations utilizing two stack arrays',
+    language: 'javascript',
+    tags: ['stack', 'queue', 'data-structure', 'buffer'],
+    code: `// Queue implementation using two Stacks
+class Queue {
+  constructor() {
+    this.s1 = [];
+    this.s2 = [];
+  }
+
+  enqueue(x) {
+    console.log("Enqueuing:", x);
+    this.s1.push(x);
+  }
+
+  dequeue() {
+    if (this.s1.length === 0 && this.s2.length === 0) {
+      console.log("Queue is empty!");
+      return -1;
+    }
+
+    if (this.s2.length === 0) {
+      console.log("Moving elements from Stack 1 to Stack 2...");
+      while (this.s1.length > 0) {
+        this.s2.push(this.s1.pop());
+      }
+    }
+
+    let val = this.s2.pop();
+    console.log("Dequeued:", val);
+    return val;
+  }
+}
+
+let q = new Queue();
+q.enqueue(10);
+q.enqueue(20);
+q.enqueue(30);
+q.dequeue();
+q.enqueue(40);
+q.dequeue();
+q.dequeue();
+q.dequeue();
+`,
+  },
+  {
+    name: 'Merge Two Sorted Lists',
+    category: 'Data Structures',
+    description: 'Merge two sorted linked lists recursively',
+    language: 'javascript',
+    tags: ['linked-list', 'merge', 'pointers', 'recursion'],
+    code: `// Merge Two Sorted Lists
+function Node(val) {
+  this.val = val;
+  this.next = null;
+}
+
+function mergeLists(l1, l2) {
+  if (!l1) return l2;
+  if (!l2) return l1;
+
+  console.log("Comparing Node(" + l1.val + ") and Node(" + l2.val + ")");
+  if (l1.val <= l2.val) {
+    console.log(l1.val, "<=", l2.val, "- choosing", l1.val, "and merging remaining next");
+    l1.next = mergeLists(l1.next, l2);
+    return l1;
+  } else {
+    console.log(l1.val, ">", l2.val, "- choosing", l2.val, "and merging remaining next");
+    l2.next = mergeLists(l1, l2.next);
+    return l2;
+  }
+}
+
+let l1 = new Node(1);
+l1.next = new Node(3);
+l1.next.next = new Node(5);
+
+let l2 = new Node(2);
+l2.next = new Node(4);
+l2.next.next = new Node(6);
+
+console.log("Merging lists...");
+let mergedHead = mergeLists(l1, l2);
+`,
+  },
+  {
+    name: 'Flood Fill (Grid DFS)',
+    category: 'Graphs & Trees',
+    description: 'DFS traversal to change matching connected components on 2D grid',
+    language: 'javascript',
+    tags: ['matrix', 'grid', 'dfs', 'flood-fill', 'recursion'],
+    code: `// Grid Flood Fill (DFS)
+let grid = [
+  [1, 1, 1, 0, 0],
+  [1, 1, 0, 1, 1],
+  [1, 0, 0, 1, 0],
+  [0, 0, 1, 1, 1]
 ];
+
+function dfs(r, c, oldColor, newColor) {
+  let rows = grid.length;
+  let cols = grid[0].length;
+
+  if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+  if (grid[r][c] !== oldColor || grid[r][c] === newColor) return;
+
+  console.log("Filling cell (" + r + "," + c + ") from color " + oldColor + " to " + newColor);
+  grid[r][c] = newColor;
+
+  dfs(r + 1, c, oldColor, newColor);
+  dfs(r - 1, c, oldColor, newColor);
+  dfs(r, c + 1, oldColor, newColor);
+  dfs(r, c - 1, oldColor, newColor);
+}
+
+console.log("Initial grid color at (1,1):", grid[1][1]);
+dfs(1, 1, 1, 2);
+console.log("Flood fill completed.");
+`,
+  },
+];
+
