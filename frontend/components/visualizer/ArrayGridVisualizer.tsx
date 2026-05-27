@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Columns, Grid, Play, RefreshCw, Sparkles, ArrowDown } from 'lucide-react';
+import { Columns, Grid, Play, RefreshCw, Sparkles, ArrowDown, Maximize2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 import { getPtrColor } from './LinkedListVisualizer';
@@ -9,6 +9,8 @@ interface ArrayGridVisualizerProps {
   variables: VariableMap;
   prevVariables: VariableMap;
   themeColor: ThemeColor;
+  arrayViewType?: 'cells' | 'bars';
+  onEnlarge?: () => void;
 }
 
 export interface ArrayGridPreview {
@@ -75,6 +77,8 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   variables,
   prevVariables,
   themeColor,
+  arrayViewType = 'cells',
+  onEnlarge,
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
@@ -128,9 +132,20 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               <Columns size={12} /> Array Visualizer
             </span>
           </div>
-          <h3 className="text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
-            {preview.sourceName}
-          </h3>
+          <div className="flex items-center gap-2 shrink-0">
+            <h3 className="text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
+              {preview.sourceName}
+            </h3>
+            {onEnlarge && (
+              <button
+                onClick={onEnlarge}
+                className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none"
+                title="Enlarge diagram"
+              >
+                <Maximize2 size={14} strokeWidth={2.5} />
+              </button>
+            )}
+          </div>
         </div>
 
         {swapIndices && (
@@ -207,22 +222,38 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
                 {/* Numeric bar */}
                 {isNum && (
-                  <div className="w-full h-24 flex items-end justify-center mb-1">
+                  <div className="w-full h-24 flex items-end justify-center mb-1 relative">
+                    {arrayViewType === 'bars' && (
+                      <span className="absolute -top-5 font-mono font-black text-xs text-slate-800 dark:text-slate-200">
+                        {val === null ? 'nil' : String(val)}
+                      </span>
+                    )}
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${barHeight}%` }}
                       transition={{ type: 'spring', stiffness: 350, damping: 20 }}
-                      className={`w-4 border-[2px] border-b-0 border-slate-900 dark:border-[var(--dark-border-bright)] ${barBg}`}
+                      className={`w-4 border-[2px] border-b-0 border-slate-900 dark:border-[var(--dark-border-bright)] ${barBg} ${
+                        arrayViewType === 'bars' ? 'w-8 border-b-[2px]' : ''
+                      }`}
                     />
                   </div>
                 )}
 
-                {/* Memory cell block */}
-                <div
-                  className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10`}
-                >
-                  {val === null ? 'nil' : String(val)}
-                </div>
+                {/* Memory cell block / String fallback */}
+                {((arrayViewType === 'cells') || !isNum) ? (
+                  <div
+                    className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10`}
+                  >
+                    {val === null ? 'nil' : String(val)}
+                  </div>
+                ) : (
+                  // For non-numeric items or in bars mode (if any exist)
+                  !isNum && (
+                    <div className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 py-2">
+                      {val === null ? 'nil' : String(val)}
+                    </div>
+                  )
+                )}
 
                 {/* Index label */}
                 <span className="text-[10px] mt-2 font-mono font-bold text-slate-400 dark:text-slate-500">
