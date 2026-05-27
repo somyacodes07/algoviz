@@ -28,10 +28,23 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
+const T = {
+  nullText: 'NULL',
+  delText: 'del',
+  prevText: 'prev',
+  dataText: 'data',
+  nextText: 'next',
+  pointersLabel: 'Pointers:',
+  cyclePrefix: 'Tail reconnects to node ',
+  cycleSuffix: ', so this list contains a cycle.',
+  truncatedLabel: 'Visualization truncated after 16 nodes to keep the panel readable.',
+};
+
 function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): string {
   const candidates = ['val', 'value', 'data', 'id', 'label', 'name', 'key'];
+  const entries = Object.entries(value);
   for (const candidate of candidates) {
-    const current = value[candidate];
+    const current = entries.find(([k]) => k === candidate)?.[1];
     if (typeof current === 'string' || typeof current === 'number') {
       return String(current);
     }
@@ -135,7 +148,7 @@ export const POINTER_COLORS: Record<string, { bg: string; text: string; border: 
 const DEFAULT_PTR_COLOR = { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600', glow: 'rgba(99,102,241,0.3)' };
 
 export function getPtrColor(name: string) {
-  return POINTER_COLORS[name] || DEFAULT_PTR_COLOR;
+  return Object.entries(POINTER_COLORS).find(([k]) => k === name)?.[1] || DEFAULT_PTR_COLOR;
 }
 
 export const LinkedListPanel: React.FC<{
@@ -236,38 +249,48 @@ export const LinkedListPanel: React.FC<{
 
   // Measure positions for the cycle overlay
   const containerRef = useRef<HTMLDivElement>(null);
-  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  const [nodePositions, setNodePositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
 
   useEffect(() => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
-    const newPositions: typeof nodePositions = {};
+    const newPositions = new Map<string, { x: number; y: number; width: number; height: number }>();
 
     preview.nodes.forEach((node) => {
       const el = document.getElementById(`node-block-${node.id}`);
       if (el) {
         const rect = el.getBoundingClientRect();
-        newPositions[node.id] = {
+        newPositions.set(node.id, {
           x: rect.left - containerRect.left,
           y: rect.top - containerRect.top,
           width: rect.width,
           height: rect.height,
-        };
+        });
       }
     });
 
-    if (JSON.stringify(newPositions) !== JSON.stringify(nodePositions)) {
+    let changed = newPositions.size !== nodePositions.size;
+    if (!changed) {
+      for (const [key, val] of newPositions.entries()) {
+        const other = nodePositions.get(key);
+        if (!other || other.x !== val.x || other.y !== val.y || other.width !== val.width || other.height !== val.height) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (changed) {
       setNodePositions(newPositions);
     }
   });
 
   const cyclePath = useMemo(() => {
     if (preview.cycleToIndex === null || preview.nodes.length === 0) return null;
-    const tailNode = preview.nodes[preview.nodes.length - 1];
-    const targetNode = preview.nodes[preview.cycleToIndex];
+    const tailNode = preview.nodes.at(-1);
+    const targetNode = preview.nodes.at(preview.cycleToIndex);
 
-    const tailPos = nodePositions[tailNode.id];
-    const targetPos = nodePositions[targetNode.id];
+    const tailPos = tailNode ? nodePositions.get(tailNode.id) : undefined;
+    const targetPos = targetNode ? nodePositions.get(targetNode.id) : undefined;
 
     if (!tailPos || !targetPos) return null;
 
@@ -373,7 +396,7 @@ export const LinkedListPanel: React.FC<{
           {/* NULL sentinel — start */}
           <div className="flex items-center gap-1">
             <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              NULL
+              {T.nullText}
             </div>
             <motion.div
               className={`mt-4 ${theme.accentText}`}
@@ -414,7 +437,7 @@ export const LinkedListPanel: React.FC<{
                         )}
                         <div className="flex flex-col items-center justify-center min-w-[52px] px-3 py-2">
                           <div className="text-[7px] font-black uppercase tracking-[0.2em] text-red-500 dark:text-red-400">
-                            del
+                            {T.delText}
                           </div>
                           <div className="text-xl font-black text-red-600 dark:text-red-400 leading-none mt-0.5">
                             {node.label}
@@ -519,7 +542,7 @@ export const LinkedListPanel: React.FC<{
                             } bg-slate-100 dark:bg-[var(--dark-surface-3)]`}>
                               <div className="flex flex-col items-center gap-0.5">
                                 <div className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                                  prev
+                                  {T.prevText}
                                 </div>
                                 <div className={`w-2 h-2 rounded-full ${
                                   isPointed ? 'bg-cyan-400 dark:bg-cyan-500' : 'bg-slate-400 dark:bg-slate-500'
@@ -531,7 +554,7 @@ export const LinkedListPanel: React.FC<{
                           {/* Data cell — center */}
                           <div className="flex flex-col items-center justify-center min-w-[52px] px-3 py-2">
                             <div className="text-[7px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-                              data
+                              {T.dataText}
                             </div>
                             <div className={`text-xl font-black leading-none mt-0.5 ${
                               isPointed ? theme.accentText : 'text-slate-900 dark:text-slate-100'
@@ -546,7 +569,7 @@ export const LinkedListPanel: React.FC<{
                           } bg-slate-100 dark:bg-[var(--dark-surface-3)]`}>
                             <div className="flex flex-col items-center gap-0.5">
                               <div className="text-[7px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                                next
+                                {T.nextText}
                               </div>
                               <div className={`w-2 h-2 rounded-full ${
                                 isPointed ? (isSaffron ? 'bg-orange-400' : 'bg-blue-400') : 'bg-slate-400 dark:bg-slate-500'
@@ -559,7 +582,7 @@ export const LinkedListPanel: React.FC<{
                   </div>
 
                   {/* ── Arrow Connectors Between Nodes ── */}
-                  {index < arr.length - 1 && !isDeleted && !arr[index + 1].deleted && (
+                  {index < arr.length - 1 && !isDeleted && !arr.at(index + 1)?.deleted && (
                     preview.isDoublyLinked ? (
                       <div className="mt-7 flex flex-col items-center gap-0 px-0.5">
                         <motion.div
@@ -603,7 +626,7 @@ export const LinkedListPanel: React.FC<{
               <ArrowRight size={12} strokeWidth={2.5} />
             </motion.div>
             <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              NULL
+              {T.nullText}
             </div>
           </div>
         </div>
@@ -613,7 +636,7 @@ export const LinkedListPanel: React.FC<{
       {preview.nodes.some((n) => n.pointerNames.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-2 border-t-[2px] border-slate-200 dark:border-[var(--dark-border-dim)] pt-3">
           <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 mr-1 self-center">
-            Pointers:
+            {T.pointersLabel}
           </span>
           {Array.from(new Set<string>(preview.nodes.flatMap((n) => n.pointerNames))).map((name) => {
             const pc = getPtrColor(name);
@@ -631,13 +654,13 @@ export const LinkedListPanel: React.FC<{
 
       {preview.cycleToIndex !== null && (
         <div className="mt-3 border-[2px] border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
-          Tail reconnects to node {preview.cycleToIndex + 1}, so this list contains a cycle.
+          {T.cyclePrefix}{preview.cycleToIndex + 1}{T.cycleSuffix}
         </div>
       )}
 
       {preview.truncated && (
         <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          Visualization truncated after 16 nodes to keep the panel readable.
+          {T.truncatedLabel}
         </div>
       )}
     </section>
