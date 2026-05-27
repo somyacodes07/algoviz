@@ -226,6 +226,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
           <div className={activeTab === 'diagrams' ? 'block h-full' : 'hidden'}>
             <StructureVisualizer 
               variables={currentStep.variables || {}} 
+              prevVariables={prevStepVariables.variables || {}}
               themeColor={themeColor} 
               currentStepIndex={currentStepIndex}
             />

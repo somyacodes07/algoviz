@@ -8,49 +8,64 @@ import {
 } from './visualizer/LinkedListVisualizer';
 import { buildGraphPreview, GraphPanel, GraphPreview } from './visualizer/GraphVisualizer';
 import { buildTreePreview, TreePanel, TreePreview } from './visualizer/TreeVisualizer';
+import {
+  buildArrayGridPreview,
+  ArrayGridVisualizer,
+  ArrayGridPreview,
+} from './visualizer/ArrayGridVisualizer';
 import { Network } from 'lucide-react';
 
 interface StructureVisualizerProps {
   variables: VariableMap;
+  prevVariables: VariableMap;
   themeColor: ThemeColor;
   currentStepIndex: number;
 }
 
 /**
- * StructureVisualizer is "sticky" — once a structure (tree, linked list, or
- * graph) is detected, it keeps showing the last known version even when the
- * current execution step enters a scope that doesn't contain the structure
- * variable (e.g. inside a recursive call).  This prevents the visualizer
- * from flickering / vanishing on every step.
+ * StructureVisualizer is "sticky" — once a structure (tree, linked list,
+ * graph, or array/grid) is detected, it keeps showing the last known version
+ * even when the current execution step enters a scope that doesn't contain
+ * the structure variable (e.g. inside a recursive call).
  */
-const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, themeColor, currentStepIndex }) => {
+const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
+  variables,
+  prevVariables,
+  themeColor,
+  currentStepIndex,
+}) => {
   const lastTree = useRef<TreePreview | null>(null);
   const lastLinkedList = useRef<LinkedListPreview | null>(null);
   const lastGraph = useRef<GraphPreview | null>(null);
+  const lastArrayGrid = useRef<ArrayGridPreview | null>(null);
 
   // Try to detect structures from the current step's variables
   const freshTree = buildTreePreview(variables);
   const freshLinkedList = buildLinkedListPreview(variables);
   const freshGraph = buildGraphPreview(variables);
+  const freshArrayGrid = buildArrayGridPreview(variables, prevVariables);
 
   // Update refs when a fresh detection succeeds
   if (freshTree) lastTree.current = freshTree;
   if (freshLinkedList) lastLinkedList.current = freshLinkedList;
   if (freshGraph) lastGraph.current = freshGraph;
+  if (freshArrayGrid) lastArrayGrid.current = freshArrayGrid;
 
   // Clear cache ONLY when execution fully restarts
   if (currentStepIndex === 0) {
     lastTree.current = null;
     lastLinkedList.current = null;
     lastGraph.current = null;
+    lastArrayGrid.current = null;
   }
 
   // Use fresh values if available, otherwise fall back to last known
   const treePreview = freshTree || lastTree.current;
   const linkedListPreview = freshLinkedList || lastLinkedList.current;
   const graphPreview = freshGraph || lastGraph.current;
+  const arrayGridPreview = freshArrayGrid || lastArrayGrid.current;
 
-  if (!treePreview && !linkedListPreview && !graphPreview) {
+  if (!treePreview && !linkedListPreview && !graphPreview && !arrayGridPreview) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all duration-300">
         <span
@@ -60,10 +75,10 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
           Visualizer
         </span>
         <span className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500 text-center">
-          No Graph, Tree, or Linked List detected.
+          No active structure detected.
         </span>
         <span className="text-xs font-medium text-slate-400 dark:text-slate-600 max-w-[250px] text-center">
-          Standard variables will appear in the Variables tab. Data structures will render here automatically.
+          Standard variables will appear in the Variables tab. Arrays, trees, linked lists, and matrices render here automatically.
         </span>
       </div>
     );
@@ -77,6 +92,9 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({ variables, th
       )}
       {!treePreview && !linkedListPreview && graphPreview && (
         <GraphPanel preview={graphPreview} themeColor={themeColor} />
+      )}
+      {!treePreview && !linkedListPreview && !graphPreview && arrayGridPreview && (
+        <ArrayGridVisualizer variables={variables} prevVariables={prevVariables} themeColor={themeColor} />
       )}
     </div>
   );
