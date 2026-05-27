@@ -154,7 +154,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
           </div>
         )}
 
-        <div className="mt-8 flex items-end gap-2 overflow-x-auto custom-scrollbar pb-4 pt-8 min-h-[160px] px-2">
+        <div className="mt-8 flex items-end gap-2 overflow-x-auto overflow-y-hidden custom-scrollbar pb-4 pt-8 min-h-[160px] px-2">
           {arr.map((val, i) => {
             const hasPointers = activePointers.has(i);
             const pointers = activePointers.get(i) || [];
