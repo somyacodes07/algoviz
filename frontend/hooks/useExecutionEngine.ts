@@ -1,3 +1,5 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { executeCode } from '../../backend/sandbox/runtime/executor';
 import { Timeline, ComplexityAnalysis, ExecutionConfig } from '../../types';
 
 interface ExecutionState {
