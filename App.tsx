@@ -148,6 +148,34 @@ const App: React.FC = () => {
   const [visualizerMode, setVisualizerMode] = useState(false);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
+  // Settings Panel States
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const defaultSettings: AppSettings = {
+      themeColor: 'auto',
+      cppCompiler: 'api',
+      arrayViewType: 'cells',
+    };
+    try {
+      const stored = localStorage.getItem('algoviz-settings');
+      if (stored) {
+        return { ...defaultSettings, ...JSON.parse(stored) };
+      }
+    } catch (e) {
+      console.error('Error loading settings from localStorage', e);
+    }
+    return defaultSettings;
+  });
+
+  // Persist settings to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('algoviz-settings', JSON.stringify(settings));
+    } catch (e) {
+      console.error('Error saving settings to localStorage', e);
+    }
+  }, [settings]);
+
   const { state, controls } = useExecutionEngine();
   const {
     timeline,
@@ -172,7 +200,9 @@ const App: React.FC = () => {
   } = controls;
 
   // Derived Theme Color
-  const themeColor = language === "c++" ? "blue" : "saffron";
+  const themeColor = settings.themeColor === "auto"
+    ? (language === "c++" ? "blue" : "saffron")
+    : settings.themeColor;
   const [hoverThemeColor, setHoverThemeColor] = useState<"saffron" | "blue" | null>(null);
   const effectiveThemeColor = hoverThemeColor || themeColor;
   const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
