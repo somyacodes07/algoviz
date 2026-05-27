@@ -114,14 +114,14 @@ Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
 | 📚 **Call stack view** | Watch frames push and pop during recursion and nested calls |
 | 💻 **Console replay** | See `console.log` and `cout` output appear at the exact step it is emitted |
 | 📈 **Complexity analysis** | Live O(n) estimation with hotspot heatmap, peak stack depth, and hot-line detection |
-| 🧠 **Template palette** | Load tagged DSA examples quickly through the searchable template library |
+| 🧠 **Template palette** | Load tagged DSA examples quickly through the searchable template library (`Cmd+K`) |
 | 🟧 **JavaScript mode** | Full support for loops, recursion, arrays, objects, and interview-style problems |
 | 🔵 **C++ mode (Clang/GCC)** | Real in-browser Wasm Clang compilation with automatic remote Wandbox API fallback |
 | 📖 **Integrated docs route** | Architecture, setup, UI, templates, and engine details accessible from the app |
-| ⚙️ **User preferences** | Toggle permanent theme accents, memory cells vs bar charts, and C++ compiler strategies |
-| 🔍 **Enlarged diagrams** | Maximize tree, graph, list, and matrix visualizers in high-resolution full-screen modals |
-| 📉 **Variables sparklines** | View variable value history inline via animated SVG trendline sparklines |
-| 🧩 **Virtual stack frames** | Inspect historical local variables across all recursive call stack frames simultaneously |
+| ⚙️ **User Preferences & Settings** | Toggle permanent theme accents (Auto/Saffron/Blue), default array rendering mode (Memory cells vs Numeric bar charts), and C++ compilation strategy (API vs Wasm local runner) with rich tooltips on hover |
+| 🔍 **Zoomable/Pannable Diagrams** | Maximize tree, graph, list, and matrix visualizers in high-resolution full-screen modals. Supports click-and-drag panning, scroll wheel zooming, floating HUD controls, and keyboard shortcuts (+ / - / 0 / Esc / Arrow Keys) |
+| 📉 **Variables Sparkline Graphing** | Traces history of numeric variables over execution timeline, drawing mini inline SVG trendlines next to watched variables |
+| 🧩 **Virtual Stack Frame Inspector** | Walk backward and reconstruct local variables inside Call Stack frame cards to inspect parameter states across all recursive frames simultaneously |
 
 ---
 

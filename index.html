@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AlgoViz | Algorithm, JavaScript, and C++ Code Visualizer</title>
+  <title>AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer</title>
   <meta
     name="description"
-    content="AlgoViz is an interactive algorithm and code execution visualizer for JavaScript and C++. Step through recursion, loops, variables, and the call stack in real time."
+    content="AlgoViz is the ultimate interactive algorithm and code execution visualizer for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, and sorting in real time."
   />
   <meta
     name="keywords"
-    content="algorithm visualizer, code visualizer, javascript code visualizer, c++ code visualizer, recursion visualizer, call stack visualizer, data structures and algorithms"
+    content="algorithm visualizer, code visualizer, javascript code visualizer, c++ code visualizer, data structures and algorithms visualizer, call stack visualizer, recursion visualizer, debugger for students, programming education tool, algoviz, tree visualizer, linked list visualizer, binary search tree visualizer, stack visualizer, queue visualizer, graph visualizer, sorting visualizer, matrix path visualizer, bubble sort visualizer, insertion sort visualizer, merge sort visualizer, quick sort visualizer, dfs visualizer, bfs visualizer, interactive code execution visualizer, c++ compiler online visualizer, dsa animator, binary tree simulator, dsa visualization website, coding execution visualizer"
   />
   <meta
     name="robots"
@@ -24,24 +24,30 @@
   <meta name="author" content="Somyajeet" />
   <meta name="application-name" content="AlgoViz" />
   <meta name="apple-mobile-web-app-title" content="AlgoViz" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#f97316" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta property="og:title" content="AlgoViz | Algorithm, JavaScript, and C++ Code Visualizer" />
+  <meta property="og:title" content="AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer" />
   <meta
     property="og:description"
-    content="Step through JavaScript and C++ code line by line. Visualize variables, recursion, console output, and the call stack with AlgoViz."
+    content="Step through JavaScript and C++ code line by line. Animate binary trees, linked lists, recursion stacks, variables, and console output with AlgoViz."
   />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="/" />
   <meta property="og:image" content="/og-image.png" />
   <meta property="og:site_name" content="AlgoViz" />
+  <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="AlgoViz | Algorithm, JavaScript, and C++ Code Visualizer" />
+  <meta name="twitter:title" content="AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer" />
   <meta
     name="twitter:description"
     content="Visualize JavaScript and C++ execution step by step with call stack, variables, and console tracing built for students and educators."
   />
   <meta name="twitter:image" content="/og-image.png" />
+  <meta name="twitter:site" content="@algoviz" />
+  <meta name="twitter:creator" content="@somyajeet" />
+  
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="apple-touch-icon" href="/logo.svg" />
@@ -66,17 +72,63 @@
 <body>
   <div id="root"></div>
   <noscript>
-    <main style="font-family: Inter, sans-serif; max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6;">
-      <h1>AlgoViz</h1>
-      <p>
-        AlgoViz is a JavaScript and C++ code visualizer that helps students and educators trace
-        variables, recursion, loops, and the call stack step by step.
+    <main style="font-family: Inter, sans-serif; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6; color: #1e293b;">
+      <h1 style="font-size: 2.5rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;">AlgoViz - Interactive Algorithm & Code Execution Visualizer</h1>
+      <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 2rem;">
+        AlgoViz is a free, interactive educational workbench that helps computer science students, programmers, and educators visualize JavaScript and C++ execution step-by-step. Step through loops, recursion, lists, and trees to watch variables, call stack frames, and console outputs update in real time.
       </p>
-      <p>
-        Browse the <a href="/docs/">documentation</a> or open the
-        <a href="/visualizer/javascript/">JavaScript visualizer</a> or
-        <a href="/visualizer/cpp/">C++ visualizer</a>.
-      </p>
+
+      <nav style="margin-bottom: 3rem; background: #f8fafc; padding: 1rem; border: 2px solid #0f172a; border-radius: 4px;">
+        <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0;">Quick Navigation</h2>
+        <ul style="list-style: none; padding: 0; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <li><a href="/" style="color: #f97316; font-weight: 700; text-decoration: none;">Home Page</a></li>
+          <li><a href="/visualizer/javascript/" style="color: #f97316; font-weight: 700; text-decoration: none;">JavaScript Visualizer Editor</a></li>
+          <li><a href="/visualizer/cpp/" style="color: #f97316; font-weight: 700; text-decoration: none;">C++ Wasm compiler & Visualizer</a></li>
+          <li><a href="/docs/" style="color: #f97316; font-weight: 700; text-decoration: none;">Technical Documentation</a></li>
+        </ul>
+      </nav>
+
+      <section style="margin-bottom: 2.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem;">Interactive Algorithm Visualizers Included</h2>
+        <ul style="padding-left: 1.5rem; margin-top: 1rem;">
+          <li style="margin-bottom: 0.8rem;">
+            <strong>Tree Visualizer:</strong> Animate Binary Search Trees (BST) and custom binary trees. Watch tree node insertions and traversal (In-order, Pre-order, Post-order) recursively.
+          </li>
+          <li style="margin-bottom: 0.8rem;">
+            <strong>Linked List Visualizer:</strong> Trace singly linked lists and doubly linked lists. Automatically highlights cycle detection using Floyd's Tortoise and Hare algorithm.
+          </li>
+          <li style="margin-bottom: 0.8rem;">
+            <strong>Stack &amp; Queue Visualizer:</strong> Animate last-in-first-out (LIFO) stack operations and first-in-first-out (FIFO) queues with visual cell transitions.
+          </li>
+          <li style="margin-bottom: 0.8rem;">
+            <strong>Array and Matrix Grid Visualizers:</strong> Highlight pointer trackers (like i, j, left, right, mid) moving across index columns. Animate matrix traversal paths, grid pathfinding (DFS, BFS), and matrix flood fills.
+          </li>
+          <li style="margin-bottom: 0.8rem;">
+            <strong>Call Stack and Recursion Tracker:</strong> Demystify backtracking and deep recursion (like N-Queens, Fibonacci, Merge Sort, and Quick Sort) by inspecting active call stack frames and historical local variables.
+          </li>
+        </ul>
+      </section>
+
+      <section style="margin-bottom: 2.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem;">Key Product Features</h2>
+        <ul style="padding-left: 1.5rem; margin-top: 1rem;">
+          <li><strong>Step-by-step Execution Controls:</strong> Play, pause, adjust speed, and scrub the timeline to watch statement transitions.</li>
+          <li><strong>Complexity Analyzer:</strong> Get live time complexity (Big-O notation) estimation, hot lines hitmaps, and operations counts.</li>
+          <li><strong>In-Browser C++ Compiler:</strong> Compile C++ code locally with WebAssembly Clang, or fallback to the GCC Wandbox compilation API.</li>
+          <li><strong>Variables Sparklines:</strong> Render inline SVG trendlines tracking variable value mutations.</li>
+          <li><strong>Enlarged Diagram View:</strong> Open zoomable/pannable full-screen views of tree, list, and graph diagrams.</li>
+        </ul>
+      </section>
+
+      <section style="margin-bottom: 2.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem;">Algorithmic Templates Library</h2>
+        <p>Explore pre-built templates for quick loading:</p>
+        <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+          <li><strong>Search &amp; Sort:</strong> Binary Search, Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort</li>
+          <li><strong>Dynamic Programming:</strong> Climbing Stairs, Coin Change, 0/1 Knapsack</li>
+          <li><strong>Graphs:</strong> Dijkstra's Shortest Path, DFS, BFS</li>
+        </ul>
+      </section>
     </main>
   </noscript>
   <script type="module" src="/index.tsx"></script>
