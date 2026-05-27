@@ -18,8 +18,20 @@ export const POINTER_SVG_COLORS: Record<string, { fill: string; stroke: string; 
 };
 const DEFAULT_SVG_COLOR = { fill: '#6366f1', stroke: '#4338ca', text: '#ffffff' };
 
+const T = {
+  autoDetectedPrefix: 'Auto-detected from ',
+  leftText: 'left',
+  rightText: 'right',
+  autoDetectedSuffix: ' pointers in runtime state.',
+  depthLabel: 'Depth: ',
+  leavesLabel: 'Leaves: ',
+  naryLabel: 'N-ary',
+  nodesCountSuffix: ' Nodes',
+  truncatedLabel: 'Visualization truncated after 31 nodes to keep the panel readable.',
+};
+
 export function getPointerSvgColor(name: string) {
-  return POINTER_SVG_COLORS[name] || DEFAULT_SVG_COLOR;
+  return Object.entries(POINTER_SVG_COLORS).find(([k]) => k === name)?.[1] || DEFAULT_SVG_COLOR;
 }
 
 export interface TreeNodeView {
@@ -50,8 +62,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): string {
   const candidates = ['val', 'value', 'id', 'label', 'name', 'key', 'data'];
+  const entries = Object.entries(value);
   for (const candidate of candidates) {
-    const current = value[candidate];
+    const current = entries.find(([k]) => k === candidate)?.[1];
     if (typeof current === 'string' || typeof current === 'number') {
       return String(current);
     }
@@ -89,7 +102,8 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
         break;
       }
 
-      const current = bfsQueue[qi++];
+      const current = bfsQueue.at(qi);
+      qi++;
 
       // Cycle protection
       if (objToId.has(current)) continue;
@@ -351,13 +365,13 @@ export const TreePanel: React.FC<{
             {preview.sourceName}
           </h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Auto-detected from <code className="font-mono">left</code>/
-            <code className="font-mono">right</code> pointers in runtime state.
+            {T.autoDetectedPrefix}<code className="font-mono">{T.leftText}</code>/
+            <code className="font-mono">{T.rightText}</code>{T.autoDetectedSuffix}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
-            {preview.nodes.length} Nodes
+            {preview.nodes.length}{T.nodesCountSuffix}
           </span>
           {onEnlarge && (
             <button
@@ -376,14 +390,14 @@ export const TreePanel: React.FC<{
         <span
           className={`border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${isSaffron ? 'border-saffron-300 bg-saffron-50 text-saffron-700 dark:border-saffron-800 dark:bg-saffron-900/20 dark:text-saffron-400' : 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400'}`}
         >
-          Depth: {maxDepth}
+          {T.depthLabel}{maxDepth}
         </span>
         <span className="border-[2px] border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
-          Leaves: {leafCount}
+          {T.leavesLabel}{leafCount}
         </span>
         {preview.nodes.some((n) => n.childrenIds && n.childrenIds.length > 0) && (
           <span className="border-[2px] border-purple-300 bg-purple-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-            N-ary
+            {T.naryLabel}
           </span>
         )}
       </div>
@@ -623,7 +637,7 @@ export const TreePanel: React.FC<{
 
       {preview.truncated && (
         <div className="mt-3 border-[2px] border-slate-900 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:text-slate-400">
-          Visualization truncated after 31 nodes to keep the panel readable.
+          {T.truncatedLabel}
         </div>
       )}
     </section>
