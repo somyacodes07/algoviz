@@ -487,8 +487,8 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                 return (
                   <motion.g
                     key={node.id}
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ translateX: pos.x, translateY: pos.y, scale: 0.5, opacity: 0 }}
+                    animate={{ translateX: pos.x, translateY: pos.y, scale: 1, opacity: 1 }}
                     transition={{
                       type: 'spring',
                       stiffness: 500,
@@ -501,8 +501,8 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                       <AnimatePresence>
                         <motion.rect
                           key={`ripple-${node.id}-${rippleKey.current.get(node.id) || 0}`}
-                          x={pos.x - halfNode - 4}
-                          y={pos.y - halfNode - 4}
+                          x={-halfNode - 4}
+                          y={-halfNode - 4}
                           width={NODE_SIZE + 8}
                           height={NODE_SIZE + 8}
                           fill="none"
@@ -512,7 +512,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                           animate={{ opacity: 0, scale: 1.9 }}
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.75, ease: 'easeOut' }}
-                          style={{ originX: `${pos.x}px`, originY: `${pos.y}px` }}
+                          style={{ originX: 0, originY: 0 }}
                         />
                       </AnimatePresence>
                     )}
@@ -520,12 +520,12 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                     {/* Active pointer ring animation */}
                     {hasPointer && (
                       <motion.rect
-                        x={pos.x - halfNode - 5}
-                        y={pos.y - halfNode - 5}
+                        x={-halfNode - 5}
+                        y={-halfNode - 5}
                         width={NODE_SIZE + 10}
                         height={NODE_SIZE + 10}
                         fill="none"
-                        stroke="#10b981"
+                        stroke={getPointerSvgColor(node.pointerNames[0]).fill}
                         strokeWidth="2"
                         strokeDasharray="6 4"
                         animate={{ strokeDashoffset: [0, -20] }}
@@ -536,39 +536,45 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                     {/* Pointer tags — bounce in/out (#8) */}
                     <AnimatePresence>
                       {hasPointer &&
-                        node.pointerNames.map((pName, pi) => (
-                          <motion.g
-                            key={pName}
-                            initial={{ opacity: 0, scale: 0.5, y: 4 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.5, y: 4 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                          >
-                            <rect
-                              x={pos.x - halfNode + pi * 3}
-                              y={pos.y - halfNode - 22 - pi * 2}
-                              width={pName.length * 7 + 10}
-                              height={15}
-                              fill="#10b981"
-                              stroke="#064e3b"
-                              strokeWidth="2"
-                            />
-                            <text
-                              x={pos.x - halfNode + pi * 3 + (pName.length * 7 + 10) / 2}
-                              y={pos.y - halfNode - 22 - pi * 2 + 11}
-                              textAnchor="middle"
-                              className="text-[8px] font-black uppercase fill-white pointer-events-none"
-                              style={{ letterSpacing: '0.12em' }}
+                        node.pointerNames.map((pName, pi) => {
+                          const pc = getPointerSvgColor(pName);
+                          const tagW = pName.length * 7 + 10;
+                          const rectY = -halfNode - 20 - (pi * 17);
+                          return (
+                            <motion.g
+                              key={pName}
+                              initial={{ opacity: 0, scale: 0.5, y: 4 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.5, y: 4 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                             >
-                              {pName}
-                            </text>
-                          </motion.g>
-                        ))}
+                              <rect
+                                x={-tagW / 2}
+                                y={rectY}
+                                width={tagW}
+                                height={15}
+                                fill={pc.fill}
+                                stroke={pc.stroke}
+                                strokeWidth="2"
+                              />
+                              <text
+                                x={0}
+                                y={rectY + 11}
+                                textAnchor="middle"
+                                className="text-[8px] font-black uppercase pointer-events-none"
+                                fill={pc.text}
+                                style={{ letterSpacing: '0.12em' }}
+                              >
+                                {pName}
+                              </text>
+                            </motion.g>
+                          );
+                        })}
                     </AnimatePresence>
 
                     <rect
-                      x={pos.x - halfNode + 2}
-                      y={pos.y - halfNode + 2}
+                      x={-halfNode + 2}
+                      y={-halfNode + 2}
                       width={NODE_SIZE}
                       height={NODE_SIZE}
                       fill="#0f172a"
@@ -577,8 +583,8 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
 
                     {/* Main rect */}
                     <rect
-                      x={pos.x - halfNode}
-                      y={pos.y - halfNode}
+                      x={-halfNode}
+                      y={-halfNode}
                       width={NODE_SIZE}
                       height={NODE_SIZE}
                       fill={
@@ -596,7 +602,7 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                             ? '#c2410c'
                             : '#1d4ed8'
                           : hasPointer
-                            ? '#10b981'
+                            ? getPointerSvgColor(node.pointerNames[0]).fill
                             : '#0f172a'
                       }
                       strokeWidth="2"
@@ -606,15 +612,15 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                             ? 'dark:fill-[#431407] dark:stroke-[#ea580c]'
                             : 'dark:fill-[#172554] dark:stroke-[#2563eb]'
                           : hasPointer
-                            ? 'dark:fill-[#062920] dark:stroke-[#059669]'
+                            ? 'dark:fill-[#062920]'
                             : 'dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border)]'
                       }
                     />
 
                     {/* Label */}
                     <text
-                      x={pos.x}
-                      y={pos.y + 5}
+                      x={0}
+                      y={5}
                       textAnchor="middle"
                       className={`text-[14px] font-black pointer-events-none ${node.visited ? (isSaffron ? 'fill-[#7c2d12] dark:fill-[#fdba74]' : 'fill-[#1e3a8a] dark:fill-[#93c5fd]') : 'fill-slate-900 dark:fill-slate-100'}`}
                       style={{ fontFamily: 'ui-monospace, monospace' }}
@@ -635,8 +641,8 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                         }}
                       >
                         <rect
-                          x={pos.x + halfNode - 8}
-                          y={pos.y - halfNode - 4}
+                          x={halfNode - 8}
+                          y={-halfNode - 4}
                           width={8}
                           height={8}
                           fill={theme.accentFill}
@@ -651,16 +657,16 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
                     {degree > 0 && (
                       <>
                         <rect
-                          x={pos.x + halfNode - 14}
-                          y={pos.y + halfNode - 2}
+                          x={halfNode - 14}
+                          y={halfNode - 2}
                           width={14}
                           height={12}
                           fill="#0f172a"
                           className="dark:fill-[var(--dark-border)]"
                         />
                         <text
-                          x={pos.x + halfNode - 7}
-                          y={pos.y + halfNode + 8}
+                          x={halfNode - 7}
+                          y={halfNode + 8}
                           textAnchor="middle"
                           className="text-[8px] font-black fill-white pointer-events-none"
                           style={{ fontFamily: 'ui-monospace, monospace' }}
