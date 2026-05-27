@@ -66,4 +66,6 @@ export interface ExecutionConfig {
   timeoutMs?: number;
   /** Input values for cin simulation */
   inputValues?: number[];
+  /** C++ Compiler Strategy override */
+  cppCompiler?: 'api' | 'wasm';
 }
