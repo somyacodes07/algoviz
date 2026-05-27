@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { Network } from 'lucide-react';
+import { Network, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
@@ -279,9 +279,14 @@ function calculateEdgePath(
 
 // ─── Panel ─────────────────────────────────────────────────────────────────────
 
-export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColor }> = ({
+export const GraphPanel: React.FC<{
+  preview: GraphPreview;
+  themeColor: ThemeColor;
+  onEnlarge?: () => void;
+}> = ({
   preview,
   themeColor,
+  onEnlarge,
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
@@ -335,10 +340,20 @@ export const GraphPanel: React.FC<{ preview: GraphPreview; themeColor: ThemeColo
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Auto-detected from adjacency-style runtime data.
           </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
+            {preview.directed ? 'Directed' : 'Undirected'}
+          </span>
+          {onEnlarge && (
+            <button
+              onClick={onEnlarge}
+              className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none"
+              title="Enlarge diagram"
+            >
+              <Maximize2 size={14} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
-        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
-          {preview.directed ? 'Directed' : 'Undirected'}
-        </span>
       </div>
 
       {/* Stats */}

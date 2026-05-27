@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, Maximize2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 
@@ -275,7 +275,8 @@ function computeTreeLayout(preview: TreePreview) {
 export const TreePanel: React.FC<{
   preview: TreePreview;
   themeColor: ThemeColor;
-}> = ({ preview, themeColor }) => {
+  onEnlarge?: () => void;
+}> = ({ preview, themeColor, onEnlarge }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
 
@@ -353,10 +354,20 @@ export const TreePanel: React.FC<{
             Auto-detected from <code className="font-mono">left</code>/
             <code className="font-mono">right</code> pointers in runtime state.
           </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
+            {preview.nodes.length} Nodes
+          </span>
+          {onEnlarge && (
+            <button
+              onClick={onEnlarge}
+              className="p-1.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:translate-y-[1px] hover:shadow-none"
+              title="Enlarge diagram"
+            >
+              <Maximize2 size={14} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
-        <span className="border-[2px] border-slate-900 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-400 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
-          {preview.nodes.length} Nodes
-        </span>
       </div>
 
       {/* Stats row */}
