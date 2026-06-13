@@ -97,7 +97,7 @@ function getEditorLabels(language: AppLanguage): {
 }
 
 export function getSeoConfig(origin: string, page: AppPage, language: AppLanguage): SeoConfig {
-  const baseOrigin = origin.includes('localhost') || origin.includes('127.0.0.1') ? origin : 'https://algoviz.app';
+  const baseOrigin = origin.includes('localhost') || origin.includes('127.0.0.1') ? origin : 'https://algoviz.somyacodes.in';
   const imageUrl = buildAbsoluteUrl(baseOrigin, '/og-image.png');
   const robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 
