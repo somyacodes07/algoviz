@@ -110,16 +110,7 @@ export async function executeWandboxCpp(
   // Extract user-visible output (everything that's NOT a __TRACE__ block)
   const userOutput = rawOutput.replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '').trim();
 
-  // Attach user cout output to the last timeline step so it shows in the console
-  if (userOutput && timeline.length > 0) {
-    const outputLines = userOutput.split('\n').filter((l: string) => l.trim());
-    for (const line of outputLines) {
-      timeline[timeline.length - 1].consoleOutput.push({
-        type: 'log',
-        message: line,
-      });
-    }
-  }
+
 
   return {
     timeline,
@@ -130,21 +121,54 @@ export async function executeWandboxCpp(
 
 function parseTraceOutput(stdout: string): Timeline {
   const timeline: Timeline = [];
-  const regex = /__TRACE__(\{.*?\})__TRACE__/g;
+  let currentLogs: { type: 'log' | 'error'; message: string }[] = [];
+
+  const traceRegex = /__TRACE__(\{.*?\})__TRACE__/g;
+  let lastIndex = 0;
   let match;
 
-  while ((match = regex.exec(stdout)) !== null) {
+  while ((match = traceRegex.exec(stdout)) !== null) {
+    // Everything between lastIndex and match.index is normal stdout printed before this trace
+    const normalText = stdout.slice(lastIndex, match.index);
+    if (normalText) {
+      const normalLines = normalText.split('\n');
+      for (const line of normalLines) {
+        if (line.trim()) {
+          currentLogs.push({ type: 'log', message: line });
+        }
+      }
+    }
+
+    // Parse the trace data
     try {
       const traceData = JSON.parse(match[1]);
       timeline.push({
         line: traceData.line,
         variables: traceData.variables || {},
         callStack: ['main'],
-        consoleOutput: [],
+        consoleOutput: [...currentLogs],
       });
+      currentLogs = [];
     } catch (e) {
       console.warn('[RemoteExecutor] Skipped malformed trace block:', match[1]);
     }
+
+    lastIndex = traceRegex.lastIndex;
+  }
+
+  // Handle any trailing normal output after the last trace
+  const trailingText = stdout.slice(lastIndex);
+  if (trailingText) {
+    const trailingLines = trailingText.split('\n');
+    for (const line of trailingLines) {
+      if (line.trim()) {
+        currentLogs.push({ type: 'log', message: line });
+      }
+    }
+  }
+
+  if (currentLogs.length > 0 && timeline.length > 0) {
+    timeline[timeline.length - 1].consoleOutput.push(...currentLogs);
   }
 
   return timeline;
