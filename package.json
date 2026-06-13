@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@vercel/analytics": "^2.0.1",
     "acorn": "^8.15.0",
     "framer-motion": "^12.34.0",
     "lucide-react": "^0.563.0",
