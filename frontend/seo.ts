@@ -97,11 +97,12 @@ function getEditorLabels(language: AppLanguage): {
 }
 
 export function getSeoConfig(origin: string, page: AppPage, language: AppLanguage): SeoConfig {
-  const imageUrl = buildAbsoluteUrl(origin, '/og-image.png');
+  const baseOrigin = origin.includes('localhost') || origin.includes('127.0.0.1') ? origin : 'https://algoviz.app';
+  const imageUrl = buildAbsoluteUrl(baseOrigin, '/og-image.png');
   const robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 
   if (page === 'docs') {
-    const canonicalUrl = buildAbsoluteUrl(origin, ROUTES.docs);
+    const canonicalUrl = buildAbsoluteUrl(baseOrigin, ROUTES.docs);
     const title = 'AlgoViz Docs | Learn Code Visualization, Transpilation & DSA Mechanics';
     const description =
       'Read the AlgoViz technical documentation. Discover how our C++ Wasm compiler, AST instrumentation, dynamic tree/graph visualization, and complexity analyzer work.';
@@ -148,7 +149,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
               '@type': 'ListItem',
               position: 1,
               name: 'Home',
-              item: buildAbsoluteUrl(origin, ROUTES.home),
+              item: buildAbsoluteUrl(baseOrigin, ROUTES.home),
             },
             {
               '@type': 'ListItem',
@@ -164,7 +165,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
 
   if (page === 'editor') {
     const labels = getEditorLabels(language);
-    const canonicalUrl = buildAbsoluteUrl(origin, getPathForState('editor', language));
+    const canonicalUrl = buildAbsoluteUrl(baseOrigin, getPathForState('editor', language));
 
     return {
       title: `${labels.title} | AlgoViz`,
@@ -211,7 +212,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
               '@type': 'ListItem',
               position: 1,
               name: 'Home',
-              item: buildAbsoluteUrl(origin, ROUTES.home),
+              item: buildAbsoluteUrl(baseOrigin, ROUTES.home),
             },
             {
               '@type': 'ListItem',
@@ -225,7 +226,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
     };
   }
 
-  const canonicalUrl = buildAbsoluteUrl(origin, ROUTES.home);
+  const canonicalUrl = buildAbsoluteUrl(baseOrigin, ROUTES.home);
   const title = 'AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer';
   const description =
     'AlgoViz is the ultimate interactive algorithm and code execution visualizer for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, and sorting in real time.';
