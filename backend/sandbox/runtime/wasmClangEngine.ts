@@ -20,8 +20,14 @@ let engineReady = false;
 let engineInitPromise: Promise<void> | null = null;
 let engineLoadError: string | null = null;
 
-// We'll use a dynamic import approach for the Wasm modules
-let clangModule: any = null;
+// WebAssembly compiler modules loaded from the public/wasm-clang directory
+let memfsModule: WebAssembly.Module | null = null;
+let clangModule: WebAssembly.Module | null = null;
+let lldModule: WebAssembly.Module | null = null;
+let sysrootBuffer: ArrayBuffer | null = null;
+
+// The virtual filesystem manager
+let memfs: MemFS | null = null;
 
 // ─── Cached instrumented trace header ─────────────────────────────────────────
 // The CppInstrumenter generates a large header with __to_json helpers.
@@ -40,11 +46,11 @@ export interface WasmClangResult {
   engineError?: string;
 }
 
-// ─── Engine Initialization ────────────────────────────────────────────────────
+// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Initialize the Wasm Clang engine.
- * Downloads and caches the Clang Wasm binary (~20-30MB on first load).
+ * Downloads and caches the Clang Wasm modules and sysroot libraries.
  * Safe to call multiple times — only initializes once.
  */
 export async function initWasmClangEngine(): Promise<void> {
@@ -69,8 +75,6 @@ export function getWasmClangError(): string | null {
   return engineLoadError;
 }
 
-// ─── Core Execution ───────────────────────────────────────────────────────────
-
 /**
  * Compile and execute C++ code using the local Wasm Clang engine.
  *
@@ -79,10 +83,6 @@ export function getWasmClangError(): string | null {
  *  2. Compile the instrumented code with Clang-Wasm.
  *  3. Execute the resulting binary.
  *  4. Parse __TRACE__ blocks from stdout into a Timeline.
- *
- * Error categories:
- *  - `engineError`   → Wasm engine failed; caller should try Wandbox fallback.
- *  - `compilerError`  → The user's code has a compilation error; show it in the UI.
  */
 export async function executeWasmClangCpp(
   code: string,
@@ -138,7 +138,6 @@ export async function executeWasmClangCpp(
   }
 
   if (!compileResult.success) {
-    // Check if it's a user code error vs engine error
     const stderr = compileResult.stderr;
     if (stderr && (stderr.includes('error:') || stderr.includes('fatal error'))) {
       // User's code has a compilation error
@@ -187,17 +186,6 @@ export async function executeWasmClangCpp(
   // Extract user-visible output (everything that's NOT a __TRACE__ block)
   const userOutput = rawOutput.replace(/__TRACE__\{.*?\}__TRACE__\n?/g, '').trim();
 
-  // Attach user cout output to the last timeline step
-  if (userOutput && timeline.length > 0) {
-    const outputLines = userOutput.split('\n').filter((l: string) => l.trim());
-    for (const line of outputLines) {
-      timeline[timeline.length - 1].consoleOutput.push({
-        type: 'log',
-        message: line,
-      });
-    }
-  }
-
   return {
     timeline,
     stdout: userOutput,
@@ -205,77 +193,486 @@ export async function executeWasmClangCpp(
   };
 }
 
-// ─── Internal Implementation ──────────────────────────────────────────────────
+// ─── WebAssembly Clang Compiler Driver Classes ──────────────────────────────────
+
+function readStr(u8: Uint8Array, o: number, len = -1): string {
+  let str = '';
+  let end = u8.length;
+  if (len !== -1)
+    end = o + len;
+  for (let i = o; i < end && u8[i] !== 0; ++i)
+    str += String.fromCharCode(u8[i]);
+  return str;
+}
+
+class Memory {
+  memory: WebAssembly.Memory;
+  buffer: ArrayBuffer;
+  u8: Uint8Array;
+  u32: Uint32Array;
+
+  constructor(memory: WebAssembly.Memory) {
+    this.memory = memory;
+    this.buffer = this.memory.buffer;
+    this.u8 = new Uint8Array(this.buffer);
+    this.u32 = new Uint32Array(this.buffer);
+  }
+
+  check() {
+    if (this.buffer.byteLength === 0) {
+      this.buffer = this.memory.buffer;
+      this.u8 = new Uint8Array(this.buffer);
+      this.u32 = new Uint32Array(this.buffer);
+    }
+  }
+
+  read8(o: number) { return this.u8[o]; }
+  read32(o: number) { return this.u32[o >> 2]; }
+  write8(o: number, v: number) { this.u8[o] = v; }
+  write32(o: number, v: number) { this.u32[o >> 2] = v; }
+  write64(o: number, vlo: number, vhi = 0) { this.write32(o, vlo); this.write32(o + 4, vhi); }
+
+  readStr(o: number, len: number) {
+    this.check();
+    return readStr(this.u8, o, len);
+  }
+
+  writeStr(o: number, str: string) {
+    o += this.write(o, str);
+    this.write8(o, 0);
+    return str.length + 1;
+  }
+
+  write(o: number, buf: ArrayBuffer | Uint8Array | string): number {
+    this.check();
+    if (buf instanceof ArrayBuffer) {
+      return this.write(o, new Uint8Array(buf));
+    } else if (typeof buf === 'string') {
+      const chars = buf.split('').map(x => x.charCodeAt(0));
+      return this.write(o, new Uint8Array(chars));
+    } else {
+      const dst = new Uint8Array(this.buffer, o, buf.length);
+      dst.set(buf);
+      return buf.length;
+    }
+  }
+}
+
+class MemFS {
+  hostWrite: (text: string) => void;
+  stdinStr = '';
+  stdinStrPos = 0;
+  instance!: WebAssembly.Instance;
+  exports: any;
+  mem!: Memory;
+  ready: Promise<void>;
+  private hostMem_: Memory | null = null;
+
+  constructor(
+    memfsModule: WebAssembly.Module,
+    hostWrite: (text: string) => void,
+  ) {
+    this.hostWrite = hostWrite;
+
+    const env = {
+      abort: () => { throw new Error('abort'); },
+      host_write: (fd: number, iovs: number, iovs_len: number, nwritten_out: number) => this.host_write(fd, iovs, iovs_len, nwritten_out),
+      host_read: (fd: number, iovs: number, iovs_len: number, nread: number) => this.host_read(fd, iovs, iovs_len, nread),
+      memfs_log: (buf: number, len: number) => this.memfs_log(buf, len),
+      copy_in: (memfs_dst: number, clang_src: number, size: number) => this.copy_in(memfs_dst, clang_src, size),
+      copy_out: (clang_dst: number, memfs_src: number, size: number) => this.copy_out(clang_dst, memfs_src, size),
+    };
+
+    this.ready = WebAssembly.instantiate(memfsModule, { env }).then(instance => {
+      this.instance = instance;
+      this.exports = instance.exports;
+      this.mem = new Memory(this.exports.memory as WebAssembly.Memory);
+      this.exports.init();
+    });
+  }
+
+  set hostMem(mem: Memory) {
+    this.hostMem_ = mem;
+  }
+
+  setStdinStr(str: string) {
+    this.stdinStr = str;
+    this.stdinStrPos = 0;
+  }
+
+  addDirectory(path: string) {
+    this.mem.check();
+    this.mem.write(this.exports.GetPathBuf(), path);
+    this.exports.AddDirectoryNode(path.length);
+  }
+
+  addFile(path: string, contents: Uint8Array | string) {
+    const length = typeof contents === 'string' ? contents.length : contents.byteLength;
+    this.mem.check();
+    this.mem.write(this.exports.GetPathBuf(), path);
+    const inode = this.exports.AddFileNode(path.length, length);
+    const addr = this.exports.GetFileNodeAddress(inode);
+    this.mem.check();
+    this.mem.write(addr, contents);
+  }
+
+  getFileContents(path: string): Uint8Array {
+    this.mem.check();
+    this.mem.write(this.exports.GetPathBuf(), path);
+    const inode = this.exports.FindNode(path.length);
+    if (inode === 0) {
+      throw new Error(`File not found: ${path}`);
+    }
+    const addr = this.exports.GetFileNodeAddress(inode);
+    const size = this.exports.GetFileNodeSize(inode);
+    return new Uint8Array(this.mem.buffer, addr, size);
+  }
+
+  host_write(fd: number, iovs: number, iovs_len: number, nwritten_out: number) {
+    if (!this.hostMem_) return 1;
+    this.hostMem_.check();
+    let size = 0;
+    let str = '';
+    for (let i = 0; i < iovs_len; ++i) {
+      const buf = this.hostMem_.read32(iovs);
+      iovs += 4;
+      const len = this.hostMem_.read32(iovs);
+      iovs += 4;
+      str += this.hostMem_.readStr(buf, len);
+      size += len;
+    }
+    this.hostMem_.write32(nwritten_out, size);
+    this.hostWrite(str);
+    return 0; // ESUCCESS
+  }
+
+  host_read(fd: number, iovs: number, iovs_len: number, nread: number) {
+    if (!this.hostMem_) return 1;
+    this.hostMem_.check();
+    let size = 0;
+    for (let i = 0; i < iovs_len; ++i) {
+      const buf = this.hostMem_.read32(iovs);
+      iovs += 4;
+      const len = this.hostMem_.read32(iovs);
+      iovs += 4;
+      const lenToWrite = Math.min(len, (this.stdinStr.length - this.stdinStrPos));
+      if (lenToWrite === 0) {
+        break;
+      }
+      this.hostMem_.write(buf, this.stdinStr.substring(this.stdinStrPos, this.stdinStrPos + lenToWrite));
+      size += lenToWrite;
+      this.stdinStrPos += lenToWrite;
+      if (lenToWrite !== len) {
+        break;
+      }
+    }
+    this.hostMem_.write32(nread, size);
+    return 0; // ESUCCESS
+  }
+
+  memfs_log(buf: number, len: number) {
+    this.mem.check();
+    console.log(this.mem.readStr(buf, len));
+  }
+
+  copy_out(clang_dst: number, memfs_src: number, size: number) {
+    if (!this.hostMem_) return;
+    this.hostMem_.check();
+    const dst = new Uint8Array(this.hostMem_.buffer, clang_dst, size);
+    this.mem.check();
+    const src = new Uint8Array(this.mem.buffer, memfs_src, size);
+    dst.set(src);
+  }
+
+  copy_in(memfs_dst: number, clang_src: number, size: number) {
+    if (!this.hostMem_) return;
+    this.mem.check();
+    const dst = new Uint8Array(this.mem.buffer, memfs_dst, size);
+    this.hostMem_.check();
+    const src = new Uint8Array(this.hostMem_.buffer, clang_src, size);
+    dst.set(src);
+  }
+}
+
+class ProcExit extends Error {
+  code: number;
+  constructor(code: number) {
+    super(`process exited with code ${code}.`);
+    this.code = code;
+  }
+}
+
+class App {
+  argv: string[];
+  environ: Record<string, string>;
+  memfs: MemFS;
+  instance!: WebAssembly.Instance;
+  exports: any;
+  mem!: Memory;
+  ready: Promise<void>;
+
+  constructor(module: WebAssembly.Module, memfs: MemFS, name: string, ...args: string[]) {
+    this.argv = [name, ...args];
+    this.environ = { USER: 'alice' };
+    this.memfs = memfs;
+
+    const env = {};
+    const wasi_unstable = {
+      proc_exit: (code: number) => this.proc_exit(code),
+      environ_sizes_get: (environ_count_out: number, environ_buf_size_out: number) => this.environ_sizes_get(environ_count_out, environ_buf_size_out),
+      environ_get: (environ_ptrs: number, environ_buf: number) => this.environ_get(environ_ptrs, environ_buf),
+      args_sizes_get: (argc_out: number, argv_buf_size_out: number) => this.args_sizes_get(argc_out, argv_buf_size_out),
+      args_get: (argv_ptrs: number, argv_buf: number) => this.args_get(argv_ptrs, argv_buf),
+      random_get: (buf: number, buf_len: number) => this.random_get(buf, buf_len),
+      clock_time_get: (clock_id: number, precision: bigint, time_out: number) => {
+        if (!this.mem) return 1;
+        this.mem.check();
+        const view = new DataView(this.mem.buffer);
+        view.setBigUint64(time_out, BigInt(Date.now()) * BigInt(1000000), true);
+        return 0;
+      },
+      poll_oneoff: () => { throw new Error('poll_oneoff not implemented'); }
+    };
+
+    Object.assign(wasi_unstable, this.memfs.exports);
+
+    this.ready = WebAssembly.instantiate(module, { wasi_unstable, env }).then(instance => {
+      this.instance = instance;
+      this.exports = this.instance.exports;
+      this.mem = new Memory(this.exports.memory as WebAssembly.Memory);
+      this.memfs.hostMem = this.mem;
+    });
+  }
+
+  async run() {
+    await this.ready;
+    try {
+      if (this.exports._start) {
+        this.exports._start();
+      } else if (this.exports.main) {
+        this.exports.main();
+      } else {
+        throw new Error('No _start or main export found');
+      }
+    } catch (exn: any) {
+      if (exn instanceof ProcExit) {
+        if (exn.code === 0) {
+          return;
+        }
+        throw exn;
+      }
+      throw exn;
+    }
+  }
+
+  proc_exit(code: number) {
+    throw new ProcExit(code);
+  }
+
+  environ_sizes_get(environ_count_out: number, environ_buf_size_out: number) {
+    this.mem.check();
+    let size = 0;
+    const names = Object.keys(this.environ);
+    for (const name of names) {
+      const value = this.environ[name];
+      size += name.length + value.length + 2;
+    }
+    this.mem.write64(environ_count_out, names.length);
+    this.mem.write64(environ_buf_size_out, size);
+    return 0;
+  }
+
+  environ_get(environ_ptrs: number, environ_buf: number) {
+    this.mem.check();
+    const names = Object.keys(this.environ);
+    for (const name of names) {
+      this.mem.write32(environ_ptrs, environ_buf);
+      environ_ptrs += 4;
+      environ_buf += this.mem.writeStr(environ_buf, `${name}=${this.environ[name]}`);
+    }
+    this.mem.write32(environ_ptrs, 0);
+    return 0;
+  }
+
+  args_sizes_get(argc_out: number, argv_buf_size_out: number) {
+    this.mem.check();
+    let size = 0;
+    for (const arg of this.argv) {
+      size += arg.length + 1;
+    }
+    this.mem.write64(argc_out, this.argv.length);
+    this.mem.write64(argv_buf_size_out, size);
+    return 0;
+  }
+
+  args_get(argv_ptrs: number, argv_buf: number) {
+    this.mem.check();
+    for (const arg of this.argv) {
+      this.mem.write32(argv_ptrs, argv_buf);
+      argv_ptrs += 4;
+      argv_buf += this.mem.writeStr(argv_buf, arg);
+    }
+    this.mem.write32(argv_ptrs, 0);
+    return 0;
+  }
+
+  random_get(buf: number, buf_len: number) {
+    this.mem.check();
+    const data = new Uint8Array(this.mem.buffer, buf, buf_len);
+    crypto.getRandomValues(data);
+    return 0;
+  }
+}
+
+class Tar {
+  u8: Uint8Array;
+  offset = 0;
+
+  constructor(buffer: ArrayBuffer) {
+    this.u8 = new Uint8Array(buffer);
+  }
+
+  readStr(len: number) {
+    const result = readStr(this.u8, this.offset, len);
+    this.offset += len;
+    return result;
+  }
+
+  readOctal(len: number) {
+    return parseInt(this.readStr(len), 8);
+  }
+
+  alignUp() {
+    this.offset = (this.offset + 511) & ~511;
+  }
+
+  readEntry() {
+    if (this.offset + 512 > this.u8.length) {
+      return null;
+    }
+
+    const entry: any = {
+      filename: this.readStr(100),
+      mode: this.readOctal(8),
+      owner: this.readOctal(8),
+      group: this.readOctal(8),
+      size: this.readOctal(12),
+      mtim: this.readOctal(12),
+      checksum: this.readOctal(8),
+      type: this.readStr(1),
+      linkname: this.readStr(100),
+    };
+
+    if (this.readStr(8) !== 'ustar  ') {
+      return null;
+    }
+
+    entry.ownerName = this.readStr(32);
+    entry.groupName = this.readStr(32);
+    entry.devMajor = this.readStr(8);
+    entry.devMinor = this.readStr(8);
+    entry.filenamePrefix = this.readStr(155);
+    this.alignUp();
+
+    if (entry.type === '0' || entry.type === '') {        // Regular file.
+      entry.contents = this.u8.subarray(this.offset, this.offset + entry.size);
+      this.offset += entry.size;
+      this.alignUp();
+    } else if (entry.type === '5') { // Directory.
+      // Directory handling, no size content to skip
+    }
+    return entry;
+  }
+
+  untar(memfs: MemFS) {
+    let entry;
+    while ((entry = this.readEntry())) {
+      if (entry.type === '5') {
+        memfs.addDirectory(entry.filename);
+      } else if (entry.type === '0' || entry.type === '') {
+        const parts = entry.filename.split('/');
+        let current = '';
+        for (let i = 0; i < parts.length - 1; i++) {
+          current = current ? current + '/' + parts[i] : parts[i];
+          try {
+            memfs.addDirectory(current);
+          } catch {
+            // Ignore if exists
+          }
+        }
+        memfs.addFile(entry.filename, entry.contents);
+      }
+    }
+  }
+}
+
+// ─── Clang Constants ─────────────────────────────────────────────────────────
+
+const clangCommonArgs = [
+  '-disable-free',
+  '-isysroot', '/',
+  '-internal-isystem', '/include/c++/v1',
+  '-internal-isystem', '/include',
+  '-internal-isystem', '/lib/clang/8.0.1/include',
+  '-ferror-limit', '19',
+  '-fmessage-length', '80',
+  '-fcolor-diagnostics',
+];
+
+// Helper to load Wasm modules with fallback to ArrayBuffer compilation
+async function compileWasmModule(url: string): Promise<WebAssembly.Module> {
+  try {
+    return await WebAssembly.compileStreaming(fetch(url));
+  } catch (e) {
+    console.warn(`[WasmClang] compileStreaming failed for ${url}, falling back to compile:`, e);
+    const response = await fetch(url);
+    const bytes = await response.arrayBuffer();
+    return await WebAssembly.compile(bytes);
+  }
+}
+
+// ─── Engine Initialization ────────────────────────────────────────────────────
 
 /**
- * Initialize the Wasm Clang module.
- *
- * Strategy: Use a lightweight Clang-to-Wasm approach.
- * We load clang.wasm + a minimal sysroot from the public/ directory.
- * These are cached by the browser after first load.
+ * Initialize the Wasm Clang engine.
+ * Downloads and caches the Clang Wasm modules and sysroot libraries.
  */
 async function doInit(): Promise<void> {
   try {
     console.log('[WasmClang] Initializing Clang-Wasm engine...');
 
-    // Load the Wasm Clang module from public directory
-    // The module provides compile() and run() functions
-    const wasmUrl = '/wasm-clang/clang.wasm';
+    const memfsUrl = '/wasm-clang/memfs.wasm';
+    const clangUrl = '/wasm-clang/clang.wasm';
+    const lldUrl = '/wasm-clang/lld.wasm';
     const sysrootUrl = '/wasm-clang/sysroot.tar';
 
-    // Check if the Wasm files are available
-    const [clangResp, sysrootResp] = await Promise.all([
-      fetch(wasmUrl, { method: 'HEAD' }),
-      fetch(sysrootUrl, { method: 'HEAD' }),
+    // Load Wasm modules
+    console.log('[WasmClang] Fetching and compiling Wasm compiler modules...');
+    const [memfsMod, clangMod, lldMod, sysrootData] = await Promise.all([
+      compileWasmModule(memfsUrl),
+      compileWasmModule(clangUrl),
+      compileWasmModule(lldUrl),
+      fetch(sysrootUrl).then((r) => {
+        if (!r.ok) throw new Error(`Failed to fetch sysroot.tar: HTTP ${r.status}`);
+        return r.arrayBuffer();
+      }),
     ]);
 
-    if (!clangResp.ok || !sysrootResp.ok) {
-      throw new Error('Wasm Clang binaries not found in /public/wasm-clang/');
-    }
+    memfsModule = memfsMod;
+    clangModule = clangMod;
+    lldModule = lldMod;
+    sysrootBuffer = sysrootData;
 
-    // Dynamically load the Wasm Clang wrapper at runtime.
-    // We use fetch + Blob URL instead of import() so Rollup/Vite
-    // doesn't try to resolve this path at build time.
-    const wrapperUrl = '/wasm-clang/clang-wrapper.js';
-    const wrapperResp = await fetch(wrapperUrl);
-    if (!wrapperResp.ok) {
-      throw new Error(`Failed to fetch Clang wrapper: HTTP ${wrapperResp.status}`);
-    }
-    const wrapperText = await wrapperResp.text();
-    const wrapperBlob = new Blob([wrapperText], { type: 'application/javascript' });
-    const wrapperBlobUrl = URL.createObjectURL(wrapperBlob);
-
-    let createClangModule: any;
-    try {
-      const mod = await import(/* @vite-ignore */ wrapperBlobUrl);
-      createClangModule = mod.default || mod;
-    } finally {
-      URL.revokeObjectURL(wrapperBlobUrl);
-    }
-
-    clangModule = await createClangModule({
-      locateFile: (path: string) => `/wasm-clang/${path}`,
-      // Use streaming compilation for faster startup
-      instantiateWasm: async (info: any, receiveInstance: any) => {
-        try {
-          const response = await fetch(wasmUrl);
-          const result = await WebAssembly.instantiateStreaming(response, info);
-          receiveInstance(result.instance, result.module);
-        } catch {
-          // Fallback to array buffer instantiation
-          const response = await fetch(wasmUrl);
-          const bytes = await response.arrayBuffer();
-          const result = await WebAssembly.instantiate(bytes, info);
-          receiveInstance(result.instance, result.module);
-        }
-      },
+    console.log('[WasmClang] Instantiating MemFS...');
+    let initStderr = '';
+    memfs = new MemFS(memfsModule, (text) => {
+      initStderr += text;
     });
+    await memfs.ready;
 
-    // Load sysroot (standard library headers)
-    const sysrootData = await fetch(sysrootUrl).then((r) => r.arrayBuffer());
-    if (clangModule.loadSysroot) {
-      clangModule.loadSysroot(new Uint8Array(sysrootData));
-    }
+    console.log('[WasmClang] Unpacking standard library headers (sysroot.tar)...');
+    const tar = new Tar(sysrootBuffer);
+    tar.untar(memfs);
 
     engineReady = true;
     engineLoadError = null;
@@ -296,58 +693,75 @@ async function compileWithClangWasm(
   source: string,
   config?: ExecutionConfig,
 ): Promise<{ success: boolean; stdout: string; stderr: string; binary?: Uint8Array }> {
-  if (!clangModule) {
-    return { success: false, stdout: '', stderr: 'Clang module not loaded' };
+  if (!clangModule || !lldModule || !memfs) {
+    return { success: false, stdout: '', stderr: 'Clang compiler modules not loaded' };
   }
 
-  try {
-    // Write the source file to the virtual filesystem
-    clangModule.FS.writeFile('/tmp/input.cpp', source);
+  let compilerOutput = '';
+  memfs.hostWrite = (text: string) => {
+    compilerOutput += text;
+  };
 
-    // Compile with Clang
-    // Flags: -O0 for debug info preservation, -std=c++17 for modern C++
-    const compileArgs = [
-      'clang++',
-      '-std=c++17',
+  try {
+    const input = '/input.cpp';
+    const obj = '/output.o';
+    const wasm = '/output.wasm';
+
+    memfs.addFile(input, source);
+
+    // 1. Compile C++ code to an object file (.o)
+    const clangArgs = [
+      'clang',
+      '-cc1',
+      '-emit-obj',
+      ...clangCommonArgs,
       '-O0',
-      '-o',
-      '/tmp/output.wasm',
-      '--target=wasm32-wasi',
-      '--sysroot=/sysroot',
-      '-fno-exceptions', // WASI limitation
-      '/tmp/input.cpp',
+      '-o', obj,
+      '-x', 'c++',
+      input
     ];
 
-    let stdout = '';
-    let stderr = '';
+    const clangApp = new App(clangModule, memfs, clangArgs[0], ...clangArgs.slice(1));
+    await clangApp.run();
 
-    const exitCode = clangModule.callMain(compileArgs, {
-      stdout: (text: string) => {
-        stdout += text;
-      },
-      stderr: (text: string) => {
-        stderr += text;
-      },
-    });
+    // 2. Link object file into target Wasm executable
+    const libdir = 'lib/wasm32-wasi';
+    const crt1 = `${libdir}/crt1.o`;
+    const stackSize = 1024 * 1024;
 
-    if (exitCode !== 0) {
-      return { success: false, stdout, stderr };
-    }
+    const lldArgs = [
+      'wasm-ld',
+      '--no-threads',
+      '--export-dynamic',
+      '-z', `stack-size=${stackSize}`,
+      `-L${libdir}`,
+      crt1,
+      obj,
+      '-lc',
+      '-lc++',
+      '-lc++abi',
+      '-o', wasm
+    ];
 
-    // Read the compiled binary
-    const binary = clangModule.FS.readFile('/tmp/output.wasm');
+    const lldApp = new App(lldModule, memfs, lldArgs[0], ...lldArgs.slice(1));
+    await lldApp.run();
 
-    // Clean up
-    try {
-      clangModule.FS.unlink('/tmp/input.cpp');
-      clangModule.FS.unlink('/tmp/output.wasm');
-    } catch {
-      /* ignore cleanup errors */
-    }
+    // 3. Extract final compiled Wasm executable
+    const binary = memfs.getFileContents(wasm);
 
-    return { success: true, stdout, stderr, binary };
-  } catch (e: any) {
-    return { success: false, stdout: '', stderr: e.message };
+    return {
+      success: true,
+      stdout: '',
+      stderr: compilerOutput,
+      binary,
+    };
+  } catch (error: any) {
+    console.error('[WasmClang] Compilation or linking failed:', error);
+    return {
+      success: false,
+      stdout: '',
+      stderr: compilerOutput || error.message || 'Unknown compilation error',
+    };
   }
 }
 
@@ -552,21 +966,54 @@ function createWasiShim(
  */
 function parseTraceOutput(stdout: string): Timeline {
   const timeline: Timeline = [];
-  const regex = /__TRACE__(\{.*?\})__TRACE__/g;
+  let currentLogs: { type: 'log' | 'error'; message: string }[] = [];
+
+  const traceRegex = /__TRACE__(\{.*?\})__TRACE__/g;
+  let lastIndex = 0;
   let match;
 
-  while ((match = regex.exec(stdout)) !== null) {
+  while ((match = traceRegex.exec(stdout)) !== null) {
+    // Everything between lastIndex and match.index is normal stdout printed before this trace
+    const normalText = stdout.slice(lastIndex, match.index);
+    if (normalText) {
+      const normalLines = normalText.split('\n');
+      for (const line of normalLines) {
+        if (line.trim()) {
+          currentLogs.push({ type: 'log', message: line });
+        }
+      }
+    }
+
+    // Parse the trace data
     try {
       const traceData = JSON.parse(match[1]);
       timeline.push({
         line: traceData.line,
         variables: traceData.variables || {},
         callStack: ['main'],
-        consoleOutput: [],
+        consoleOutput: [...currentLogs],
       });
+      currentLogs = [];
     } catch {
       console.warn('[WasmClang] Skipped malformed trace block:', match[1]);
     }
+
+    lastIndex = traceRegex.lastIndex;
+  }
+
+  // Handle any trailing normal output after the last trace
+  const trailingText = stdout.slice(lastIndex);
+  if (trailingText) {
+    const trailingLines = trailingText.split('\n');
+    for (const line of trailingLines) {
+      if (line.trim()) {
+        currentLogs.push({ type: 'log', message: line });
+      }
+    }
+  }
+
+  if (currentLogs.length > 0 && timeline.length > 0) {
+    timeline[timeline.length - 1].consoleOutput.push(...currentLogs);
   }
 
   return timeline;
@@ -579,8 +1026,8 @@ function parseTraceOutput(stdout: string): Timeline {
 function cleanCompilerError(stderr: string): string {
   return (
     stderr
-      // Remove /tmp/input.cpp path prefix
-      .replace(/\/tmp\/input\.cpp/g, 'main.cpp')
+      // Remove /input.cpp path prefix
+      .replace(/\/input\.cpp/g, 'main.cpp')
       // Remove verbose note lines
       .replace(/^note:.*$/gm, '')
       // Trim excessive whitespace
