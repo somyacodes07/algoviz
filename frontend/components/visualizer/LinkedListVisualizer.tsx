@@ -8,6 +8,7 @@ export interface LinkedListNodeView {
   id: string;
   label: string;
   pointerNames: string[];
+  nodeAddress?: string;
 }
 
 export interface LinkedListPreview {
@@ -62,6 +63,7 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
   let bestPreview: (LinkedListPreview & { score: number }) | null = null;
 
   for (const [sourceName, startNode] of entries) {
+    const addressToIndex = new Map<string, number>();
     const refToIndex = new WeakMap<object, number>();
     const nodes: LinkedListNodeView[] = [];
     let current: unknown = startNode;
@@ -71,6 +73,16 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
 
     while (isPlainObject(current) && 'next' in current) {
       if ('prev' in current) isDoublyLinked = true;
+
+      const objCurrent = current as Record<string, unknown>;
+      const nodeAddress = (typeof objCurrent.__addr === 'string' || typeof objCurrent.__addr === 'number')
+        ? String(objCurrent.__addr)
+        : null;
+
+      if (nodeAddress && addressToIndex.has(nodeAddress)) {
+        cycleToIndex = addressToIndex.get(nodeAddress)!;
+        break;
+      }
       if (refToIndex.has(current)) {
         cycleToIndex = refToIndex.get(current)!;
         break;
@@ -83,10 +95,15 @@ export function buildLinkedListPreview(variables: VariableMap): LinkedListPrevie
 
       const nextIndex = nodes.length;
       refToIndex.set(current, nextIndex);
+      if (nodeAddress) {
+        addressToIndex.set(nodeAddress, nextIndex);
+      }
+
       nodes.push({
         id: `${sourceName}-${nextIndex}`,
         label: getNodeLabel(current, nextIndex),
         pointerNames: [],
+        nodeAddress: nodeAddress || undefined,
       });
 
       current = current.next;
@@ -257,7 +274,7 @@ export const LinkedListPanel: React.FC<{
     const newPositions = new Map<string, { x: number; y: number; width: number; height: number }>();
 
     preview.nodes.forEach((node) => {
-      const el = document.getElementById(`node-block-${node.id}`);
+      const el = containerRef.current?.querySelector(`[id="node-mem-${node.id}"]`);
       if (el) {
         const rect = el.getBoundingClientRect();
         newPositions.set(node.id, {
@@ -294,22 +311,33 @@ export const LinkedListPanel: React.FC<{
 
     if (!tailPos || !targetPos) return null;
 
-    // Start at bottom center of the tail node
-    const startX = tailPos.x + tailPos.width / 2;
-    const startY = tailPos.y + tailPos.height - 4;
+    if (preview.cycleToIndex === 0) {
+      // Circular list loop-back: right edge of tail to left edge of head
+      const startX = tailPos.x + tailPos.width;
+      const startY = tailPos.y + tailPos.height / 2;
 
-    // End at bottom center of the target node
-    const endX = targetPos.x + targetPos.width / 2;
-    const endY = targetPos.y + targetPos.height - 4;
+      const endX = targetPos.x;
+      const endY = targetPos.y + targetPos.height / 2;
 
-    // Loop downwards
-    const drop = 48;
-    const cp1x = startX;
-    const cp1y = startY + drop;
-    const cp2x = endX;
-    const cp2y = endY + drop;
+      const dropY = Math.max(tailPos.y, targetPos.y) + tailPos.height + 24;
 
-    return `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+      return `M ${startX} ${startY} C ${startX + 25} ${startY}, ${startX + 25} ${dropY}, ${startX} ${dropY} L ${endX} ${dropY} C ${endX - 25} ${dropY}, ${endX - 25} ${endY}, ${endX} ${endY}`;
+    } else {
+      // General cycle reconnects in middle
+      const startX = tailPos.x + tailPos.width / 2;
+      const startY = tailPos.y + tailPos.height - 4;
+
+      const endX = targetPos.x + targetPos.width / 2;
+      const endY = targetPos.y + targetPos.height - 4;
+
+      const drop = 48;
+      const cp1x = startX;
+      const cp1y = startY + drop;
+      const cp2x = endX;
+      const cp2y = endY + drop;
+
+      return `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+    }
   }, [preview.cycleToIndex, preview.nodes, nodePositions]);
 
   return (
@@ -320,7 +348,13 @@ export const LinkedListPanel: React.FC<{
           <div className="flex items-center gap-2 flex-wrap">
             <span className={theme.badgeClass}>
               <GitBranch size={12} />
-              {preview.isDoublyLinked ? 'Doubly Linked List' : 'Singly Linked List'}
+              {preview.cycleToIndex === 0
+                ? preview.isDoublyLinked
+                  ? 'Circular Doubly Linked List'
+                  : 'Circular Singly Linked List'
+                : preview.isDoublyLinked
+                ? 'Doubly Linked List'
+                : 'Singly Linked List'}
             </span>
             <span className="inline-flex items-center gap-1 border-[2px] border-slate-300 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-400">
               {preview.nodes.length} nodes
@@ -337,7 +371,7 @@ export const LinkedListPanel: React.FC<{
                 {deletedCount} removed
               </span>
             )}
-            {preview.cycleToIndex !== null && (
+            {preview.cycleToIndex !== null && preview.cycleToIndex !== 0 && (
               <span className="inline-flex items-center gap-1 border-[2px] border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
                 <Repeat2 size={12} />
                 Cycle
@@ -360,52 +394,23 @@ export const LinkedListPanel: React.FC<{
       </div>
 
       {/* ── Visualization ── */}
-      <div className="mt-4 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2 relative" ref={containerRef}>
-        {/* Dynamic Cycle Path SVG overlay */}
-        {cyclePath && (
-          <svg className="absolute inset-0 pointer-events-none w-full h-full overflow-visible z-20">
-            <defs>
-              <marker
-                id="cycle-arrow"
-                viewBox="0 0 10 10"
-                refX="6"
-                refY="5"
-                markerUnits="strokeWidth"
-                markerWidth="7"
-                markerHeight="7"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 1 L 10 5 L 0 9 L 3 5 z" fill={isSaffron ? '#f97316' : '#3b82f6'} />
-              </marker>
-            </defs>
-            <motion.path
-              d={cyclePath}
-              stroke={isSaffron ? '#f97316' : '#3b82f6'}
-              strokeWidth="3"
-              fill="none"
-              strokeDasharray="4 3"
-              markerEnd="url(#cycle-arrow)"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
-          </svg>
-        )}
-
-        <div className="flex items-start gap-1 w-max pt-12 pb-14">
+      <div className="mt-4 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
+        <div className="flex items-start gap-1 w-max pt-12 pb-14 px-12 relative" ref={containerRef}>
           {/* NULL sentinel — start */}
-          <div className="flex items-center gap-1">
-            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              {T.nullText}
+          {preview.cycleToIndex !== 0 && (
+            <div className="flex items-center gap-1">
+              <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                {T.nullText}
+              </div>
+              <motion.div
+                className={`mt-4 ${theme.accentText}`}
+                animate={{ x: [0, 3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <ArrowRight size={12} strokeWidth={2.5} />
+              </motion.div>
             </div>
-            <motion.div
-              className={`mt-4 ${theme.accentText}`}
-              animate={{ x: [0, 3, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <ArrowRight size={12} strokeWidth={2.5} />
-            </motion.div>
-          </div>
+          )}
 
           <AnimatePresence mode="popLayout">
             {renderNodes.map((node, index, arr) => {
@@ -525,6 +530,7 @@ export const LinkedListPanel: React.FC<{
 
                         {/* ── Node Memory Block ── */}
                         <motion.div
+                          id={`node-mem-${node.id}`}
                           animate={isPointed ? { scale: 1.06, y: -1 } : { scale: 1, y: 0 }}
                           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                           className={`mt-4 flex items-stretch border-[3px] bg-white dark:bg-[var(--dark-surface-2)] ${
@@ -617,18 +623,52 @@ export const LinkedListPanel: React.FC<{
           </AnimatePresence>
 
           {/* NULL sentinel — end */}
-          <div className="flex items-center gap-1">
-            <motion.div
-              className={`mt-10 ${theme.accentText}`}
-              animate={{ x: [0, 3, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-            >
-              <ArrowRight size={12} strokeWidth={2.5} />
-            </motion.div>
-            <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              {T.nullText}
+          {preview.cycleToIndex !== 0 && (
+            <div className="flex items-center gap-1">
+              <motion.div
+                className={`mt-10 ${theme.accentText}`}
+                animate={{ x: [0, 3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              >
+                <ArrowRight size={12} strokeWidth={2.5} />
+              </motion.div>
+              <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                {T.nullText}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Dynamic Cycle Path SVG overlay */}
+          {cyclePath && (
+            <svg className="absolute inset-0 pointer-events-none w-full h-full overflow-visible z-20">
+              <defs>
+                <marker
+                  id="cycle-arrow"
+                  viewBox="0 0 10 10"
+                  refX="10"
+                  refY="5"
+                  markerUnits="strokeWidth"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 1 L 10 5 L 0 9 L 3 5 z" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+                </marker>
+              </defs>
+              <motion.path
+                d={cyclePath}
+                stroke={isSaffron ? '#f97316' : '#3b82f6'}
+                strokeWidth="3"
+                fill="none"
+                strokeDasharray="4 3"
+                markerEnd="url(#cycle-arrow)"
+                markerStart={preview.cycleToIndex === 0 && preview.isDoublyLinked ? 'url(#cycle-arrow)' : undefined}
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+              />
+            </svg>
+          )}
         </div>
       </div>
 
