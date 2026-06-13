@@ -208,6 +208,49 @@ int main() {
 `,
   },
   {
+    name: 'Circular Linked List: Traverse',
+    category: 'Linked List',
+    description: 'Create and traverse a circular linked list in C++',
+    language: 'c++',
+    tags: ['linked-list', 'circular', 'pointers', 'traversal'],
+    code: `// C++ Circular Linked List Traversal
+#include <iostream>
+using namespace std;
+
+struct Node {
+    int val;
+    Node* next;
+    Node(int v) : val(v), next(nullptr) {}
+};
+
+int main() {
+    // Create nodes
+    Node* head = new Node(10);
+    Node* node2 = new Node(20);
+    Node* node3 = new Node(30);
+
+    // Form circular links
+    head->next = node2;
+    node2->next = node3;
+    node3->next = head; // Pointing back to head to make it circular
+
+    cout << "Traversing circular linked list:" << endl;
+    Node* curr = head;
+    int steps = 0;
+    
+    if (head != nullptr) {
+        do {
+            cout << "Visited Node: " << curr->val << endl;
+            curr = curr->next;
+            steps++;
+        } while (curr != head && steps < 10);
+    }
+
+    return 0;
+}
+`,
+  },
+  {
     name: 'Doubly Linked List: Insert',
     category: 'Linked List',
     description: 'Insert nodes at head and tail of a doubly linked list',
