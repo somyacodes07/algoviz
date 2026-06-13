@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import Controls from "./frontend/components/Controls";
 import HomePage from "./frontend/components/HomePage";
 import TemplatePalette from "./frontend/components/TemplatePalette";
@@ -556,6 +557,7 @@ const App: React.FC = () => {
         page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (effectiveThemeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
       }`}
     >
+      <Analytics />
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
           <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative h-full w-full will-change-transform">
