@@ -4,6 +4,8 @@ import { Columns, Grid, Play, RefreshCw, Sparkles, ArrowDown, Maximize2 } from '
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 import { getPtrColor } from './LinkedListVisualizer';
+import { TreePanel } from './TreeVisualizer';
+
 
 interface ArrayGridVisualizerProps {
   variables: VariableMap;
@@ -85,9 +87,72 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
 
+  const [viewAsHeap, setViewAsHeap] = useState(false);
+
   const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables), [variables, prevVariables]);
 
+  const isNumericArray = useMemo(() => {
+    if (!preview || preview.type !== 'array') return false;
+    return preview.value.length > 0 && preview.value.every(v => typeof v === 'number');
+  }, [preview]);
+
+  const heapTreePreview = useMemo(() => {
+    if (!viewAsHeap || !preview || preview.type !== 'array') return null;
+    const arr = preview.value;
+    if (arr.length === 0) return null;
+
+    const nodes: any[] = [];
+    
+    // BFS construction
+    const buildSubtree = (i: number): string | undefined => {
+      if (i >= arr.length || arr[i] == null) return undefined;
+      const nodeId = `${preview.sourceName}-heap-${i}`;
+      const leftId = buildSubtree(2 * i + 1);
+      const rightId = buildSubtree(2 * i + 2);
+      
+      nodes.push({
+        id: nodeId,
+        label: String(arr[i]),
+        pointerNames: i === 0 ? ['root'] : [],
+        leftId,
+        rightId,
+      });
+      return nodeId;
+    };
+
+    buildSubtree(0);
+
+    nodes.sort((a, b) => {
+      const idxA = parseInt(a.id.split('-').pop() || '0');
+      const idxB = parseInt(b.id.split('-').pop() || '0');
+      return idxA - idxB;
+    });
+
+    return {
+      sourceName: `${preview.sourceName} (Heap Tree View)`,
+      nodes,
+      rootId: `${preview.sourceName}-heap-0`,
+      truncated: arr.length > 31,
+    };
+  }, [viewAsHeap, preview]);
+
+  useEffect(() => {
+    if (!isNumericArray) {
+      setViewAsHeap(false);
+    }
+  }, [isNumericArray]);
+
   if (!preview) return null;
+
+  if (preview.type === 'array' && viewAsHeap && heapTreePreview) {
+    return (
+      <TreePanel
+        preview={heapTreePreview}
+        themeColor={themeColor}
+        onEnlarge={onEnlarge}
+      />
+    );
+  }
 
   // ── 1D Array Rendering ──
   if (preview.type === 'array') {
@@ -106,6 +171,28 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
         }
       }
     });
+
+    // Detect sliding window range boundaries
+    let rangeStart: number | null = null;
+    let rangeEnd: number | null = null;
+
+    for (const key of ['left', 'start', 'low', 'windowStart']) {
+      const val = variables[key];
+      if (typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < arr.length) {
+        rangeStart = val;
+        break;
+      }
+    }
+
+    for (const key of ['right', 'end', 'high', 'windowEnd']) {
+      const val = variables[key];
+      if (typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < arr.length) {
+        rangeEnd = val;
+        break;
+      }
+    }
+
+    const hasSlidingWindow = rangeStart !== null && rangeEnd !== null && rangeStart <= rangeEnd;
 
     // Detect changed indices
     const changedIndices = new Set<number>();
@@ -129,10 +216,26 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     return (
       <section className={`${theme.panelClass} p-4`}>
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={theme.badgeClass}>
               <Columns size={12} /> Array Visualizer
             </span>
+            {isNumericArray && (
+              <button
+                onClick={() => setViewAsHeap(v => !v)}
+                className={`flex items-center gap-1 border-[2px] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-[1px_1px_0_rgba(15,23,42,1)] dark:shadow-[1px_1px_0_var(--dark-shadow)] transition-all active:translate-y-[1px] active:shadow-none ${
+                  viewAsHeap
+                    ? isSaffron
+                      ? 'bg-saffron-100 text-saffron-700 border-saffron-500'
+                      : 'bg-blue-100 text-blue-700 border-blue-500'
+                    : 'bg-slate-100 dark:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[var(--dark-border)] hover:bg-slate-200'
+                }`}
+                title="View 1D array as a Binary Heap tree"
+              >
+                <Sparkles size={10} />
+                Heap Tree View
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <h3 className="text-sm font-black uppercase tracking-[0.22em] text-slate-700 dark:text-slate-300">
@@ -162,6 +265,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             const pointers = activePointers.get(i) || [];
             const isChanged = changedIndices.has(i);
             const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
+            const isInRange = hasSlidingWindow && i >= rangeStart! && i <= rangeEnd!;
 
             // Heights for numeric bars
             const isNum = typeof val === 'number';
@@ -188,6 +292,11 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               cellBorder = pc.border.replace('border-', 'border-'); // fallback
               cellText = 'text-slate-900 dark:text-slate-100 font-black';
               barBg = pc.bg;
+            } else if (isInRange) {
+              cellBg = isSaffron ? 'bg-saffron-50/50 dark:bg-saffron-900/10' : 'bg-blue-50/50 dark:bg-blue-900/10';
+              cellBorder = isSaffron ? 'border-saffron-500/50 dark:border-saffron-600/40' : 'border-blue-500/50 dark:border-blue-600/40';
+              cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300 font-bold' : 'text-blue-900 dark:text-blue-300 font-bold';
+              barBg = isSaffron ? 'bg-saffron-300 dark:bg-saffron-800/40' : 'bg-blue-300 dark:bg-blue-800/40';
             }
 
             return (
@@ -196,6 +305,18 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                 layout
                 className="flex flex-col items-center flex-1 min-w-[48px] max-w-[72px] relative"
               >
+                {/* Sliding Window Brackets & Link Lines */}
+                {isInRange && (
+                  <>
+                    <div className={`absolute -inset-y-1.5 left-0 right-0 border-y-[2px] border-dashed ${isSaffron ? 'border-saffron-500/50' : 'border-blue-500/50'} pointer-events-none z-20`} />
+                    {i === rangeStart && (
+                      <div className={`absolute -inset-y-1.5 -left-1.5 w-3 border-y-[3px] border-l-[3px] ${isSaffron ? 'border-saffron-500' : 'border-blue-500'} pointer-events-none z-20`} />
+                    )}
+                    {i === rangeEnd && (
+                      <div className={`absolute -inset-y-1.5 -right-1.5 w-3 border-y-[3px] border-r-[3px] ${isSaffron ? 'border-saffron-500' : 'border-blue-500'} pointer-events-none z-20`} />
+                    )}
+                  </>
+                )}
                 {/* Pointer Arrow Flags */}
                 {hasPointers && (
                   <div className="absolute -top-10 left-0 right-0 flex flex-col items-center z-20">

@@ -308,6 +308,42 @@ while (fast !== null && fast.next !== null && steps < 20) {
 console.log("Does list have cycle?", hasCycle);
 `,
   },
+  {
+    name: 'Circular Linked List',
+    category: 'Data Structures',
+    description: 'Create and traverse a circular linked list',
+    language: 'javascript',
+    tags: ['linked-list', 'circular', 'pointers', 'traversal'],
+    code: `// Circular Linked List: Creation and Traversal
+class ListNode {
+  constructor(val = 0, next = null) {
+    this.val = val;
+    this.next = next;
+  }
+}
+
+// Create a circular linked list: 10 -> 20 -> 30 -> (back to 10)
+let head = new ListNode(10);
+let node2 = new ListNode(20);
+let node3 = new ListNode(30);
+
+head.next = node2;
+node2.next = node3;
+node3.next = head; // Pointing back to head to make it circular!
+
+console.log("Traversing circular linked list...");
+let curr = head;
+let steps = 0;
+
+do {
+  console.log("Visiting Node:", curr.val);
+  curr = curr.next;
+  steps++;
+} while (curr !== head && steps < 15);
+
+console.log("Traversal complete. Visited " + steps + " nodes.");
+`,
+  },
 
   // ==============================
   // SEARCH & SORT
