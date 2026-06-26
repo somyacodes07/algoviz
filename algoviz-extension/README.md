@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/ssgamingop/AlgoViz/main/public/icon-512.png" alt="AlgoViz Logo" width="120" />
+  <img src="https://raw.githubusercontent.com/somyacodes07/AlgoViz-copy/main/public/icon-512.png" alt="AlgoViz Logo" width="120" />
   <h1>AlgoViz for VS Code</h1>
   <p><em>See how your code really works, right inside your IDE.</em></p>
 </div>
