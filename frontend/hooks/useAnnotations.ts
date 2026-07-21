@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 export interface Annotation {
   stepIndex: number;
@@ -34,7 +34,11 @@ function saveAnnotations(key: string, map: Map<number, string>): void {
 
 export function useAnnotations(code: string) {
   const storageKey = useMemo(() => hashCode(code), [code]);
-  const [annotations, setAnnotations] = useState<Map<number, string>>(() => loadAnnotations(hashCode(code)));
+  const [annotations, setAnnotations] = useState<Map<number, string>>(() => loadAnnotations(storageKey));
+
+  useEffect(() => {
+    setAnnotations(loadAnnotations(storageKey));
+  }, [storageKey]);
 
   const setAnnotation = useCallback((stepIndex: number, text: string) => {
     setAnnotations(prev => {
