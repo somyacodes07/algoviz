@@ -258,7 +258,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {T.docs}
             </a>
             <a
-              href="https://github.com/ssgamingop/AlgoViz"
+              href="https://github.com/somyacodes07/AlgoViz"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm"

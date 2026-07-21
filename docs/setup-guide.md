@@ -10,7 +10,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/ssgamingop/algoviz.git
+git clone https://github.com/somyacodes07/algoviz.git
 cd algoviz
 
 # Install dependencies

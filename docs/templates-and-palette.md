@@ -18,7 +18,7 @@ The fuzzy matching makes the palette useful even when you think in concepts rath
 
 ## Built-in Algorithm Implementations
 
-The library includes 35+ templates designed for visual clarity, available in both **JavaScript** and **C++**:
+The library includes 50+ templates designed for visual clarity, available in both **JavaScript** and **C++**:
 
 ### Arrays & Strings
 - Find Maximum
@@ -33,23 +33,34 @@ The library includes 35+ templates designed for visual clarity, available in bot
 - Linked List Cycle Detection
 - Valid Parentheses via Stack
 - Array Frequency Counter (Hash Maps)
+- Trie (Insert & Search)
+- LRU Cache
+- Union-Find (Disjoint Set)
 
 ### Search & Sorting
 - Binary Search (O(log n))
 - Merge Sort, Quick Sort (O(n log n))
 - Selection Sort, Insertion Sort, Bubble Sort (O(n²))
+- Heap Sort
+- Counting Sort
 
 ### Graph & Trees
 - Breadth-First Search (BFS)
 - Depth-First Search (DFS)
 - Dijkstra's Shortest Path
+- A* Pathfinding
+- Bellman-Ford
 - Binary Search Tree Construction and In-order Traversal
+- Binary Tree Invert (Mirror)
+- Binary Tree Level Order Traversal
 
-### Dynamic Programming & Recursion
+### Dynamic Programming, Math & Recursion
 - Climbing Stairs (Fibonacci Sequence Tabulation)
 - Coin Change
 - 0/1 Knapsack
 - N-Queens Backtracking
+- Sieve of Eratosthenes (Prime Numbers)
+- Euclidean Algorithm (GCD)
 
 ## C++ Template Design
 

@@ -6,7 +6,7 @@
   "publisher": "somyacodes",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ssgamingop/AlgoViz.git"
+    "url": "https://github.com/somyacodes07/AlgoViz.git"
   },
   "engines": {
     "vscode": "^1.80.0"

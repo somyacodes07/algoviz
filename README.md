@@ -1,50 +1,111 @@
 <div align="center">
+  <img src="assets/homepage.png" alt="AlgoViz Logo" width="100%" style="border-radius: 12px; margin-bottom: 20px;" />
 
-# ⚡ AlgoViz
+  # ⚡ AlgoViz
 
-### Interactive algorithm visualizer for JavaScript and C++
+  **The ultimate interactive algorithm visualizer for JavaScript and C++**
 
-**Step through code line-by-line, inspect variables in real time, analyze complexity, and replay execution inside a browser workbench.**
+  <p>
+    <a href="https://github.com/somyacodes07/algoviz/stargazers"><img src="https://img.shields.io/github/stars/somyacodes07/algoviz?style=for-the-badge&color=ff7316" alt="Stars" /></a>
+    <a href="https://github.com/sponsors/somyacodes07"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge&logo=github" alt="Sponsor" /></a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/badge/VS%20Code-Extension-007acc?style=for-the-badge&logo=visualstudiocode" alt="VS Code Extension" /></a>
+    <br/>
+    <a href="."><img src="https://img.shields.io/badge/JavaScript-ES6+-f7df1e?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" /></a>
+    <a href="."><img src="https://img.shields.io/badge/C++-WebAssembly_Engine-00599c?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++" /></a>
+    <a href="."><img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React" /></a>
+  </p>
 
-[![Made by Somyajeet](https://img.shields.io/badge/Made%20by-Somyajeet-ff7316?style=for-the-badge)](https://github.com/ssgamingop)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-f7df1e?style=for-the-badge&logo=javascript&logoColor=black)](.)
-[![C++](https://img.shields.io/badge/C++-GCC%20Powered-00599c?style=for-the-badge&logo=cplusplus&logoColor=white)](.)
-[![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black)](.)
-
+  **Step through code line-by-line, inspect memory in real time, analyze time complexity, and build an intuition for data structures—all inside your browser.**
 </div>
 
 ---
 
-## 🎯 What Is AlgoViz?
+## 💖 Support the Project
+AlgoViz is an open-source project built with passion. If this tool helped you nail an interview, ace a class, or understand complex algorithms better, consider sponsoring the development!
+👉 **[Sponsor Somyajeet on GitHub](https://github.com/sponsors/somyacodes07)**
 
-AlgoViz is a browser-based code visualizer built for students, educators, and anyone who wants to understand runtime behavior instead of only final output.
+---
 
-Write **JavaScript** or **C++**, hit Run, and scrub through execution like a video timeline:
+## ✨ What's New?
 
-- See the active line move through the editor
-- Watch variables mutate step-by-step
-- Track recursion and nested calls in the call stack
-- Replay console output exactly when it appears
-- Analyze time complexity with live hotspot heatmaps
-- Teach search, sorting, graph, and pointer-heavy problems visually
+AlgoViz has been completely revamped with **Tier 2 & Tier 3 Data Structures** and a brand new **Glassmorphic UI**:
+- 🌳 **New Visualizers**: Dynamic rendering for Binary Trees, Heaps, Hash Maps, Sets, Tries, Linked Lists, and 2D Arrays.
+- 🗒️ **Sticky Note Annotations**: Attach persistent markdown notes to specific execution steps to explain the *why* behind your code.
+- 🔍 **Zoomable Diagram Modal**: Expand complex graphs and trees into an interactive, pan-and-zoom full-screen modal.
+- 🎨 **Neo-Brutalist & Glassmorphic UI**: A stunning new dark/light mode engine featuring floating elements, backdrop blurs, and animated transitions.
+
+---
+
+## 🚀 Features
+
+- **Step-by-step Execution**: Play, pause, scrub, and step through your code's timeline.
+- **Multi-Language Engine**: Run JavaScript natively or execute real C++ right in your browser via our WebAssembly Clang Engine.
+- **Rich Data Visualizers**: Auto-magically renders memory structures like Vectors, Hash Maps, Sets, and multi-dimensional matrices.
+- **Visual Call Stack**: Watch recursion unfold in real-time as stack frames push and pop.
+- **Complexity Analysis**: Live O(n) estimation, hotspot heatmaps, and peak stack depth calculations.
+- **Template Library**: 50+ built-in algorithms ranging from simple sorting to advanced dynamic programming and graph algorithms (`Cmd+K` palette).
+- **Embed Mode**: Add `?embed=true` to embed the visualizer cleanly inside iframes or Notion docs.
 
 ---
 
 ## 💻 VS Code Extension
 
-AlgoViz is now available directly inside your IDE! You can visualize your code without ever leaving your editor.
+AlgoViz isn't just for the browser—it's right inside your editor!
 
-- **Available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode) and [Open VSX Registry](https://open-vsx.org/extension/somyacodes/algoviz-vscode)**
-- **Offline Execution**: Runs locally using the built-in Web Worker and transpiler (Zero API calls).
+- **Offline Execution**: Runs locally using the built-in Web Worker and WASM (Zero API calls).
 - **Run Menu Integration**: Just click **AlgoViz: Visualize** from the editor's Play/Run dropdown menu.
 - **Side-by-Side View**: Opens the visualizer in a split pane, pulling in your active code automatically.
 
-Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
+**Download on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode)**
+
+---
+
+## 🖼️ Product Tour
+
+### Workbench & Data Structure Galleries
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/image-1.png" alt="JavaScript Timeline" />
+      <p><strong>JavaScript Tracing</strong><br />Array pointer markers and variable tracking.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/image-2.png" alt="C++ Bubble Sort" />
+      <p><strong>C++ Execution</strong><br />Real GCC-powered compilation with STL container support.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/image-3.png" alt="Call Stack" />
+      <p><strong>Recursive Call Stack</strong><br />Trace deep DFS frames and parameter mutations.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/image-4.png" alt="Graph State" />
+      <p><strong>Graph & Tree Rendering</strong><br />Live snapshots of tree expansions and graph traversals.</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Architecture: The C++ Dual-Engine
+
+AlgoViz uses a state-of-the-art dual-engine to execute C++ without servers.
+
+### Primary: Wasm Clang Engine
+- Compiles instrumented C++ **directly in the browser** using WebAssembly Clang.
+- Runs completely locally (offline-capable, zero latency).
+- Uses Tree-sitter AST to inject `__trace()` calls that generate JSON execution state.
+
+### Fallback: Wandbox API
+- If WebAssembly fails to load, the engine seamlessly falls back to the remote Wandbox API GCC compiler.
 
 ---
 
 ## 🧭 Documentation
 
+Explore the inner workings of AlgoViz:
 - [Introduction & Philosophy](docs/introduction.md)
 - [Setup & Installation Guide](docs/setup-guide.md)
 - [Features & UI Layouts](docs/features-and-ui.md)
@@ -57,281 +118,34 @@ Check out the [VS Code Extension Docs](docs/vscode-extension.md) for more info!
 
 ---
 
-## 🖼️ Product Tour
-
-### Landing Experience
-
-<div align="center">
-  <img src="assets/homepage.png" alt="AlgoViz landing page with interactive launch options for JavaScript, C++, and documentation." width="900" />
-</div>
-
-### Workbench Gallery
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/image-1.png" alt="JavaScript reverse array example in AlgoViz showing variable cards, pointer tags, and timeline playback." />
-      <p>
-        <strong>JavaScript state tracing</strong><br />
-        Reverse-array execution with live pointer markers and variable updates.
-      </p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/image-2.png" alt="C++ bubble sort running in AlgoViz with highlighted lines and variable visualization." />
-      <p>
-        <strong>C++ execution (GCC powered)</strong><br />
-        Bubble sort compiled by real GCC, with full STL support and step-by-step tracing.
-      </p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/image-3.png" alt="AlgoViz call stack view focused on recursive depth-first search frames." />
-      <p>
-        <strong>Recursive call stack replay</strong><br />
-        Stack frames stay readable while DFS expands through nested calls.
-      </p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/image-4.png" alt="AlgoViz variables panel showing visited and result arrays updating during graph traversal." />
-      <p>
-        <strong>Data structure snapshots</strong><br />
-        Graph traversal state shown as evolving arrays and tracked values.
-      </p>
-    </td>
-  </tr>
-</table>
-
----
-
-## ✨ Core Features
-
-| Feature | Description |
-|---|---|
-| 🔬 **Step-by-step execution** | Play, pause, scrub, and move line-by-line through the program timeline |
-| 📊 **Live variables panel** | Inspect scalars, arrays, vectors, maps, and tracked values as state changes |
-| 🎯 **Pointer visualization** | Follow indices like `i`, `j`, `left`, `right`, and `mid` visually |
-| 📚 **Call stack view** | Watch frames push and pop during recursion and nested calls |
-| 💻 **Console replay** | See `console.log` and `cout` output appear at the exact step it is emitted |
-| 📈 **Complexity analysis** | Live O(n) estimation with hotspot heatmap, peak stack depth, and hot-line detection |
-| 🧠 **Template palette** | Load tagged DSA examples quickly through the searchable template library (`Cmd+K`) |
-| 🟧 **JavaScript mode** | Full support for loops, recursion, arrays, objects, and interview-style problems |
-| 🔵 **C++ mode (Clang/GCC)** | Real in-browser Wasm Clang compilation with automatic remote Wandbox API fallback |
-| 📖 **Integrated docs route** | Architecture, setup, UI, templates, and engine details accessible from the app |
-| ⚙️ **User Preferences & Settings** | Toggle permanent theme accents (Auto/Saffron/Blue), default array rendering mode (Memory cells vs Numeric bar charts), and C++ compilation strategy (API vs Wasm local runner) with rich tooltips on hover |
-| 🔍 **Zoomable/Pannable Diagrams** | Maximize tree, graph, list, and matrix visualizers in high-resolution full-screen modals. Supports click-and-drag panning, scroll wheel zooming, floating HUD controls, and keyboard shortcuts (+ / - / 0 / Esc / Arrow Keys) |
-| 📉 **Variables Sparkline Graphing** | Traces history of numeric variables over execution timeline, drawing mini inline SVG trendlines next to watched variables |
-| 🧩 **Virtual Stack Frame Inspector** | Walk backward and reconstruct local variables inside Call Stack frame cards to inspect parameter states across all recursive frames simultaneously |
-
----
-
-## 🏗️ How C++ Execution Works
-
-AlgoViz uses a **dual-engine architecture** for C++:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   User clicks "Run"                     │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-                        ▼
-              ┌─────────────────┐
-              │  C++ Detected   │
-              └────────┬────────┘
-                       │
-            ┌──────────▼──────────┐
-            │  PRIMARY ENGINE     │
-            │  Wasm Clang Engine  │
-            │  Compiles C++ inside│
-            │  the browser locally│
-            └──────────┬──────────┘
-                       │
-              ┌────────▼────────┐
-              │  Engine Ready?  │
-              └───┬─────────┬───┘
-                Yes         No
-                 │           │
-                 ▼           ▼
-        ┌────────────┐  ┌────────────────┐
-        │ Wasm Clang │  │ FALLBACK       │
-        │ runs code  │  │ Wandbox API    │
-        │ with trace │  │ Remote GCC     │
-        │ headers    │  │ compilation    │
-        └─────┬──────┘  └───────┬────────┘
-              │                 │
-              └────────┬────────┘
-                       ▼
-              ┌─────────────────┐
-              │  Timeline data  │
-              │  + Complexity   │
-              │  analysis       │
-              └────────┬────────┘
-                       ▼
-              ┌─────────────────┐
-              │  Visual replay  │
-              │  in React UI    │
-              └─────────────────┘
-```
-
-### Primary: Wasm Clang Engine
-- Compiles instrumented C++ directly in the browser using WebAssembly Clang
-- Runs completely locally in the user's world (offline-capable, zero-latency)
-- Full support for STL containers, OOP, templates, and standard C++
-- `__trace()` calls injected via Tree-sitter AST produce JSON state output natively
-
-### Fallback: Wandbox API
-- If the Wasm Clang binaries are unavailable or fail to load, seamlessly falls back to the network
-- Sends instrumented C++ to [Wandbox](https://wandbox.org) for remote GCC compilation
-- Ensures the platform remains functional even if local WebAssembly support is limited
-
----
-
-## 🧱 Project Structure
-
-```text
-algoviz/
-├── App.tsx                          # Main application component
-├── types.ts                         # Shared TypeScript interfaces
-├── README.md
-│
-├── backend/
-│   ├── analysis/
-│   │   └── complexity.ts            # Time complexity analyzer (AST + timeline heuristic)
-│   ├── tracer/
-│   │   └── instrumenter.ts          # JS AST instrumentation (Acorn-based)
-│   └── sandbox/
-│       ├── runtime/
-│       │   ├── executor.ts          # Execution router (Wasm Clang → Wandbox fallback)
-│       │   ├── executor.worker.ts   # Sandboxed Web Worker for JS
-│       │   ├── wasmClangEngine.ts   # Wasm Clang engine for local C++ compilation
-│       │   └── wandboxExecutor.ts   # Wandbox API client + trace parser
-│       ├── transpiler/
-│       │   ├── parser.ts            # Tree-sitter WASM C++ parser
-│       │   └── cppInstrumenter.ts   # C++ source-to-source trace injector
-│       └── legacy/
-│           ├── regexTranspiler.ts   # Regex-based fallback transpiler
-│           ├── transformer.ts       # Legacy C++ → JS AST transformer
-│           └── generator.ts         # Legacy JS code emitter
-│
-├── frontend/
-│   ├── components/
-│   │   ├── layout/                  # WorkspaceHeader, Editor, Visualizer shells
-│   │   ├── visualizer/              # GraphVisualizer, LinkedListVisualizer
-│   │   ├── HomePage.tsx             # Landing page
-│   │   ├── DocsPage.tsx             # Documentation viewer
-│   │   ├── CodeEditor.tsx           # Monaco-based code editor
-│   │   ├── VariablesPanel.tsx       # Live variable state display
-│   │   ├── CallStackPanel.tsx       # Call stack frame viewer
-│   │   ├── ConsolePanel.tsx         # Console output replay
-│   │   ├── PerformancePanel.tsx     # Complexity analysis dashboard
-│   │   ├── Controls.tsx             # Playback controls
-│   │   └── TemplatePalette.tsx      # Cmd+K template picker
-│   ├── hooks/
-│   │   └── useExecutionEngine.ts    # Execution state management hook
-│   └── theme/
-│       └── theme.ts                 # Design tokens
-│
-├── docs/                            # Markdown documentation source
-├── public/                          # Static assets, WASM files, icons
-└── assets/                          # README screenshots
-```
-
----
-
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) 18+
-- Active internet connection (Optional: Wasm Clang runs completely offline; Wandbox API fallback requires internet)
-
-### Installation
-
 ```bash
-git clone https://github.com/ssgamingop/algoviz.git
+# Clone the repository
+git clone https://github.com/somyacodes07/algoviz.git
 cd algoviz
+
+# Install dependencies
 npm install
+
+# Start the dev server
 npm run dev
 ```
 
-The app runs locally at `http://localhost:3000`.
-
-### Production Build
-
-```bash
-npm run build
-npm run preview
-```
+Visit `http://localhost:3000` to start visualizing!
 
 ---
 
-## 🛠️ Tech Stack
+## 🤝 Contributing & License
 
-| Technology | Purpose |
-|---|---|
-| **React 19** | UI and route-driven app shell |
-| **TypeScript** | Type safety across frontend and backend code |
-| **Vite** | Dev server, production build, and aggressive manual chunk code splitting |
-| **View Transitions API** | Hardware-accelerated, seamless Neo-Brutalist dark/light theme toggling |
-| **Monaco Editor** | VS Code-grade code editing surface |
-| **Framer Motion** | Complex UI motion, route transitions, and hover states |
-| **Acorn** | JavaScript AST instrumentation |
-| **web-tree-sitter** | Browser C++ parsing (WASM) |
-| **Wandbox API** | Remote GCC compilation for C++ |
-| **React Markdown** | Rendered docs experience |
-| **Lucide React** | Iconography |
+Contributions are always welcome. Open an issue to report bugs or suggest features, and submit Pull Requests with improvements.
 
----
-
-## 📈 Complexity Analysis
-
-AlgoViz provides **live time complexity estimation** for both JavaScript and C++:
-
-| Signal | How It Works |
-|---|---|
-| **Loop depth** | Detects nested `for`/`while` loops via AST (JS) or timeline hit patterns (C++) |
-| **Logarithmic loops** | Identifies `i *= 2`, `i /= 2` patterns or log₂(n)-scale hit counts |
-| **Recursion** | Tracks self-calls and branching recursion (e.g. Fibonacci → `O(2^n)`) |
-| **Sort detection** | Recognizes `sort()` calls → signals `O(n log n)` |
-| **Hotspot heatmap** | Shows which lines execute most frequently with hit counts and shares |
-| **Peak stack depth** | Measures maximum call stack depth during execution |
-
-For C++, complexity is inferred from runtime trace data using a timeline-based heuristic when the Acorn JS parser can't process the source.
-
----
-
-## 📝 Typical Workflow
-
-1. Open the landing page and choose **JavaScript** or **C++**.
-2. Write code or load a template from the palette (`Cmd+K`).
-3. Click **Run**.
-4. Step through the timeline with playback controls.
-5. Inspect variables, pointers, console output, and the call stack as the program evolves.
-6. Check the **Complexity** tab for time complexity estimate and hot-line heatmap.
-7. Open the docs route when you want the architecture behind the visualizer.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome.
-
-- Report bugs through [Issues](https://github.com/ssgamingop/algoviz/issues)
-- Suggest features or docs improvements
-- Open a pull request with focused changes
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
+AlgoViz is open source software licensed under the [MIT License](LICENSE).
 
 <div align="center">
-
-**Built by [Somyajeet Singh](https://github.com/ssgamingop) with ❤️**
-
-*AlgoViz makes runtime behavior visible.*
-
+  <br/>
+  <strong>Built with ❤️ by <a href="https://github.com/somyacodes07">Somyajeet Singh</a></strong>
+  <br/>
+  <br/>
+  <a href="https://github.com/sponsors/somyacodes07"><img src="https://img.shields.io/badge/Sponsor_Me_On_GitHub-%E2%9D%A4-pink?style=for-the-badge&logo=github" alt="Sponsor Somyajeet" /></a>
 </div>

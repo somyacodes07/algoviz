@@ -292,7 +292,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
         },
         url: canonicalUrl,
         image: imageUrl,
-        sameAs: ['https://github.com/ssgamingop/AlgoViz'],
+        sameAs: ['https://github.com/somyacodes07/AlgoViz'],
         featureList: [
           'Visualize JavaScript code execution step-by-step',
           'Visualize C++ code compilation and run locally using Wasm Clang',

@@ -42,7 +42,7 @@ Once the visualizer is open:
 ## 🤝 Contributing
 
 This extension is open source and powered by the [AlgoViz](https://algoviz.somyacodes.in) project. 
-If you find a bug or want to request a feature, please feel free to [open an issue](https://github.com/ssgamingop/AlgoViz/issues) or contribute on GitHub!
+If you find a bug or want to request a feature, please feel free to [open an issue](https://github.com/somyacodes07/AlgoViz/issues) or contribute on GitHub!
 
 ---
 **Happy Visualizing!** 🚀
