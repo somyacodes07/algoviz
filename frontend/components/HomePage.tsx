@@ -28,7 +28,7 @@ interface HomePageProps {
   docsHref: string;
   javascriptHref: string;
   cppHref: string;
-  toggleTheme: () => void;
+  toggleTheme: (e: React.MouseEvent<HTMLElement>) => void;
   theme: 'light' | 'dark';
   onHoverLanguage?: (lang: string | null) => void;
 }
@@ -267,7 +267,8 @@ const HomePage: React.FC<HomePageProps> = ({
               <span>{T.githubStar}</span>
             </a>
             <button
-              onClick={toggleTheme}
+              data-theme-toggle
+              onClick={(e) => toggleTheme(e)}
               className="p-2 border border-slate-300 dark:border-[var(--dark-border)] rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >

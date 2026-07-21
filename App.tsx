@@ -9,8 +9,11 @@ import DocsPage from "./frontend/components/DocsPage";
 import WorkspaceHeader from "./frontend/components/layout/WorkspaceHeader";
 import WorkspaceEditor from "./frontend/components/layout/WorkspaceEditor";
 import WorkspaceVisualizer from "./frontend/components/layout/WorkspaceVisualizer";
+import SnapshotsDrawer from "./frontend/components/SnapshotsDrawer";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
 import { useSeoMetadata } from "./frontend/hooks/useSeoMetadata";
+import { useSnapshots } from "./frontend/hooks/useSnapshots";
+import { useAnnotations } from "./frontend/hooks/useAnnotations";
 import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from "./frontend/codeTemplates";
 import { getSeoConfig } from "./frontend/seo";
 import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
@@ -148,6 +151,11 @@ const App: React.FC = () => {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [visualizerMode, setVisualizerMode] = useState(false);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
+  const [snapshotsOpen, setSnapshotsOpen] = useState(false);
+  const [annotationMode, setAnnotationMode] = useState(false);
+
+  // Embed mode: ?embed=true hides the header for iframe usage
+  const embedMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === 'true';
 
   // Settings Panel States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -199,6 +207,10 @@ const App: React.FC = () => {
     toggleBreakpoint,
     clearError,
   } = controls;
+
+  // Snapshots & Annotations
+  const { snapshots, saveSnapshot, deleteSnapshot } = useSnapshots();
+  const { setAnnotation, getAnnotation, hasAnnotation } = useAnnotations(code);
 
   // Derived Theme Color
   const themeColor = settings.themeColor === "auto"
@@ -473,27 +485,32 @@ const App: React.FC = () => {
     syncUrl("editor", language, { replace: true, preserveShareHash: true });
   }, [code, language, syncUrl]);
 
-  // Track cursor position for the theme circle reveal origin
-  const lastMousePos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  useEffect(() => {
-    const track = (e: MouseEvent) => { lastMousePos.current = { x: e.clientX, y: e.clientY }; };
-    window.addEventListener('mousemove', track, { passive: true });
-    return () => window.removeEventListener('mousemove', track);
-  }, []);
-
   const isTransitioning = useRef(false);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback((e?: React.MouseEvent<HTMLElement> | MouseEvent) => {
     if (isTransitioning.current) return;
     const target = theme === 'light' ? 'dark' : 'light';
-    const { x, y } = lastMousePos.current;
 
-    // Use View Transitions API for dynamic color reveal
+    let x = window.innerWidth - 40;
+    let y = 28;
+
+    // Get exact center of button from event or querySelector fallback
+    const targetEl = (e?.currentTarget as HTMLElement) || (e?.target as HTMLElement)?.closest('button') || document.querySelector('[data-theme-toggle]');
+    if (targetEl && targetEl.getBoundingClientRect) {
+      const r = targetEl.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        x = r.left + r.width / 2;
+        y = r.top + r.height / 2;
+      }
+    } else if (e && 'clientX' in e && (e.clientX !== 0 || e.clientY !== 0)) {
+      x = e.clientX;
+      y = e.clientY;
+    }
+
     if (document.startViewTransition) {
       isTransitioning.current = true;
       const transition = document.startViewTransition(() => {
         setTheme(target);
-        // Force synchronous DOM update
         document.documentElement.classList.toggle('dark', target === 'dark');
       });
 
@@ -502,7 +519,6 @@ const App: React.FC = () => {
           Math.max(x, window.innerWidth - x),
           Math.max(y, window.innerHeight - y)
         );
-
         document.documentElement.animate(
           {
             clipPath: [
@@ -511,8 +527,8 @@ const App: React.FC = () => {
             ],
           },
           {
-            duration: 1800,
-            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            duration: 750,
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
             pseudoElement: '::view-transition-new(root)',
           }
         );
@@ -522,10 +538,9 @@ const App: React.FC = () => {
         isTransitioning.current = false;
       });
     } else {
-      // Fallback for unsupported browsers
       setTheme(target);
     }
-  };
+  }, [theme]);
 
   // ── Hover Language Color Change ──────────────────
   const handleHoverLanguage = useCallback((lang: string | null) => {
@@ -586,15 +601,20 @@ const App: React.FC = () => {
           </motion.div>
         ) : (
           <motion.div key="editor" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="flex h-full w-full flex-col will-change-transform">
-            <WorkspaceHeader
-              language={language}
-              theme={theme}
-              langLabel={langLabel}
-              onGoHome={handleGoHome}
-              onOpenDocs={handleOpenDocs}
-              toggleTheme={toggleTheme}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-            />
+            {!embedMode && (
+              <WorkspaceHeader
+                language={language}
+                theme={theme}
+                langLabel={langLabel}
+                onGoHome={handleGoHome}
+                onOpenDocs={handleOpenDocs}
+                toggleTheme={toggleTheme}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenSnapshots={() => setSnapshotsOpen(true)}
+                annotationMode={annotationMode}
+                onToggleAnnotationMode={() => setAnnotationMode(prev => !prev)}
+              />
+            )}
 
             <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
               <WorkspaceEditor
@@ -617,6 +637,10 @@ const App: React.FC = () => {
                 onShare={handleCopyLink}
                 onOpenTemplates={() => setTemplateMenuOpen(true)}
                 onToggleBreakpoint={toggleBreakpoint}
+                annotationMode={annotationMode}
+                currentAnnotation={getAnnotation(currentStepIndex)}
+                currentStepIndex={currentStepIndex}
+                onSaveAnnotation={setAnnotation}
               />
               
               <WorkspaceVisualizer
@@ -677,7 +701,26 @@ const App: React.FC = () => {
               onUpdateSettings={setSettings}
               activeThemeColor={themeColor}
             />
+
+            {/* Snapshots Drawer */}
+            <SnapshotsDrawer
+              isOpen={snapshotsOpen}
+              onClose={() => setSnapshotsOpen(false)}
+              snapshots={snapshots}
+              currentCode={code}
+              currentLanguage={language}
+              themeColor={themeColor}
+              onSave={saveSnapshot}
+              onLoad={(snap) => {
+                setCode(snap.code);
+                setLanguage(snap.language as AppLanguage);
+                setSnapshotsOpen(false);
+                setIsPlaying(false);
+              }}
+              onDelete={deleteSnapshot}
+            />
           </motion.div>
+
         )}
       </AnimatePresence>
     </div>

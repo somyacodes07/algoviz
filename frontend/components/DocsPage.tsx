@@ -35,7 +35,7 @@ import image6 from '../../assets/image-6.png';
 interface DocsPageProps {
   onBack: () => void;
   theme: 'light' | 'dark';
-  toggleTheme: () => void;
+  toggleTheme: (e: React.MouseEvent<HTMLElement>) => void;
   homeHref: string;
   javascriptHref: string;
   cppHref: string;
@@ -576,7 +576,8 @@ const DocsPage: React.FC<DocsPageProps> = ({
           <h1 className="font-black text-lg tracking-tight leading-none uppercase">AlgoViz Docs</h1>
         </div>
         <button
-          onClick={toggleTheme}
+          data-theme-toggle
+          onClick={(e) => toggleTheme(e)}
           className="flex items-center gap-2 rounded border-2 border-slate-900 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#94a3b8] transition-all hover:shadow-[3px_3px_0_#94a3b8] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-300 dark:shadow-[2px_2px_0_var(--dark-shadow)] dark:hover:shadow-[3px_3px_0_var(--dark-shadow)]"
           aria-label="Toggle theme"
         >
