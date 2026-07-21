@@ -180,10 +180,10 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
 
               {/* Floating Glassmorphic HUD Controls */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3 px-4 py-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white/70 dark:bg-slate-900/75 backdrop-blur-md shadow-[4px_4px_0_#0f172a] dark:shadow-[4px_4px_0_var(--dark-shadow)] rounded-xl">
+                <div className="flex items-center gap-3 px-4 py-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white/90 dark:bg-[var(--dark-surface-2)] backdrop-blur-md shadow-[4px_4px_0_#0f172a] dark:shadow-[4px_4px_0_var(--dark-shadow)] rounded-xl">
                   <button
                     onClick={handleZoomOut}
-                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded transition-colors"
+                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)] text-slate-800 dark:text-slate-200 rounded transition-colors"
                     title="Zoom Out (-)"
                   >
                     <ZoomOut size={16} />
@@ -193,15 +193,15 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
                   </span>
                   <button
                     onClick={handleZoomIn}
-                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded transition-colors"
+                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)] text-slate-800 dark:text-slate-200 rounded transition-colors"
                     title="Zoom In (+)"
                   >
                     <ZoomIn size={16} />
                   </button>
-                  <div className="w-[2px] h-4 bg-slate-900/20 dark:bg-white/10" />
+                  <div className="w-[2px] h-4 bg-slate-900/20 dark:bg-[var(--dark-border)]" />
                   <button
                     onClick={handleReset}
-                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded transition-colors"
+                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)] text-slate-800 dark:text-slate-200 rounded transition-colors"
                     title="Reset View (R)"
                   >
                     <RotateCcw size={16} />
