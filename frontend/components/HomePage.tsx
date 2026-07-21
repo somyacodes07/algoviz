@@ -370,7 +370,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     <Code2 strokeWidth={2.5} />
                     Launch index.js
                   </span>
-                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-opacity group-hover:translate-x-0 group-hover:opacity-100" />
+                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                 </a>
 
                 <a
@@ -387,7 +387,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     <Cpu strokeWidth={2.5} />
                     Launch main.cpp
                   </span>
-                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-opacity group-hover:translate-x-0 group-hover:opacity-100" />
+                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                 </a>
               </div>
 
@@ -435,26 +435,6 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.25 }}
-              className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3"
-            >
-              {/* {HERO_SIGNAL_CARDS.map((card) => ( */}
-              {/* <div
-                  key={card.label}
-                  className="rounded-2xl border border-slate-900/15 bg-white/60 px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/35 dark:shadow-[0_16px_40px_rgba(2,6,23,0.45)]"
-                >
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                    {card.label}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-200">
-                    {card.value}
-                  </p>
-                </div>
-              ))} */}
-            </motion.div>
           </div>
 
           {/* Right Side: Visualizer abstract graphic */}
