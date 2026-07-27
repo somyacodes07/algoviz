@@ -29,7 +29,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   onToggleAnnotationMode,
 }) => {
   return (
-    <header className="h-14 flex items-center px-6 justify-between bg-white dark:bg-[var(--dark-surface)] border-b border-slate-900 dark:border-[var(--dark-border)] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0">
+    <header className="h-14 flex items-center px-3 sm:px-6 justify-between bg-white dark:bg-[var(--dark-surface)] border-b border-slate-900 dark:border-[var(--dark-border)] z-30 text-slate-900 dark:text-slate-100 transition-colors duration-200 relative shrink-0">
       <div className="flex items-center gap-4">
         <a
           href={ROUTES.home}
