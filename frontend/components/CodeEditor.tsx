@@ -44,6 +44,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         }
       }
     });
+    // Bind Cmd+Enter / Ctrl+Enter shortcut inside Monaco
+    if (monaco) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        const runBtn = document.querySelector('button[title*="Run Code"]') as HTMLButtonElement;
+        if (runBtn) runBtn.click();
+      });
+    }
   };
 
   // Line highlight decorations

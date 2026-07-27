@@ -32,8 +32,29 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
     );
   }
 
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopyLogs = () => {
+    const text = logs.map(l => l.message).join('\n');
+    navigator.clipboard?.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="flex flex-col gap-1.5 p-3 font-mono text-xs md:text-sm h-full font-medium">
+    <div className="flex flex-col gap-2 p-3 font-mono text-xs md:text-sm h-full font-medium overflow-y-auto custom-scrollbar">
+      <div className="flex items-center justify-between pb-2 mb-1 border-b border-slate-200 dark:border-[var(--dark-border)] shrink-0">
+        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+          Output ({logs.length} {logs.length === 1 ? 'entry' : 'entries'})
+        </span>
+        <button
+          onClick={handleCopyLogs}
+          className="px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-300 shadow-[1px_1px_0_rgba(15,23,42,1)] active:translate-y-[1px] active:shadow-none transition-all"
+        >
+          {copied ? 'Copied!' : 'Copy Console'}
+        </button>
+      </div>
+
       <AnimatePresence initial={false}>
         {logs.map((log, index) => {
           const isError = log.type === 'error';
