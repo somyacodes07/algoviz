@@ -163,6 +163,8 @@ export const POINTER_COLORS: Record<string, { bg: string; text: string; border: 
   right:    { bg: 'bg-indigo-500',  text: 'text-white',       border: 'border-indigo-600',   glow: 'rgba(99,102,241,0.3)', hex: '#6366f1' },
 };
 
+export const DEFAULT_PTR_COLOR = { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600', glow: 'rgba(99,102,241,0.3)', hex: '#6366f1' };
+
 export function getPtrColor(name: string) {
   return Object.entries(POINTER_COLORS).find(([k]) => k === name)?.[1] || DEFAULT_PTR_COLOR;
 }

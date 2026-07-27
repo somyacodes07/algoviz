@@ -509,6 +509,8 @@ const App: React.FC = () => {
 
     if (document.startViewTransition) {
       isTransitioning.current = true;
+      document.documentElement.classList.add('view-transitioning');
+
       const transition = document.startViewTransition(() => {
         setTheme(target);
         document.documentElement.classList.toggle('dark', target === 'dark');
@@ -519,7 +521,7 @@ const App: React.FC = () => {
           Math.max(x, window.innerWidth - x),
           Math.max(y, window.innerHeight - y)
         );
-        document.documentElement.animate(
+        const anim = document.documentElement.animate(
           {
             clipPath: [
               `circle(0px at ${x}px ${y}px)`,
@@ -527,18 +529,24 @@ const App: React.FC = () => {
             ],
           },
           {
-            duration: 750,
-            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+            duration: 550,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
             pseudoElement: '::view-transition-new(root)',
           }
         );
+
+        anim.onfinish = () => {
+          document.documentElement.classList.remove('view-transitioning');
+        };
       });
 
       transition.finished.then(() => {
         isTransitioning.current = false;
+        document.documentElement.classList.remove('view-transitioning');
       });
     } else {
       setTheme(target);
+      document.documentElement.classList.toggle('dark', target === 'dark');
     }
   }, [theme]);
 
