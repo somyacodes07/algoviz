@@ -511,8 +511,16 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     peakStackDepth,
   });
 
+  const spaceEstimate = buildSpaceEstimate({
+    peakStackDepth,
+    recursiveFunctions: Array.from(recursiveFunctions),
+    hasBranchingRecursion,
+    timeline,
+  });
+
   return {
     estimate,
+    spaceEstimate,
     maxLoopDepth,
     recursiveFunctions: Array.from(recursiveFunctions),
     hasLogarithmicLoop,
@@ -522,6 +530,43 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     uniqueExecutedLines,
     peakStackDepth,
     hotspots,
+  };
+}
+
+function buildSpaceEstimate(input: {
+  peakStackDepth: number;
+  recursiveFunctions: string[];
+  hasBranchingRecursion: boolean;
+  timeline: Timeline;
+}) {
+  const rationale: string[] = [];
+  const maxAlloc = estimateInputSize(input.timeline);
+
+  if (input.recursiveFunctions.length > 0) {
+    if (input.peakStackDepth > 2) {
+      rationale.push(`Auxiliary call stack space O(h) with peak stack depth ${input.peakStackDepth}.`);
+      return {
+        notation: input.hasBranchingRecursion ? 'O(n)' : 'O(n)',
+        confidence: 'high' as const,
+        rationale,
+      };
+    }
+  }
+
+  if (maxAlloc > 50) {
+    rationale.push(`Allocated dynamic heap collections scaling with input size n (${maxAlloc} items).`);
+    return {
+      notation: 'O(n)',
+      confidence: 'medium' as const,
+      rationale,
+    };
+  }
+
+  rationale.push('In-place auxiliary space complexity. Uses scalar primitive variables.');
+  return {
+    notation: 'O(1)',
+    confidence: 'high' as const,
+    rationale,
   };
 }
 

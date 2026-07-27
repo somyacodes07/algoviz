@@ -19,8 +19,15 @@ export interface ComplexityHotspot {
   share: number;
 }
 
+export interface SpaceEstimate {
+  notation: string;
+  confidence: 'low' | 'medium' | 'high';
+  rationale: string[];
+}
+
 export interface ComplexityAnalysis {
   estimate: ComplexityEstimate;
+  spaceEstimate?: SpaceEstimate;
   maxLoopDepth: number;
   recursiveFunctions: string[];
   hasLogarithmicLoop: boolean;

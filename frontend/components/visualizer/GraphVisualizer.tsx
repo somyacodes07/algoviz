@@ -390,15 +390,27 @@ export const GraphPanel: React.FC<{
             <defs>
               <marker
                 id="graph-arrow"
-                viewBox="0 0 10 10"
-                refX="8"
-                refY="5"
+                viewBox="0 0 12 12"
+                refX="9"
+                refY="6"
                 markerUnits="strokeWidth"
-                markerWidth="5"
-                markerHeight="5"
+                markerWidth="6"
+                markerHeight="6"
                 orient="auto"
               >
-                <path d="M 0 0 L 10 5 L 0 10 L 3 5 z" fill={theme.accentFill} opacity="0.9" />
+                <path d="M 1 1 L 11 6 L 1 11 L 4 6 z" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+              </marker>
+              <marker
+                id="graph-arrow-traversed"
+                viewBox="0 0 12 12"
+                refX="9"
+                refY="6"
+                markerUnits="strokeWidth"
+                markerWidth="7.5"
+                markerHeight="7.5"
+                orient="auto"
+              >
+                <path d="M 1 1 L 11 6 L 1 11 L 4 6 z" fill={isSaffron ? '#f59e0b' : '#06b6d4'} />
               </marker>
             </defs>
 
@@ -435,7 +447,7 @@ export const GraphPanel: React.FC<{
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                       transition={{ duration: 0.5, ease: 'easeOut', delay: ei * 0.04 }}
-                      markerEnd={preview.directed ? 'url(#graph-arrow)' : undefined}
+                      markerEnd={preview.directed ? (isTraversed ? 'url(#graph-arrow-traversed)' : 'url(#graph-arrow)') : undefined}
                     />
                     {/* Animated traversal dot */}
                     {isTraversed && preview.directed && (

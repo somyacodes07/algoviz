@@ -235,33 +235,34 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
 
   return (
     <div className="flex flex-col gap-4 p-4">
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      {/* ── Time & Space Complexity Hero Header ── */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className={`${theme.panelClass} p-4`}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          {/* Time Complexity Card */}
+          <div className="flex-1 w-full bg-slate-50 dark:bg-[var(--dark-surface-2)] p-3 border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a]">
+            <div className="flex items-center justify-between">
               <span
-                className={`inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
+                className={`inline-flex items-center gap-1 border-[1.5px] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] ${theme.accentSoftBg} ${theme.accentText} ${theme.accentBorder}`}
               >
                 <Activity size={12} />
-                Trace Estimate
+                Time Complexity
               </span>
               {analysis && (
                 <span
-                  className={`border-[2px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${confidenceClass}`}
+                  className={`border-[1.5px] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] ${confidenceClass}`}
                 >
-                  {analysis.estimate.confidence} confidence
+                  {analysis.estimate.confidence}
                 </span>
               )}
             </div>
-            <h3 className="mt-3 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-              Observed Complexity
-            </h3>
-            <div className="mt-2 flex items-end gap-3">
-              <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            <div className="mt-2 flex items-end justify-between">
+              <span className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                 {analysis?.estimate.notation || 'O(?)'}
               </span>
               {analysis?.estimate.notation && analysis.estimate.notation !== 'O(?)' && (
@@ -271,35 +272,44 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                   fill={theme.accentFill}
                 />
               )}
-              <span className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                trace + control flow
-              </span>
             </div>
           </div>
 
-          <div
-            className={`border-[2px] px-3 py-2 text-right shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] ${theme.accentBorder} ${theme.accentSoftBg}`}
-          >
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Trace Slice
+          {/* Space Complexity Card */}
+          <div className="flex-1 w-full bg-slate-50 dark:bg-[var(--dark-surface-2)] p-3 border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a]">
+            <div className="flex items-center justify-between">
+              <span
+                className={`inline-flex items-center gap-1 border-[1.5px] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-500`}
+              >
+                <GitBranch size={12} />
+                Auxiliary Space
+              </span>
+              <span className="border-[1.5px] border-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-800 dark:text-emerald-300">
+                {analysis?.spaceEstimate?.confidence || 'high'}
+              </span>
             </div>
-            <div className={`mt-1 text-2xl font-black ${theme.accentText}`}>
-              {Math.round(((currentStepIndex + 1) / timeline.length) * 100)}%
-            </div>
-            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              {currentStepIndex + 1} of {timeline.length} traced steps
+            <div className="mt-2 flex items-end justify-between">
+              <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
+                {analysis?.spaceEstimate?.notation || 'O(1)'}
+              </span>
+              <ComplexitySparkline
+                notation={analysis?.spaceEstimate?.notation || 'O(1)'}
+                stroke="#10b981"
+                fill="#10b981"
+              />
             </div>
           </div>
         </div>
 
+        {/* Rationale Bullet Points */}
         {analysis?.estimate.rationale?.length ? (
-          <div className="mt-4 grid gap-2 md:grid-cols-2">
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
             {analysis.estimate.rationale.slice(0, 2).map((reason) => (
               <div
                 key={reason}
-                className={`${theme.subPanelClass} flex items-start gap-2 p-2 text-sm text-slate-600 dark:text-slate-300`}
+                className={`${theme.subPanelClass} flex items-start gap-2 p-2 text-xs text-slate-600 dark:text-slate-300`}
               >
-                <span className={`mt-1 h-2.5 w-2.5 shrink-0 ${theme.accentBg}`} />
+                <span className={`mt-1 h-2 w-2 shrink-0 ${theme.accentBg}`} />
                 <span className="leading-relaxed font-medium">{compactReason(reason)}</span>
               </div>
             ))}
