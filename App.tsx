@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
 import Controls from "./frontend/components/Controls";
@@ -512,8 +513,10 @@ const App: React.FC = () => {
       document.documentElement.classList.add('view-transitioning');
 
       const transition = document.startViewTransition(() => {
-        setTheme(target);
-        document.documentElement.classList.toggle('dark', target === 'dark');
+        flushSync(() => {
+          setTheme(target);
+          document.documentElement.classList.toggle('dark', target === 'dark');
+        });
       });
 
       transition.ready.then(() => {
