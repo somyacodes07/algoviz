@@ -144,25 +144,24 @@ interface RenderNode extends LinkedListNodeView {
 }
 
 // Color-coded pointer tags — different colors for different pointer roles
-export const POINTER_COLORS: Record<string, { bg: string; text: string; border: string; glow: string }> = {
-  head:     { bg: 'bg-emerald-500', text: 'text-white',       border: 'border-emerald-600', glow: 'rgba(16,185,129,0.3)' },
-  root:     { bg: 'bg-emerald-500', text: 'text-white',       border: 'border-emerald-600', glow: 'rgba(16,185,129,0.3)' },
-  tail:     { bg: 'bg-purple-500',  text: 'text-white',       border: 'border-purple-600',  glow: 'rgba(168,85,247,0.3)' },
-  curr:     { bg: 'bg-amber-500',   text: 'text-black',       border: 'border-amber-600',   glow: 'rgba(245,158,11,0.3)' },
-  current:  { bg: 'bg-amber-500',   text: 'text-black',       border: 'border-amber-600',   glow: 'rgba(245,158,11,0.3)' },
-  parent:   { bg: 'bg-orange-500',  text: 'text-white',       border: 'border-orange-600',  glow: 'rgba(249,115,22,0.3)' },
-  temp:     { bg: 'bg-rose-500',    text: 'text-white',       border: 'border-rose-600',     glow: 'rgba(244,63,94,0.3)' },
-  prev:     { bg: 'bg-cyan-500',    text: 'text-black',       border: 'border-cyan-600',     glow: 'rgba(6,182,212,0.3)' },
-  n:        { bg: 'bg-pink-500',    text: 'text-white',       border: 'border-pink-600',     glow: 'rgba(236,72,153,0.3)' },
-  node:     { bg: 'bg-pink-500',    text: 'text-white',       border: 'border-pink-600',     glow: 'rgba(236,72,153,0.3)' },
-  nxtNode:  { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)' },
-  nextTemp: { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)' },
-  found:    { bg: 'bg-lime-500',    text: 'text-black',       border: 'border-lime-600',     glow: 'rgba(132,204,22,0.3)' },
-  target:   { bg: 'bg-lime-500',    text: 'text-black',       border: 'border-lime-600',     glow: 'rgba(132,204,22,0.3)' },
-  left:     { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)' },
-  right:    { bg: 'bg-indigo-500',  text: 'text-white',       border: 'border-indigo-600',   glow: 'rgba(99,102,241,0.3)' },
+export const POINTER_COLORS: Record<string, { bg: string; text: string; border: string; glow: string; hex: string }> = {
+  head:     { bg: 'bg-emerald-500', text: 'text-white',       border: 'border-emerald-600', glow: 'rgba(16,185,129,0.3)', hex: '#10b981' },
+  root:     { bg: 'bg-emerald-500', text: 'text-white',       border: 'border-emerald-600', glow: 'rgba(16,185,129,0.3)', hex: '#10b981' },
+  tail:     { bg: 'bg-purple-500',  text: 'text-white',       border: 'border-purple-600',  glow: 'rgba(168,85,247,0.3)', hex: '#a855f7' },
+  curr:     { bg: 'bg-amber-500',   text: 'text-black',       border: 'border-amber-600',   glow: 'rgba(245,158,11,0.3)', hex: '#f59e0b' },
+  current:  { bg: 'bg-amber-500',   text: 'text-black',       border: 'border-amber-600',   glow: 'rgba(245,158,11,0.3)', hex: '#f59e0b' },
+  parent:   { bg: 'bg-orange-500',  text: 'text-white',       border: 'border-orange-600',  glow: 'rgba(249,115,22,0.3)', hex: '#f97316' },
+  temp:     { bg: 'bg-rose-500',    text: 'text-white',       border: 'border-rose-600',     glow: 'rgba(244,63,94,0.3)',  hex: '#f43f5e' },
+  prev:     { bg: 'bg-cyan-500',    text: 'text-black',       border: 'border-cyan-600',     glow: 'rgba(6,182,212,0.3)',  hex: '#06b6d4' },
+  n:        { bg: 'bg-pink-500',    text: 'text-white',       border: 'border-pink-600',     glow: 'rgba(236,72,153,0.3)', hex: '#ec4899' },
+  node:     { bg: 'bg-pink-500',    text: 'text-white',       border: 'border-pink-600',     glow: 'rgba(236,72,153,0.3)', hex: '#ec4899' },
+  nxtNode:  { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)', hex: '#0ea5e9' },
+  nextTemp: { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)', hex: '#0ea5e9' },
+  found:    { bg: 'bg-lime-500',    text: 'text-black',       border: 'border-lime-600',     glow: 'rgba(132,204,22,0.3)', hex: '#84cc16' },
+  target:   { bg: 'bg-lime-500',    text: 'text-black',       border: 'border-lime-600',     glow: 'rgba(132,204,22,0.3)', hex: '#84cc16' },
+  left:     { bg: 'bg-sky-500',     text: 'text-white',       border: 'border-sky-600',      glow: 'rgba(14,165,233,0.3)', hex: '#0ea5e9' },
+  right:    { bg: 'bg-indigo-500',  text: 'text-white',       border: 'border-indigo-600',   glow: 'rgba(99,102,241,0.3)', hex: '#6366f1' },
 };
-const DEFAULT_PTR_COLOR = { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600', glow: 'rgba(99,102,241,0.3)' };
 
 export function getPtrColor(name: string) {
   return Object.entries(POINTER_COLORS).find(([k]) => k === name)?.[1] || DEFAULT_PTR_COLOR;
@@ -483,19 +482,17 @@ export const LinkedListPanel: React.FC<{
                                 })}
                               </div>
                               {/* Arrow stalk — drops down from labels into the node */}
-                              <div className="flex flex-col items-center">
-                                <div
-                                  className="w-[2px] h-3"
-                                  style={{ backgroundColor: getPtrColor(node.pointerNames[0]).glow.replace('0.3)', '0.8)') }}
-                                />
-                                <div
-                                  className="w-0 h-0"
-                                  style={{
-                                    borderLeft: '4px solid transparent',
-                                    borderRight: '4px solid transparent',
-                                    borderTop: `5px solid ${getPtrColor(node.pointerNames[0]).glow.replace('0.3)', '0.9)')}`,
-                                  }}
-                                />
+                              <div className="flex flex-col items-center mt-0.5">
+                                <svg width="12" height="18" viewBox="0 0 12 18" className="overflow-visible">
+                                  <defs>
+                                    <linearGradient id={`ptr-grad-${node.id}`} x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor={getPtrColor(node.pointerNames[0]).hex} stopOpacity="0.4" />
+                                      <stop offset="100%" stopColor={getPtrColor(node.pointerNames[0]).hex} stopOpacity="1" />
+                                    </linearGradient>
+                                  </defs>
+                                  <line x1="6" y1="0" x2="6" y2="12" stroke={`url(#ptr-grad-${node.id})`} strokeWidth="2.5" strokeLinecap="round" />
+                                  <polygon points="2,11 6,17 10,11" fill={getPtrColor(node.pointerNames[0]).hex} />
+                                </svg>
                               </div>
                             </motion.div>
                           )}
