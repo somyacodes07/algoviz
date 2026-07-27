@@ -11,12 +11,21 @@
   animation: none;
   mix-blend-mode: normal;
   pointer-events: none;
+  height: 100%;
+  overflow: hidden;
 }
 ::view-transition-new(root) {
   z-index: 999;
 }
 ::view-transition-old(root) {
   z-index: 1;
+}
+
+/* ── Prevent DOM element transition conflicts during Theme Circle Reveal ── */
+html.view-transitioning *,
+html.view-transitioning *::before,
+html.view-transitioning *::after {
+  transition: none !important;
 }
 
 @layer utilities {

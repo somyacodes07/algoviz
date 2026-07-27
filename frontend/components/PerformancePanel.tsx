@@ -235,8 +235,6 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
 
   return (
     <div className="flex flex-col gap-4 p-4">
-  return (
-    <div className="flex flex-col gap-4 p-4">
       {/* ── Time & Space Complexity Hero Header ── */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
