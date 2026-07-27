@@ -238,38 +238,40 @@ const HomePage: React.FC<HomePageProps> = ({
         <LandingInteractiveBackdrop hoverLang={hoverLang} defaultLang={language} theme={theme} />
 
         {/* Top Navigation / Header */}
-        <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-6 backdrop-blur-md dark:border-[var(--dark-border)] dark:bg-slate-950/20">
+        <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-4 sm:p-6 backdrop-blur-md dark:border-[var(--dark-border)] dark:bg-slate-950/20">
           <div className="flex items-center gap-2">
             <Logo
               language={hoverLang === 'cpp' ? 'c++' : 'javascript'}
-              className="w-[2.4rem] h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]"
+              className="w-[2.2rem] h-[2.2rem] sm:w-[2.4rem] sm:h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]"
             />
-            <span className="font-bold text-xl tracking-tight font-mono">{scrambledTitle}</span>
+            <span className="font-bold text-lg sm:text-xl tracking-tight font-mono">{scrambledTitle}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 mr-12">
+          <div className="flex items-center gap-3 sm:gap-6 text-sm font-bold text-slate-600 dark:text-slate-300">
             <a
               href={docsHref}
               onClick={(e) => {
                 e.preventDefault();
                 onOpenDocs();
               }}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1"
             >
-              {T.docs}
+              <BookOpen size={14} className="sm:hidden" />
+              <span>{T.docs}</span>
             </a>
             <a
               href="https://github.com/somyacodes07/AlgoViz"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm"
+              className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm text-xs sm:text-sm"
             >
               <Star size={14} className="group-hover:text-amber-500 transition-colors" />
-              <span>{T.githubStar}</span>
+              <span className="hidden sm:inline">{T.githubStar}</span>
+              <span className="sm:hidden">Star</span>
             </a>
             <button
               data-theme-toggle
               onClick={(e) => toggleTheme(e)}
-              className="p-2 border border-slate-300 dark:border-[var(--dark-border)] rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
+              className="p-1.5 sm:p-2 border border-slate-300 dark:border-[var(--dark-border)] rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
@@ -279,7 +281,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
         <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
           {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-12 border-slate-900/80 bg-white/35 p-8 backdrop-blur-sm md:border-r-2 md:p-16 lg:p-24 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-a40)]">
+          <div className="relative flex flex-1 flex-col justify-between gap-8 sm:gap-12 border-slate-900/80 bg-white/35 p-6 sm:p-12 lg:p-20 backdrop-blur-sm md:border-r-2 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-a40)]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -293,7 +295,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
-                className="mb-6 flex flex-wrap items-center gap-x-4 text-5xl font-black tracking-tight leading-[1.1] md:text-7xl"
+                className="mb-6 flex flex-wrap items-center gap-x-3 sm:gap-x-4 text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1]"
               >
                 <motion.span
                   initial={{ opacity: 0, y: 10 }}
@@ -329,7 +331,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   whileHover={{ scale: 1.05, rotate: -2 }}
                   className="group relative mb-2 mt-2 inline-block cursor-pointer"
                 >
-                  <span className="relative z-10 inline-block transform -skew-x-6 bg-slate-900 px-4 py-1.5 leading-none text-white transition-colors group-hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:group-hover:bg-slate-200">
+                  <span className="relative z-10 inline-block transform -skew-x-6 bg-slate-900 px-3.5 py-1.5 leading-none text-white transition-colors group-hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:group-hover:bg-slate-200">
                     {T.code}
                   </span>
                   <span className="absolute inset-0 -z-10 translate-x-2 translate-y-2 transform skew-x-6 bg-amber-400 transition-transform group-hover:translate-x-3 group-hover:translate-y-3 dark:bg-amber-500"></span>
@@ -351,7 +353,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </motion.span>
               </motion.h1>
 
-              <p className="mb-10 max-w-md text-lg font-medium leading-relaxed text-slate-600 md:text-xl dark:text-slate-400">
+              <p className="mb-8 sm:mb-10 max-w-md text-base sm:text-lg md:text-xl font-medium leading-relaxed text-slate-600 dark:text-slate-400">
                 {T.heroSub}
               </p>
 
@@ -364,7 +366,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   }}
                   onMouseEnter={() => { setHoverLang('js'); onHoverLanguage?.('javascript'); }}
                   onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
-                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-yellow-400 px-6 py-4 text-lg font-bold text-slate-900 shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-yellow-300 active:translate-y-1 dark:bg-yellow-500 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-yellow-400"
+                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-yellow-400 px-6 py-4 text-base sm:text-lg font-bold text-slate-900 shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-yellow-300 active:translate-y-1 dark:bg-yellow-500 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-yellow-400"
                 >
                   <span className="flex items-center gap-3">
                     <Code2 strokeWidth={2.5} />
@@ -381,7 +383,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   }}
                   onMouseEnter={() => { setHoverLang('cpp'); onHoverLanguage?.('c++'); }}
                   onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
-                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-blue-500 px-6 py-4 text-lg font-bold text-white shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-blue-400 active:translate-y-1 dark:border-white/10 dark:bg-blue-600 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-blue-500"
+                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-blue-500 px-6 py-4 text-base sm:text-lg font-bold text-white shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-blue-400 active:translate-y-1 dark:border-white/10 dark:bg-blue-600 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-blue-500"
                 >
                   <span className="flex items-center gap-3">
                     <Cpu strokeWidth={2.5} />
@@ -391,14 +393,14 @@ const HomePage: React.FC<HomePageProps> = ({
                 </a>
               </div>
 
-              <div className="mb-4 mt-8 flex items-center gap-4 flex-wrap">
+              <div className="mb-4 mt-6 sm:mt-8 flex items-center gap-3 sm:gap-4 flex-wrap">
                 <a
                   href={docsHref}
                   onClick={(e) => {
                     e.preventDefault();
                     onOpenDocs();
                   }}
-                  className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 transition-colors hover:text-slate-900 active:translate-y-[1px] dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-900 active:translate-y-[1px] dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   <BookOpen size={14} /> Read Documentation
                 </a>
@@ -429,22 +431,20 @@ const HomePage: React.FC<HomePageProps> = ({
                 </a>
               </div>
 
-              <div className="mt-4 flex items-center gap-2 font-mono text-sm text-slate-500">
+              <div className="mt-4 flex items-center gap-2 font-mono text-xs sm:text-sm text-slate-500">
                 <Terminal size={14} />
                 <span>{T.selectFile}</span>
               </div>
             </motion.div>
-
           </div>
 
-          {/* Right Side: Visualizer abstract graphic */}
-          <div className="relative z-0 hidden flex-1 items-center justify-center bg-slate-100/35 p-8 backdrop-blur-[2px] md:flex md:p-12 lg:p-16 dark:bg-[var(--dark-surface-a30)]">
-
+          {/* Right Side: Visualizer abstract graphic (Responsive on desktop AND mobile) */}
+          <div className="relative z-0 flex flex-1 items-center justify-center bg-slate-100/35 p-4 sm:p-8 backdrop-blur-[2px] md:p-12 lg:p-16 dark:bg-[var(--dark-surface-a30)]">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex h-[420px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] lg:h-[460px]"
+              className="flex h-[380px] sm:h-[420px] lg:h-[460px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[6px_6px_0px_#0f172a] sm:shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)]"
               style={{
                 boxShadow: theme === 'dark'
                   ? `8px 8px 0px var(--dark-shadow), 0 0 40px ${(hoverLang === 'cpp' || (!hoverLang && language === 'c++')) ? 'var(--dark-glow-blue)' : 'var(--dark-glow-saffron)'}`

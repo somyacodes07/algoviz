@@ -79,10 +79,10 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
 
   return (
     <div
-      className={`flex flex-col h-full w-full md:min-w-[300px] bg-white dark:bg-[var(--dark-surface-2)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] transition-all duration-200 ease-out ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}
+      className={`flex flex-col h-full w-full md:min-w-[300px] min-h-[320px] md:min-h-0 bg-white dark:bg-[var(--dark-surface-2)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[4px_4px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] transition-all duration-200 ease-out ${visualizerMode ? 'md:w-[40%]' : 'md:flex-1'}`}
     >
       {/* Toolbar */}
-      <div className="flex justify-between items-center px-4 py-3 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]">
+      <div className="flex flex-wrap justify-between items-center px-3 sm:px-4 py-2 sm:py-3 gap-2 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]">
         <div className="flex items-center gap-3">
           <span className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-wider flex items-center gap-1.5">
             <Code size={16} className={iconTextClass} />
@@ -242,10 +242,10 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
                   value={noteText}
                   onChange={e => setNoteText(e.target.value)}
                   onKeyDown={e => {
-                    if (e.key === 'Enter' && e.metaKey) handleSaveNote();
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSaveNote();
                     if (e.key === 'Escape') handleCancelNote();
                   }}
-                  placeholder="Write a note for this step… (⌘Enter to save)"
+                  placeholder="Write a note for this step… (⌘/Ctrl+Enter to save)"
                   className="w-full px-4 py-2 text-xs text-slate-800 dark:text-slate-200 bg-transparent resize-none focus:outline-none min-h-[56px] placeholder-slate-400 dark:placeholder-slate-600"
                 />
               ) : currentAnnotation ? (
