@@ -616,7 +616,7 @@ const App: React.FC = () => {
               />
             )}
 
-            <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 md:p-6 gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
+            <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-6 gap-4 md:gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
               <WorkspaceEditor
                 language={language}
                 theme={theme}
