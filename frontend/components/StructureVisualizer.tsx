@@ -107,58 +107,107 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-4">
       {treePreview && (
-        <TreePanel
-          preview={treePreview}
-          themeColor={themeColor}
-          onEnlarge={() => setEnlargedType('tree')}
-        />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 shadow-[1px_1px_0_#0f172a]">
+              🌳 Tree Visualizer
+            </span>
+          </div>
+          <TreePanel
+            preview={treePreview}
+            themeColor={themeColor}
+            onEnlarge={() => setEnlargedType('tree')}
+          />
+        </div>
       )}
-      {!treePreview && linkedListPreview && (
-        <LinkedListPanel
-          preview={linkedListPreview}
-          themeColor={themeColor}
-          onEnlarge={() => setEnlargedType('list')}
-        />
+      {linkedListPreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 shadow-[1px_1px_0_#0f172a]">
+              🔗 Linked List Visualizer
+            </span>
+          </div>
+          <LinkedListPanel
+            preview={linkedListPreview}
+            themeColor={themeColor}
+            onEnlarge={() => setEnlargedType('list')}
+          />
+        </div>
       )}
-      {!treePreview && !linkedListPreview && graphPreview && (
-        <GraphPanel
-          preview={graphPreview}
-          themeColor={themeColor}
-          onEnlarge={() => setEnlargedType('graph')}
-        />
+      {graphPreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 shadow-[1px_1px_0_#0f172a]">
+              🕸️ Graph Visualizer
+            </span>
+          </div>
+          <GraphPanel
+            preview={graphPreview}
+            themeColor={themeColor}
+            onEnlarge={() => setEnlargedType('graph')}
+          />
+        </div>
       )}
-      {!treePreview && !linkedListPreview && !graphPreview && heapPreview && (
-        <HeapPanel
-          preview={heapPreview}
-          themeColor={themeColor}
-          onEnlarge={() => setEnlargedType('heap')}
-        />
+      {heapPreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 shadow-[1px_1px_0_#0f172a]">
+              🗃️ Heap Visualizer
+            </span>
+          </div>
+          <HeapPanel
+            preview={heapPreview}
+            themeColor={themeColor}
+            onEnlarge={() => setEnlargedType('heap')}
+          />
+        </div>
       )}
-      {!treePreview && !linkedListPreview && !graphPreview && !heapPreview && stackQueuePreview && (
-        <StackQueuePanel
-          preview={stackQueuePreview}
-          themeColor={themeColor}
-          onEnlarge={() => setEnlargedType('stackqueue')}
-        />
+      {stackQueuePreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-300 shadow-[1px_1px_0_#0f172a]">
+              🥞 Stack / Queue Visualizer
+            </span>
+          </div>
+          <StackQueuePanel
+            preview={stackQueuePreview}
+            themeColor={themeColor}
+            onEnlarge={() => setEnlargedType('stackqueue')}
+          />
+        </div>
       )}
-      {!treePreview && !linkedListPreview && !graphPreview && !heapPreview && !stackQueuePreview && hashMapPreview && (
-        <HashMapPanel
-          preview={hashMapPreview}
-          themeColor={themeColor}
-          prevVariables={prevVariables}
-          onEnlarge={() => setEnlargedType('hashmap')}
-        />
+      {hashMapPreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 shadow-[1px_1px_0_#0f172a]">
+              🔑 Hash Map Visualizer
+            </span>
+          </div>
+          <HashMapPanel
+            preview={hashMapPreview}
+            themeColor={themeColor}
+            prevVariables={prevVariables}
+            onEnlarge={() => setEnlargedType('hashmap')}
+          />
+        </div>
       )}
-      {!treePreview && !linkedListPreview && !graphPreview && !heapPreview && !stackQueuePreview && !hashMapPreview && arrayGridPreview && (
-        <ArrayGridVisualizer
-          variables={variables}
-          prevVariables={prevVariables}
-          themeColor={themeColor}
-          arrayViewType={arrayViewType}
-          onEnlarge={() => setEnlargedType('array')}
-        />
+      {arrayGridPreview && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 shadow-[1px_1px_0_#0f172a]">
+              📊 Array Visualizer
+            </span>
+          </div>
+          <ArrayGridVisualizer
+            variables={variables}
+            prevVariables={prevVariables}
+            themeColor={themeColor}
+            arrayViewType={arrayViewType}
+            onEnlarge={() => setEnlargedType('array')}
+          />
+        </div>
       )}
 
       {/* Enlarged Diagram Modal Overlay */}
