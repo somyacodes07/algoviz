@@ -395,7 +395,7 @@ export const LinkedListPanel: React.FC<{
       </div>
 
       {/* ── Visualization ── */}
-      <div className="mt-4 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
+      <div className="mt-4 overflow-x-auto overflow-y-hidden no-scrollbar pb-2">
         <div className="flex items-start gap-1 w-max pt-12 pb-14 px-12 relative" ref={containerRef}>
           {/* NULL sentinel — start */}
           {preview.cycleToIndex !== 0 && (

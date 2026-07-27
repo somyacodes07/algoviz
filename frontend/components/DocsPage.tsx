@@ -560,34 +560,55 @@ const DocsPage: React.FC<DocsPageProps> = ({
       data-theme={theme}
       className="flex h-full w-full flex-col overflow-y-auto bg-[#faf9f6] text-slate-900 dark:bg-[var(--dark-base)] dark:text-slate-100"
     >
-      <header className="h-14 flex items-center px-6 border-b border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] shrink-0 sticky top-0 z-30">
+      {/* ── Responsive Sticky Header ── */}
+      <header className="h-14 flex items-center px-3 sm:px-6 justify-between border-b border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shrink-0 sticky top-0 z-30">
         <a
           href={homeHref}
           onClick={(e) => {
             e.preventDefault();
             onBack();
           }}
-          className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[#161618] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-xs transition-colors active:translate-y-[1px]"
+          className="flex items-center gap-1.5 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-xs transition-colors active:translate-y-[1px]"
         >
-          <ArrowLeft size={16} /> Back to App
+          <ArrowLeft size={16} />
+          <span className="hidden sm:inline">Back to App</span>
         </a>
-        <div className="mx-auto flex items-center gap-2">
-          <BookOpen size={18} className="text-saffron-500" />
-          <h1 className="font-black text-lg tracking-tight leading-none uppercase">AlgoViz Docs</h1>
+        <div className="flex items-center gap-2">
+          <BookOpen size={18} className="text-saffron-500 shrink-0" />
+          <h1 className="font-black text-sm sm:text-lg tracking-tight leading-none uppercase truncate">AlgoViz Docs</h1>
         </div>
         <button
           data-theme-toggle
           onClick={(e) => toggleTheme(e)}
-          className="flex items-center gap-2 rounded border-2 border-slate-900 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#94a3b8] transition-all hover:shadow-[3px_3px_0_#94a3b8] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-300 dark:shadow-[2px_2px_0_var(--dark-shadow)] dark:hover:shadow-[3px_3px_0_var(--dark-shadow)]"
+          className="flex items-center gap-1.5 rounded border-2 border-slate-900 bg-white px-2.5 py-1 text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#94a3b8] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:text-slate-300 dark:shadow-[2px_2px_0_var(--dark-shadow)]"
           aria-label="Toggle theme"
         >
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-          {theme === 'dark' ? 'Light' : 'Dark'}
+          <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
         </button>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1520px] flex-1 flex-col gap-4 px-4 py-6 md:px-6 lg:flex-row lg:items-start lg:gap-5 lg:px-8">
-        <aside className="w-full shrink-0 lg:sticky lg:top-[5.25rem] lg:w-[17.5rem]">
+      {/* ── Mobile Horizontal Navigation Carousel (< lg breakpoint) ── */}
+      <div className="lg:hidden w-full overflow-x-auto custom-scrollbar px-3 py-2.5 bg-slate-100 dark:bg-[var(--dark-surface-2)] border-b border-slate-300 dark:border-[var(--dark-border)] flex items-center gap-2 shrink-0 z-20 sticky top-14">
+        {docsStructure.map((doc) => (
+          <button
+            key={doc.id}
+            onClick={() => setActiveDoc(doc.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap transition-all border ${
+              activeDoc === doc.id
+                ? 'bg-saffron-500 text-white border-slate-900 shadow-[1.5px_1.5px_0_#0f172a]'
+                : 'bg-white dark:bg-[var(--dark-surface-3)] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-[var(--dark-border)]'
+            }`}
+          >
+            {doc.icon}
+            <span>{doc.title}</span>
+          </button>
+        ))}
+      </div>
+
+      <main className="mx-auto flex w-full max-w-[1520px] flex-1 flex-col gap-4 px-3 sm:px-6 py-4 sm:py-6 lg:flex-row lg:items-start lg:gap-5 lg:px-8">
+        {/* ── Desktop Sidebar (lg+ breakpoint) ── */}
+        <aside className="hidden lg:block w-full shrink-0 lg:sticky lg:top-[5.25rem] lg:w-[17.5rem]">
           <div className="relative z-10 flex flex-col gap-2 rounded border-[2px] border-slate-900 bg-white p-3.5 shadow-[2px_2px_0_#94a3b8] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
             <h2 className="mb-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">
               Documentation
@@ -635,26 +656,26 @@ const DocsPage: React.FC<DocsPageProps> = ({
               className="mb-20 w-full max-w-[1120px] space-y-6"
             >
               <section className="overflow-hidden rounded border-[2px] border-slate-900 bg-slate-900 text-white shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:shadow-[4px_4px_0_var(--dark-shadow)]">
-                <div className="relative bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.28),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.35),transparent_38%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#172554_100%)] p-8 md:p-10">
-                  <p className="mb-3 text-[11px] font-black uppercase tracking-[0.28em] text-saffron-300">
+                <div className="relative bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.28),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.35),transparent_38%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#172554_100%)] p-4 sm:p-8 md:p-10">
+                  <p className="mb-2 sm:mb-3 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.28em] text-saffron-300">
                     {activeSection.visual.eyebrow}
                   </p>
-                  <h2 className="text-3xl font-black leading-tight tracking-tight md:text-4xl">
+                  <h2 className="text-2xl sm:text-3xl font-black leading-tight tracking-tight md:text-4xl">
                     {activeSection.visual.title}
                   </h2>
-                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-200 md:text-lg">
+                  <p className="mt-3 sm:mt-4 max-w-3xl text-sm sm:text-base leading-relaxed text-slate-200 md:text-lg">
                     {activeSection.visual.summary}
                   </p>
-                  <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                     {activeSection.visual.metrics.map((metric) => (
                       <div
                         key={metric.label}
-                        className="rounded border border-white/15 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                        className="rounded border border-white/15 bg-white/10 px-3.5 sm:px-4 py-3 sm:py-4 backdrop-blur-sm"
                       >
-                        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
+                        <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
                           {metric.label}
                         </div>
-                        <div className="mt-2 text-lg font-black text-white">{metric.value}</div>
+                        <div className="mt-1 sm:mt-2 text-base sm:text-lg font-black text-white">{metric.value}</div>
                       </div>
                     ))}
                   </div>
@@ -787,7 +808,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
                 </section>
               )}
 
-              <section className="rounded border-[2px] border-slate-900 bg-white p-8 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-12">
+              <section className="rounded border-[2px] border-slate-900 bg-white p-4 sm:p-8 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)] md:p-12">
                 <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-saffron-600 prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-rose-600 prose-pre:bg-slate-950 prose-pre:text-slate-100 prose-strong:text-slate-900 prose-table:text-sm prose-th:text-[11px] prose-th:uppercase prose-th:tracking-wider hover:prose-a:text-saffron-500 dark:prose-invert dark:prose-headings:text-slate-100 dark:prose-p:text-slate-300 dark:prose-a:text-saffron-500 dark:prose-code:bg-[#222] dark:prose-code:text-rose-400 dark:prose-strong:text-slate-100">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeSection.content}</ReactMarkdown>
                 </article>

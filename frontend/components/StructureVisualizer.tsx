@@ -112,7 +112,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 shadow-[1px_1px_0_#0f172a]">
-              🌳 Tree Visualizer
+              Tree Visualizer
             </span>
           </div>
           <TreePanel
@@ -126,7 +126,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 shadow-[1px_1px_0_#0f172a]">
-              🔗 Linked List Visualizer
+              Linked List Visualizer
             </span>
           </div>
           <LinkedListPanel
@@ -140,7 +140,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 shadow-[1px_1px_0_#0f172a]">
-              🕸️ Graph Visualizer
+              Graph Visualizer
             </span>
           </div>
           <GraphPanel
@@ -154,7 +154,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 shadow-[1px_1px_0_#0f172a]">
-              🗃️ Heap Visualizer
+              Heap Visualizer
             </span>
           </div>
           <HeapPanel
@@ -168,7 +168,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-300 shadow-[1px_1px_0_#0f172a]">
-              🥞 Stack / Queue Visualizer
+              Stack / Queue Visualizer
             </span>
           </div>
           <StackQueuePanel
@@ -182,7 +182,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 shadow-[1px_1px_0_#0f172a]">
-              🔑 Hash Map Visualizer
+              Hash Map Visualizer
             </span>
           </div>
           <HashMapPanel
@@ -197,7 +197,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
             <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 shadow-[1px_1px_0_#0f172a]">
-              📊 Array Visualizer
+              Array Visualizer
             </span>
           </div>
           <ArrayGridVisualizer

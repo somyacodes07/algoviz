@@ -139,7 +139,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}
       >
         {/* Tabs */}
-        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] overflow-x-auto custom-scrollbar">
+        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('diagrams')}
             className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'diagrams' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
@@ -175,7 +175,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[var(--dark-surface)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] overflow-x-auto custom-scrollbar shrink-0"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[var(--dark-surface)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] overflow-x-auto no-scrollbar shrink-0"
             >
               <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 shrink-0">
                 Δ Changed
@@ -207,7 +207,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         </AnimatePresence>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
+        <div className="flex-1 overflow-y-auto no-scrollbar bg-transparent p-3 relative">
           {/* #11 Loop detection warning */}
           {loopWarning && activeTab === 'variables' && (
             <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_var(--dark-shadow)]">

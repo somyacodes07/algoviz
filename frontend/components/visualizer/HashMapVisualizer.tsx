@@ -68,7 +68,7 @@ export const HashMapPanel: React.FC<HashMapPanelProps> = ({ preview, themeColor,
         </div>
       </div>
 
-      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
         <AnimatePresence>
           {preview.entries.map(([key, value]) => {
             const isNew = !(key in prevEntries);

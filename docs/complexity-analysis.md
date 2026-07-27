@@ -1,6 +1,6 @@
-# Complexity Analysis
+# Complexity & Telemetry Analysis
 
-AlgoViz provides **live time complexity estimation** for both JavaScript and C++ code. The Complexity tab in the workbench displays the estimated Big-O notation, hotspot heatmap, and execution statistics.
+AlgoViz provides **live time and auxiliary space complexity estimation** for both JavaScript and C++ code. The Perf tab in the workbench displays estimated Big-O notations, interactive SVG growth curves, hotspot heatmaps, and call stack metrics.
 
 ## How It Works
 
@@ -29,42 +29,42 @@ Since Acorn cannot parse C++ source code, AlgoViz infers complexity from the **r
 4. **Sort detection**: Scans the C++ source text for `sort(` patterns
 5. **Logarithmic pattern matching**: Checks if hit counts follow log-scale growth
 
+### Auxiliary Space Analysis
+
+In addition to Time Complexity, AlgoViz estimates **Auxiliary Space Complexity**:
+- **Stack Memory O(h)**: Evaluates peak call stack frames during recursive execution
+- **Dynamic Heap Memory O(n)**: Evaluates vector, array, hash map, and matrix allocations
+- **In-Place O(1)**: Confirms when only primitive scalar variables and registers are allocated
+
 ## Complexity Tab UI
 
-The Complexity panel shows:
+The Perf panel displays telemetry metrics:
 
 | Metric | Description |
 |---|---|
-| **Observed Complexity** | The estimated Big-O notation (e.g., `O(n²)`) |
-| **Trace Slice** | Percentage of the total timeline currently visible |
+| **Time Complexity** | Estimated Big-O time growth (e.g., `O(n²)`) with interactive sparkline curve |
+| **Auxiliary Space** | Estimated Big-O memory overhead (e.g., `O(1)` or `O(n)`) |
 | **Operations Seen** | Total number of traced execution steps |
 | **Unique Lines** | Count of distinct source lines that were executed |
-| **Peak Stack** | Maximum call stack depth during execution |
-| **Hot Line** | The most frequently executed line number |
-| **Hot Lines** | Heatmap bar chart of the top 6 most-hit lines |
+| **Peak Stack** | Maximum call stack depth reached during execution |
+| **Hot Line** | The most frequently executed source code line number |
+| **Hotspot Heatmap** | Color-coded severity bar chart of top executed lines |
 
-## Estimation Examples
+## Estimation Benchmarks
 
-| Algorithm | Expected | Detected |
-|---|---|---|
-| Array traversal | O(n) | O(n) ✓ |
-| Two Sum (brute force) | O(n²) | O(n²) ✓ |
-| Binary Search | O(log n) | O(log n) ✓ |
-| Bubble Sort | O(n²) | O(n²) ✓ |
-| Merge Sort | O(n log n) | O(n log n) ✓ |
-| Fibonacci (recursive) | O(2^n) | O(2^n) ✓ |
+| Algorithm | Time Complexity | Auxiliary Space | Status |
+|---|---|---|---|
+| Array Traversal | O(n) | O(1) | Verified ✓ |
+| Binary Search | O(log n) | O(1) | Verified ✓ |
+| Two Sum (Brute Force) | O(n²) | O(1) | Verified ✓ |
+| Bubble Sort | O(n²) | O(1) | Verified ✓ |
+| Merge Sort | O(n log n) | O(n) | Verified ✓ |
+| Fibonacci (Recursive) | O(2^n) | O(n) | Verified ✓ |
 
 ## Confidence Levels
 
-The analyzer assigns a confidence level to each estimate:
+The analyzer assigns a confidence rating to each estimate:
 
-- **High**: Strong structural evidence from nested loops or multiple signals
+- **High**: Strong structural evidence from nested loops, AST trees, or stack metrics
 - **Medium**: Single loop or recursive pattern detected
 - **Low**: No clear loop/recursion structure found (defaults to O(1))
-
-## Limitations
-
-- The C++ timeline heuristic requires a sufficiently large input for accurate estimation
-- Very short programs (< 3 steps) may produce O(1) estimates regardless of actual complexity
-- Custom iterators or non-standard loop patterns may not be detected
-- The analyzer estimates *observed* complexity, which may differ from worst-case theoretical complexity

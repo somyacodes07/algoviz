@@ -164,7 +164,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
               onTouchEnd={handleMouseUp}
               onWheel={handleWheel}
               style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-              className="flex-1 overflow-hidden relative p-6 bg-slate-50 dark:bg-[var(--dark-surface)] flex justify-center items-center"
+              className="flex-1 overflow-hidden no-scrollbar relative p-6 bg-slate-50 dark:bg-[var(--dark-surface)] flex justify-center items-center"
             >
               {/* Transform Content Wrap */}
               <div
@@ -173,7 +173,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
                   transformOrigin: 'center center',
                   transition: isDragging ? 'none' : 'transform 0.15s ease-out',
                 }}
-                className="w-full h-full flex justify-center items-center"
+                className="w-full h-full flex justify-center items-center no-scrollbar"
               >
                 {children}
               </div>

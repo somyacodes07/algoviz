@@ -98,7 +98,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
         ) : (
           // Queue: horizontal row, head on the left
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar py-1">
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
               <div className="flex flex-col items-center shrink-0">
                 <span className="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase mb-1">FRONT →</span>
               </div>

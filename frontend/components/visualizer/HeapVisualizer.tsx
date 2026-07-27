@@ -115,7 +115,7 @@ export const HeapPanel: React.FC<HeapPanelProps> = ({ preview, themeColor, onEnl
         </svg>
       </div>
 
-      <div className="flex items-center gap-1 px-3 py-2 border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] overflow-x-auto custom-scrollbar">
+      <div className="flex items-center gap-1 px-3 py-2 border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] overflow-x-auto no-scrollbar">
         <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400 shrink-0 mr-1">arr:</span>
         {preview.value.slice(0, 20).map((val, i) => (
           <motion.div key={i} layout
