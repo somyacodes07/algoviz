@@ -587,31 +587,23 @@ export const LinkedListPanel: React.FC<{
                   {/* ── Arrow Connectors Between Nodes ── */}
                   {index < arr.length - 1 && !isDeleted && !arr.at(index + 1)?.deleted && (
                     preview.isDoublyLinked ? (
-                      <div className="mt-7 flex flex-col items-center gap-0 px-0.5">
-                        <motion.div
-                          className={theme.accentText}
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6 }}
-                        >
-                          <ArrowRight size={13} strokeWidth={2.5} />
-                        </motion.div>
-                        <div className={`h-[2px] w-5 ${isSaffron ? 'bg-orange-300 dark:bg-orange-700' : 'bg-blue-300 dark:bg-blue-700'} rounded-full`} />
-                        <motion.div
-                          className={theme.accentText}
-                          animate={{ x: [0, -4, 0] }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6, delay: 0.3 }}
-                        >
-                          <ArrowLeft size={13} strokeWidth={2.5} />
-                        </motion.div>
+                      <div className="mt-7 flex flex-col items-center gap-0.5 px-1">
+                        <svg width="32" height="24" viewBox="0 0 32 24" className="overflow-visible">
+                          {/* Forward Next arrow */}
+                          <line x1="2" y1="6" x2="24" y2="6" stroke={isSaffron ? '#f97316' : '#3b82f6'} strokeWidth="2.5" strokeLinecap="round" />
+                          <polygon points="22,2 30,6 22,10" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+                          {/* Backward Prev arrow */}
+                          <line x1="30" y1="18" x2="8" y2="18" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" />
+                          <polygon points="10,14 2,18 10,22" fill="#06b6d4" />
+                        </svg>
                       </div>
                     ) : (
-                      <motion.div
-                        className={`mt-10 flex items-center ${theme.accentText}`}
-                        animate={{ x: [0, 3, 0] }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.4 }}
-                      >
-                        <ArrowRight size={14} />
-                      </motion.div>
+                      <div className="mt-9 flex items-center px-1">
+                        <svg width="30" height="16" viewBox="0 0 30 16" className="overflow-visible">
+                          <line x1="2" y1="8" x2="22" y2="8" stroke={isSaffron ? '#f97316' : '#3b82f6'} strokeWidth="2.5" strokeLinecap="round" />
+                          <polygon points="20,4 28,8 20,12" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+                        </svg>
+                      </div>
                     )
                   )}
                 </motion.div>
@@ -622,13 +614,12 @@ export const LinkedListPanel: React.FC<{
           {/* NULL sentinel — end */}
           {preview.cycleToIndex !== 0 && (
             <div className="flex items-center gap-1">
-              <motion.div
-                className={`mt-10 ${theme.accentText}`}
-                animate={{ x: [0, 3, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              >
-                <ArrowRight size={12} strokeWidth={2.5} />
-              </motion.div>
+              <div className="mt-9 flex items-center px-1">
+                <svg width="24" height="16" viewBox="0 0 24 16" className="overflow-visible">
+                  <line x1="2" y1="8" x2="16" y2="8" stroke={isSaffron ? '#f97316' : '#3b82f6'} strokeWidth="2.5" strokeLinecap="round" />
+                  <polygon points="14,4 22,8 14,12" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+                </svg>
+              </div>
               <div className="mt-4 px-2 py-3 border-[3px] border-dashed border-slate-400 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                 {T.nullText}
               </div>
@@ -641,23 +632,35 @@ export const LinkedListPanel: React.FC<{
               <defs>
                 <marker
                   id="cycle-arrow"
-                  viewBox="0 0 10 10"
+                  viewBox="0 0 12 12"
                   refX="10"
-                  refY="5"
+                  refY="6"
                   markerUnits="strokeWidth"
-                  markerWidth="7"
-                  markerHeight="7"
+                  markerWidth="8"
+                  markerHeight="8"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 1 L 10 5 L 0 9 L 3 5 z" fill={isSaffron ? '#f97316' : '#3b82f6'} />
+                  <path d="M 1 1 L 11 6 L 1 11 L 4 6 z" fill={isSaffron ? '#f97316' : '#3b82f6'} />
                 </marker>
+                <filter id="cycle-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="glow" />
+                  <feComposite in="SourceGraphic" in2="glow" operator="over" />
+                </filter>
               </defs>
+              {/* Background Glow Path */}
+              <path
+                d={cyclePath}
+                stroke={isSaffron ? 'rgba(249,115,22,0.3)' : 'rgba(59,130,246,0.3)'}
+                strokeWidth="7"
+                fill="none"
+              />
+              {/* Main Curve Path */}
               <motion.path
                 d={cyclePath}
                 stroke={isSaffron ? '#f97316' : '#3b82f6'}
-                strokeWidth="3"
+                strokeWidth="3.5"
                 fill="none"
-                strokeDasharray="4 3"
+                strokeDasharray="6 4"
                 markerEnd="url(#cycle-arrow)"
                 markerStart={preview.cycleToIndex === 0 && preview.isDoublyLinked ? 'url(#cycle-arrow)' : undefined}
                 initial={{ pathLength: 0 }}
