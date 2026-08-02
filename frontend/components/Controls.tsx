@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { Play, Pause, StepBack, StepForward, RotateCcw, CircleDot, Zap } from 'lucide-react';
+import { Play, Pause, StepBack, StepForward, RotateCcw, CircleDot, Zap, Gauge, Turtle, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ControlsProps {
@@ -219,32 +219,34 @@ const Controls: React.FC<ControlsProps> = ({
         </div>
       </div>
 
-      {/* Speed Selector Pills */}
-      <div className="shrink-0 flex items-center gap-1 bg-slate-100 dark:bg-[var(--dark-surface-2)] p-1 border-[1.5px] border-slate-900 dark:border-[var(--dark-border)] shadow-[1.5px_1.5px_0_#0f172a]">
+      {/* Speed Selector Icon Pills */}
+      <div className="shrink-0 flex items-center gap-1 bg-slate-100 dark:bg-[var(--dark-surface-2)] p-1 border-[1.5px] border-slate-900 dark:border-[var(--dark-border)] shadow-[1.5px_1.5px_0_#0f172a] rounded">
         {(
           [
-            { label: '0.5x', value: 2000, icon: null },
-            { label: '1x', value: 1000, icon: null },
-            { label: '2x', value: 400, icon: null },
-            { label: '⚡', value: 80, icon: Zap },
-          ] as { label: string; value: number; icon: typeof Zap | null }[]
+            { label: '0.5x', value: 2000, title: 'Slow (0.5x)', Icon: Turtle },
+            { label: '1x', value: 1000, title: 'Normal (1x)', Icon: Gauge },
+            { label: '2x', value: 400, title: 'Fast (2x)', Icon: Flame },
+            { label: 'Max', value: 80, title: 'Turbo (Instant)', Icon: Zap },
+          ]
         ).map((preset) => {
           const isActive = speed === preset.value;
+          const Icon = preset.Icon;
           return (
             <button
               key={preset.label}
               data-no-transition
               onClick={() => setSpeed(preset.value)}
-              className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border transition-all active:translate-y-[1px] active:shadow-none ${
+              className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 border transition-all active:translate-y-[1px] active:shadow-none ${
                 isActive
                   ? isSaffron
                     ? 'bg-saffron-500 text-white border-slate-900 shadow-[1px_1px_0_#0f172a]'
                     : 'bg-blue-500 text-white border-slate-900 shadow-[1px_1px_0_#0f172a]'
                   : 'bg-transparent text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-200'
               }`}
-              title={`Speed: ${preset.label}`}
+              title={preset.title}
             >
-              {preset.label}
+              <Icon size={12} strokeWidth={2.5} />
+              <span>{preset.label}</span>
             </button>
           );
         })}
