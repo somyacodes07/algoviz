@@ -301,27 +301,30 @@ class MemFS {
   }
 
   addDirectory(path: string) {
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
     this.mem.check();
-    this.mem.write(this.exports.GetPathBuf(), path);
-    this.exports.AddDirectoryNode(path.length);
+    this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
+    this.exports.AddDirectoryNode(cleanPath.length);
   }
 
   addFile(path: string, contents: Uint8Array | string) {
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
     const length = typeof contents === 'string' ? contents.length : contents.byteLength;
     this.mem.check();
-    this.mem.write(this.exports.GetPathBuf(), path);
-    const inode = this.exports.AddFileNode(path.length, length);
+    this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
+    const inode = this.exports.AddFileNode(cleanPath.length, length);
     const addr = this.exports.GetFileNodeAddress(inode);
     this.mem.check();
     this.mem.write(addr, contents);
   }
 
   getFileContents(path: string): Uint8Array {
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
     this.mem.check();
-    this.mem.write(this.exports.GetPathBuf(), path);
-    const inode = this.exports.FindNode(path.length);
+    this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
+    const inode = this.exports.FindNode(cleanPath.length);
     if (inode === 0) {
-      throw new Error(`File not found: ${path}`);
+      throw new Error(`File not found: ${cleanPath}`);
     }
     const addr = this.exports.GetFileNodeAddress(inode);
     const size = this.exports.GetFileNodeSize(inode);
