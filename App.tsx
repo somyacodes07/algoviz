@@ -735,6 +735,7 @@ const App: React.FC = () => {
                   currentStepIndex={currentStepIndex}
                   complexityAnalysis={complexityAnalysis}
                   settings={settings}
+                  onSeekStep={jumpToStep}
                 />
               </div>
             </main>

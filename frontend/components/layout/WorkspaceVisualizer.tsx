@@ -35,6 +35,7 @@ interface WorkspaceVisualizerProps {
   currentStepIndex: number;
   complexityAnalysis: ComplexityAnalysis | null;
   settings: AppSettings;
+  onSeekStep?: (index: number) => void;
 }
 
 const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
@@ -245,6 +246,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               onTogglePin={handleTogglePin}
               timeline={timeline}
               currentStepIndex={currentStepIndex}
+              onSeekStep={onSeekStep}
             />
           ) : activeTab === 'stack' ? (
             <CallStackPanel

@@ -25,6 +25,7 @@ interface VariablesPanelProps {
   onTogglePin?: (name: string) => void;
   timeline?: Timeline;
   currentStepIndex?: number;
+  onSeekStep?: (stepIndex: number) => void;
 }
 
 function safeSerialize(value: unknown, maxDepth: number = 3): string {
@@ -231,7 +232,8 @@ const ArrayVisualizer: React.FC<{
 const Sparkline: React.FC<{
   history: number[];
   themeColor: ThemeColor;
-}> = ({ history, themeColor }) => {
+  onSeekStep?: (stepIndex: number) => void;
+}> = ({ history, themeColor, onSeekStep }) => {
   const isSaffron = themeColor === 'saffron';
   const width = 80;
   const height = 24;
@@ -241,18 +243,19 @@ const Sparkline: React.FC<{
   const max = Math.max(...history);
   const range = max - min === 0 ? 1 : max - min;
 
-  const points = history.map((val, index) => {
-    const x = padding + (index / (history.length - 1)) * (width - 2 * padding);
+  const pointCoords = history.map((val, index) => {
+    const x = padding + (index / (Math.max(history.length - 1, 1))) * (width - 2 * padding);
     const y = height - padding - ((val - min) / range) * (height - 2 * padding);
-    return `${x},${y}`;
-  }).join(' ');
+    return { x, y, val, index };
+  });
 
+  const points = pointCoords.map((p) => `${p.x},${p.y}`).join(' ');
   const strokeColor = isSaffron ? '#f97316' : '#3b82f6';
   const fillGradientId = `sparkline-grad-${Math.random().toString(36).substr(2, 9)}`;
   const areaPoints = `${padding},${height - padding} ${points} ${width - padding},${height - padding}`;
 
   return (
-    <svg width={width} height={height} className="overflow-visible shrink-0 ml-1.5" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+    <svg width={width} height={height} className="overflow-visible shrink-0 ml-1.5 cursor-pointer" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
       <defs>
         <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
@@ -268,16 +271,24 @@ const Sparkline: React.FC<{
         strokeLinejoin="round"
         points={points}
       />
-      {history.length > 0 && (
+      {pointCoords.map((p) => (
         <circle
-          cx={padding + (history.length - 1) * (width - 2 * padding) / (history.length - 1)}
-          cy={height - padding - ((history[history.length - 1] - min) / range) * (height - 2 * padding)}
-          r="2.5"
+          key={p.index}
+          cx={p.x}
+          cy={p.y}
+          r={p.index === history.length - 1 ? 3 : 2}
           fill={strokeColor}
           stroke="#ffffff"
           strokeWidth="1"
-        />
-      )}
+          className="hover:scale-150 transition-transform cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onSeekStep) onSeekStep(p.index);
+          }}
+        >
+          <title>{`Value: ${p.val} (Step ${p.index + 1}) - Click to jump`}</title>
+        </circle>
+      ))}
     </svg>
   );
 };
@@ -292,7 +303,8 @@ const VariableCard: React.FC<{
   variables: VariableMap;
   timeline?: Timeline;
   currentStepIndex?: number;
-}> = ({ name, value, prevValue, wasPresent, themeColor, variables, timeline, currentStepIndex }) => {
+  onSeekStep?: (stepIndex: number) => void;
+}> = ({ name, value, prevValue, wasPresent, themeColor, variables, timeline, currentStepIndex, onSeekStep }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Compute numeric history for sparkline
@@ -779,6 +791,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
                 variables={variables}
                 timeline={timeline}
                 currentStepIndex={currentStepIndex}
+                onSeekStep={onSeekStep}
               />
             </div>
           ))}

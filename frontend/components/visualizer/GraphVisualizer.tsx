@@ -233,6 +233,8 @@ function computeGraphLayout(preview: GraphPreview) {
   const radius = Math.max(80, count * 22);
   const svgSize = radius * 2 + NODE_SIZE * 2 + 40;
   const center = svgSize / 2;
+
+  // Initial circular placement
   preview.nodes.forEach((node, index) => {
     const angle = ((Math.PI * 2) / count) * index - Math.PI / 2;
     positions.set(node.id, {
@@ -240,6 +242,76 @@ function computeGraphLayout(preview: GraphPreview) {
       y: center + Math.sin(angle) * radius,
     });
   });
+
+  // Force-directed layout simulation (Spring-Embedder physics iteration)
+  const iterations = 45;
+  const kRepulsion = 12000;
+  const kSpring = 0.04;
+  const idealLength = 95;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const forces = new Map<string, { fx: number; fy: number }>();
+    preview.nodes.forEach((n) => forces.set(n.id, { fx: 0, fy: 0 }));
+
+    // 1. Repulsion forces between node pairs
+    for (let i = 0; i < preview.nodes.length; i++) {
+      for (let j = i + 1; j < preview.nodes.length; j++) {
+        const idA = preview.nodes[i].id;
+        const idB = preview.nodes[j].id;
+        const posA = positions.get(idA)!;
+        const posB = positions.get(idB)!;
+
+        const dx = posB.x - posA.x;
+        const dy = posB.y - posA.y;
+        const distSq = Math.max(dx * dx + dy * dy, 100);
+        const dist = Math.sqrt(distSq);
+        const force = kRepulsion / distSq;
+
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        forces.get(idA)!.fx -= fx;
+        forces.get(idA)!.fy -= fy;
+        forces.get(idB)!.fx += fx;
+        forces.get(idB)!.fy += fy;
+      }
+    }
+
+    // 2. Spring attraction forces along edges
+    for (const edge of preview.edges) {
+      const posA = positions.get(edge.from);
+      const posB = positions.get(edge.to);
+      if (!posA || !posB) continue;
+
+      const dx = posB.x - posA.x;
+      const dy = posB.y - posA.y;
+      const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+      const force = kSpring * (dist - idealLength);
+
+      const fx = (dx / dist) * force;
+      const fy = (dy / dist) * force;
+
+      forces.get(edge.from)!.fx += fx;
+      forces.get(edge.from)!.fy += fy;
+      forces.get(edge.to)!.fx -= fx;
+      forces.get(edge.to)!.fy -= fy;
+    }
+
+    // 3. Update positions with damping and boundary clamping
+    const damping = 0.8;
+    const padding = NODE_SIZE + 16;
+
+    preview.nodes.forEach((node) => {
+      const pos = positions.get(node.id)!;
+      const f = forces.get(node.id)!;
+
+      const newX = Math.max(padding, Math.min(svgSize - padding, pos.x + f.fx * damping));
+      const newY = Math.max(padding, Math.min(svgSize - padding, pos.y + f.fy * damping));
+
+      positions.set(node.id, { x: newX, y: newY });
+    });
+  }
+
   return { positions, svgSize, NODE_SIZE, center };
 }
 
