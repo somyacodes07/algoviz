@@ -409,16 +409,28 @@ class App {
   instance!: WebAssembly.Instance;
   exports: any;
   mem!: Memory;
-  ready: Promise<void>;
 
-  constructor(module: WebAssembly.Module, memfs: MemFS, name: string, ...args: string[]) {
-    this.argv = [name, ...args];
-    this.environ = { USER: 'alice' };
+  constructor(
+    module: WebAssembly.Module,
+    memfs: MemFS,
+    argv: string[],
+    environ: Record<string, string> = {},
+  ) {
+    this.argv = argv;
+    this.environ = environ;
     this.memfs = memfs;
 
-    const env = {};
-    const wasi_unstable = {
-      proc_exit: (code: number) => this.proc_exit(code),
+    const env = {
+      abort: () => { throw new Error('abort'); },
+      host_write: (fd: number, iovs: number, iovs_len: number, nwritten_out: number) => this.host_write(fd, iovs, iovs_len, nwritten_out),
+      host_read: (fd: number, iovs: number, iovs_len: number, nread: number) => this.host_read(fd, iovs, iovs_len, nread),
+      memfs_log: (buf: number, len: number) => this.memfs_log(buf, len),
+      copy_in: (memfs_dst: number, clang_src: number, size: number) => this.copy_in(memfs_dst, clang_src, size),
+      copy_out: (clang_dst: number, memfs_src: number, size: number) => this.copy_out(clang_dst, memfs_src, size),
+    };
+
+    const wasi = {
+      proc_exit: (code: number) => { throw new ProcExit(code); },
       environ_sizes_get: (environ_count_out: number, environ_buf_size_out: number) => this.environ_sizes_get(environ_count_out, environ_buf_size_out),
       environ_get: (environ_ptrs: number, environ_buf: number) => this.environ_get(environ_ptrs, environ_buf),
       args_sizes_get: (argc_out: number, argv_buf_size_out: number) => this.args_sizes_get(argc_out, argv_buf_size_out),
@@ -434,39 +446,42 @@ class App {
       poll_oneoff: () => { throw new Error('poll_oneoff not implemented'); }
     };
 
-    Object.assign(wasi_unstable, this.memfs.exports);
-
-    this.ready = WebAssembly.instantiate(module, { wasi_unstable, env }).then(instance => {
-      this.instance = instance;
-      this.exports = this.instance.exports;
-      this.mem = new Memory(this.exports.memory as WebAssembly.Memory);
-      this.memfs.hostMem = this.mem;
-    });
+    this.instance = new WebAssembly.Instance(module, { env, wasi_snapshot_preview1: wasi });
+    this.exports = this.instance.exports;
+    this.mem = new Memory(this.exports.memory as WebAssembly.Memory);
+    this.memfs.hostMem = this.mem;
   }
 
-  async run() {
-    await this.ready;
+  async run(): Promise<number> {
     try {
-      if (this.exports._start) {
-        this.exports._start();
-      } else if (this.exports.main) {
-        this.exports.main();
-      } else {
-        throw new Error('No _start or main export found');
+      this.exports._start();
+      return 0;
+    } catch (e: any) {
+      if (e instanceof ProcExit) {
+        return e.code;
       }
-    } catch (exn: any) {
-      if (exn instanceof ProcExit) {
-        if (exn.code === 0) {
-          return;
-        }
-        throw exn;
-      }
-      throw exn;
+      throw e;
     }
   }
 
-  proc_exit(code: number) {
-    throw new ProcExit(code);
+  host_write(fd: number, iovs: number, iovs_len: number, nwritten_out: number) {
+    return this.memfs.exports.host_write(fd, iovs, iovs_len, nwritten_out);
+  }
+
+  host_read(fd: number, iovs: number, iovs_len: number, nread: number) {
+    return this.memfs.exports.host_read(fd, iovs, iovs_len, nread);
+  }
+
+  memfs_log(buf: number, len: number) {
+    return this.memfs.exports.memfs_log(buf, len);
+  }
+
+  copy_out(clang_dst: number, memfs_src: number, size: number) {
+    return this.memfs.exports.copy_out(clang_dst, memfs_src, size);
+  }
+
+  copy_in(memfs_dst: number, clang_src: number, size: number) {
+    return this.memfs.exports.copy_in(memfs_dst, clang_src, size);
   }
 
   environ_sizes_get(environ_count_out: number, environ_buf_size_out: number) {
@@ -586,21 +601,44 @@ class Tar {
 
   untar(memfs: MemFS) {
     let entry;
+    const createdDirs = new Set<string>();
+
     while ((entry = this.readEntry())) {
+      let rawPath = entry.filenamePrefix
+        ? `${entry.filenamePrefix}/${entry.filename}`
+        : entry.filename;
+
+      let cleanPath = rawPath.replace(/^\.?\//, '').trim();
+      if (!cleanPath) continue;
+      if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+      while (cleanPath.endsWith('/') && cleanPath.length > 1) {
+        cleanPath = cleanPath.slice(0, -1);
+      }
+
       if (entry.type === '5') {
-        memfs.addDirectory(entry.filename);
-      } else if (entry.type === '0' || entry.type === '') {
-        const parts = entry.filename.split('/');
-        let current = '';
-        for (let i = 0; i < parts.length - 1; i++) {
-          current = current ? current + '/' + parts[i] : parts[i];
+        if (!createdDirs.has(cleanPath)) {
           try {
-            memfs.addDirectory(current);
-          } catch {
-            // Ignore if exists
+            memfs.addDirectory(cleanPath);
+            createdDirs.add(cleanPath);
+          } catch (e) {
+            // Directory exists
           }
         }
-        memfs.addFile(entry.filename, entry.contents);
+      } else if (entry.type === '0' || entry.type === '') {
+        const parts = cleanPath.split('/').filter(Boolean);
+        let curr = '';
+        for (let i = 0; i < parts.length - 1; i++) {
+          curr += '/' + parts[i];
+          if (!createdDirs.has(curr)) {
+            try {
+              memfs.addDirectory(curr);
+              createdDirs.add(curr);
+            } catch (e) {
+              // Directory exists
+            }
+          }
+        }
+        memfs.addFile(cleanPath, entry.contents);
       }
     }
   }
