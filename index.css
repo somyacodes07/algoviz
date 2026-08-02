@@ -211,12 +211,19 @@ html.view-transitioning *::after {
 
 /* ─── Global Scroll Lock & Overscroll Containment ───────────────────────── */
 html,
-body,
-#root {
-  height: 100%;
-  width: 100%;
+body {
   margin: 0;
   padding: 0;
+}
+
+/* For workbench / docs pages, lock viewport height & disable rubber-band overscroll */
+html.page-workbench,
+body.page-workbench,
+html.page-workbench #root,
+body.page-workbench #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
 }

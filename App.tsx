@@ -274,6 +274,16 @@ const App: React.FC = () => {
     prewarmWasmEngines();
   }, []);
 
+  useEffect(() => {
+    if (page === "home") {
+      document.documentElement.classList.remove("page-workbench");
+      document.body.classList.remove("page-workbench");
+    } else {
+      document.documentElement.classList.add("page-workbench");
+      document.body.classList.add("page-workbench");
+    }
+  }, [page]);
+
   useSeoMetadata(seoConfig);
 
   const syncUrl = useCallback(
