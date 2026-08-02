@@ -411,53 +411,56 @@ class ProcExit extends Error {
 }
 
 class App {
-  argv: string[];
-  environ: Record<string, string>;
-  memfs: MemFS;
+  argv!: string[];
+  environ!: Record<string, string>;
+  memfs!: MemFS;
   instance!: WebAssembly.Instance;
   exports: any;
   mem!: Memory;
 
-  constructor(
+  static async create(
     module: WebAssembly.Module,
     memfs: MemFS,
     argv: string[],
     environ: Record<string, string> = {},
-  ) {
-    this.argv = argv;
-    this.environ = environ;
-    this.memfs = memfs;
+  ): Promise<App> {
+    const app = new App();
+    app.argv = argv;
+    app.environ = environ;
+    app.memfs = memfs;
 
     const env = {
       abort: () => { throw new Error('abort'); },
-      host_write: (fd: number, iovs: number, iovs_len: number, nwritten_out: number) => this.host_write(fd, iovs, iovs_len, nwritten_out),
-      host_read: (fd: number, iovs: number, iovs_len: number, nread: number) => this.host_read(fd, iovs, iovs_len, nread),
-      memfs_log: (buf: number, len: number) => this.memfs_log(buf, len),
-      copy_in: (memfs_dst: number, clang_src: number, size: number) => this.copy_in(memfs_dst, clang_src, size),
-      copy_out: (clang_dst: number, memfs_src: number, size: number) => this.copy_out(clang_dst, memfs_src, size),
+      host_write: (fd: number, iovs: number, iovs_len: number, nwritten_out: number) => app.host_write(fd, iovs, iovs_len, nwritten_out),
+      host_read: (fd: number, iovs: number, iovs_len: number, nread: number) => app.host_read(fd, iovs, iovs_len, nread),
+      memfs_log: (buf: number, len: number) => app.memfs_log(buf, len),
+      copy_in: (memfs_dst: number, clang_src: number, size: number) => app.copy_in(memfs_dst, clang_src, size),
+      copy_out: (clang_dst: number, memfs_src: number, size: number) => app.copy_out(clang_dst, memfs_src, size),
     };
 
     const wasi = {
       proc_exit: (code: number) => { throw new ProcExit(code); },
-      environ_sizes_get: (environ_count_out: number, environ_buf_size_out: number) => this.environ_sizes_get(environ_count_out, environ_buf_size_out),
-      environ_get: (environ_ptrs: number, environ_buf: number) => this.environ_get(environ_ptrs, environ_buf),
-      args_sizes_get: (argc_out: number, argv_buf_size_out: number) => this.args_sizes_get(argc_out, argv_buf_size_out),
-      args_get: (argv_ptrs: number, argv_buf: number) => this.args_get(argv_ptrs, argv_buf),
-      random_get: (buf: number, buf_len: number) => this.random_get(buf, buf_len),
+      environ_sizes_get: (environ_count_out: number, environ_buf_size_out: number) => app.environ_sizes_get(environ_count_out, environ_buf_size_out),
+      environ_get: (environ_ptrs: number, environ_buf: number) => app.environ_get(environ_ptrs, environ_buf),
+      args_sizes_get: (argc_out: number, argv_buf_size_out: number) => app.args_sizes_get(argc_out, argv_buf_size_out),
+      args_get: (argv_ptrs: number, argv_buf: number) => app.args_get(argv_ptrs, argv_buf),
+      random_get: (buf: number, buf_len: number) => app.random_get(buf, buf_len),
       clock_time_get: (clock_id: number, precision: bigint, time_out: number) => {
-        if (!this.mem) return 1;
-        this.mem.check();
-        const view = new DataView(this.mem.buffer);
+        if (!app.mem) return 1;
+        app.mem.check();
+        const view = new DataView(app.mem.buffer);
         view.setBigUint64(time_out, BigInt(Date.now()) * BigInt(1000000), true);
         return 0;
       },
       poll_oneoff: () => { throw new Error('poll_oneoff not implemented'); }
     };
 
-    this.instance = new WebAssembly.Instance(module, { env, wasi_snapshot_preview1: wasi });
-    this.exports = this.instance.exports;
-    this.mem = new Memory(this.exports.memory as WebAssembly.Memory);
-    this.memfs.hostMem = this.mem;
+    const res = await WebAssembly.instantiate(module, { env, wasi_snapshot_preview1: wasi });
+    app.instance = res instanceof WebAssembly.Instance ? res : res.instance;
+    app.exports = app.instance.exports;
+    app.mem = new Memory(app.exports.memory as WebAssembly.Memory);
+    app.memfs.hostMem = app.mem;
+    return app;
   }
 
   async run(): Promise<number> {
@@ -764,7 +767,7 @@ async function compileWithClangWasm(
       input
     ];
 
-    const clangApp = new App(clangModule, memfs, clangArgs);
+    const clangApp = await App.create(clangModule, memfs, clangArgs);
     await clangApp.run();
 
     // 2. Link object file into target Wasm executable
@@ -786,7 +789,7 @@ async function compileWithClangWasm(
       '-o', wasm
     ];
 
-    const lldApp = new App(lldModule, memfs, lldArgs);
+    const lldApp = await App.create(lldModule, memfs, lldArgs);
     await lldApp.run();
 
     // 3. Extract final compiled Wasm executable
