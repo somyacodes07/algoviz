@@ -603,6 +603,22 @@ class Tar {
     let entry;
     const createdDirs = new Set<string>();
 
+    const ensureDirectoryChain = (dirPath: string) => {
+      const parts = dirPath.split('/').filter(Boolean);
+      let curr = '';
+      for (let i = 0; i < parts.length; i++) {
+        curr += '/' + parts[i];
+        if (!createdDirs.has(curr)) {
+          try {
+            memfs.addDirectory(curr);
+            createdDirs.add(curr);
+          } catch (e) {
+            // Directory exists
+          }
+        }
+      }
+    };
+
     while ((entry = this.readEntry())) {
       let rawPath = entry.filenamePrefix
         ? `${entry.filenamePrefix}/${entry.filename}`
@@ -616,27 +632,12 @@ class Tar {
       }
 
       if (entry.type === '5') {
-        if (!createdDirs.has(cleanPath)) {
-          try {
-            memfs.addDirectory(cleanPath);
-            createdDirs.add(cleanPath);
-          } catch (e) {
-            // Directory exists
-          }
-        }
+        ensureDirectoryChain(cleanPath);
       } else if (entry.type === '0' || entry.type === '') {
-        const parts = cleanPath.split('/').filter(Boolean);
-        let curr = '';
-        for (let i = 0; i < parts.length - 1; i++) {
-          curr += '/' + parts[i];
-          if (!createdDirs.has(curr)) {
-            try {
-              memfs.addDirectory(curr);
-              createdDirs.add(curr);
-            } catch (e) {
-              // Directory exists
-            }
-          }
+        const lastSlash = cleanPath.lastIndexOf('/');
+        if (lastSlash > 0) {
+          const parentDir = cleanPath.substring(0, lastSlash);
+          ensureDirectoryChain(parentDir);
         }
         memfs.addFile(cleanPath, entry.contents);
       }
