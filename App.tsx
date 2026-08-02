@@ -278,9 +278,13 @@ const App: React.FC = () => {
     if (page === "home") {
       document.documentElement.classList.remove("page-workbench");
       document.body.classList.remove("page-workbench");
+      document.documentElement.style.overflowY = "auto";
+      document.body.style.overflowY = "auto";
     } else {
       document.documentElement.classList.add("page-workbench");
       document.body.classList.add("page-workbench");
+      document.documentElement.style.overflowY = "hidden";
+      document.body.style.overflowY = "hidden";
     }
   }, [page]);
 
@@ -640,7 +644,7 @@ const App: React.FC = () => {
   return (
     <div
       className={`flex min-w-0 flex-col w-full text-slate-800 dark:text-slate-200 ${
-        page === "home" ? "min-h-screen overflow-x-hidden overflow-y-auto" : "h-[100dvh] h-screen overflow-hidden overscroll-none"
+        page === "home" ? "w-full min-h-screen" : "h-[100dvh] h-screen overflow-hidden overscroll-none"
       } ${
         page === "home" ? "bg-[#f7f0e3] dark:bg-[var(--dark-base)]" : theme === "dark" ? (effectiveThemeColor === "blue" ? "bg-mesh-dark-blue" : "bg-mesh-dark-saffron") : "bg-mesh-light"
       }`}
@@ -648,7 +652,7 @@ const App: React.FC = () => {
       <Analytics />
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
-          <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative h-full w-full will-change-transform">
+          <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative w-full h-full will-change-transform">
             <HomePage
               language={language}
               onSelectLanguage={handleLanguageSelect}

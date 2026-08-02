@@ -64,28 +64,60 @@ export const executeCode = async (
  *  2. On engine failure → fall back to Wandbox API (real GCC, full STL)
  *  3. On compiler error → show the error to the user (don't fallback)
  */
+function prependEngineBanner(
+  timeline: Timeline,
+  infoMsg: { type: 'info' | 'warn' | 'error'; message: string },
+): Timeline {
+  if (timeline.length === 0) {
+    return [
+      {
+        line: 0,
+        variables: {},
+        callStack: ['main'],
+        consoleOutput: [infoMsg],
+      },
+    ];
+  }
+
+  const firstStep = timeline[0];
+  const existing = firstStep.consoleOutput || [];
+  
+  // Avoid duplicate banner logs
+  if (existing.some(log => log.message.includes('Executed via'))) {
+    return timeline;
+  }
+
+  const updatedFirst = {
+    ...firstStep,
+    consoleOutput: [infoMsg, ...existing],
+  };
+
+  return [updatedFirst, ...timeline.slice(1)];
+}
+
 async function executeCpp(
   userCode: string,
   config: ExecutionConfig | undefined,
   timeoutMs: number,
 ): Promise<ExecuteResult> {
-  // ── Strategy 1: Wasm Clang Engine (If explicitly chosen) ──
   const useWasm = config?.cppCompiler === 'wasm';
   if (useWasm) {
     try {
       const { executeWasmClangCpp } = await import('./wasmClangEngine');
-
       const result = await executeWasmClangCpp(userCode, config);
 
-      // ── Engine error → fall back to Wandbox ──
       if (result.engineError) {
         console.warn(
           `[Executor] Wasm Clang unavailable (${result.engineError}), falling back to Wandbox API.`,
         );
-        return executeWithWandbox(userCode, config, timeoutMs);
+        const fallbackRes = await executeWithWandbox(userCode, config, timeoutMs);
+        fallbackRes.timeline = prependEngineBanner(fallbackRes.timeline, {
+          type: 'warn',
+          message: `⚠️ WebAssembly Clang engine unavailable (${result.engineError}). Executed via Remote Compiler API (GCC).`,
+        });
+        return fallbackRes;
       }
 
-      // ── Compiler error → show to user, don't fallback ──
       if (result.compilerError) {
         return {
           timeline: [
@@ -103,21 +135,34 @@ async function executeCpp(
         };
       }
 
-      // ── Success: run complexity analysis ──
       const analysis = analyzeComplexity(userCode, result.timeline);
+      const timelineWithBanner = prependEngineBanner(result.timeline, {
+        type: 'info',
+        message: '⚡ Executed via WebAssembly Clang (In-Browser Engine)',
+      });
+
       return {
-        timeline: result.timeline,
+        timeline: timelineWithBanner,
         analysis,
       };
     } catch (e: any) {
-      // Unexpected Wasm engine error → fall back to Wandbox
       console.warn('[Executor] Unexpected Wasm Clang error, falling back to Wandbox:', e.message);
-      return executeWithWandbox(userCode, config, timeoutMs);
+      const fallbackRes = await executeWithWandbox(userCode, config, timeoutMs);
+      fallbackRes.timeline = prependEngineBanner(fallbackRes.timeline, {
+        type: 'warn',
+        message: `⚠️ WebAssembly Clang error (${e.message}). Executed via Remote Compiler API (GCC).`,
+      });
+      return fallbackRes;
     }
   }
 
-  // ── Strategy 2: Wandbox API (Chosen or Fallback) ──
-  return executeWithWandbox(userCode, config, timeoutMs);
+  // API mode chosen explicitly
+  const apiRes = await executeWithWandbox(userCode, config, timeoutMs);
+  apiRes.timeline = prependEngineBanner(apiRes.timeline, {
+    type: 'info',
+    message: '🌐 Executed via Remote Compiler API (GCC Engine)',
+  });
+  return apiRes;
 }
 
 /**
