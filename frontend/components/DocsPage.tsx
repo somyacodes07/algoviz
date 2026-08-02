@@ -23,6 +23,7 @@ import transpilerMd from '../../docs/cpp-engine.md?raw';
 import sandboxMd from '../../docs/instrumentation-sandbox.md?raw';
 import templateMd from '../../docs/templates-and-palette.md?raw';
 import complexityMd from '../../docs/complexity-analysis.md?raw';
+import bigOCheatSheetMd from '../../docs/big-o-cheat-sheet.md?raw';
 import architectureMd from '../../docs/architecture.md?raw';
 import vscodeExtensionMd from '../../docs/vscode-extension.md?raw';
 import image1 from '../../assets/image-1.png';
@@ -449,6 +450,44 @@ const docsStructure: DocSection[] = [
         'Works for both JavaScript and C++ — JS uses AST analysis, C++ uses runtime trace heuristics.',
         'The hotspot heatmap reveals which lines consume the most execution time.',
         'Supports O(1), O(log n), O(n), O(n log n), O(n²), O(n³), and O(2^n) detection.',
+      ],
+    },
+  },
+  {
+    id: 'big-o-cheat-sheet',
+    title: 'Big-O Cheat Sheet & Formulas',
+    icon: <BarChart3 size={16} />,
+    content: bigOCheatSheetMd,
+    visual: {
+      eyebrow: 'Complexity Reference',
+      title: 'Master data structure operations and asymptotic growth bounds',
+      summary:
+        'A comprehensive formula reference breaking down Big-O, Big-Omega, Big-Theta, Master Theorem, and data structure execution matrices.',
+      metrics: [
+        { label: 'Growth Bound', value: 'O(1) to O(N!)' },
+        { label: 'Sort Matrix', value: '6 Algorithms' },
+        { label: 'Data Structures', value: '8 Core Types' },
+      ],
+      steps: [
+        {
+          label: 'Classify',
+          detail: 'Identify execution bounds: O(1) constant, O(N) linear, or O(N log N) logarithmic.',
+          tone: 'blue',
+        },
+        {
+          label: 'Evaluate',
+          detail: 'Apply Master Theorem to divide-and-conquer recurrence relations.',
+          tone: 'amber',
+        },
+        {
+          label: 'Compare',
+          detail: 'Cross-reference data structure access, search, insert, and delete complexity.',
+          tone: 'emerald',
+        },
+      ],
+      notes: [
+        'AlgoViz monitors runtime loop steps and stack depth to map code directly onto these theoretical complexity bounds.',
+        'Sorting stability and auxiliary space complexities are detailed in the matrix table.',
       ],
     },
   },
