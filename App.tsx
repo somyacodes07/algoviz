@@ -252,6 +252,7 @@ const App: React.FC = () => {
     reset,
     nextStep,
     prevStep,
+    jumpToStep,
     toggleBreakpoint,
     clearError,
   } = controls;

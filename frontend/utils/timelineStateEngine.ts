@@ -1,4 +1,4 @@
-import { Timeline, ExecutionStep, VariableMap } from '../types';
+import { Timeline, ExecutionStep, VariableMap, ConsoleLog } from '../../types';
 
 /**
  * Structural Sharing & State Differential Engine for Time-Travel Debugging.
@@ -89,7 +89,7 @@ export function processTimelineDiffEngine(rawTimeline: Timeline): OptimizedTimel
   const processedSteps: ExecutionStep[] = [];
   const KEYFRAME_INTERVAL = 10;
 
-  let currentLogs: import('../types').ConsoleLog[] = [];
+  let currentLogs: ConsoleLog[] = [];
   let prevStepVars: VariableMap | null = null;
   let reusedCount = 0;
   let totalCount = 0;

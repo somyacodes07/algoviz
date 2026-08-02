@@ -52,6 +52,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   currentStepIndex,
   complexityAnalysis,
   settings,
+  onSeekStep,
 }) => {
   const isSaffron = themeColor === 'saffron';
   // ── #9 Variable watch/pin state ────────────────────────────────

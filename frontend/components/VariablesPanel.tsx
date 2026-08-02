@@ -668,6 +668,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
   onTogglePin,
   timeline,
   currentStepIndex,
+  onSeekStep,
 }) => {
   const keys = Object.keys(variables);
   const isSaffron = themeColor === 'saffron';
