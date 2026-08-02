@@ -64,6 +64,29 @@ export const executeCode = async (
  *  2. On engine failure → fall back to Wandbox API (real GCC, full STL)
  *  3. On compiler error → show the error to the user (don't fallback)
  */
+function logDevToolsEngineBanner(isWasm: boolean, fallbackReason?: string) {
+  if (typeof console === 'undefined') return;
+  if (fallbackReason) {
+    console.warn(
+      `%c[AlgoViz C++]%c Wasm Clang unavailable (${fallbackReason}). Fallback: Remote Compiler API (GCC)`,
+      'background: #f59e0b; color: #000; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+      'color: #f59e0b; font-weight: bold;',
+    );
+  } else if (isWasm) {
+    console.info(
+      `%c[AlgoViz C++]%c Executing via WebAssembly Clang (In-Browser Wasm Engine ⚡)`,
+      'background: #0284c7; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+      'color: #38bdf8; font-weight: bold;',
+    );
+  } else {
+    console.info(
+      `%c[AlgoViz C++]%c Executing via Remote Compiler API (GCC Engine 🌐)`,
+      'background: #3b82f6; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+      'color: #60a5fa; font-weight: bold;',
+    );
+  }
+}
+
 function prependEngineBanner(
   timeline: Timeline,
   infoMsg: { type: 'info' | 'warn' | 'error'; message: string },
@@ -107,9 +130,7 @@ async function executeCpp(
       const result = await executeWasmClangCpp(userCode, config);
 
       if (result.engineError) {
-        console.warn(
-          `[Executor] Wasm Clang unavailable (${result.engineError}), falling back to Wandbox API.`,
-        );
+        logDevToolsEngineBanner(false, result.engineError);
         const fallbackRes = await executeWithWandbox(userCode, config, timeoutMs);
         fallbackRes.timeline = prependEngineBanner(fallbackRes.timeline, {
           type: 'warn',
@@ -119,6 +140,7 @@ async function executeCpp(
       }
 
       if (result.compilerError) {
+        logDevToolsEngineBanner(true);
         return {
           timeline: [
             {
@@ -135,6 +157,7 @@ async function executeCpp(
         };
       }
 
+      logDevToolsEngineBanner(true);
       const analysis = analyzeComplexity(userCode, result.timeline);
       const timelineWithBanner = prependEngineBanner(result.timeline, {
         type: 'info',
@@ -146,7 +169,7 @@ async function executeCpp(
         analysis,
       };
     } catch (e: any) {
-      console.warn('[Executor] Unexpected Wasm Clang error, falling back to Wandbox:', e.message);
+      logDevToolsEngineBanner(false, e.message);
       const fallbackRes = await executeWithWandbox(userCode, config, timeoutMs);
       fallbackRes.timeline = prependEngineBanner(fallbackRes.timeline, {
         type: 'warn',
@@ -157,6 +180,7 @@ async function executeCpp(
   }
 
   // API mode chosen explicitly
+  logDevToolsEngineBanner(false);
   const apiRes = await executeWithWandbox(userCode, config, timeoutMs);
   apiRes.timeline = prependEngineBanner(apiRes.timeline, {
     type: 'info',
