@@ -760,7 +760,7 @@ async function compileWithClangWasm(
       input
     ];
 
-    const clangApp = new App(clangModule, memfs, clangArgs[0], ...clangArgs.slice(1));
+    const clangApp = new App(clangModule, memfs, clangArgs);
     await clangApp.run();
 
     // 2. Link object file into target Wasm executable
@@ -782,7 +782,7 @@ async function compileWithClangWasm(
       '-o', wasm
     ];
 
-    const lldApp = new App(lldModule, memfs, lldArgs[0], ...lldArgs.slice(1));
+    const lldApp = new App(lldModule, memfs, lldArgs);
     await lldApp.run();
 
     // 3. Extract final compiled Wasm executable
