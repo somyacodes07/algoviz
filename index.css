@@ -209,10 +209,34 @@ html.view-transitioning *::after {
   background-color: var(--dark-scrollbar-thumb-hover);
 }
 
+/* ─── Global Scroll Lock & Overscroll Containment ───────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
 html {
   scroll-behavior: smooth;
   scrollbar-color: rgba(100, 116, 139, 0.58) #e8decb;
   scrollbar-width: thin;
+}
+
+/* Prevent scroll chaining on all scrollable panels */
+.overflow-y-auto,
+.overflow-x-auto,
+.custom-scrollbar,
+.no-scrollbar,
+pre,
+textarea,
+main {
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
 }
 
 .dark {
