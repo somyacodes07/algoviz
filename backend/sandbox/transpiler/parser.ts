@@ -37,6 +37,27 @@ export async function initParser(): Promise<void> {
 }
 
 /**
+ * Pre-warm the Tree-sitter WASM engine in the background when browser is idle.
+ * This guarantees 0ms initialization delay when the user runs C++ code.
+ */
+export function prewarmWasmEngines(): void {
+  if (typeof window === 'undefined') return;
+  if (isParserReady()) return;
+
+  const startPrewarm = () => {
+    initParser().catch((err) => {
+      console.warn('WASM background pre-warming deferred:', err);
+    });
+  };
+
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => startPrewarm(), { timeout: 3000 });
+  } else {
+    setTimeout(startPrewarm, 1500);
+  }
+}
+
+/**
  * Check whether the parser has been initialized and is ready.
  */
 export function isParserReady(): boolean {

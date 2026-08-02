@@ -17,6 +17,7 @@ import { useSnapshots } from "./frontend/hooks/useSnapshots";
 import { useAnnotations } from "./frontend/hooks/useAnnotations";
 import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from "./frontend/codeTemplates";
 import { getSeoConfig } from "./frontend/seo";
+import { prewarmWasmEngines } from "./backend/sandbox/transpiler/parser";
 import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
 import { SettingsModal, AppSettings } from "./frontend/components/SettingsModal";
 
@@ -267,6 +268,10 @@ const App: React.FC = () => {
   const effectiveThemeColor = hoverThemeColor || themeColor;
   const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
   const seoConfig = getSeoConfig(window.location.origin, page, language);
+
+  useEffect(() => {
+    prewarmWasmEngines();
+  }, []);
 
   useSeoMetadata(seoConfig);
 
