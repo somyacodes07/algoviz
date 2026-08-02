@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
@@ -119,10 +120,12 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
     };
   }, [isOpen, onClose, handleZoomIn, handleZoomOut, handleReset]);
 
-  return (
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 select-none my-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-8 select-none my-auto">
           {/* Blurred Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -215,6 +218,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
