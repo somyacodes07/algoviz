@@ -716,9 +716,15 @@ const App: React.FC = () => {
                   try { localStorage.setItem('algoviz-split-ratio', '50'); } catch (e) {}
                 }}
                 title="Drag to resize panels (Double-click to reset 50/50)"
-                className="hidden md:flex items-center justify-center w-3 cursor-col-resize z-20 group transition-all shrink-0 hover:bg-amber-400/20 rounded select-none"
+                className="hidden md:flex items-center justify-center w-2.5 cursor-col-resize z-20 group transition-all shrink-0 select-none -mx-1"
               >
-                <div className={`w-1.5 h-12 rounded-full transition-colors ${isResizing ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700 group-hover:bg-amber-500'}`} />
+                <div
+                  className={`w-1 h-10 rounded-full transition-all duration-150 ${
+                    isResizing
+                      ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] scale-y-110'
+                      : 'bg-slate-300/80 dark:bg-[var(--dark-border)] group-hover:bg-amber-500 dark:group-hover:bg-saffron-500'
+                  }`}
+                />
               </div>
 
               <div className="flex-1 flex flex-col min-w-0 h-full w-full">

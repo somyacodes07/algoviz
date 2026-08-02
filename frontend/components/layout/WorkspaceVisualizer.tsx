@@ -117,7 +117,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
   return (
     <div
-      className={`min-h-[320px] md:min-h-0 flex flex-col shrink-0 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden ${visualizerMode ? 'w-full md:flex-1' : 'w-full md:w-[540px]'}`}
+      className="h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden"
     >
       <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)]">
         <button
@@ -209,7 +209,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         </AnimatePresence>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar bg-transparent p-3 relative">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
           {/* #11 Loop detection warning */}
           {loopWarning && activeTab === 'variables' && (
             <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
