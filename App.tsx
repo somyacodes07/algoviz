@@ -158,6 +158,52 @@ const App: React.FC = () => {
   // Embed mode: ?embed=true hides the header for iframe usage
   const embedMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === 'true';
 
+  // Draggable Split Ratio State
+  const [splitRatio, setSplitRatio] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('algoviz-split-ratio');
+      if (stored) {
+        const val = parseFloat(stored);
+        if (!isNaN(val) && val >= 20 && val <= 80) return val;
+      }
+    } catch (e) {}
+    return 50;
+  });
+
+  const [isResizing, setIsResizing] = useState(false);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!mainContainerRef.current) return;
+      const rect = mainContainerRef.current.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      const percentage = (relativeX / rect.width) * 100;
+      const clamped = Math.max(25, Math.min(75, percentage));
+      setSplitRatio(clamped);
+      try {
+        localStorage.setItem('algoviz-split-ratio', String(clamped));
+      } catch (err) {}
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   // Settings Panel States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => {
@@ -627,48 +673,65 @@ const App: React.FC = () => {
               />
             )}
 
-            <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-6 gap-4 md:gap-6 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
-              <WorkspaceEditor
-                language={language}
-                theme={theme}
-                themeColor={themeColor}
-                code={code}
-                executionError={executionError}
-                isPlaying={isPlaying}
-                isExecuting={isExecuting}
-                visualizerMode={visualizerMode}
-                currentStepLine={currentStep.line}
-                breakpoints={breakpoints}
-                linkCopied={linkCopied}
-                onCodeChange={handleCodeChange}
-                onRun={async () => {
-                  setIsPlaying(false);
-                  return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
+            <main ref={mainContainerRef} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-5 gap-2 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
+              <div style={{ flex: typeof window !== 'undefined' && window.innerWidth >= 768 ? `0 0 calc(${splitRatio}% - 6px)` : undefined }} className="flex flex-col min-w-0 h-full w-full">
+                <WorkspaceEditor
+                  language={language}
+                  theme={theme}
+                  themeColor={themeColor}
+                  code={code}
+                  executionError={executionError}
+                  isPlaying={isPlaying}
+                  isExecuting={isExecuting}
+                  visualizerMode={visualizerMode}
+                  currentStepLine={currentStep.line}
+                  breakpoints={breakpoints}
+                  linkCopied={linkCopied}
+                  onCodeChange={handleCodeChange}
+                  onRun={async () => {
+                    setIsPlaying(false);
+                    return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
+                  }}
+                  onShare={handleCopyLink}
+                  onOpenTemplates={() => setTemplateMenuOpen(true)}
+                  onToggleBreakpoint={toggleBreakpoint}
+                  annotationMode={annotationMode}
+                  currentAnnotation={getAnnotation(currentStepIndex)}
+                  currentStepIndex={currentStepIndex}
+                  onSaveAnnotation={setAnnotation}
+                />
+              </div>
+
+              {/* Draggable Divider Handle */}
+              <div
+                onMouseDown={handleDividerMouseDown}
+                onDoubleClick={() => {
+                  setSplitRatio(50);
+                  try { localStorage.setItem('algoviz-split-ratio', '50'); } catch (e) {}
                 }}
-                onShare={handleCopyLink}
-                onOpenTemplates={() => setTemplateMenuOpen(true)}
-                onToggleBreakpoint={toggleBreakpoint}
-                annotationMode={annotationMode}
-                currentAnnotation={getAnnotation(currentStepIndex)}
-                currentStepIndex={currentStepIndex}
-                onSaveAnnotation={setAnnotation}
-              />
-              
-              <WorkspaceVisualizer
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                consoleExpanded={consoleExpanded}
-                setConsoleExpanded={setConsoleExpanded}
-                visualizerMode={visualizerMode}
-                setVisualizerMode={setVisualizerMode}
-                themeColor={themeColor}
-                currentStep={currentStep}
-                prevStepVariables={prevStepVariables}
-                timeline={timeline}
-                currentStepIndex={currentStepIndex}
-                complexityAnalysis={complexityAnalysis}
-                settings={settings}
-              />
+                title="Drag to resize panels (Double-click to reset 50/50)"
+                className="hidden md:flex items-center justify-center w-3 cursor-col-resize z-20 group transition-all shrink-0 hover:bg-amber-400/20 rounded select-none"
+              >
+                <div className={`w-1.5 h-12 rounded-full transition-colors ${isResizing ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700 group-hover:bg-amber-500'}`} />
+              </div>
+
+              <div className="flex-1 flex flex-col min-w-0 h-full w-full">
+                <WorkspaceVisualizer
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  consoleExpanded={consoleExpanded}
+                  setConsoleExpanded={setConsoleExpanded}
+                  visualizerMode={visualizerMode}
+                  setVisualizerMode={setVisualizerMode}
+                  themeColor={themeColor}
+                  currentStep={currentStep}
+                  prevStepVariables={prevStepVariables}
+                  timeline={timeline}
+                  currentStepIndex={currentStepIndex}
+                  complexityAnalysis={complexityAnalysis}
+                  settings={settings}
+                />
+              </div>
             </main>
 
             <Controls
