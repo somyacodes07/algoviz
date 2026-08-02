@@ -3,73 +3,54 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JavaScript Code Visualizer and Algorithm Debugger | AlgoViz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>JavaScript Code Visualizer, Call Stack & Data Structures Animator | AlgoViz</title>
   <meta
     name="description"
-    content="Visualize JavaScript code execution step by step. Track variables, recursion, loops, console output, and the call stack with AlgoViz."
+    content="Step through JavaScript execution line-by-line in your browser. Visualize binary search trees, linked lists, recursion stacks, variables, sorting algorithms, and console output with AlgoViz."
   />
   <meta
     name="keywords"
-    content="javascript code visualizer, algorithm debugger, javascript recursion visualizer, call stack visualizer, student debugger"
+    content="javascript code visualizer, javascript algorithm visualizer, javascript debugger online, javascript recursion visualizer, javascript call stack visualizer, javascript tree visualizer, javascript linked list visualizer, javascript stack queue visualizer, js visualizer, binary search tree visualizer javascript, dsa visualizer tool javascript, sorting algorithm animator javascript, interactive code debugger js, visualize recursion online, algoviz javascript"
   />
   <meta
     name="robots"
-    content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
   />
   <meta
     name="googlebot"
-    content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
   />
   <meta name="author" content="Somyajeet" />
   <meta name="application-name" content="AlgoViz" />
-  <meta name="apple-mobile-web-app-title" content="AlgoViz" />
+  <meta name="apple-mobile-web-app-title" content="AlgoViz JS" />
   <meta name="theme-color" content="#f97316" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta property="og:title" content="JavaScript Code Visualizer and Algorithm Debugger | AlgoViz" />
+  
+  <meta property="og:title" content="JavaScript Code Visualizer & Algorithm Debugger | AlgoViz" />
   <meta
     property="og:description"
-    content="Step through JavaScript algorithms line by line with variable tracking, call stack playback, and console visualization."
+    content="Step through JavaScript code line by line. Track variables, call stack frames, binary search trees, linked lists, and console logs in real-time."
   />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://algoviz.somyacodes.in/visualizer/javascript/" />
   <meta property="og:image" content="https://algoviz.somyacodes.in/og-image.png" />
   <meta property="og:site_name" content="AlgoViz" />
+
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="JavaScript Code Visualizer and Algorithm Debugger | AlgoViz" />
+  <meta name="twitter:title" content="JavaScript Code Visualizer & Algorithm Debugger | AlgoViz" />
   <meta
     name="twitter:description"
-    content="Use AlgoViz to visualize JavaScript recursion, loops, variables, and console output in a teaching-friendly workbench."
+    content="Interactive JavaScript code execution visualizer for students, software engineers, and computer science educators."
   />
   <meta name="twitter:image" content="https://algoviz.somyacodes.in/og-image.png" />
+  <meta name="twitter:site" content="@algoviz" />
+
+  <link rel="canonical" href="https://algoviz.somyacodes.in/visualizer/javascript/" />
   <link rel="manifest" href="/site.webmanifest" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            saffron: {
-              50: '#fff7ed',
-              100: '#ffedd5',
-              200: '#fed7aa',
-              300: '#fdba74',
-              400: '#fb923c',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-              800: '#9a3412',
-              900: '#7c2d12',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="apple-touch-icon" href="/logo.svg" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -84,37 +65,47 @@
       font-family: 'JetBrains Mono', monospace;
     }
   </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "framer-motion": "https://esm.sh/framer-motion@^12.34.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "@monaco-editor/react": "https://esm.sh/@monaco-editor/react@^4.7.0",
-    "acorn": "https://esm.sh/acorn@^8.15.0"
-  }
-}
-</script>
   <link rel="stylesheet" href="/index.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AlgoViz JavaScript Visualizer",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web",
+      "url": "https://algoviz.somyacodes.in/visualizer/javascript/",
+      "image": "https://algoviz.somyacodes.in/og-image.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Interactive JavaScript code execution visualizer that tracks variable mutation, recursive call stacks, binary trees, linked lists, and sorting animations line-by-line."
+    }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
   <noscript>
-    <main style="font-family: Inter, sans-serif; max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6;">
-      <h1>JavaScript Code Visualizer</h1>
-      <p>
-        AlgoViz helps you trace JavaScript algorithms, recursion, variables, and the call stack step by step in the browser.
+    <main style="font-family: Inter, system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6; color: #1e293b;">
+      <h1 style="font-size: 2.25rem; font-weight: 800; color: #ea580c;">JavaScript Code Visualizer & Algorithm Debugger</h1>
+      <p style="font-size: 1.1rem; font-weight: 500;">
+        AlgoViz allows you to write, edit, and step through JavaScript (ES6+) code line-by-line in your web browser. Follow variables, array indices, recursive call stacks, binary search trees, and console output in real time.
       </p>
-      <p>
-        Return <a href="/">home</a>, read the <a href="/docs/">documentation</a>, or open the
-        <a href="/visualizer/cpp/">C++ visualizer</a>.
-      </p>
+      <nav style="margin-top: 1.5rem;">
+        <p><strong>Quick Links:</strong></p>
+        <ul>
+          <li><a href="/" style="color: #ea580c; font-weight: 700;">Home Overview</a></li>
+          <li><a href="/visualizer/cpp/" style="color: #ea580c; font-weight: 700;">C++ Visualizer & Compiler</a></li>
+          <li><a href="/docs/" style="color: #ea580c; font-weight: 700;">Documentation</a></li>
+        </ul>
+      </nav>
     </main>
   </noscript>
   <script type="module" src="/index.tsx"></script>
 </body>
 
 </html>
+

@@ -1,22 +1,48 @@
 {
-  "name": "AlgoViz",
+  "id": "algoviz-app",
+  "name": "AlgoViz - Interactive Algorithm Visualizer",
   "short_name": "AlgoViz",
-  "description": "Interactive JavaScript and C++ code visualizer for algorithms, recursion, variables, and call stack tracing.",
+  "description": "Interactive JavaScript and C++ code visualizer for algorithms, binary trees, linked lists, recursion, variables, and call stack tracing.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
+  "categories": ["education", "developer", "utilities"],
   "background_color": "#faf9f6",
   "theme_color": "#f97316",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "JavaScript Visualizer",
+      "short_name": "JS Visualizer",
+      "description": "Launch the JavaScript code visualizer and debugger",
+      "url": "/visualizer/javascript/"
+    },
+    {
+      "name": "C++ Visualizer",
+      "short_name": "C++ Visualizer",
+      "description": "Launch the C++ WebAssembly compiler and code visualizer",
+      "url": "/visualizer/cpp/"
+    },
+    {
+      "name": "Documentation",
+      "short_name": "Docs",
+      "description": "Read AlgoViz documentation and visualizer architecture",
+      "url": "/docs/"
     }
   ]
 }
+

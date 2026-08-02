@@ -1,10 +1,45 @@
 User-agent: *
 Allow: /
 
+# Ensure search engine bots & AI search agents index assets and pages
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
 # Keep previewable assets crawlable for rich results and social cards.
 Allow: /og-image.png
 Allow: /apple-touch-icon.png
-Allow: /favicon-32x32.png
-Allow: /favicon-16x16.png
+Allow: /logo.svg
+Allow: /site.webmanifest
 
 Sitemap: https://algoviz.somyacodes.in/sitemap.xml
+

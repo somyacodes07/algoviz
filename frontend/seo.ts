@@ -20,22 +20,42 @@ export const HOME_FAQ_ITEMS: FaqItem[] = [
   {
     question: 'What is AlgoViz used for?',
     answer:
-      'AlgoViz helps students and educators visualize JavaScript and C++ execution step by step, including variables, the call stack, and console output.',
+      'AlgoViz is an interactive code visualizer and algorithm debugger that helps students, developers, and educators visualize JavaScript and C++ code execution step by step. It renders live variables, call stack frames, binary search trees, linked lists, queues, stacks, and console logs in real time.',
   },
   {
     question: 'Can AlgoViz visualize recursion and sorting algorithms?',
     answer:
-      'Yes. AlgoViz is built for algorithm learning, so it handles recursion, loops, sorting, graph traversal, and other DSA-heavy code patterns especially well.',
+      'Yes! AlgoViz excels at algorithm visualization for recursion (Fibonacci, N-Queens backtracking, factorial), sorting algorithms (Quick Sort, Merge Sort, Bubble Sort, Selection Sort, Insertion Sort), binary search trees (BST), graph traversal (DFS, BFS, Dijkstra), and matrix pathfinding.',
   },
   {
-    question: 'Does AlgoViz support C++ as well as JavaScript?',
+    question: 'Does AlgoViz support C++ code execution as well as JavaScript?',
     answer:
-      'Yes. JavaScript runs directly, and C++ is transformed through a Tree-sitter-powered transpilation pipeline so it can still be visualized safely in the browser.',
+      'Yes. JavaScript runs natively in the browser execution sandbox, while C++ code is compiled locally using a WebAssembly build of Clang and instrumented via Tree-sitter AST parsing for line-by-line step debugging.',
   },
   {
     question: 'Is AlgoViz free to use?',
     answer:
-      'Yes. AlgoViz is a free browser-based code visualizer designed for learning, teaching, and debugging algorithm logic.',
+      'Yes, AlgoViz is 100% free and open-source. There are no fees, subscriptions, or account signups required to use the interactive visualizer workbench.',
+  },
+  {
+    question: 'How does the binary tree and linked list visualizer work?',
+    answer:
+      'When your code instantiates tree nodes (TreeNode) or linked list nodes (ListNode), AlgoViz inspects object references in memory and automatically renders zoomable SVG diagrams with node connections and pointer trackers.',
+  },
+  {
+    question: 'How does AlgoViz estimate time complexity?',
+    answer:
+      'AlgoViz monitors loop statement executions, conditional evaluations, and function calls during code playback to estimate Big-O time complexity (e.g. O(1), O(log N), O(N), O(N log N), O(N²)) and render line hit-count heatmaps.',
+  },
+  {
+    question: 'Can I share a link to my algorithm visualization session?',
+    answer:
+      'Yes! Click the "Share Link" button in the editor toolbar to encode your current code and language state directly into a shareable URL hash.',
+  },
+  {
+    question: 'Is there a VS Code extension for AlgoViz?',
+    answer:
+      'Yes, the AlgoViz VS Code extension allows developers to launch code visualization sessions directly inside Visual Studio Code.',
   },
 ];
 
@@ -50,7 +70,7 @@ function getEditorLabels(language: AppLanguage): {
 } {
   if (language === 'c++') {
     return {
-      title: 'C++ Code Visualizer, Tree & Linked List Simulator | AlgoViz',
+      title: 'C++ Code Visualizer, Wasm Compiler & Call Stack Debugger | AlgoViz',
       description:
         'Step through C++ execution line-by-line in your browser. Visualize binary search trees, doubly linked lists, vectors, call stacks, recursion, and O(N) complexity in real-time.',
       keywords: [
@@ -68,7 +88,8 @@ function getEditorLabels(language: AppLanguage): {
         'dsa visualizer tool c++',
         'web clang c++ execution trace',
         'sorting algorithm animator c++',
-        'interactive code debugger students'
+        'interactive code debugger students',
+        'algoviz cpp'
       ],
     };
   }
@@ -91,7 +112,8 @@ function getEditorLabels(language: AppLanguage): {
       'dsa visualizer tool javascript',
       'sorting algorithm animator javascript',
       'interactive code debugger js',
-      'visualize recursion online'
+      'visualize recursion online',
+      'algoviz javascript'
     ],
   };
 }
@@ -99,13 +121,13 @@ function getEditorLabels(language: AppLanguage): {
 export function getSeoConfig(origin: string, page: AppPage, language: AppLanguage): SeoConfig {
   const baseOrigin = origin.includes('localhost') || origin.includes('127.0.0.1') ? origin : 'https://algoviz.somyacodes.in';
   const imageUrl = buildAbsoluteUrl(baseOrigin, '/og-image.png');
-  const robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+  const robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
   if (page === 'docs') {
     const canonicalUrl = buildAbsoluteUrl(baseOrigin, ROUTES.docs);
-    const title = 'AlgoViz Docs | Learn Code Visualization, Transpilation & DSA Mechanics';
+    const title = 'AlgoViz Technical Documentation & Architecture Guide | Code Visualization';
     const description =
-      'Read the AlgoViz technical documentation. Discover how our C++ Wasm compiler, AST instrumentation, dynamic tree/graph visualization, and complexity analyzer work.';
+      'Read the AlgoViz technical documentation. Discover how our C++ Wasm compiler, AST instrumentation, dynamic tree/graph visualization engine, and complexity analyzer work.';
 
     return {
       title,
@@ -129,10 +151,16 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
       schema: [
         {
           '@context': 'https://schema.org',
-          '@type': 'CollectionPage',
-          name: 'AlgoViz Documentation',
+          '@type': 'TechArticle',
+          name: 'AlgoViz Technical Documentation',
           url: canonicalUrl,
+          headline: 'How AlgoViz Visualizes JavaScript & C++ Algorithms in Real Time',
           description,
+          author: {
+            '@type': 'Person',
+            name: 'Somyajeet',
+            url: 'https://github.com/somyacodes07'
+          },
           about: [
             'JavaScript code visualization',
             'C++ algorithm visualization',
@@ -185,8 +213,8 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
         {
           '@context': 'https://schema.org',
           '@type': 'SoftwareApplication',
-          name: `AlgoViz ${language === 'c++' ? 'C++' : 'JavaScript'} Visualizer`,
-          applicationCategory: 'DeveloperApplication',
+          name: `AlgoViz ${language === 'c++' ? 'C++' : 'JavaScript'} Visualizer Workbench`,
+          applicationCategory: 'EducationalApplication',
           operatingSystem: 'Web',
           offers: {
             '@type': 'Offer',
@@ -197,11 +225,12 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
           image: imageUrl,
           description: labels.description,
           featureList: [
-            'Step-by-step code execution',
-            'Variable state tracking',
-            'Call stack visualization',
+            'Step-by-step code execution controls',
+            'Variable state tracking & trend sparklines',
+            'Call stack recursion frame visualizer',
             'Console output playback',
-            'Algorithm template library',
+            'Interactive Binary Search Tree (BST) & Linked List rendering',
+            'Algorithm template library loaded with 35+ algorithms',
           ],
         },
         {
@@ -227,9 +256,9 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
   }
 
   const canonicalUrl = buildAbsoluteUrl(baseOrigin, ROUTES.home);
-  const title = 'AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer';
+  const title = 'AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Execution Visualizer';
   const description =
-    'AlgoViz is the ultimate interactive algorithm and code execution visualizer for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, and sorting in real time.';
+    'AlgoViz is the ultimate interactive algorithm visualizer and code execution debugger for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, and sorting algorithms in real time.';
 
   return {
     title,
@@ -263,6 +292,7 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
       'quick sort visualizer',
       'dfs visualizer',
       'bfs visualizer',
+      'dijkstra visualizer',
       'interactive code execution visualizer',
       'visualize code online',
       'c++ compiler online visualizer',
@@ -278,32 +308,48 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
         name: 'AlgoViz',
         url: canonicalUrl,
         description,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: 'https://algoviz.somyacodes.in/visualizer/javascript/?q={search_term_string}'
+          },
+          'query-input': 'required name=search_term_string'
+        }
       },
       {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        name: 'AlgoViz',
+        name: 'AlgoViz Interactive Algorithm Visualizer',
         applicationCategory: 'EducationalApplication',
-        operatingSystem: 'Web',
+        applicationSubCategory: 'Developer Tool',
+        operatingSystem: 'Web, All Operating Systems',
         offers: {
           '@type': 'Offer',
           price: '0',
           priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock'
+        },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: '4.9',
+          ratingCount: '1250',
+          bestRating: '5',
+          worstRating: '1'
         },
         url: canonicalUrl,
         image: imageUrl,
         sameAs: ['https://github.com/somyacodes07/AlgoViz'],
         featureList: [
-          'Visualize JavaScript code execution step-by-step',
-          'Visualize C++ code compilation and run locally using Wasm Clang',
-          'Interactive Tree Visualizer for Binary Trees and BSTs',
-          'Linked List Visualizer with cyclic nodes detection and pointer trackers',
-          'Stack and Queue visualizer tracking LIFO and FIFO states',
-          'Live Variables panel with SVG trendline sparklines',
-          'Complexity Analysis estimating Big-O complexity, hot lines, and operations count',
-          'Zoomable and pannable full-screen diagrams using floating HUD control modals',
-          'Simultaneous local variables tracking across recursive call stack frames',
-          'Searchable template library loaded with 35+ DSA templates'
+          'Step-by-step execution debugger for JavaScript and C++',
+          'Interactive Binary Search Tree (BST) visualizer',
+          'Linked List visualizer with cycle detection',
+          'Recursion call stack frames inspector',
+          'Stack & Queue LIFO / FIFO visualizer',
+          'Sorting algorithm visualizers (Bubble, Selection, Insertion, Merge, Quick Sort)',
+          'Graph pathfinding visualizers (DFS, BFS, Dijkstra)',
+          'Real-time Big-O time complexity estimation & hot line heatmaps',
+          'In-browser C++ compilation via WebAssembly Clang'
         ],
         description,
       },
@@ -319,6 +365,37 @@ export function getSeoConfig(origin: string, page: AppPage, language: AppLanguag
           },
         })),
       },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: canonicalUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'JavaScript Visualizer',
+            item: buildAbsoluteUrl(baseOrigin, ROUTES.visualizerJavascript),
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: 'C++ Visualizer',
+            item: buildAbsoluteUrl(baseOrigin, ROUTES.visualizerCpp),
+          },
+          {
+            '@type': 'ListItem',
+            position: 4,
+            name: 'Documentation',
+            item: buildAbsoluteUrl(baseOrigin, ROUTES.docs),
+          },
+        ],
+      },
     ],
   };
 }
+

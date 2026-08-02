@@ -12,24 +12,39 @@
     "vscode": "^1.80.0"
   },
   "categories": [
+    "Education",
+    "Visualization",
     "Other"
   ],
   "license": "MIT",
   "readme": "README.md",
   "icon": "icon.png",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:cpp",
+    "onLanguage:c",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "algoviz.start",
-        "title": "AlgoViz: Start Visualization",
+        "title": "AlgoViz: Open Visualizer Workbench",
         "icon": "$(play)"
       },
       {
         "command": "algoviz.visualizeCurrentFile",
-        "title": "AlgoViz: Visualize",
+        "title": "AlgoViz: Visualize Active File",
         "icon": "$(play)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "algoviz.visualizeCurrentFile",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "editorTextFocus"
       }
     ],
     "menus": {
@@ -37,6 +52,13 @@
         {
           "command": "algoviz.visualizeCurrentFile",
           "group": "1_run"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "algoviz.visualizeCurrentFile",
+          "group": "navigation",
+          "when": "editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript"
         }
       ]
     }

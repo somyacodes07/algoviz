@@ -52,19 +52,26 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('keywords', keywords);
     upsertMetaByName('robots', config.robots);
     upsertMetaByName('googlebot', config.robots);
+    upsertMetaByName('bingbot', config.robots);
     upsertMetaByName('author', 'Somyajeet');
+    upsertMetaByName('publisher', 'AlgoViz');
     upsertMetaByName('application-name', 'AlgoViz');
     upsertMetaByName('apple-mobile-web-app-title', 'AlgoViz');
     upsertMetaByName('apple-mobile-web-app-capable', 'yes');
     upsertMetaByName('apple-mobile-web-app-status-bar-style', 'black-translucent');
     upsertMetaByName('theme-color', '#f97316');
     upsertMetaByName('referrer', 'strict-origin-when-cross-origin');
+    upsertMetaByName('revisit-after', '1 days');
 
     upsertMetaByProperty('og:title', config.title);
     upsertMetaByProperty('og:description', config.description);
     upsertMetaByProperty('og:type', config.type);
     upsertMetaByProperty('og:url', config.canonicalUrl);
     upsertMetaByProperty('og:image', config.imageUrl);
+    upsertMetaByProperty('og:image:width', '1200');
+    upsertMetaByProperty('og:image:height', '630');
+    upsertMetaByProperty('og:image:type', 'image/png');
+    upsertMetaByProperty('og:image:alt', 'AlgoViz Interactive Code Execution Visualizer');
     upsertMetaByProperty('og:site_name', 'AlgoViz');
     upsertMetaByProperty('og:locale', 'en_US');
 
@@ -72,6 +79,7 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('twitter:title', config.title);
     upsertMetaByName('twitter:description', config.description);
     upsertMetaByName('twitter:image', config.imageUrl);
+    upsertMetaByName('twitter:image:alt', 'AlgoViz Interactive Code Execution Visualizer');
     upsertMetaByName('twitter:site', '@algoviz');
     upsertMetaByName('twitter:creator', '@somyajeet');
 
@@ -104,3 +112,4 @@ export function useSeoMetadata(config: SeoConfig) {
     schemaJson,
   ]);
 }
+

@@ -3,73 +3,53 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AlgoViz Documentation for JavaScript and C++ Visualization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>AlgoViz Technical Documentation & Architecture Guide | Code Visualization</title>
   <meta
     name="description"
-    content="Read the AlgoViz docs covering setup, architecture, template workflows, the C++ transpiler, and the execution sandbox used for code visualization."
+    content="Read the AlgoViz technical documentation. Discover how our C++ WebAssembly Clang compiler, AST instrumentation, dynamic tree/graph visualization engine, and Big-O time complexity analyzer work."
   />
   <meta
     name="keywords"
-    content="algoviz documentation, code visualizer docs, javascript execution visualizer docs, c++ transpiler docs, algorithm visualizer architecture"
+    content="algoviz documentation, code visualizer docs, javascript execution visualizer docs, c++ transpiler docs, algorithm visualizer architecture, data structures and algorithms animation guide, wasm clang compiling in browser, how does code visualization work, tree visualizer source code, linked list visualizer implementation"
   />
   <meta
     name="robots"
-    content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
   />
   <meta
     name="googlebot"
-    content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
   />
   <meta name="author" content="Somyajeet" />
-  <meta name="application-name" content="AlgoViz" />
-  <meta name="apple-mobile-web-app-title" content="AlgoViz" />
+  <meta name="application-name" content="AlgoViz Docs" />
   <meta name="theme-color" content="#f97316" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta property="og:title" content="AlgoViz Documentation for JavaScript and C++ Visualization" />
+  
+  <meta property="og:title" content="AlgoViz Documentation & Architecture Guide" />
   <meta
     property="og:description"
-    content="Explore setup guides, template documentation, the C++ transpiler, and the execution sandbox behind AlgoViz."
+    content="Explore setup guides, algorithm template documentation, WebAssembly C++ compilation, and the execution engine behind AlgoViz."
   />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://algoviz.somyacodes.in/docs/" />
   <meta property="og:image" content="https://algoviz.somyacodes.in/og-image.png" />
   <meta property="og:site_name" content="AlgoViz" />
+
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="AlgoViz Documentation for JavaScript and C++ Visualization" />
+  <meta name="twitter:title" content="AlgoViz Technical Documentation & Architecture Guide" />
   <meta
     name="twitter:description"
-    content="Learn how AlgoViz works, how to set it up, and how the visual execution pipeline is built."
+    content="Technical design and implementation guide for the AlgoViz interactive algorithm visualizer and debugger."
   />
   <meta name="twitter:image" content="https://algoviz.somyacodes.in/og-image.png" />
+  <meta name="twitter:site" content="@algoviz" />
+
+  <link rel="canonical" href="https://algoviz.somyacodes.in/docs/" />
   <link rel="manifest" href="/site.webmanifest" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            saffron: {
-              50: '#fff7ed',
-              100: '#ffedd5',
-              200: '#fed7aa',
-              300: '#fdba74',
-              400: '#fb923c',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-              800: '#9a3412',
-              900: '#7c2d12',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="apple-touch-icon" href="/logo.svg" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -84,37 +64,45 @@
       font-family: 'JetBrains Mono', monospace;
     }
   </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "framer-motion": "https://esm.sh/framer-motion@^12.34.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "@monaco-editor/react": "https://esm.sh/@monaco-editor/react@^4.7.0",
-    "acorn": "https://esm.sh/acorn@^8.15.0"
-  }
-}
-</script>
   <link rel="stylesheet" href="/index.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "name": "AlgoViz Architecture & Technical Documentation",
+      "headline": "How AlgoViz Visualizes JavaScript & C++ Algorithms in real time",
+      "description": "In-depth guide covering AST instrumentation, WebAssembly C++ Clang execution, tree & graph rendering, call stack monitoring, and Big-O estimation.",
+      "url": "https://algoviz.somyacodes.in/docs/",
+      "image": "https://algoviz.somyacodes.in/og-image.png",
+      "author": {
+        "@type": "Person",
+        "name": "Somyajeet"
+      }
+    }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
   <noscript>
-    <main style="font-family: Inter, sans-serif; max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6;">
-      <h1>AlgoViz Documentation</h1>
-      <p>
-        Browse setup guides, architecture notes, template library details, and the C++ transpiler and execution sandbox documentation.
+    <main style="font-family: Inter, system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6; color: #1e293b;">
+      <h1 style="font-size: 2.25rem; font-weight: 800; color: #ea580c;">AlgoViz Technical Documentation</h1>
+      <p style="font-size: 1.1rem; font-weight: 500;">
+        Learn how AlgoViz instruments code for line-by-line step playback, renders dynamic tree and graph diagrams, tracks variables across stack frames, and compiles C++ via WebAssembly Clang.
       </p>
-      <p>
-        Return <a href="/">home</a>, launch the <a href="/visualizer/javascript/">JavaScript visualizer</a>,
-        or open the <a href="/visualizer/cpp/">C++ visualizer</a>.
-      </p>
+      <nav style="margin-top: 1.5rem;">
+        <p><strong>Quick Links:</strong></p>
+        <ul>
+          <li><a href="/" style="color: #ea580c; font-weight: 700;">Home Overview</a></li>
+          <li><a href="/visualizer/javascript/" style="color: #ea580c; font-weight: 700;">JavaScript Visualizer</a></li>
+          <li><a href="/visualizer/cpp/" style="color: #ea580c; font-weight: 700;">C++ Visualizer</a></li>
+        </ul>
+      </nav>
     </main>
   </noscript>
   <script type="module" src="/index.tsx"></script>
 </body>
 
 </html>
+
