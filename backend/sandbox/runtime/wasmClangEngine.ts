@@ -438,7 +438,7 @@ class App {
       copy_out: (clang_dst: number, memfs_src: number, size: number) => app.copy_out(clang_dst, memfs_src, size),
     };
 
-    const wasi = {
+    const wasi_unstable = {
       proc_exit: (code: number) => { throw new ProcExit(code); },
       environ_sizes_get: (environ_count_out: number, environ_buf_size_out: number) => app.environ_sizes_get(environ_count_out, environ_buf_size_out),
       environ_get: (environ_ptrs: number, environ_buf: number) => app.environ_get(environ_ptrs, environ_buf),
@@ -452,10 +452,15 @@ class App {
         view.setBigUint64(time_out, BigInt(Date.now()) * BigInt(1000000), true);
         return 0;
       },
-      poll_oneoff: () => { throw new Error('poll_oneoff not implemented'); }
+      poll_oneoff: () => { throw new Error('poll_oneoff not implemented'); },
+      ...memfs.exports,
     };
 
-    const res = await WebAssembly.instantiate(module, { env, wasi_snapshot_preview1: wasi });
+    const res = await WebAssembly.instantiate(module, {
+      env,
+      wasi_unstable,
+      wasi_snapshot_preview1: wasi_unstable,
+    });
     app.instance = res instanceof WebAssembly.Instance ? res : res.instance;
     app.exports = app.instance.exports;
     app.mem = new Memory(app.exports.memory as WebAssembly.Memory);
