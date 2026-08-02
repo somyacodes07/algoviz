@@ -119,23 +119,6 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
     <div
       className="h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden"
     >
-      <div className="flex items-center justify-end px-3 py-1 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)]">
-        <button
-          onClick={() => setVisualizerMode(!visualizerMode)}
-          className={`flex items-center gap-1.5 border-[2px] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all active:translate-y-[2px] active:shadow-none ${
-            visualizerMode
-              ? isSaffron
-                ? 'bg-saffron-100 dark:bg-saffron-900/30 text-saffron-700 dark:text-saffron-400 border-saffron-500 dark:border-saffron-700'
-                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-500 dark:border-blue-700'
-              : 'bg-slate-100 dark:bg-[var(--dark-surface-3)] text-slate-600 dark:text-slate-400 border-slate-900 dark:border-[var(--dark-border)] hover:bg-slate-200 dark:hover:bg-[var(--dark-surface-3)]'
-          }`}
-          title={visualizerMode ? 'Exit focus mode' : 'Enter focus mode'}
-        >
-          {visualizerMode ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
-          {visualizerMode ? 'Focus' : 'Expand'}
-        </button>
-      </div>
-
       {/* Top half: Variables / Call Stack */}
       <div
         className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}

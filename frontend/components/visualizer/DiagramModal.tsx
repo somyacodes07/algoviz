@@ -122,14 +122,14 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10 select-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 select-none my-auto">
           {/* Blurred Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-xl"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xl"
           />
 
           {/* Modal Container */}
@@ -138,7 +138,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 15 }}
             transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-            className={`w-[94vw] h-[90vh] flex flex-col bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] border-[3px] border-slate-900 dark:border-[var(--dark-border)] shadow-[6px_6px_0_#0f172a] dark:shadow-[6px_6px_0_var(--dark-shadow)] relative z-10 overflow-hidden`}
+            className={`w-[90vw] max-w-6xl h-[78vh] max-h-[720px] flex flex-col bg-[#faf9f6]/98 dark:bg-[var(--dark-base)] border-[3px] border-slate-900 dark:border-[var(--dark-border)] shadow-[8px_8px_0_#0f172a] dark:shadow-[8px_8px_0_var(--dark-shadow)] relative z-10 overflow-hidden rounded-lg my-auto`}
           >
             {/* Header */}
             <div className="h-14 flex items-center justify-between px-6 bg-white dark:bg-[var(--dark-surface-2)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] shrink-0">
