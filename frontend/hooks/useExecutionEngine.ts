@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { executeCode } from '../../backend/sandbox/runtime/executor';
 import { Timeline, ComplexityAnalysis, ExecutionConfig } from '../../types';
+import { processTimelineDiffEngine } from '../utils/timelineStateEngine';
 
 interface ExecutionState {
   timeline: Timeline;
@@ -52,12 +53,8 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
     try {
       const { timeline: rawTimeline, analysis } = await executeCode(code, language, config);
 
-      // Reconstruct full console history from deltas to reduce worker memory bloat
-      let currentLogs: import('../../types').ConsoleLog[] = [];
-      const result = rawTimeline.map((step) => {
-        currentLogs = [...currentLogs, ...(step.consoleOutput || [])];
-        return { ...step, consoleOutput: currentLogs };
-      });
+      // Apply structural sharing & state diff engine to raw timeline steps
+      const { steps: result } = processTimelineDiffEngine(rawTimeline);
 
       setTimeline(result);
       setComplexityAnalysis(analysis || null);
