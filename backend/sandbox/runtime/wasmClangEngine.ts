@@ -258,6 +258,10 @@ class Memory {
   }
 }
 
+function normalizeMemfsPath(p: string): string {
+  return p.trim().replace(/^[\/\.]+|[\/]+$/g, '');
+}
+
 class MemFS {
   hostWrite: (text: string) => void;
   stdinStr = '';
@@ -301,14 +305,15 @@ class MemFS {
   }
 
   addDirectory(path: string) {
-    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    const cleanPath = normalizeMemfsPath(path);
+    if (!cleanPath) return;
     this.mem.check();
     this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
     this.exports.AddDirectoryNode(cleanPath.length);
   }
 
   addFile(path: string, contents: Uint8Array | string) {
-    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    const cleanPath = normalizeMemfsPath(path);
     const length = typeof contents === 'string' ? contents.length : contents.byteLength;
     this.mem.check();
     this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
@@ -319,7 +324,7 @@ class MemFS {
   }
 
   getFileContents(path: string): Uint8Array {
-    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    const cleanPath = normalizeMemfsPath(path);
     this.mem.check();
     this.mem.writeStr(this.exports.GetPathBuf(), cleanPath);
     const inode = this.exports.FindNode(cleanPath.length);
@@ -610,7 +615,7 @@ class Tar {
       const parts = dirPath.split('/').filter(Boolean);
       let curr = '';
       for (let i = 0; i < parts.length; i++) {
-        curr += '/' + parts[i];
+        curr = curr ? curr + '/' + parts[i] : parts[i];
         if (!createdDirs.has(curr)) {
           try {
             memfs.addDirectory(curr);
@@ -627,12 +632,8 @@ class Tar {
         ? `${entry.filenamePrefix}/${entry.filename}`
         : entry.filename;
 
-      let cleanPath = rawPath.replace(/^\.?\//, '').trim();
+      let cleanPath = normalizeMemfsPath(rawPath);
       if (!cleanPath) continue;
-      if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
-      while (cleanPath.endsWith('/') && cleanPath.length > 1) {
-        cleanPath = cleanPath.slice(0, -1);
-      }
 
       if (entry.type === '5') {
         ensureDirectoryChain(cleanPath);
