@@ -661,6 +661,7 @@ class Tar {
 
 const clangCommonArgs = [
   '-disable-free',
+  '-std=c++17',
   '-isysroot', '/',
   '-internal-isystem', '/include/c++/v1',
   '-internal-isystem', '/include',
