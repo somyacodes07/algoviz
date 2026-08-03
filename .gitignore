@@ -23,10 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Wasm Clang engine binaries (downloaded via setup-wasm-clang.sh)
-public/wasm-clang/*.wasm
-public/wasm-clang/*.tar
-public/wasm-clang/*.js
-
 # Test artifacts
 test_*
