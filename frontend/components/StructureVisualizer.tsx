@@ -57,6 +57,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   themeColor,
   currentStepIndex,
   arrayViewType = 'cells',
+  playerControlsProps,
 }) => {
   const [enlargedType, setEnlargedType] = useState<'tree' | 'list' | 'graph' | 'array' | 'heap' | 'hashmap' | 'stackqueue' | null>(null);
   const lastTree = useRef<TreePreview | null>(null);
