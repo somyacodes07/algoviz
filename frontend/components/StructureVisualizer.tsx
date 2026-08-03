@@ -17,7 +17,24 @@ import { buildHeapPreview, HeapPanel, HeapPreview } from './visualizer/HeapVisua
 import { buildHashMapPreview, HashMapPanel, HashMapPreview } from './visualizer/HashMapVisualizer';
 import { buildStackQueuePreview, StackQueuePanel, StackQueuePreview } from './visualizer/StackQueueVisualizer';
 import { DiagramModal } from './visualizer/DiagramModal';
+import Controls from './Controls';
 import { Network } from 'lucide-react';
+
+export interface PlayerControlsProps {
+  isPlaying: boolean;
+  onPlayPause: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onReset: () => void;
+  canNext: boolean;
+  canPrev: boolean;
+  speed: number;
+  setSpeed: (s: number) => void;
+  progress: number;
+  onSeek: (progress: number) => void;
+  totalSteps: number;
+  breakpointCount?: number;
+}
 
 interface StructureVisualizerProps {
   variables: VariableMap;
@@ -25,6 +42,7 @@ interface StructureVisualizerProps {
   themeColor: ThemeColor;
   currentStepIndex: number;
   arrayViewType?: 'cells' | 'bars';
+  playerControlsProps?: PlayerControlsProps;
 }
 
 /**
@@ -224,6 +242,27 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
           : arrayGridPreview?.sourceName || 'Array/Matrix'
         }
         themeColor={themeColor}
+        playerControls={
+          playerControlsProps && (
+            <Controls
+              isPlaying={playerControlsProps.isPlaying}
+              onPlayPause={playerControlsProps.onPlayPause}
+              onNext={playerControlsProps.onNext}
+              onPrev={playerControlsProps.onPrev}
+              onReset={playerControlsProps.onReset}
+              canNext={playerControlsProps.canNext}
+              canPrev={playerControlsProps.canPrev}
+              speed={playerControlsProps.speed}
+              setSpeed={playerControlsProps.setSpeed}
+              progress={playerControlsProps.progress}
+              onSeek={playerControlsProps.onSeek}
+              themeColor={themeColor}
+              currentStep={currentStepIndex}
+              totalSteps={playerControlsProps.totalSteps}
+              breakpointCount={playerControlsProps.breakpointCount}
+            />
+          )
+        }
       >
         <div className="w-full p-2">
           {enlargedType === 'tree' && treePreview && (

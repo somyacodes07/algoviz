@@ -9,6 +9,7 @@ interface DiagramModalProps {
   onClose: () => void;
   title: string;
   themeColor: ThemeColor;
+  playerControls?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
   onClose,
   title,
   themeColor,
+  playerControls,
   children,
 }) => {
   const theme = getThemeConfig(themeColor);
@@ -215,6 +217,13 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
                 </span>
               </div>
             </div>
+
+            {/* Player Controls Footer Bar */}
+            {playerControls && (
+              <div className="border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)] p-1.5 shrink-0 z-20">
+                {playerControls}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

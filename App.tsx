@@ -757,6 +757,24 @@ const App: React.FC = () => {
                   complexityAnalysis={complexityAnalysis}
                   settings={settings}
                   onSeekStep={jumpToStep}
+                  playerControlsProps={{
+                    isPlaying,
+                    onPlayPause: togglePlayPause,
+                    onNext: nextStep,
+                    onPrev: prevStep,
+                    onReset: () => reset(code, language, { cppCompiler: settings.cppCompiler }),
+                    canNext: currentStepIndex < timeline.length - 1,
+                    canPrev: currentStepIndex > 0,
+                    speed,
+                    setSpeed,
+                    progress,
+                    onSeek: (p) => {
+                      const targetIndex = Math.floor((p / 100) * (timeline.length - 1));
+                      controls.jumpToStep(targetIndex);
+                    },
+                    totalSteps: timeline.length,
+                    breakpointCount: breakpoints.size,
+                  }}
                 />
               </div>
             </main>

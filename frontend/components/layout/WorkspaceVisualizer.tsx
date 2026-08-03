@@ -16,7 +16,7 @@ import VariablesPanel from '../VariablesPanel';
 import CallStackPanel from '../CallStackPanel';
 import PerformancePanel from '../PerformancePanel';
 import ConsolePanel from '../ConsolePanel';
-import StructureVisualizer from '../StructureVisualizer';
+import StructureVisualizer, { PlayerControlsProps } from '../StructureVisualizer';
 import { ThemeColor, getThemeConfig } from '../../theme/theme';
 import { ExecutionStep, Timeline, ComplexityAnalysis } from '../../../types';
 import { AppSettings } from '../SettingsModal';
@@ -36,6 +36,7 @@ interface WorkspaceVisualizerProps {
   complexityAnalysis: ComplexityAnalysis | null;
   settings: AppSettings;
   onSeekStep?: (index: number) => void;
+  playerControlsProps?: PlayerControlsProps;
 }
 
 const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
@@ -53,6 +54,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   complexityAnalysis,
   settings,
   onSeekStep,
+  playerControlsProps,
 }) => {
   const isSaffron = themeColor === 'saffron';
   // ── #9 Variable watch/pin state ────────────────────────────────
@@ -218,6 +220,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
               themeColor={themeColor} 
               currentStepIndex={currentStepIndex}
               arrayViewType={settings.arrayViewType}
+              playerControlsProps={playerControlsProps}
             />
           </div>
 
