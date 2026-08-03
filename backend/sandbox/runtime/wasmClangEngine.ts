@@ -755,9 +755,9 @@ async function compileWithClangWasm(
   };
 
   try {
-    const input = '/input.cpp';
-    const obj = '/output.o';
-    const wasm = '/output.wasm';
+    const input = 'input.cpp';
+    const obj = 'output.o';
+    const wasm = 'output.wasm';
 
     memfs.addFile(input, source);
 
@@ -774,11 +774,19 @@ async function compileWithClangWasm(
     ];
 
     const clangApp = await App.create(clangModule, memfs, clangArgs);
-    await clangApp.run();
+    const clangExitCode = await clangApp.run();
+    if (clangExitCode !== 0) {
+      return {
+        success: false,
+        stdout: '',
+        stderr: compilerOutput || 'Clang compilation failed',
+      };
+    }
 
     // 2. Link object file into target Wasm executable
     const libdir = 'lib/wasm32-wasi';
     const crt1 = `${libdir}/crt1.o`;
+    const compilerRt = 'lib/clang/8.0.1/lib/wasi/libclang_rt.builtins-wasm32.a';
     const stackSize = 1024 * 1024;
 
     const lldArgs = [
@@ -792,11 +800,19 @@ async function compileWithClangWasm(
       '-lc',
       '-lc++',
       '-lc++abi',
+      compilerRt,
       '-o', wasm
     ];
 
     const lldApp = await App.create(lldModule, memfs, lldArgs);
-    await lldApp.run();
+    const lldExitCode = await lldApp.run();
+    if (lldExitCode !== 0) {
+      return {
+        success: false,
+        stdout: '',
+        stderr: compilerOutput || 'Wasm linker failed',
+      };
+    }
 
     // 3. Extract final compiled Wasm executable
     const binary = memfs.getFileContents(wasm);
