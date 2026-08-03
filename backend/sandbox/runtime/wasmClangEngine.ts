@@ -461,7 +461,7 @@ class App {
       wasi_unstable,
       wasi_snapshot_preview1: wasi_unstable,
     });
-    app.instance = res instanceof WebAssembly.Instance ? res : res.instance;
+    app.instance = res;
     app.exports = app.instance.exports;
     app.mem = new Memory(app.exports.memory as WebAssembly.Memory);
     app.memfs.hostMem = app.mem;
