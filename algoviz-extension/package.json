@@ -2,11 +2,11 @@
   "name": "algoviz-vscode",
   "displayName": "AlgoViz",
   "description": "Algorithm Visualizer inside VS Code",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "somyacodes",
   "repository": {
     "type": "git",
-    "url": "https://github.com/somyacodes07/AlgoViz.git"
+    "url": "https://github.com/somyacodes07/AlgoViz-copy.git"
   },
   "engines": {
     "vscode": "^1.80.0"

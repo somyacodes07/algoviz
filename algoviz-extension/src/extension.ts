@@ -35,9 +35,14 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor && AlgoVizPanel.currentPanel) {
-        const ctx = getEditorContext(editor);
-        if (ctx) {
-          AlgoVizPanel.currentPanel.sendContext(ctx.code, ctx.language);
+        try {
+          const ctx = getEditorContext(editor);
+          if (ctx) {
+            AlgoVizPanel.currentPanel.sendContext(ctx.code, ctx.language);
+          }
+        } catch (e) {
+          // Editor may have been disposed between event fire and handler execution
+          console.warn('AlgoViz: Failed to read editor context', e);
         }
       }
     })
@@ -133,6 +138,17 @@ class AlgoVizPanel {
     this._update();
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
+    // Handle panel visibility changes (e.g., tab switch)
+    this._panel.onDidChangeViewState(
+      () => {
+        if (this._panel.visible && this._pendingContext) {
+          this.sendContext(this._pendingContext.code, this._pendingContext.language);
+        }
+      },
+      null,
+      this._disposables
+    );
+
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         switch (message.command) {
@@ -186,20 +202,47 @@ class AlgoVizPanel {
 <html lang="en">
 <body>
   <h1>Error loading AlgoViz frontend</h1>
-  <p>Make sure you have built the webview-ui folder via npm run build:webview.</p>
+  <p>Make sure you have built the webview-ui folder via <code>npm run build:webview</code>.</p>
+  <p>Error: ${e instanceof Error ? e.message : String(e)}</p>
 </body>
 </html>`;
     }
+
+    // Generate a nonce for CSP
+    const nonce = getNonce();
 
     const scriptPathOnDisk = vscode.Uri.joinPath(distPath, 'assets');
     const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
     const baseUri = webview.asWebviewUri(distPath).toString();
 
+    // Replace both ../assets/ and ./assets/ relative paths emitted by Vite
     html = html.replace(/(href|src)="\.\.\/assets\//g, `$1="${scriptUri}/`);
-    html = html.replace('<head>', `<head>\n    <script>window.__WEBVIEW_URI__ = "${baseUri}";</script>`);
+    html = html.replace(/(href|src)="\.\/assets\//g, `$1="${scriptUri}/`);
+
+    // Inject CSP meta tag + webview URI config
+    const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; font-src ${webview.cspSource} https://fonts.gstatic.com; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} data: https:; connect-src ${webview.cspSource} https:;">`;
+    html = html.replace('<head>', `<head>\n    ${cspMeta}\n    <script nonce="${nonce}">window.__WEBVIEW_URI__ = "${baseUri}";</script>`);
+
+    // Add nonce to all existing script tags
+    html = html.replace(/<script(?![^>]*nonce)/g, `<script nonce="${nonce}"`);
 
     return html;
   }
 }
 
-export function deactivate() {}
+export function deactivate() {
+  if (statusBarItem) {
+    statusBarItem.dispose();
+    statusBarItem = undefined;
+  }
+}
+
+/** Generate a random nonce for Content Security Policy */
+function getNonce(): string {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let nonce = '';
+  for (let i = 0; i < 32; i++) {
+    nonce += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return nonce;
+}
