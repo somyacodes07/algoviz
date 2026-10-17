@@ -6,10 +6,10 @@ The instrumentation sandbox is the layer that transforms ordinary code into code
 
 AlgoViz uses different instrumentation strategies depending on the language and engine:
 
-### Path 1: JavaScript (and C++ Fallback)
+### Path 1: JavaScript
 
 ```
-JavaScript source (or transpiled C++ output)
+JavaScript source
   → Acorn AST walk
   → __tracer.step() injection
   → Protected Web Worker execution
@@ -17,13 +17,13 @@ JavaScript source (or transpiled C++ output)
   → Visual playback in React
 ```
 
-### Path 2: C++ via Wasm Clang (and Wandbox Fallback)
+### Path 2: C++ (local Wasm or remote Wandbox)
 
 ```
 C++ source
   → Tree-sitter AST walk
   → __trace() injection (source-to-source)
-  → Wasm Clang compiles locally (or POST to Wandbox API fallback)
+  → selected compiler runs locally or receives source through the Wandbox API
   → Parse __TRACE__ JSON blocks from stdout
   → Timeline snapshots
   → Visual playback in React
@@ -53,11 +53,11 @@ The sandbox also manages:
 
 After instrumentation, AlgoViz executes the final code inside `executor.worker.ts`.
 
-The worker provides:
+The worker keeps the main UI thread responsive and provides:
 - Main UI thread stays responsive
 - Infinite loops can be terminated cleanly
 - Runtime failures can be converted into structured timeline errors
-- Dangerous globals are blocked (`fetch`, `WebSocket`, `XMLHttpRequest`, etc.)
+- Selected network globals are shadowed in the execution wrapper (`fetch`, `WebSocket`, `XMLHttpRequest`, etc.). This is defense in depth, not a hardened security boundary; do not treat it as a general-purpose secure sandbox for untrusted code.
 
 ## C++ Instrumentation
 
@@ -114,7 +114,7 @@ The sandbox separates several failure modes:
 | `worker` | Web Worker crashed |
 
 For C++, errors are further categorized:
-- **Engine/Network errors** → Trigger automatic fallback from Wasm Clang to Wandbox API
+- **Engine initialization errors** → Trigger fallback from Wasm Clang to Wandbox API when Wasm was selected
 - **Compiler errors** → Shown directly to the user in the Console Panel
 
 ## Why This Layer Matters for Learning

@@ -12,9 +12,11 @@ The timeline playback system lets you:
 - **Adjust speed** from slow (detailed study) to fast (overview)
 - **Reset** to re-run with the same code
 
-## 2. Live Variables Panel
+## 2. Execution Details
 
-The Variables tab shows all in-scope variables updating in real time:
+The **Inspect** control opens an optional details drawer below the always-visible visualization. Variables, call stack, and complexity details are available without replacing the diagram. The main view also summarizes observable changes at the current step, such as an array swap, pointer move, or scalar update.
+
+The Variables view shows in-scope values:
 
 - Scalars display with their current value
 - Arrays and vectors render as indexed blocks
@@ -30,16 +32,16 @@ AlgoViz scans your variable scope for common algorithmic pointers:
 
 These render as **Emerald Green Tags** above array columns, letting you physically watch sliding windows shrink, pivots swap, and binary searches narrow.
 
-## 4. Complexity Analysis Panel
+## 4. Complexity Estimates
 
-The Complexity tab provides live time complexity estimation:
+The Complexity view provides heuristic estimates, not a proof of asymptotic complexity:
 
-- **Big-O notation** estimated from AST analysis (JS) or timeline heuristics (C++)
+- **Big-O notation** estimated from source structure (JS) or runtime trace patterns (C++)
 - **Operations count** showing total traced steps
 - **Unique lines** executed
 - **Peak stack depth** for recursion analysis
 - **Hot-line heatmap** showing which lines run most frequently
-- Works for **both JavaScript and C++**
+- Available for **JavaScript and C++**; treat estimates as guidance, especially for code that does not match common algorithm patterns.
 
 ## 5. Command Palette Templates
 
@@ -95,7 +97,7 @@ Click the **Share** button to generate a shareable URL that encodes your current
 
 Click the gear icon in the Workbench header to open the Preferences dialog:
 - **Permanent Theme Accent**: Toggle between **Auto** (language-adaptive saffron/blue theme transition), **Saffron** (JavaScript-styled orange Neo-Brutalist look), or **Blue** (C++ styled blue look) to pin your preferred layout style.
-- **C++ Compiler Strategy**: Toggle between **Wandbox Remote API** (runs compilation on external high-performance compilers over the network) and **WebAssembly Clang Engine** (runs a 30MB Clang compiler bundle directly inside your browser's local sandbox, offline-ready). Hovering over each option reveals a custom tooltip explaining trade-offs.
+- **C++ Compiler Strategy**: Choose **Wandbox Remote API** (sends instrumented code to a remote compiler) or **WebAssembly Clang Engine** (runs the compiler bundle in the browser). Wandbox is the current default; Wasm mode can fall back to Wandbox if initialization fails.
 - **Default Array Rendering**: Configure 1D array visualizers to display standard **Memory Cells** or clean numeric **Bar Charts** (height proportional to value).
 
 ## 12. Enlarged Diagram View (Zoomable & Pannable Modal)

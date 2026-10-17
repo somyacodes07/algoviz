@@ -14,8 +14,8 @@
 - **Step-by-Step Debugging**: Pause execution, step forwards or backwards, and watch variables mutate exactly when lines evaluate.
 - **Visual Call Stack**: Demystify recursion and nested function calls by seeing the stack grow and shrink in real-time.
 - **Run Menu Integration**: Select **AlgoViz: Visualize** directly from your editor's Run/Play dropdown to instantly visualize the current file.
-- **Zero API Calls**: Execution runs locally within your IDE context, meaning you don't need to send your code to external servers for visualization.
-- **100% Offline Capability**: Runs directly inside VS Code's robust webview.
+- **Local JavaScript Execution**: JavaScript runs in a web worker inside the VS Code webview.
+- **Two C++ Compiler Options**: Choose local WebAssembly Clang or remote Wandbox in Settings. Wandbox is the current default; local Wasm can run offline when its compiler bundle is available.
 
 ## 🚀 How to Use
 

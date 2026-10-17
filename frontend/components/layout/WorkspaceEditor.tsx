@@ -12,7 +12,6 @@ interface WorkspaceEditorProps {
   executionError?: string | null;
   isPlaying: boolean;
   isExecuting?: boolean;
-  visualizerMode: boolean;
   currentStepLine: number;
   breakpoints: Set<number>;
   linkCopied: boolean;
@@ -36,7 +35,6 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   executionError,
   isPlaying,
   isExecuting,
-  visualizerMode,
   currentStepLine,
   breakpoints,
   linkCopied,

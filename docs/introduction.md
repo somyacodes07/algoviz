@@ -50,17 +50,17 @@ Internally, AlgoViz treats source code differently based on the language:
 Source code → Acorn AST → tracer injection → Web Worker → timeline → UI
 ```
 
-### C++ (Primary: Wasm Clang)
+### C++ (Local Wasm option)
 ```
 Source code → Tree-sitter AST → __trace() injection → Wasm Clang Engine (Local Browser) → timeline → UI
 ```
 
-### C++ (Fallback: Wandbox API)
+### C++ (Remote Wandbox option)
 ```
 Source code → Tree-sitter AST → __trace() injection → Wandbox API (Remote GCC) → timeline → UI
 ```
 
-The fallback activates automatically if the local WebAssembly engine is unsupported by the browser or fails to load.
+The current default is Wandbox. If local Wasm is selected, an engine initialization failure falls back to Wandbox. A compiler error is returned as an error rather than retried remotely.
 
 ## Why the Browser Matters
 
@@ -71,7 +71,7 @@ AlgoViz deliberately runs in the browser because that makes the experience:
 - deployment-light
 - classroom-friendly
 
-For JavaScript, everything runs locally. For C++, the primary engine uses Wasm Clang for real in-browser native compilation with zero-latency offline, while the fallback connects to the Wandbox API if the local engine is unavailable.
+JavaScript execution runs in a browser worker. C++ uses the compiler strategy selected in Settings: Wandbox is the current default, while Wasm Clang provides local execution when its compiler bundle is available. Wasm mode can fall back to Wandbox if the local engine fails to initialize.
 
 ## What Makes AlgoViz Different
 
@@ -80,11 +80,11 @@ Four product choices define the platform:
 1. **Timeline over black-box execution**
    Every run aims to produce a replayable history, not just a final answer.
 
-2. **Real C++ compilation with graceful fallback**
-   C++ code compiles with actual local Wasm Clang for full language support offline, while the remote Wandbox API fallback ensures execution even when Wasm is unsupported.
+2. **Two C++ compiler strategies**
+   Choose local WebAssembly Clang or remote Wandbox GCC. The Wasm strategy can fall back to Wandbox when the local engine is unavailable.
 
-3. **Live complexity analysis**
-   Time complexity is estimated from both source structure and runtime behavior, with hotspot heatmaps showing where computation concentrates.
+3. **Complexity estimates with trace context**
+   JavaScript estimates use source structure and C++ estimates use runtime traces. Treat them as learning aids, not proofs of asymptotic bounds.
 
 4. **Algorithm-aware UX**
    Templates, pointer tracking, stack views, and state panels are built around the kinds of code students actually practice.

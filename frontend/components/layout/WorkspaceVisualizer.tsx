@@ -1,33 +1,31 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Layers,
-  BarChart3,
-  Maximize2,
-  Minimize2,
-  Terminal as TerminalIcon,
+  Activity,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
-  ArrowRight,
-  AlertTriangle,
+  Code2,
+  Layers,
   Network,
+  Terminal as TerminalIcon,
 } from 'lucide-react';
 import VariablesPanel from '../VariablesPanel';
 import CallStackPanel from '../CallStackPanel';
 import PerformancePanel from '../PerformancePanel';
 import ConsolePanel from '../ConsolePanel';
 import StructureVisualizer, { PlayerControlsProps } from '../StructureVisualizer';
-import { ThemeColor, getThemeConfig } from '../../theme/theme';
+import { ThemeColor } from '../../theme/theme';
 import { ExecutionStep, Timeline, ComplexityAnalysis } from '../../../types';
 import { AppSettings } from '../SettingsModal';
+
+type DetailTab = 'variables' | 'stack' | 'performance';
 
 interface WorkspaceVisualizerProps {
   activeTab: 'variables' | 'stack' | 'performance' | 'diagrams';
   setActiveTab: (tab: 'variables' | 'stack' | 'performance' | 'diagrams') => void;
   consoleExpanded: boolean;
   setConsoleExpanded: (expanded: boolean) => void;
-  visualizerMode: boolean;
-  setVisualizerMode: (mode: boolean) => void;
   themeColor: ThemeColor;
   currentStep: ExecutionStep;
   prevStepVariables: { variables: Record<string, any> };
@@ -39,13 +37,72 @@ interface WorkspaceVisualizerProps {
   playerControlsProps?: PlayerControlsProps;
 }
 
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== typeof b || a === null || b === null) return false;
+  if (typeof a !== 'object') return false;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+function compactValue(value: unknown): string {
+  if (value === undefined) return 'undefined';
+  if (value === null) return 'null';
+  if (typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) return `Array(${value.length})`;
+    return 'Object';
+  }
+  return String(value);
+}
+
+function describeStep(current: ExecutionStep, previous: ExecutionStep | undefined): string {
+  if (current.isError) return current.errorMessage || 'Execution stopped with an error.';
+  if (!previous) return 'Execution is ready. Step forward to see what changes.';
+
+  const before = previous.variables || {};
+  const after = current.variables || {};
+  const changed = Object.keys(after).filter((name) => !valuesEqual(before[name], after[name]));
+
+  for (const name of changed) {
+    const oldValue = before[name];
+    const newValue = after[name];
+    if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+      const indices = newValue.map((value, index) =>
+        valuesEqual(oldValue[index], value) ? -1 : index,
+      ).filter((index) => index >= 0);
+      if (indices.length === 2 && valuesEqual(oldValue[indices[0]], newValue[indices[1]]) && valuesEqual(oldValue[indices[1]], newValue[indices[0]])) {
+        return `${name} swapped values at indices ${indices[0]} and ${indices[1]}.`;
+      }
+      if (indices.length === 1) return `${name}[${indices[0]}] changed from ${compactValue(oldValue[indices[0]])} to ${compactValue(newValue[indices[0]])}.`;
+      return `${name} changed (${indices.length} array positions updated).`;
+    }
+  }
+
+  const pointerNames = new Set(['i', 'j', 'k', 'left', 'right', 'low', 'high', 'lo', 'hi', 'mid', 'current', 'curr', 'head', 'tail', 'node']);
+  const pointerChange = changed.find((name) => pointerNames.has(name.toLowerCase()) && Number.isFinite(before[name]) && Number.isFinite(after[name]));
+  if (pointerChange) return `${pointerChange} moved from ${compactValue(before[pointerChange])} to ${compactValue(after[pointerChange])}.`;
+
+  const valueChange = changed.find((name) => typeof after[name] !== 'object' || after[name] === null);
+  if (valueChange) {
+    if (!(valueChange in before)) return `${valueChange} was created with value ${compactValue(after[valueChange])}.`;
+    return `${valueChange} changed from ${compactValue(before[valueChange])} to ${compactValue(after[valueChange])}.`;
+  }
+
+  if (changed.length > 0) return `${changed.length} values changed at this step.`;
+  if ((current.callStack || []).length > (previous.callStack || []).length) return 'A function call added a frame to the call stack.';
+  if ((current.callStack || []).length < (previous.callStack || []).length) return 'A function returned to its caller.';
+  return 'Execution moved to the next statement.';
+}
+
 const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   activeTab,
   setActiveTab,
   consoleExpanded,
   setConsoleExpanded,
-  visualizerMode,
-  setVisualizerMode,
   themeColor,
   currentStep,
   prevStepVariables,
@@ -56,9 +113,15 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   onSeekStep,
   playerControlsProps,
 }) => {
-  const isSaffron = themeColor === 'saffron';
-  // ── #9 Variable watch/pin state ────────────────────────────────
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
+  const isSaffron = themeColor === 'saffron';
+  const accentText = isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300';
+  const accentBg = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
+  const selectedTabClass = isSaffron
+    ? 'bg-saffron-50 text-saffron-800 dark:bg-saffron-900/30 dark:text-saffron-200'
+    : 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
+
   const handleTogglePin = useCallback((name: string) => {
     setPinnedVars((prev) => {
       const next = new Set(prev);
@@ -68,229 +131,130 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
     });
   }, []);
 
-  const tabActiveText =
-    themeColor === 'saffron'
-      ? 'text-saffron-600 dark:text-saffron-400'
-      : 'text-blue-600 dark:text-blue-400';
-  const tabActiveBg = themeColor === 'saffron' ? 'bg-saffron-50/50' : 'bg-blue-50/50';
-  const tabActiveShadow =
-    themeColor === 'saffron'
-      ? 'shadow-[inset_0_-4px_0_#f97316]'
-      : 'shadow-[inset_0_-4px_0_#3b82f6]';
-  const iconTextClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
-
-  // ── Step diff (#7) ────────────────────────────────────────────────────────
-  const stepDiff = useMemo(() => {
-    const prev = prevStepVariables.variables || {};
-    const curr = currentStep.variables || {};
-    const changes: { name: string; from: unknown; to: unknown; isNew: boolean }[] = [];
-    const stringify = (v: unknown) => {
-      if (v === null) return 'null';
-      if (v === undefined) return '—';
-      if (typeof v === 'object') return Array.isArray(v) ? `[${(v as unknown[]).length}]` : '{…}';
-      return String(v);
-    };
-    for (const [key, val] of Object.entries(curr)) {
-      if (typeof val === 'function' || (typeof val === 'string' && val === '[Function]')) continue;
-      if (typeof val === 'object' && val !== null) continue; // skip objects/arrays for brevity
-      const isNew = !(key in prev);
-      const changed = !isNew && String(prev[key]) !== String(val);
-      if (isNew || changed) {
-        changes.push({ name: key, from: prev[key], to: val, isNew });
-      }
-    }
-    return changes;
-  }, [currentStep, prevStepVariables]);
-
-  // ── #11 Loop detection ───────────────────────────────────────────
+  const previousStep = timeline[currentStepIndex - 1];
+  const insight = useMemo(() => describeStep(currentStep, previousStep), [currentStep, previousStep]);
   const loopWarning = useMemo(() => {
     if (currentStepIndex < 100) return null;
     const slice = timeline.slice(Math.max(0, currentStepIndex - 100), currentStepIndex + 1);
     const firstLine = slice[0]?.line;
-    if (!firstLine) return null;
-    const allSameLine = slice.every((s) => s.line === firstLine);
-    if (!allSameLine) return null;
-    // Check that variables haven't changed across the slice
-    const firstVarStr = JSON.stringify(slice[0]?.variables ?? {});
-    const lastVarStr = JSON.stringify(slice[slice.length - 1]?.variables ?? {});
-    if (firstVarStr !== lastVarStr) return null;
-    return firstLine;
+    if (!firstLine || !slice.every((step) => step.line === firstLine)) return null;
+    if (valuesEqual(slice[0]?.variables ?? {}, slice[slice.length - 1]?.variables ?? {})) return firstLine;
+    return null;
   }, [timeline, currentStepIndex]);
 
+  const openDetails = (tab: DetailTab) => {
+    setActiveTab(tab);
+    setDetailsOpen(true);
+  };
+
+  const detailButtons: { id: DetailTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'variables', label: 'Variables', icon: <Code2 size={14} /> },
+    { id: 'stack', label: 'Call stack', icon: <Layers size={14} /> },
+    { id: 'performance', label: 'Complexity', icon: <Activity size={14} /> },
+  ];
+
   return (
-    <div
-      className="h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 transition-all duration-200 ease-out overflow-hidden"
-    >
-      {/* Top half: Variables / Call Stack */}
-      <div
-        className={`flex flex-col min-h-0 transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3]' : 'flex-[4]'}`}
-      >
-        {/* Tabs */}
-        <div className="flex border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('diagrams')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'diagrams' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
-          >
-            <Network size={16} /> Diagrams
-          </button>
-          <button
-            onClick={() => setActiveTab('variables')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'variables' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
-          >
-            <Layers size={16} /> Variables
-          </button>
-          <button
-            onClick={() => setActiveTab('stack')}
-            className={`flex-1 border-r-[2px] border-slate-900 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] dark:border-[var(--dark-border)] ${activeTab === 'stack' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
-          >
-            <Layers size={16} className="rotate-180" /> Stack
-          </button>
-          <button
-            onClick={() => setActiveTab('performance')}
-            className={`flex-1 py-3.5 px-3 text-[11px] md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.12em] flex items-center justify-center gap-2 transition-colors active:translate-y-[1px] ${activeTab === 'performance' ? `${tabActiveText} ${tabActiveBg} ${tabActiveShadow} dark:bg-[var(--dark-surface-2)]` : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-2)]'}`}
-          >
-            <BarChart3 size={16} /> Perf
-          </button>
+    <div className="h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Network size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} />
+          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">Live visualization</span>
+          {currentStep.line > 0 && <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Line {currentStep.line}</span>}
         </div>
-
-        {/* Step diff annotation bar (#7) */}
-        <AnimatePresence mode="wait">
-          {stepDiff.length > 0 && activeTab === 'variables' && (
-            <motion.div
-              key={`diff-${currentStepIndex}`}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[var(--dark-surface)] border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] overflow-x-auto no-scrollbar shrink-0"
-            >
-              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 shrink-0">
-                Δ Changed
-              </span>
-              {stepDiff.map((d) => (
-                <span
-                  key={d.name}
-                  className={`flex items-center gap-1 border-[2px] px-2 py-0.5 text-[10px] font-bold font-mono whitespace-nowrap shadow-[1px_1px_0_rgba(15,23,42,0.5)] ${
-                    d.isNew
-                      ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300'
-                      : isSaffron
-                        ? 'border-saffron-400 bg-saffron-50 text-saffron-800 dark:border-saffron-700 dark:bg-saffron-900/20 dark:text-saffron-300'
-                        : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                  }`}
-                >
-                  <span className="font-black">{d.name}</span>
-                  {!d.isNew && (
-                    <>
-                      <span className="opacity-50 line-through">{String(d.from)}</span>
-                      <ArrowRight size={8} className="opacity-50" />
-                    </>
-                  )}
-                  <span>{String(d.to)}</span>
-                  {d.isNew && <span className="text-[8px] opacity-60 ml-0.5">NEW</span>}
-                </span>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Content Area */}
-        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
-          {/* #11 Loop detection warning */}
-          {loopWarning && activeTab === 'variables' && (
-            <div className="mb-3 flex items-start gap-2 border-[2px] border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 shadow-[2px_2px_0_#92400e] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
-              <AlertTriangle
-                size={14}
-                className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
-              />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-400">
-                  Possible Infinite Loop
-                </p>
-                <p className="text-[10px] font-medium text-amber-600 dark:text-amber-500 mt-0.5">
-                  Line {loopWarning} has executed 100+ times with no variable change.
-                </p>
-              </div>
-            </div>
-          )}
-          {/* Diagrams Tab Content - rendered persistently to preserve cache */}
-          <div className={activeTab === 'diagrams' ? 'block h-full' : 'hidden'}>
-            <StructureVisualizer 
-              variables={currentStep.variables || {}} 
-              prevVariables={prevStepVariables.variables || {}}
-              themeColor={themeColor} 
-              currentStepIndex={currentStepIndex}
-              arrayViewType={settings.arrayViewType}
-              playerControlsProps={playerControlsProps}
-            />
-          </div>
-
-          {activeTab === 'variables' ? (
-            <VariablesPanel
-              variables={currentStep.variables || {}}
-              prevVariables={prevStepVariables.variables || {}}
-              themeColor={themeColor}
-              pinnedVars={pinnedVars}
-              onTogglePin={handleTogglePin}
-              timeline={timeline}
-              currentStepIndex={currentStepIndex}
-              onSeekStep={onSeekStep}
-            />
-          ) : activeTab === 'stack' ? (
-            <CallStackPanel
-              stack={currentStep.callStack || []}
-              themeColor={themeColor}
-              timeline={timeline}
-              currentStepIndex={currentStepIndex}
-            />
-          ) : activeTab === 'performance' ? (
-            <PerformancePanel
-              timeline={timeline}
-              currentStepIndex={currentStepIndex}
-              analysis={complexityAnalysis}
-              themeColor={themeColor}
-            />
-          ) : null}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (!detailsOpen && activeTab === 'diagrams') setActiveTab('variables');
+            setDetailsOpen((open) => !open);
+          }}
+          aria-expanded={detailsOpen}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-200 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+        >
+          <Code2 size={13} />
+          Inspect
+          {detailsOpen ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+        </button>
       </div>
 
-      {/* Bottom half: Console */}
-      <div
-        className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] transition-all duration-200 ease-out ${consoleExpanded ? 'flex-[3] min-h-[150px]' : 'h-10'}`}
-      >
+      <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] bg-slate-50 dark:bg-[var(--dark-base)] min-h-10 shrink-0" aria-live="polite" aria-atomic="true">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${accentBg}`} />
+        <p className="text-[11px] sm:text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{insight}</p>
+      </div>
+
+      {loopWarning && (
+        <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-300 dark:border-amber-800 shrink-0">
+          <AlertTriangle size={14} />
+          <span>Line {loopWarning} has repeated without a visible state change.</span>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
+        <StructureVisualizer
+          variables={currentStep.variables || {}}
+          prevVariables={prevStepVariables.variables || {}}
+          themeColor={themeColor}
+          currentStepIndex={currentStepIndex}
+          arrayViewType={settings.arrayViewType}
+          playerControlsProps={playerControlsProps}
+        />
+      </div>
+
+      <AnimatePresence initial={false}>
+        {detailsOpen && (
+          <motion.section
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'min(38vh, 300px)', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="shrink-0 overflow-hidden border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]"
+            aria-label="Execution details"
+          >
+            <div className="flex items-center gap-1 px-2 pt-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] overflow-x-auto">
+              {detailButtons.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  aria-pressed={activeTab === tab.id}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 text-[10px] sm:text-xs font-bold border-b-2 whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${activeTab === tab.id ? `${selectedTabClass} border-current` : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'}`}
+                >
+                  {tab.icon}{tab.label}
+                </button>
+              ))}
+              <span className={`ml-auto hidden sm:block pr-2 text-[10px] font-mono ${accentText}`}>Step {Math.max(0, currentStepIndex + 1)} / {timeline.length}</span>
+            </div>
+            <div className="h-[calc(100%-42px)] overflow-y-auto custom-scrollbar p-3">
+              {activeTab === 'variables' ? (
+                <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} pinnedVars={pinnedVars} onTogglePin={handleTogglePin} timeline={timeline} currentStepIndex={currentStepIndex} onSeekStep={onSeekStep} />
+              ) : activeTab === 'stack' ? (
+                <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} timeline={timeline} currentStepIndex={currentStepIndex} />
+              ) : (
+                <PerformancePanel timeline={timeline} currentStepIndex={currentStepIndex} analysis={complexityAnalysis} themeColor={themeColor} />
+              )}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      <div className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] transition-[height] duration-200 ease-out ${consoleExpanded ? 'h-40 sm:h-48 shrink-0' : 'h-10 shrink-0'}`}>
         <button
-          className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-2)] transition-colors cursor-pointer w-full"
+          type="button"
+          className="h-10 flex flex-shrink-0 items-center justify-between px-4 hover:bg-slate-50 dark:hover:bg-[var(--dark-surface-2)] transition-colors w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-blue-500"
           onClick={() => setConsoleExpanded(!consoleExpanded)}
+          aria-expanded={consoleExpanded}
         >
           <div className="flex items-center gap-2">
-            <TerminalIcon size={16} className={iconTextClass} />
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-400 uppercase tracking-wider">
-              Console Output
-            </span>
-            {!consoleExpanded &&
-              currentStep.consoleOutput &&
-              currentStep.consoleOutput.length > 0 && (
-                <span className="ml-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-200 dark:bg-[var(--dark-surface-3)] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300 shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
-                  {currentStep.consoleOutput.length}
-                </span>
-              )}
+            <TerminalIcon size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} />
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-300">Console</span>
+            {!consoleExpanded && currentStep.consoleOutput?.length ? (
+              <span className="border border-slate-900 dark:border-[var(--dark-border)] bg-slate-200 dark:bg-[var(--dark-surface-3)] px-1.5 py-0.5 text-[9px] font-bold text-slate-700 dark:text-slate-300">{currentStep.consoleOutput.length}</span>
+            ) : null}
           </div>
-          <div className="text-slate-500 dark:text-slate-600">
-            {consoleExpanded ? (
-              <ChevronDown size={14} strokeWidth={3} />
-            ) : (
-              <ChevronUp size={14} strokeWidth={3} />
-            )}
-          </div>
+          {consoleExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
         </button>
-
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {consoleExpanded && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 overflow-y-auto custom-scrollbar"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
               <ConsolePanel logs={currentStep.consoleOutput || []} themeColor={themeColor} />
             </motion.div>
           )}

@@ -32,7 +32,11 @@ export const executeCode = async (
   config?: ExecutionConfig,
 ): Promise<ExecuteResult> => {
   const timeoutMs = config?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const cacheKey = `${language}:${userCode.trim()}:${timeoutMs}`;
+  const cacheKey = JSON.stringify({
+    language: language === 'cpp' ? 'c++' : language,
+    code: userCode,
+    config: { ...config, timeoutMs },
+  });
 
   if (executionCache.has(cacheKey)) {
     return executionCache.get(cacheKey)!;

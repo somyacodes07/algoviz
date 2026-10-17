@@ -1,25 +1,27 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
-import Controls from "./frontend/components/Controls";
-import HomePage from "./frontend/components/HomePage";
-import TemplatePalette from "./frontend/components/TemplatePalette";
 import ErrorPopup from "./frontend/components/ErrorPopup";
-import DocsPage from "./frontend/components/DocsPage";
-import WorkspaceHeader from "./frontend/components/layout/WorkspaceHeader";
-import WorkspaceEditor from "./frontend/components/layout/WorkspaceEditor";
-import WorkspaceVisualizer from "./frontend/components/layout/WorkspaceVisualizer";
-import SnapshotsDrawer from "./frontend/components/SnapshotsDrawer";
 import { useExecutionEngine } from "./frontend/hooks/useExecutionEngine";
 import { useSeoMetadata } from "./frontend/hooks/useSeoMetadata";
 import { useSnapshots } from "./frontend/hooks/useSnapshots";
 import { useAnnotations } from "./frontend/hooks/useAnnotations";
-import { JS_TEMPLATES, CPP_TEMPLATES, CodeTemplate } from "./frontend/codeTemplates";
+import type { CodeTemplate } from "./frontend/codeTemplates";
 import { getSeoConfig } from "./frontend/seo";
 import { prewarmWasmEngines } from "./backend/sandbox/transpiler/parser";
 import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
-import { SettingsModal, AppSettings } from "./frontend/components/SettingsModal";
+import type { AppSettings } from "./frontend/components/SettingsModal";
+
+const Controls = lazy(() => import("./frontend/components/Controls"));
+const HomePage = lazy(() => import("./frontend/components/HomePage"));
+const TemplatePalette = lazy(() => import("./frontend/components/TemplatePalette"));
+const DocsPage = lazy(() => import("./frontend/components/DocsPage"));
+const WorkspaceHeader = lazy(() => import("./frontend/components/layout/WorkspaceHeader"));
+const WorkspaceEditor = lazy(() => import("./frontend/components/layout/WorkspaceEditor"));
+const WorkspaceVisualizer = lazy(() => import("./frontend/components/layout/WorkspaceVisualizer"));
+const SnapshotsDrawer = lazy(() => import("./frontend/components/SnapshotsDrawer"));
+const SettingsModal = lazy(() => import("./frontend/components/SettingsModal").then((module) => ({ default: module.SettingsModal })));
 
 const JS_DEFAULT_CODE = `// Welcome to AlgoViz!
 // Edit this code and click the Play button below.
@@ -151,7 +153,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance" | "diagrams">("diagrams");
   const [linkCopied, setLinkCopied] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
-  const [visualizerMode, setVisualizerMode] = useState(false);
+  const [templates, setTemplates] = useState<CodeTemplate[]>([]);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [snapshotsOpen, setSnapshotsOpen] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
@@ -267,7 +269,6 @@ const App: React.FC = () => {
     : settings.themeColor;
   const [hoverThemeColor, setHoverThemeColor] = useState<"saffron" | "blue" | null>(null);
   const effectiveThemeColor = hoverThemeColor || themeColor;
-  const templates = language === "c++" ? CPP_TEMPLATES : JS_TEMPLATES;
   const seoConfig = getSeoConfig(window.location.origin, page, language);
 
   useEffect(() => {
@@ -509,6 +510,29 @@ const App: React.FC = () => {
     setTemplateMenuOpen(false);
   };
 
+  const handleOpenTemplates = useCallback(async () => {
+    if (language === 'c++') {
+      const { CPP_TEMPLATES } = await import('./frontend/templates/cppTemplates');
+      setTemplates(CPP_TEMPLATES);
+    } else {
+      const { JS_TEMPLATES } = await import('./frontend/templates/jsTemplates');
+      setTemplates(JS_TEMPLATES);
+    }
+    setTemplateMenuOpen(true);
+  }, [language]);
+
+  useEffect(() => {
+    const handleTemplateShortcut = (event: KeyboardEvent) => {
+      if (page !== 'editor' || templateMenuOpen || !(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('.monaco-editor')) return;
+      event.preventDefault();
+      void handleOpenTemplates();
+    };
+    window.addEventListener('keydown', handleTemplateShortcut);
+    return () => window.removeEventListener('keydown', handleTemplateShortcut);
+  }, [page, templateMenuOpen, handleOpenTemplates]);
+
   const handleCopyLink = useCallback(() => {
     const url = encodeShareLink(code, language);
     
@@ -653,73 +677,80 @@ const App: React.FC = () => {
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
           <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative w-full h-full will-change-transform">
-            <HomePage
-              language={language}
-              onSelectLanguage={handleLanguageSelect}
-              onOpenDocs={handleOpenDocs}
-              docsHref={ROUTES.docs}
-              javascriptHref={ROUTES.visualizerJavascript}
-              cppHref={ROUTES.visualizerCpp}
-              toggleTheme={toggleTheme}
-              theme={theme}
-              onHoverLanguage={handleHoverLanguage}
-            />
+            <Suspense fallback={<div className="min-h-screen w-full bg-[#f7f0e3] dark:bg-[var(--dark-base)]" aria-label="Loading AlgoViz" />}>
+              <HomePage
+                language={language}
+                onSelectLanguage={handleLanguageSelect}
+                onOpenDocs={handleOpenDocs}
+                docsHref={ROUTES.docs}
+                javascriptHref={ROUTES.visualizerJavascript}
+                cppHref={ROUTES.visualizerCpp}
+                toggleTheme={toggleTheme}
+                theme={theme}
+                onHoverLanguage={handleHoverLanguage}
+              />
+            </Suspense>
           </motion.div>
         ) : page === "docs" ? (
           <motion.div key="docs" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="h-full w-full will-change-transform">
-            <DocsPage
-              onBack={handleGoHome}
-              theme={theme}
-              toggleTheme={toggleTheme}
-              homeHref={ROUTES.home}
-              javascriptHref={ROUTES.visualizerJavascript}
-              cppHref={ROUTES.visualizerCpp}
-            />
+            <Suspense fallback={<div className="h-full w-full bg-[#f7f0e3] dark:bg-[var(--dark-base)]" aria-label="Loading documentation" />}>
+              <DocsPage
+                onBack={handleGoHome}
+                theme={theme}
+                toggleTheme={toggleTheme}
+                homeHref={ROUTES.home}
+                javascriptHref={ROUTES.visualizerJavascript}
+                cppHref={ROUTES.visualizerCpp}
+              />
+            </Suspense>
           </motion.div>
         ) : (
           <motion.div key="editor" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="flex h-full w-full flex-col will-change-transform">
             {!embedMode && (
-              <WorkspaceHeader
-                language={language}
-                theme={theme}
-                langLabel={langLabel}
-                onGoHome={handleGoHome}
-                onOpenDocs={handleOpenDocs}
-                toggleTheme={toggleTheme}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                onOpenSnapshots={() => setSnapshotsOpen(true)}
-                annotationMode={annotationMode}
-                onToggleAnnotationMode={() => setAnnotationMode(prev => !prev)}
-              />
+              <Suspense fallback={<header className="h-14 shrink-0 bg-white dark:bg-[var(--dark-surface)] border-b border-slate-900 dark:border-[var(--dark-border)]" />}>
+                <WorkspaceHeader
+                  language={language}
+                  theme={theme}
+                  langLabel={langLabel}
+                  onGoHome={handleGoHome}
+                  onOpenDocs={handleOpenDocs}
+                  toggleTheme={toggleTheme}
+                  onOpenSettings={() => setIsSettingsOpen(true)}
+                  onOpenSnapshots={() => setSnapshotsOpen(true)}
+                  annotationMode={annotationMode}
+                  onToggleAnnotationMode={() => setAnnotationMode(prev => !prev)}
+                />
+              </Suspense>
             )}
 
             <main ref={mainContainerRef} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-5 gap-2 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
               <div style={{ flex: typeof window !== 'undefined' && window.innerWidth >= 768 ? `0 0 calc(${splitRatio}% - 6px)` : undefined }} className="flex flex-col min-w-0 h-full w-full">
-                <WorkspaceEditor
-                  language={language}
-                  theme={theme}
-                  themeColor={themeColor}
-                  code={code}
-                  executionError={executionError}
-                  isPlaying={isPlaying}
-                  isExecuting={isExecuting}
-                  visualizerMode={visualizerMode}
-                  currentStepLine={currentStep.line}
-                  breakpoints={breakpoints}
-                  linkCopied={linkCopied}
-                  onCodeChange={handleCodeChange}
-                  onRun={async () => {
-                    setIsPlaying(false);
-                    return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
-                  }}
-                  onShare={handleCopyLink}
-                  onOpenTemplates={() => setTemplateMenuOpen(true)}
-                  onToggleBreakpoint={toggleBreakpoint}
-                  annotationMode={annotationMode}
-                  currentAnnotation={getAnnotation(currentStepIndex)}
-                  currentStepIndex={currentStepIndex}
-                  onSaveAnnotation={setAnnotation}
-                />
+                <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)]" aria-label="Loading code editor" />}>
+                  <WorkspaceEditor
+                    language={language}
+                    theme={theme}
+                    themeColor={themeColor}
+                    code={code}
+                    executionError={executionError}
+                    isPlaying={isPlaying}
+                    isExecuting={isExecuting}
+                    currentStepLine={currentStep.line}
+                    breakpoints={breakpoints}
+                    linkCopied={linkCopied}
+                    onCodeChange={handleCodeChange}
+                    onRun={async () => {
+                      setIsPlaying(false);
+                      return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
+                    }}
+                    onShare={handleCopyLink}
+                    onOpenTemplates={handleOpenTemplates}
+                    onToggleBreakpoint={toggleBreakpoint}
+                    annotationMode={annotationMode}
+                    currentAnnotation={getAnnotation(currentStepIndex)}
+                    currentStepIndex={currentStepIndex}
+                    onSaveAnnotation={setAnnotation}
+                  />
+                </Suspense>
               </div>
 
               {/* Draggable Divider Handle */}
@@ -742,43 +773,44 @@ const App: React.FC = () => {
               </div>
 
               <div className="flex-1 flex flex-col min-w-0 h-full w-full">
-                <WorkspaceVisualizer
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  consoleExpanded={consoleExpanded}
-                  setConsoleExpanded={setConsoleExpanded}
-                  visualizerMode={visualizerMode}
-                  setVisualizerMode={setVisualizerMode}
-                  themeColor={themeColor}
-                  currentStep={currentStep}
-                  prevStepVariables={prevStepVariables}
-                  timeline={timeline}
-                  currentStepIndex={currentStepIndex}
-                  complexityAnalysis={complexityAnalysis}
-                  settings={settings}
-                  onSeekStep={jumpToStep}
-                  playerControlsProps={{
-                    isPlaying,
-                    onPlayPause: togglePlayPause,
-                    onNext: nextStep,
-                    onPrev: prevStep,
-                    onReset: () => reset(code, language, { cppCompiler: settings.cppCompiler }),
-                    canNext: currentStepIndex < timeline.length - 1,
-                    canPrev: currentStepIndex > 0,
-                    speed,
-                    setSpeed,
-                    progress,
-                    onSeek: (p) => {
-                      const targetIndex = Math.floor((p / 100) * (timeline.length - 1));
-                      controls.jumpToStep(targetIndex);
-                    },
-                    totalSteps: timeline.length,
-                    breakpointCount: breakpoints.size,
-                  }}
-                />
+                <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]" aria-label="Loading visualization" />}>
+                  <WorkspaceVisualizer
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    consoleExpanded={consoleExpanded}
+                    setConsoleExpanded={setConsoleExpanded}
+                    themeColor={themeColor}
+                    currentStep={currentStep}
+                    prevStepVariables={prevStepVariables}
+                    timeline={timeline}
+                    currentStepIndex={currentStepIndex}
+                    complexityAnalysis={complexityAnalysis}
+                    settings={settings}
+                    onSeekStep={jumpToStep}
+                    playerControlsProps={{
+                      isPlaying,
+                      onPlayPause: togglePlayPause,
+                      onNext: nextStep,
+                      onPrev: prevStep,
+                      onReset: () => reset(code, language, { cppCompiler: settings.cppCompiler }),
+                      canNext: currentStepIndex < timeline.length - 1,
+                      canPrev: currentStepIndex > 0,
+                      speed,
+                      setSpeed,
+                      progress,
+                      onSeek: (p) => {
+                        const targetIndex = Math.floor((p / 100) * (timeline.length - 1));
+                        controls.jumpToStep(targetIndex);
+                      },
+                      totalSteps: timeline.length,
+                      breakpointCount: breakpoints.size,
+                    }}
+                  />
+                </Suspense>
               </div>
             </main>
 
+            <Suspense fallback={<div className="h-14 shrink-0 border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]" />}>
             <Controls
               isPlaying={isPlaying}
               onPlayPause={togglePlayPause}
@@ -799,30 +831,31 @@ const App: React.FC = () => {
               totalSteps={timeline.length}
               breakpointCount={breakpoints.size}
             />
+            </Suspense>
 
-            <TemplatePalette
+            <Suspense fallback={null}><TemplatePalette
               isOpen={templateMenuOpen}
               onClose={() => setTemplateMenuOpen(false)}
               templates={templates}
               onSelect={handleTemplateSelect}
               language={language}
-            />
+            /></Suspense>
 
             <ErrorPopup
               error={executionError}
               onClose={clearError}
             />
 
-            <SettingsModal
+            <Suspense fallback={null}><SettingsModal
               isOpen={isSettingsOpen}
               onClose={() => setIsSettingsOpen(false)}
               settings={settings}
               onUpdateSettings={setSettings}
               activeThemeColor={themeColor}
-            />
+            /></Suspense>
 
             {/* Snapshots Drawer */}
-            <SnapshotsDrawer
+            <Suspense fallback={null}><SnapshotsDrawer
               isOpen={snapshotsOpen}
               onClose={() => setSnapshotsOpen(false)}
               snapshots={snapshots}
@@ -837,7 +870,7 @@ const App: React.FC = () => {
                 setIsPlaying(false);
               }}
               onDelete={deleteSnapshot}
-            />
+            /></Suspense>
           </motion.div>
 
         )}

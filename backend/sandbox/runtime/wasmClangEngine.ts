@@ -259,7 +259,7 @@ class Memory {
 }
 
 function normalizeMemfsPath(p: string): string {
-  return p.trim().replace(/^[\/\.]+|[\/]+$/g, '');
+  return p.trim().split('/').filter((part) => part && part !== '.' && part !== '..').join('/');
 }
 
 class MemFS {
@@ -636,11 +636,11 @@ class Tar {
     };
 
     while ((entry = this.readEntry())) {
-      let rawPath = entry.filenamePrefix
+      const rawPath = entry.filenamePrefix
         ? `${entry.filenamePrefix}/${entry.filename}`
         : entry.filename;
 
-      let cleanPath = normalizeMemfsPath(rawPath);
+      const cleanPath = normalizeMemfsPath(rawPath);
       if (!cleanPath) continue;
 
       if (entry.type === '5') {

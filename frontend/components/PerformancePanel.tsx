@@ -283,18 +283,20 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
                 Auxiliary Space
               </span>
               <span className="border-[1.5px] border-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-800 dark:text-emerald-300">
-                {analysis?.spaceEstimate?.confidence || 'high'}
+                {analysis?.spaceEstimate?.confidence || '—'}
               </span>
             </div>
             <div className="mt-2 flex items-end justify-between">
               <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
-                {analysis?.spaceEstimate?.notation || 'O(1)'}
+                {analysis?.spaceEstimate?.notation || 'O(?)'}
               </span>
-              <ComplexitySparkline
-                notation={analysis?.spaceEstimate?.notation || 'O(1)'}
-                stroke="#10b981"
-                fill="#10b981"
-              />
+              {analysis?.spaceEstimate?.notation && (
+                <ComplexitySparkline
+                  notation={analysis.spaceEstimate.notation}
+                  stroke="#10b981"
+                  fill="#10b981"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -313,6 +315,9 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
             ))}
           </div>
         ) : null}
+        <p className="mt-3 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
+          Estimates are pattern-based learning hints. One run cannot prove an algorithm’s Big-O bound.
+        </p>
       </motion.section>
 
       <div className="grid grid-cols-2 gap-3">

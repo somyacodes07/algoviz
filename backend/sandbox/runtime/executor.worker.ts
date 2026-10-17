@@ -113,8 +113,6 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
 
-    complexityAnalysis = analyzeComplexity(userCode, timeline);
-
     let stepCount = 0;
 
     // ── Tracer object ──

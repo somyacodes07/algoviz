@@ -27,11 +27,11 @@ This document provides a technical overview of AlgoViz's internal architecture f
 └────────────┼─────────────────────────────┼───────────────────────┘
              │                             │
     ┌────────▼────────┐          ┌─────────▼─────────┐
-    │ C++ (Wasm Clang)│          │ JS (Web Worker) / │
-    │                 │          │ C++ Fallback API  │
+    │ C++ (configured)│          │ JS (Web Worker)   │
+    │ Wasm or Wandbox │          │                   │
     │  Instrument C++ │          │                   │
-    │  Compile locally│          │  JS: Instrument   │
-    │  Parse traces   │          │  C++: POST to GCC │
+    │ Compile or POST │          │  Instrument JS    │
+    │  Parse traces   │          │ Capture snapshots│
     │                 │          │                   │
     └────────┬────────┘          └─────────┬───────────┘
              │                             │
@@ -55,12 +55,12 @@ This document provides a technical overview of AlgoViz's internal architecture f
 
 The central entry point for all code execution. Routes based on language:
 
-- **C++**: Tries local Wasm Clang engine first, falls back to Wandbox API if unsupported
+- **C++**: Uses the configured compiler strategy. The default is Wandbox; choosing Wasm runs locally and falls back to Wandbox if the local engine fails to initialize.
 - **JavaScript**: Always uses Web Worker with Acorn instrumentation
 
 ### Wasm Clang Engine (`wasmClangEngine.ts`)
 
-Handles the primary C++ pipeline:
+Handles the local C++ pipeline when selected:
 
 1. Instruments C++ with `CppInstrumenter`
 2. Compiles to WebAssembly directly in the browser
@@ -86,7 +86,7 @@ Source-to-source transformation that keeps C++ valid while adding trace output:
 
 ### Web Worker (`executor.worker.ts`)
 
-Sandboxed execution environment for JavaScript and fallback C++:
+Worker execution environment for JavaScript:
 
 - Blocks dangerous globals (`fetch`, `WebSocket`, etc.)
 - Enforces step limits for infinite loop protection
@@ -107,7 +107,7 @@ Singleton WASM parser for C++ grammar:
 
 - Lazy initialization with `initParser()` 
 - Browser compatibility polyfill for `process.versions`
-- Used by both the instrumenter (Wandbox path) and transformer (fallback path)
+- Used by the C++ instrumenter for both compiler strategies
 
 ## Data Flow
 

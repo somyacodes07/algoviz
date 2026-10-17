@@ -2,20 +2,20 @@
 
 ## Overview
 
-AlgoViz uses a **dual-engine architecture** for C++ execution that brings native compilation to the browser: a local Wasm Clang engine for immediate execution and a remote Wandbox API for network fallback.
+AlgoViz supports two C++ execution strategies: local Wasm Clang and remote Wandbox GCC. The current default is Wandbox. If Wasm is selected but cannot initialize, the executor falls back to Wandbox; compile errors do not trigger a fallback.
 
 ## Execution Flow
 
 ```
 C++ Source Code
-  ├─ PRIMARY: Wasm Clang Engine (Local/Browser)
+  ├─ Local Wasm Clang (selected in Settings)
   │    ├─ Tree-sitter parses C++ into AST
   │    ├─ Source-to-source instrumenter injects __trace() calls
   │    ├─ Local WebAssembly Clang compiles code in-browser
   │    ├─ Binary executes locally, printing __TRACE__ JSON
   │    └─ Timeline + Complexity Analysis returned to UI
   │
-  └─ FALLBACK: Wandbox API (Online)
+  └─ Wandbox API (default; also Wasm initialization fallback)
        ├─ Tree-sitter parses C++ into AST
        ├─ Source-to-source instrumenter injects __trace() calls
        ├─ Instrumented code POSTed to Wandbox (remote GCC)
@@ -23,9 +23,9 @@ C++ Source Code
        └─ Timeline + Complexity Analysis returned to UI
 ```
 
-## Primary Engine: Wasm Clang Engine
+## Local Engine: Wasm Clang
 
-When you press **Run** on C++ code, AlgoViz follows this pipeline:
+When selected, the Wasm engine follows this pipeline:
 
 ### 1. Source Instrumentation (`cppInstrumenter.ts`)
 
@@ -100,23 +100,24 @@ The trace header includes `__to_json()` overloads for:
 | `std::queue<T>` | JSON array (copied and unwound) |
 | Unknown types | `"unsupported"` fallback |
 
-## Fallback Engine: Wandbox API
+## Remote Engine: Wandbox API
 
-If the Wasm Clang engine is unavailable (e.g., binaries failed to load or are unsupported by the browser environment), AlgoViz automatically falls back to the Wandbox API.
+When Wandbox is selected, the instrumented C++ source is sent to the Wandbox service. When Wasm is selected, the executor also uses Wandbox if the local engine fails to initialize. This sends source code to a remote service and requires network access.
 
 ### When Fallback Activates
 
 | Scenario | Engine Used |
 |---|---|
-| Wasm Clang initialized successfully | Wasm Clang (Local) |
-| Wasm Clang load failure | Wandbox API (Remote GCC) |
-| Wandbox returns compiler error | Error shown to user |
+| Wandbox selected | Wandbox API (Remote GCC) |
+| Wasm selected and initialized | Wasm Clang (Local) |
+| Wasm initialization failure | Wandbox API (Remote GCC) |
+| Selected compiler returns a compiler error | Error shown to user |
 
 ### Wandbox Pipeline
 
 1. **Parse & Instrument**: Tree-sitter WASM parses and injects trace logic into C++.
 2. **Execute**: Code is sent to the Wandbox REST API.
-3. **Parse Trace**: The resulting stdout is parsed for `__TRACE__` outputs, identical to the primary path.
+3. **Parse Trace**: The resulting stdout is parsed for `__TRACE__` outputs, using the same timeline format as the local path.
 
 ## Complexity Analysis for C++
 
@@ -128,7 +129,7 @@ Since Acorn (the JS parser) cannot parse C++ source code, AlgoViz uses a **timel
 4. **Sort detection**: Scans source text for `sort()` calls
 5. **Logarithmic detection**: Checks if hot-line hits match log₂(n) patterns
 
-This produces accurate estimates for common DSA patterns: O(n), O(n²), O(n log n), O(log n).
+These are heuristics for common DSA patterns, not proofs of complexity. A single run can misclassify unusual algorithms or input-dependent paths.
 
 ## In One Sentence
 

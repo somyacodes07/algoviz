@@ -23,11 +23,11 @@
 
 ## 🌟 Why AlgoViz?
 
-Most code visualizers show static outputs or basic arrays. **AlgoViz** automatically detects and renders high-level data structures right as your code executes:
+Most code visualizers show static outputs or basic arrays. **AlgoViz** inspects runtime values and can render common data structures as code executes:
 
-- 🧠 **Zero Configuration Auto-Detection**: Write standard JavaScript or C++ code (`Tree`, `Graph`, `LinkedList`, `Vector`, `Map`, `Heap`). AlgoViz inspects runtime memory and renders interactive SVG diagrams automatically.
-- ⚡ **Dual C++ Execution Engine**: Execute real C++ code via public GCC Wandbox backend or fall back to an offline WebAssembly WASM engine.
-- 📊 **Telemetry & Complexity Analysis**: Live Big-O Time Growth ($O(1), O(\log n), O(n), O(n \log n), O(n^2), O(2^n)$), Auxiliary Space estimate ($O(1), O(n)$), and execution hotspot heatmaps.
+- 🧠 **Runtime Structure Views**: AlgoViz uses value shapes and variable names to identify common data structures. Detection is heuristic, so ambiguous code may need a clearer variable shape or name.
+- ⚡ **Two C++ Execution Options**: Choose local WebAssembly Clang or remote Wandbox GCC in Settings. Wandbox is the current default; Wasm mode can fall back to Wandbox if the local engine cannot start.
+- 📊 **Complexity Estimates**: JavaScript estimates use syntax structure; C++ estimates use runtime trace patterns. Both are heuristics and include hotspot information.
 - 📝 **Interactive Annotations**: Add per-step sticky notes and comments directly to the execution timeline to build shareable explanations.
 - 🔍 **Pan & Zoom Modal**: Expand trees, graphs, and matrices into a full-screen interactive view with drag-and-pan controls.
 - 🎨 **Sleek Neo-Brutalist & Glassmorphic UI**: High-contrast, zero-lag theme transitions (Dark Mode & Saffron/Blue themes).
@@ -49,9 +49,9 @@ AlgoViz is **100% free and open-source**. If AlgoViz helped you ace your coding 
 | 🎬 **Scrubbable Timeline** | Inline player control bar with drag scrubber, step counters, and speed toggles (`0.5x`, `1x`, `2x`, `⚡`). |
 | 🌳 **Data Structure Suite** | Auto-detected visualizers for **Trees**, **Graphs**, **Linked Lists**, **Binary Heaps**, **Hash Maps**, **Stacks/Queues**, and **2D Matrices**. |
 | 🥞 **Visual Call Stack** | Deep recursion frame inspector tracking parameter mutations, stack depth, and return values. |
-| 📊 **Time & Space Telemetry** | Automated Big-O detection, memory usage estimates, and line-by-line execution heatmaps. |
+| 📊 **Time & Space Estimates** | Heuristic Big-O and auxiliary-space estimates, with line-by-line execution heatmaps. |
 | ⌨️ **Command Palette** | Press `Cmd+K` / `Ctrl+K` to search over 50+ pre-built DSA templates across Sorting, DP, Graphs, Trees, and Recursion. |
-| 💻 **VS Code Extension** | Run the visualizer directly inside Visual Studio Code split pane, fully offline. |
+| 💻 **VS Code Extension** | Run the visualizer inside a VS Code split pane; JavaScript runs locally, while C++ uses the selected local or remote compiler. |
 
 ---
 

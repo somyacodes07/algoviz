@@ -1,6 +1,6 @@
 # VS Code Extension
 
-AlgoViz can be used directly inside your Visual Studio Code editor, providing an offline, seamless visualization experience right next to your codebase. 
+AlgoViz can be used directly inside your Visual Studio Code editor, providing a visualization experience right next to your codebase.
 
 ## Installation
 
@@ -29,10 +29,6 @@ Once open, simply click **Play/Run** to see the magic happen!
 
 ## Offline Execution
 
-One of the major benefits of using the VS Code extension is that **no external API calls are made**. 
+JavaScript execution runs locally in a web worker. C++ uses the compiler strategy selected in Settings. The current default is Wandbox, which sends instrumented source to a remote service; choose Local Wasm Clang for browser-side compilation. Wasm can run offline after its compiler bundle is available, but may fall back to Wandbox if initialization fails.
 
-When you run C++ or JavaScript code inside the extension:
-- **JavaScript** code is instrumented and executed inside a secure web worker entirely within the VS Code Webview context.
-- **C++** code is natively compiled in the browser via WebAssembly Clang (Wasm Clang) and executed locally, allowing you to visualize complex C++ logic with full STL support without needing `g++` or a network connection.
-
-All the features of AlgoViz (Complexity Analysis, Variable Watch, Call Stack) are fully functional offline!
+The extension includes the workbench, execution timeline, complexity estimates, variable inspection, and call stack views. These features work offline when the selected execution path and required assets are available offline.

@@ -1,6 +1,6 @@
 # Big-O Complexity Cheat Sheet & Formula Reference
 
-Understanding asymptotic notation and runtime performance is essential for mastering Data Structures & Algorithms. AlgoViz automatically evaluates time complexity at runtime, but this guide breaks down the underlying formulas, recurrence relations, and algorithm complexity bounds.
+Understanding asymptotic notation and runtime performance is essential for mastering Data Structures & Algorithms. AlgoViz reports heuristic complexity estimates; this guide explains the underlying formulas, recurrence relations, and algorithm complexity bounds.
 
 ---
 

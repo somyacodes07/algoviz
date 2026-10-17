@@ -10,6 +10,7 @@ interface ConsolePanelProps {
 
 const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = React.useState(false);
   const accentIconClass = themeColor === 'saffron' ? 'text-saffron-500' : 'text-blue-500';
 
   useEffect(() => {
@@ -31,8 +32,6 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ logs, themeColor }) => {
       </div>
     );
   }
-
-  const [copied, setCopied] = React.useState(false);
 
   const handleCopyLogs = () => {
     const text = logs.map(l => l.message).join('\n');

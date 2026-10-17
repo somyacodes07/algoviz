@@ -119,7 +119,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
           No active structure detected.
         </span>
         <span className="text-xs font-medium text-slate-400 dark:text-slate-600 max-w-[250px] text-center">
-          Standard variables will appear in the Variables tab. Arrays, trees, linked lists, and matrices render here automatically.
+          No visual structure is present at this step. Inspect values below, or use an array or data structure to build a live view.
         </span>
       </div>
     );

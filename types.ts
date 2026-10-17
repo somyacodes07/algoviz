@@ -3,7 +3,7 @@ export interface VariableMap {
 }
 
 export interface ConsoleLog {
-  type: 'log' | 'error' | 'warn';
+  type: 'log' | 'info' | 'error' | 'warn';
   message: string;
 }
 

@@ -1,6 +1,6 @@
 # Complexity & Telemetry Analysis
 
-AlgoViz provides **live time and auxiliary space complexity estimation** for both JavaScript and C++ code. The Perf tab in the workbench displays estimated Big-O notations, interactive SVG growth curves, hotspot heatmaps, and call stack metrics.
+AlgoViz provides **heuristic time and auxiliary space estimates** for JavaScript and C++ code. The Complexity view displays estimated Big-O notation, growth curves, hotspot heatmaps, and call stack metrics. These estimates are educational hints and cannot prove an algorithm's asymptotic bound from one execution.
 
 ## How It Works
 
@@ -36,9 +36,9 @@ In addition to Time Complexity, AlgoViz estimates **Auxiliary Space Complexity**
 - **Dynamic Heap Memory O(n)**: Evaluates vector, array, hash map, and matrix allocations
 - **In-Place O(1)**: Confirms when only primitive scalar variables and registers are allocated
 
-## Complexity Tab UI
+## Complexity View
 
-The Perf panel displays telemetry metrics:
+The Complexity view displays these trace metrics:
 
 | Metric | Description |
 |---|---|
@@ -54,16 +54,16 @@ The Perf panel displays telemetry metrics:
 
 | Algorithm | Time Complexity | Auxiliary Space | Status |
 |---|---|---|---|
-| Array Traversal | O(n) | O(1) | Verified ✓ |
-| Binary Search | O(log n) | O(1) | Verified ✓ |
-| Two Sum (Brute Force) | O(n²) | O(1) | Verified ✓ |
-| Bubble Sort | O(n²) | O(1) | Verified ✓ |
-| Merge Sort | O(n log n) | O(n) | Verified ✓ |
-| Fibonacci (Recursive) | O(2^n) | O(n) | Verified ✓ |
+| Array Traversal | O(n) | O(1) | Typical pattern |
+| Binary Search | O(log n) | O(1) | Typical pattern |
+| Two Sum (Brute Force) | O(n²) | O(1) | Typical pattern |
+| Bubble Sort | O(n²) | O(1) | Typical pattern |
+| Merge Sort | O(n log n) | O(n) | Typical pattern |
+| Fibonacci (Recursive) | O(2^n) | O(n) | Typical pattern |
 
 ## Confidence Levels
 
-The analyzer assigns a confidence rating to each estimate:
+The analyzer reports a confidence rating for each estimate. It reflects how strongly the input matches its heuristics; it is not a statistical confidence interval or correctness guarantee.
 
 - **High**: Strong structural evidence from nested loops, AST trees, or stack metrics
 - **Medium**: Single loop or recursive pattern detected

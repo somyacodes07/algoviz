@@ -64,10 +64,10 @@ The library includes 50+ templates designed for visual clarity, available in bot
 
 ## C++ Template Design
 
-C++ templates work with both the primary Wasm Clang engine and the Wandbox API fallback:
+C++ templates work with either configured compiler strategy:
 
-- **Wasm Clang mode**: Full C++ support — templates can use standard STL containers, OOP, templates, and modern C++ features completely offline.
-- **Wandbox Fallback mode**: Ensures execution continues to work over the network if local WebAssembly support fails.
+- **Wasm Clang mode**: Compiles and executes inside the browser. Offline use requires the compiler bundle to be available; initialization errors can fall back to Wandbox.
+- **Wandbox mode**: Sends instrumented source to the remote GCC service and requires network access.
 
 ## Complexity Visibility
 
