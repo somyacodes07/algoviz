@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { VariableMap } from '../../types';
 import { ThemeColor } from '../theme/theme';
 import {
@@ -69,42 +69,45 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   const lastStackQueue = useRef<StackQueuePreview | null>(null);
 
   // Try to detect structures from the current step's variables
-  const freshTree = buildTreePreview(variables);
-  const freshLinkedList = buildLinkedListPreview(variables);
-  const freshGraph = buildGraphPreview(variables);
-  const freshArrayGrid = buildArrayGridPreview(variables, prevVariables);
-  const freshHeap = buildHeapPreview(variables);
-  const freshHashMap = buildHashMapPreview(variables);
-  const freshStackQueue = buildStackQueuePreview(variables);
+  // Preview builders can scan large runtime snapshots. Memoizing by snapshot
+  // identity avoids rebuilding every diagram when only drawer or modal state changes.
+  const freshTree = useMemo(() => buildTreePreview(variables), [variables]);
+  const freshLinkedList = useMemo(() => buildLinkedListPreview(variables), [variables]);
+  const freshGraph = useMemo(() => buildGraphPreview(variables), [variables]);
+  const freshArrayGrid = useMemo(() => buildArrayGridPreview(variables, prevVariables), [variables, prevVariables]);
+  const freshHeap = useMemo(() => buildHeapPreview(variables), [variables]);
+  const freshHashMap = useMemo(() => buildHashMapPreview(variables), [variables]);
+  const freshStackQueue = useMemo(() => buildStackQueuePreview(variables), [variables]);
 
-  // Update refs when a fresh detection succeeds
-  if (freshTree) lastTree.current = freshTree;
-  if (freshLinkedList) lastLinkedList.current = freshLinkedList;
-  if (freshGraph) lastGraph.current = freshGraph;
-  if (freshArrayGrid) lastArrayGrid.current = freshArrayGrid;
-  if (freshHeap) lastHeap.current = freshHeap;
-  if (freshHashMap) lastHashMap.current = freshHashMap;
-  if (freshStackQueue) lastStackQueue.current = freshStackQueue;
-
-  // Clear cache ONLY when execution fully restarts
-  if (currentStepIndex === 0) {
-    lastTree.current = null;
-    lastLinkedList.current = null;
-    lastGraph.current = null;
-    lastArrayGrid.current = null;
-    lastHeap.current = null;
-    lastHashMap.current = null;
-    lastStackQueue.current = null;
-  }
+  // Keep last-known structures across temporary scope changes, but never mutate
+  // refs during render: concurrent renders may be abandoned by React.
+  useEffect(() => {
+    if (currentStepIndex === 0) {
+      lastTree.current = null;
+      lastLinkedList.current = null;
+      lastGraph.current = null;
+      lastArrayGrid.current = null;
+      lastHeap.current = null;
+      lastHashMap.current = null;
+      lastStackQueue.current = null;
+    }
+    if (freshTree) lastTree.current = freshTree;
+    if (freshLinkedList) lastLinkedList.current = freshLinkedList;
+    if (freshGraph) lastGraph.current = freshGraph;
+    if (freshArrayGrid) lastArrayGrid.current = freshArrayGrid;
+    if (freshHeap) lastHeap.current = freshHeap;
+    if (freshHashMap) lastHashMap.current = freshHashMap;
+    if (freshStackQueue) lastStackQueue.current = freshStackQueue;
+  }, [currentStepIndex, freshTree, freshLinkedList, freshGraph, freshArrayGrid, freshHeap, freshHashMap, freshStackQueue]);
 
   // Use fresh values if available, otherwise fall back to last known
-  const treePreview = freshTree || lastTree.current;
-  const linkedListPreview = freshLinkedList || lastLinkedList.current;
-  const graphPreview = freshGraph || lastGraph.current;
-  const arrayGridPreview = freshArrayGrid || lastArrayGrid.current;
-  const heapPreview = freshHeap || lastHeap.current;
-  const hashMapPreview = freshHashMap || lastHashMap.current;
-  const stackQueuePreview = freshStackQueue || lastStackQueue.current;
+  const treePreview = freshTree || (currentStepIndex === 0 ? null : lastTree.current);
+  const linkedListPreview = freshLinkedList || (currentStepIndex === 0 ? null : lastLinkedList.current);
+  const graphPreview = freshGraph || (currentStepIndex === 0 ? null : lastGraph.current);
+  const arrayGridPreview = freshArrayGrid || (currentStepIndex === 0 ? null : lastArrayGrid.current);
+  const heapPreview = freshHeap || (currentStepIndex === 0 ? null : lastHeap.current);
+  const hashMapPreview = freshHashMap || (currentStepIndex === 0 ? null : lastHashMap.current);
+  const stackQueuePreview = freshStackQueue || (currentStepIndex === 0 ? null : lastStackQueue.current);
 
   if (!treePreview && !linkedListPreview && !graphPreview && !arrayGridPreview && !heapPreview && !hashMapPreview && !stackQueuePreview) {
     return (

@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Keep the editor split tied to CSS breakpoints so rotate/resize stays correct. */
+.workspace-editor-pane {
+  flex: 0 0 auto;
+}
+@media (min-width: 768px) {
+  .workspace-editor-pane {
+    flex: 0 0 calc(var(--editor-split, 50%) - 6px);
+  }
+}
+
 /* ─── View Transition: Theme Toggle Circle Reveal ───────────────────────── */
 ::view-transition {
   pointer-events: none;

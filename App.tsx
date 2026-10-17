@@ -723,8 +723,8 @@ const App: React.FC = () => {
               </Suspense>
             )}
 
-            <main ref={mainContainerRef} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-5 gap-2 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
-              <div style={{ flex: typeof window !== 'undefined' && window.innerWidth >= 768 ? `0 0 calc(${splitRatio}% - 6px)` : undefined }} className="flex flex-col min-w-0 h-full w-full">
+            <main ref={mainContainerRef} className="min-h-0 flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-5 pb-4 gap-3 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
+              <div style={{ '--editor-split': `${splitRatio}%` } as React.CSSProperties} className="workspace-editor-pane flex flex-col min-w-0 h-[70dvh] min-h-[420px] shrink-0 w-full md:h-full md:min-h-0 md:shrink">
                 <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)]" aria-label="Loading code editor" />}>
                   <WorkspaceEditor
                     language={language}
@@ -772,7 +772,7 @@ const App: React.FC = () => {
                 />
               </div>
 
-              <div className="flex-1 flex flex-col min-w-0 h-full w-full">
+              <div className="flex-1 flex flex-col min-w-0 h-[76dvh] min-h-[440px] shrink-0 w-full md:h-full md:min-h-0 md:shrink">
                 <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]" aria-label="Loading visualization" />}>
                   <WorkspaceVisualizer
                     activeTab={activeTab}

@@ -105,13 +105,13 @@ const Controls: React.FC<ControlsProps> = ({
   return (
     <div
       data-no-transition
-      className="h-auto py-2.5 sm:py-3 px-3 sm:px-6 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 z-20 bg-white dark:bg-[var(--dark-surface)] border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] select-none"
+      className="h-auto grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 py-1.5 px-2 sm:flex sm:py-3 sm:px-6 sm:gap-4 shrink-0 z-20 bg-white dark:bg-[var(--dark-surface)] border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] select-none"
     >
       {/* Sleek Compact Playback Controls */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         <button
           onClick={onReset}
-          className={`p-1.5 text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] active:translate-y-[1px] active:shadow-none ${toolButtonClass}`}
+          className={`p-1.5 sm:p-1.5 text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] active:translate-y-[1px] active:shadow-none ${toolButtonClass}`}
           title="Reset (R)"
         >
           <RotateCcw size={16} />
@@ -130,7 +130,7 @@ const Controls: React.FC<ControlsProps> = ({
 
         <button
           onClick={onPlayPause}
-          className={`p-2 text-white border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none ${playBtnClass}`}
+          className={`p-2 sm:p-2 text-white border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none ${playBtnClass}`}
           title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
         >
           {isPlaying ? (
@@ -151,7 +151,7 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Progress & Scrubber */}
-      <div className="flex-1 w-full flex flex-col justify-center gap-1 px-1 sm:px-3">
+      <div className="col-span-2 row-start-2 flex-1 w-full flex flex-col justify-center gap-0.5 px-1 sm:col-span-1 sm:row-auto sm:gap-1 sm:px-3">
         <div className="flex justify-between items-center text-[10px] font-mono font-bold">
           {totalSteps > 0 ? (
             <span className={`px-2 py-0.5 border-[1px] border-slate-900 dark:border-[var(--dark-border)] ${stepBadgeClass}`}>
@@ -220,7 +220,7 @@ const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Speed Selector Icon Pills */}
-      <div className="shrink-0 flex items-center gap-1 bg-slate-100 dark:bg-[var(--dark-surface-2)] p-1 border-[1.5px] border-slate-900 dark:border-[var(--dark-border)] shadow-[1.5px_1.5px_0_#0f172a] rounded">
+      <div className="col-start-2 row-start-1 justify-self-end shrink-0 flex items-center gap-0.5 sm:gap-1 bg-slate-100 dark:bg-[var(--dark-surface-2)] p-1 border-[1.5px] border-slate-900 dark:border-[var(--dark-border)] shadow-[1.5px_1.5px_0_#0f172a] rounded">
         {(
           [
             { label: '0.5x', value: 2000, title: 'Slow (0.5x)', Icon: Turtle },
@@ -236,7 +236,7 @@ const Controls: React.FC<ControlsProps> = ({
               key={preset.label}
               data-no-transition
               onClick={() => setSpeed(preset.value)}
-              className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 border transition-all active:translate-y-[1px] active:shadow-none ${
+              className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 border transition-all active:translate-y-[1px] active:shadow-none ${
                 isActive
                   ? isSaffron
                     ? 'bg-saffron-500 text-white border-slate-900 shadow-[1px_1px_0_#0f172a]'
@@ -246,7 +246,7 @@ const Controls: React.FC<ControlsProps> = ({
               title={preset.title}
             >
               <Icon size={12} strokeWidth={2.5} />
-              <span>{preset.label}</span>
+              <span className="hidden sm:inline">{preset.label}</span>
             </button>
           );
         })}

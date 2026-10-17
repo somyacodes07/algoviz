@@ -226,7 +226,7 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
 
-function computeGraphLayout(preview: GraphPreview) {
+function computeGraphLayout(preview: Pick<GraphPreview, 'nodes' | 'edges'>) {
   const NODE_SIZE = 48;
   const positions = new Map<string, { x: number; y: number }>();
   const count = Math.max(preview.nodes.length, 1);
@@ -362,7 +362,20 @@ export const GraphPanel: React.FC<{
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
-  const { positions, svgSize, NODE_SIZE } = useMemo(() => computeGraphLayout(preview), [preview]);
+  // Traversal visits rebuild the preview each step, but the force layout only
+  // depends on graph topology. Reuse coordinates when only visited state changes.
+  const layoutKey = JSON.stringify([
+    preview.nodes.map((node) => node.id),
+    preview.edges.map(({ from, to, isBidirectional }) => [from, to, !!isBidirectional]),
+  ]);
+  const layoutTopology = useMemo(() => {
+    const [nodeIds, edgeTuples] = JSON.parse(layoutKey) as [string[], [string, string, boolean][]];
+    return {
+      nodes: nodeIds.map((id) => ({ id, label: id, pointerNames: [], visited: false })),
+      edges: edgeTuples.map(([from, to, isBidirectional]) => ({ from, to, isBidirectional })),
+    };
+  }, [layoutKey]);
+  const { positions, svgSize, NODE_SIZE } = useMemo(() => computeGraphLayout(layoutTopology), [layoutTopology]);
   const halfNode = NODE_SIZE / 2;
 
   // Track newly-visited nodes for ripple animation
