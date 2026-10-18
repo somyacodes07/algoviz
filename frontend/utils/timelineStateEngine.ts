@@ -17,29 +17,85 @@ export interface OptimizedTimeline {
  * Deep structural comparison check to determine if two values share identical structure.
  */
 function isStructurallyEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a == null || b == null) return a === b;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  const pending: Array<[unknown, unknown]> = [[a, b]];
+  const leftToRight = new WeakMap<object, object>();
+  const rightToLeft = new WeakMap<object, object>();
 
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!isStructurallyEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const keysA = Object.keys(a as object);
-  const keysB = Object.keys(b as object);
-
-  if (keysA.length !== keysB.length) return false;
-
-  for (const key of keysA) {
-    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
-    if (!isStructurallyEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) {
+  // Use an explicit work list rather than recursion: snapshots may contain
+  // circular linked structures or deeply nested objects supplied by user code.
+  while (pending.length > 0) {
+    const [left, right] = pending.pop()!;
+    if (Object.is(left, right)) continue;
+    if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') {
       return false;
+    }
+
+    const pairedRight = leftToRight.get(left);
+    if (pairedRight) {
+      if (pairedRight !== right) return false;
+      continue;
+    }
+    if (rightToLeft.has(right)) return false;
+    leftToRight.set(left, right);
+    rightToLeft.set(right, left);
+
+    if (Object.getPrototypeOf(left) !== Object.getPrototypeOf(right)) return false;
+
+    if (left instanceof Date && right instanceof Date) {
+      if (left.getTime() !== right.getTime()) return false;
+      continue;
+    }
+    if (left instanceof RegExp && right instanceof RegExp) {
+      if (left.source !== right.source || left.flags !== right.flags || left.lastIndex !== right.lastIndex) return false;
+      continue;
+    }
+    if (left instanceof Map && right instanceof Map) {
+      if (left.size !== right.size) return false;
+      const leftEntries = Array.from(left.entries());
+      const rightEntries = Array.from(right.entries());
+      for (let index = 0; index < leftEntries.length; index++) {
+        pending.push([leftEntries[index][0], rightEntries[index][0]]);
+        pending.push([leftEntries[index][1], rightEntries[index][1]]);
+      }
+      continue;
+    }
+    if (left instanceof Set && right instanceof Set) {
+      if (left.size !== right.size) return false;
+      const leftValues = Array.from(left.values());
+      const rightValues = Array.from(right.values());
+      for (let index = 0; index < leftValues.length; index++) {
+        pending.push([leftValues[index], rightValues[index]]);
+      }
+      continue;
+    }
+    if (ArrayBuffer.isView(left) && ArrayBuffer.isView(right)) {
+      if (left.constructor !== right.constructor || left.byteLength !== right.byteLength) return false;
+      const leftBytes = new Uint8Array(left.buffer, left.byteOffset, left.byteLength);
+      const rightBytes = new Uint8Array(right.buffer, right.byteOffset, right.byteLength);
+      for (let index = 0; index < leftBytes.length; index++) {
+        if (leftBytes[index] !== rightBytes[index]) return false;
+      }
+      continue;
+    }
+    if (left instanceof ArrayBuffer && right instanceof ArrayBuffer) {
+      if (left.byteLength !== right.byteLength) return false;
+      const leftBytes = new Uint8Array(left);
+      const rightBytes = new Uint8Array(right);
+      for (let index = 0; index < leftBytes.length; index++) {
+        if (leftBytes[index] !== rightBytes[index]) return false;
+      }
+      continue;
+    }
+
+    if (Array.isArray(left) !== Array.isArray(right)) return false;
+    if (Array.isArray(left) && Array.isArray(right) && left.length !== right.length) return false;
+
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length) return false;
+    for (const key of leftKeys) {
+      if (!Object.prototype.hasOwnProperty.call(right, key)) return false;
+      pending.push([(left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]]);
     }
   }
 

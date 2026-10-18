@@ -81,7 +81,7 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ error, onClose }) => {
                     <AlertTriangle size={15} className="text-red-700 dark:text-red-300" />
                   </div>
                   <span className="text-[12px] font-black uppercase tracking-[0.2em] text-white dark:text-red-100">
-                    Compilation Error
+                    Execution Error
                   </span>
                 </div>
 
