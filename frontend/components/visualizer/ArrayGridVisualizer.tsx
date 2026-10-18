@@ -449,7 +449,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             let cellBackgroundColor: string | undefined;
             let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
             let cellText = 'text-slate-900 dark:text-slate-100';
-            let barBg = 'bg-slate-300 dark:bg-slate-500';
+            let barBg = isSaffron ? 'bg-orange-300 dark:bg-orange-700' : 'bg-blue-300 dark:bg-blue-700';
 
             if (isSwapped) {
               cellBg = 'bg-yellow-50 dark:bg-yellow-950/20';

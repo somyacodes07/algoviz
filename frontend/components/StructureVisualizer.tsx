@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { VariableMap, VisualizationEvent } from '../../types';
-import { ThemeColor } from '../theme/theme';
+import { getThemeConfig, ThemeColor } from '../theme/theme';
 import {
   buildLinkedListPreview,
   LinkedListPanel,
@@ -63,6 +63,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   events = [],
   onStructureAvailabilityChange,
 }) => {
+  const theme = getThemeConfig(themeColor);
   const [enlargedType, setEnlargedType] = useState<'tree' | 'list' | 'graph' | 'array' | 'heap' | 'hashmap' | 'stackqueue' | null>(null);
   const lastTree = useRef<TreePreview | null>(null);
   const lastLinkedList = useRef<LinkedListPreview | null>(null);
@@ -122,7 +123,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all duration-300">
         <span
-          className={`border px-2 py-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] ${themeColor === 'saffron' ? 'border-saffron-500 bg-saffron-100 text-saffron-700 dark:border-saffron-600 dark:bg-saffron-900/30 dark:text-saffron-400' : 'border-blue-500 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}
+          className={`border px-2 py-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] ${theme.badgeClass}`}
         >
           <Network size={12} />
           Visualizer
@@ -227,7 +228,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
       {arrayGridPreview && (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 px-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.16em] px-2 py-0.5 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 shadow-[1px_1px_0_#0f172a]">
+            <span className={`${theme.badgeClass} px-2 py-0.5 shadow-[1px_1px_0_#0f172a]`}>
               Array Visualizer
             </span>
           </div>
