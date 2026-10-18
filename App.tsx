@@ -12,6 +12,7 @@ import { getSeoConfig } from "./frontend/seo";
 import { prewarmWasmEngines } from "./backend/sandbox/transpiler/parser";
 import { AppPage, AppLanguage, getPathForState, getStateFromPath, ROUTES } from "./frontend/routes";
 import type { AppSettings } from "./frontend/components/SettingsModal";
+import { LoadingSkeleton } from "./frontend/components/layout/LoadingSkeleton";
 
 const Controls = lazy(() => import("./frontend/components/Controls"));
 const HomePage = lazy(() => import("./frontend/components/HomePage"));
@@ -678,7 +679,7 @@ const App: React.FC = () => {
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
           <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative w-full h-full will-change-transform">
-            <Suspense fallback={<div className="min-h-screen w-full bg-[#f7f0e3] dark:bg-[var(--dark-base)]" aria-label="Loading AlgoViz" />}>
+            <Suspense fallback={<LoadingSkeleton variant="home" />}>
               <HomePage
                 language={language}
                 onSelectLanguage={handleLanguageSelect}
@@ -694,7 +695,7 @@ const App: React.FC = () => {
           </motion.div>
         ) : page === "docs" ? (
           <motion.div key="docs" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="h-full w-full will-change-transform">
-            <Suspense fallback={<div className="h-full w-full bg-[#f7f0e3] dark:bg-[var(--dark-base)]" aria-label="Loading documentation" />}>
+            <Suspense fallback={<LoadingSkeleton variant="docs" />}>
               <DocsPage
                 onBack={handleGoHome}
                 theme={theme}
@@ -708,7 +709,7 @@ const App: React.FC = () => {
         ) : (
           <motion.div key="editor" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="flex h-full w-full flex-col will-change-transform">
             {!embedMode && (
-              <Suspense fallback={<header className="h-14 shrink-0 bg-white dark:bg-[var(--dark-surface)] border-b border-slate-900 dark:border-[var(--dark-border)]" />}>
+              <Suspense fallback={<LoadingSkeleton variant="header" />}>
                 <WorkspaceHeader
                   language={language}
                   theme={theme}
@@ -740,7 +741,7 @@ const App: React.FC = () => {
               </div>
 
               <div style={{ '--editor-split': `${splitRatio}%` } as React.CSSProperties} className={`workspace-editor-pane min-w-0 w-full min-h-0 flex-col md:h-full md:min-h-0 md:shrink ${mobileWorkspaceView === 'code' ? 'flex' : 'hidden'} md:flex`}>
-                <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)]" aria-label="Loading code editor" />}>
+                <Suspense fallback={<LoadingSkeleton variant="editor" />}>
                   <WorkspaceEditor
                     language={language}
                     theme={theme}
@@ -790,7 +791,7 @@ const App: React.FC = () => {
               </div>
 
               <div className={`flex-1 flex-col min-w-0 min-h-0 w-full md:h-full md:shrink ${mobileWorkspaceView === 'workspace' ? 'flex' : 'hidden'} md:flex`}>
-                <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]" aria-label="Loading visualization" />}>
+                <Suspense fallback={<LoadingSkeleton variant="workspace" />}>
                   <WorkspaceVisualizer
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
@@ -827,7 +828,7 @@ const App: React.FC = () => {
               </div>
             </main>
 
-            <Suspense fallback={<div className="h-14 shrink-0 border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]" />}>
+            <Suspense fallback={<LoadingSkeleton variant="controls" />}>
             <Controls
               isPlaying={isPlaying}
               onPlayPause={togglePlayPause}

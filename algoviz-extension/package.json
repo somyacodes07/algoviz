@@ -2,7 +2,7 @@
   "name": "algoviz-vscode",
   "displayName": "AlgoViz",
   "description": "Algorithm Visualizer inside VS Code",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "somyacodes",
   "repository": {
     "type": "git",
@@ -23,7 +23,9 @@
     "onLanguage:cpp",
     "onLanguage:c",
     "onLanguage:javascript",
-    "onLanguage:typescript"
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -58,7 +60,7 @@
         {
           "command": "algoviz.visualizeCurrentFile",
           "group": "navigation",
-          "when": "editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript"
+          "when": "editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript || editorLangId == javascriptreact || editorLangId == typescriptreact"
         }
       ]
     }

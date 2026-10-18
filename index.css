@@ -181,6 +181,23 @@ html.view-transitioning *::after {
   100% { background-position: -200% 0; }
 }
 
+.algoviz-skeleton {
+  background: linear-gradient(100deg, rgba(100, 116, 139, 0.12) 20%, rgba(100, 116, 139, 0.24) 42%, rgba(100, 116, 139, 0.12) 64%);
+  background-size: 220% 100%;
+  animation: shimmer 1.7s ease-in-out infinite;
+}
+
+.dark .algoviz-skeleton {
+  background: linear-gradient(100deg, rgba(148, 163, 184, 0.08) 20%, rgba(148, 163, 184, 0.18) 42%, rgba(148, 163, 184, 0.08) 64%);
+  background-size: 220% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .algoviz-skeleton {
+    animation: none;
+  }
+}
+
 /* ─── Hide scrollbar utility for clean visualizers ───────────────────────── */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;

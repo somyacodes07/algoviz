@@ -31,6 +31,8 @@ Most code visualizers show static outputs or basic arrays. **AlgoViz** inspects 
 - 📝 **Interactive Annotations**: Add per-step sticky notes and comments directly to the execution timeline to build shareable explanations.
 - 🔍 **Pan & Zoom Modal**: Expand trees, graphs, and matrices into a full-screen interactive view with drag-and-pan controls.
 - 🎨 **Sleek Neo-Brutalist & Glassmorphic UI**: High-contrast, zero-lag theme transitions (Dark Mode & Saffron/Blue themes).
+- 📱 **Responsive Workbench**: Keep code and workspace side by side on desktop, or switch between full-size Code and Workspace views on mobile.
+- 📈 **Readable Array Bars**: Numeric bars preserve value ordering with illustrative heights; use cell view when exact values and indexes are the focus. Large arrays and matrices render in a navigable window.
 
 ---
 
@@ -52,6 +54,7 @@ AlgoViz is **100% free and open-source**. If AlgoViz helped you ace your coding 
 | 📊 **Time & Space Estimates** | Heuristic Big-O and auxiliary-space estimates, with line-by-line execution heatmaps. |
 | ⌨️ **Command Palette** | Press `Cmd+K` / `Ctrl+K` to search over 50+ pre-built DSA templates across Sorting, DP, Graphs, Trees, and Recursion. |
 | 💻 **VS Code Extension** | Run the visualizer inside a VS Code split pane; JavaScript runs locally, while C++ uses the selected local or remote compiler. |
+| 📱 **Mobile Workbench** | Switch between a full-width editor and workspace on small screens; desktop keeps both panes visible and resizable. |
 
 ---
 
@@ -61,7 +64,7 @@ Take the visualizer experience directly into your IDE:
 
 1. Search for **AlgoViz** in the VS Code Marketplace.
 2. Open any `.js` or `.cpp` file.
-3. Click **AlgoViz: Visualize** from the editor run menu to view your code's step-by-step execution timeline right next to your source editor!
+3. Click **AlgoViz: Visualize Active File** from the editor run menu to view your code's step-by-step execution timeline right next to your source editor!
 
 👉 **[Download on VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode)**
 
@@ -129,6 +132,8 @@ Want to understand how the instrumentation, compiler engine, or complex structur
 - [🎨 Template Library & Command Palette](docs/templates-and-palette.md)
 - [📐 Architecture Reference](docs/architecture.md)
 - [💻 VS Code Extension Guide](docs/vscode-extension.md)
+
+The documentation site mirrors these workflows and includes the same feature pages. Loading skeletons preserve the page structure while its larger editor, visualization, and documentation modules load.
 
 ---
 

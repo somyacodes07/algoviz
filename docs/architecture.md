@@ -51,6 +51,12 @@ This document provides a technical overview of AlgoViz's internal architecture f
 
 ## Key Modules
 
+### Responsive Workbench and Loading States
+
+`App.tsx` lazy-loads the home page, documentation, editor, workspace panels, and playback controls. `frontend/components/layout/LoadingSkeleton.tsx` provides layout-matched fallbacks for those deferred surfaces so loading does not flash as an empty panel. The workbench keeps editor and workspace side by side on desktop and switches between them on narrow screens.
+
+The workspace panel selector can display diagrams, variables, the call stack, or complexity. If no diagram is detected, the workspace selects Variables. Array and matrix diagrams virtualize large visible ranges; numeric bar heights use a monotonic square-root scale to make relative ordering legible, not to represent exact proportions.
+
 ### Execution Router (`executor.ts`)
 
 The central entry point for all code execution. Routes based on language:

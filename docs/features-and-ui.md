@@ -14,7 +14,9 @@ The timeline playback system lets you:
 
 ## 2. Execution Details
 
-The **Inspect** control opens an optional details drawer below the always-visible visualization. Variables, call stack, and complexity details are available without replacing the diagram. The main view also summarizes observable changes at the current step, such as an array swap, pointer move, or scalar update.
+The workspace panel selector lets users switch between a detected diagram, Variables, Call stack, and Complexity. When there is no diagram to show, the workspace defaults to Variables. The current step summary calls out observable changes such as an array swap, pointer move, or scalar update.
+
+On phones, **Code** and **Workspace** are full-size switchable views so the editor and visualization do not have to compete for narrow screen space. On desktop, both remain side by side and can be resized.
 
 The Variables view shows in-scope values:
 
@@ -30,7 +32,7 @@ AlgoViz scans your variable scope for common algorithmic pointers:
 - `left`, `right`, `lo`, `hi`, `low`, `high`
 - `mid`, `pivot`
 
-These render as **Emerald Green Tags** above array columns, letting you physically watch sliding windows shrink, pivots swap, and binary searches narrow.
+These render as color-coded pointer tags above array columns, letting you watch sliding windows shrink, pivots move, and binary searches narrow.
 
 ## 4. Complexity Estimates
 
@@ -80,7 +82,7 @@ The Console panel replays `console.log` (JS) and `cout` (C++) output:
 ## 9. Data Structure Visualizers
 
 AlgoViz automatically maps memory state to the appropriate visual representations:
-- **Array & 1D Vector**: Renders as a grid of memory cells or an interactive bar chart. Tracks standard algorithmic pointers (`i`, `j`, `left`, `right`, `mid`, etc.).
+- **Array & 1D Vector**: Renders as a grid of memory cells or an interactive bar chart. Bar heights show the ordering of numeric values, not their exact proportions. Tracks standard algorithmic pointers (`i`, `j`, `left`, `right`, `mid`, etc.). Large arrays are windowed; scrolling and active pointers move the visible range.
 - **2D Array / Matrix**: Visualized as a 2D grid, rendering nested arrays or vectors perfectly.
 - **Linked Lists**: Infers `.next` chaining to render linear memory graphs with cycle detection.
 - **Binary Trees**: Reconstructs hierarchical structure recursively by traversing `.left` and `.right` pointers.
@@ -98,7 +100,7 @@ Click the **Share** button to generate a shareable URL that encodes your current
 Click the gear icon in the Workbench header to open the Preferences dialog:
 - **Permanent Theme Accent**: Toggle between **Auto** (language-adaptive saffron/blue theme transition), **Saffron** (JavaScript-styled orange Neo-Brutalist look), or **Blue** (C++ styled blue look) to pin your preferred layout style.
 - **C++ Compiler Strategy**: Choose **Wandbox Remote API** (sends instrumented code to a remote compiler) or **WebAssembly Clang Engine** (runs the compiler bundle in the browser). Wandbox is the current default; Wasm mode can fall back to Wandbox if initialization fails.
-- **Default Array Rendering**: Configure 1D array visualizers to display standard **Memory Cells** or clean numeric **Bar Charts** (height proportional to value).
+- **Default Array Rendering**: Configure 1D array visualizers to display standard **Memory Cells** or numeric **Bar Charts** (height communicates relative ordering).
 
 ## 12. Enlarged Diagram View (Zoomable & Pannable Modal)
 

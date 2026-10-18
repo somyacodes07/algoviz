@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 let statusBarItem: vscode.StatusBarItem | undefined;
+let syncTimer: NodeJS.Timeout | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   // ── Status Bar Shortcut Button ──────────────────────────────────────────
@@ -49,16 +50,21 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // ── Real-Time Sync: Text Document Edits (Debounced 400ms) ──────────────
-  let syncTimer: NodeJS.Timeout | undefined;
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
-      const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor && activeEditor.document === e.document && AlgoVizPanel.currentPanel) {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && editor.document === e.document && AlgoVizPanel.currentPanel) {
         if (syncTimer) clearTimeout(syncTimer);
         syncTimer = setTimeout(() => {
-          const ctx = getEditorContext(activeEditor);
-          if (ctx) {
-            AlgoVizPanel.currentPanel?.sendContext(ctx.code, ctx.language);
+          syncTimer = undefined;
+          const currentEditor = vscode.window.activeTextEditor;
+          if (currentEditor && currentEditor.document === e.document) {
+            try {
+              const ctx = getEditorContext(currentEditor);
+              if (ctx) AlgoVizPanel.currentPanel?.sendContext(ctx.code, ctx.language);
+            } catch (error) {
+              console.warn('AlgoViz: Failed to sync editor changes', error);
+            }
           }
         }, 400);
       }
@@ -231,6 +237,10 @@ class AlgoVizPanel {
 }
 
 export function deactivate() {
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = undefined;
+  }
   if (statusBarItem) {
     statusBarItem.dispose();
     statusBarItem = undefined;

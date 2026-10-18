@@ -10,19 +10,19 @@
 
 ## ✨ Features
 
-- **Multi-Language Support**: Trace and visualize execution for JavaScript and C++ seamlessly.
+- **Language Support**: Trace JavaScript and C++ files, including TypeScript and React files interpreted as JavaScript.
 - **Step-by-Step Debugging**: Pause execution, step forwards or backwards, and watch variables mutate exactly when lines evaluate.
 - **Visual Call Stack**: Demystify recursion and nested function calls by seeing the stack grow and shrink in real-time.
-- **Run Menu Integration**: Select **AlgoViz: Visualize** directly from your editor's Run/Play dropdown to instantly visualize the current file.
+- **Run Menu Integration**: Select **AlgoViz: Visualize Active File** directly from your editor's Run/Play dropdown to instantly visualize the current file.
 - **Local JavaScript Execution**: JavaScript runs in a web worker inside the VS Code webview.
 - **Two C++ Compiler Options**: Choose local WebAssembly Clang or remote Wandbox in Settings. Wandbox is the current default; local Wasm can run offline when its compiler bundle is available.
 
 ## 🚀 How to Use
 
 ### Method 1: Editor Run Menu (Recommended)
-1. Open any `.js` or `.cpp` file in your editor.
+1. Open a `.js`, `.jsx`, `.ts`, `.tsx`, `.c`, or `.cpp` file in your editor.
 2. Click the **Play button dropdown** (Run menu) in the top-right corner of the editor.
-3. Select **`AlgoViz: Visualize`**.
+3. Select **`AlgoViz: Visualize Active File`**.
 4. The visualizer will open in a split pane, automatically importing your code and language!
 
 ### Method 2: Command Palette

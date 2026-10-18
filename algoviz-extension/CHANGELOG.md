@@ -2,6 +2,16 @@
 
 All notable changes to the **AlgoViz** VS Code extension will be documented in this file.
 
+## [1.2.0] — 2026-10-18
+
+### 🐛 Bug Fixes
+- **Reliable editor synchronization** — Debounced updates now read the current active editor and verify that it still matches the edited document before sending code to the workbench.
+- **Complete TypeScript activation** — TypeScript, JavaScript React, and TypeScript React files now activate the extension and expose the editor context action, matching the languages already supported by the sync logic.
+- **Safe shutdown** — Pending editor synchronization is canceled when the extension deactivates.
+
+### 📦 Release
+- Bumped the extension package version to `1.2.0`.
+
 ## [1.1.0] — 2026-08-03
 
 ### 🐛 Bug Fixes

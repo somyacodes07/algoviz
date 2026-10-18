@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   BookOpen,
@@ -587,6 +587,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
 }) => {
   const [activeDoc, setActiveDoc] = useState(docsStructure[0].id);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const activeSection = docsStructure.find((doc) => doc.id === activeDoc) || docsStructure[0];
 
   useEffect(() => {
@@ -628,12 +629,13 @@ const DocsPage: React.FC<DocsPageProps> = ({
       </header>
 
       {/* ── Mobile Horizontal Navigation Carousel (< lg breakpoint) ── */}
-      <div className="lg:hidden w-full overflow-x-auto custom-scrollbar px-3 py-2.5 bg-slate-100 dark:bg-[var(--dark-surface-2)] border-b border-slate-300 dark:border-[var(--dark-border)] flex items-center gap-2 shrink-0 z-20 sticky top-14">
+      <nav aria-label="Documentation sections" className="lg:hidden w-full overflow-x-auto custom-scrollbar px-3 py-2.5 bg-slate-100 dark:bg-[var(--dark-surface-2)] border-b border-slate-300 dark:border-[var(--dark-border)] flex items-center gap-2 shrink-0 z-20 sticky top-14 snap-x">
         {docsStructure.map((doc) => (
           <button
             key={doc.id}
             onClick={() => setActiveDoc(doc.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap transition-all border ${
+            aria-current={activeDoc === doc.id ? 'page' : undefined}
+            className={`flex min-h-10 snap-start items-center gap-1.5 px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
               activeDoc === doc.id
                 ? 'bg-saffron-500 text-white border-slate-900 shadow-[1.5px_1.5px_0_#0f172a]'
                 : 'bg-white dark:bg-[var(--dark-surface-3)] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-[var(--dark-border)]'
@@ -643,7 +645,7 @@ const DocsPage: React.FC<DocsPageProps> = ({
             <span>{doc.title}</span>
           </button>
         ))}
-      </div>
+      </nav>
 
       <main className="mx-auto flex w-full max-w-[1520px] flex-1 flex-col gap-4 px-3 sm:px-6 py-4 sm:py-6 lg:flex-row lg:items-start lg:gap-5 lg:px-8">
         {/* ── Desktop Sidebar (lg+ breakpoint) ── */}
@@ -689,9 +691,9 @@ const DocsPage: React.FC<DocsPageProps> = ({
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeDoc}
-              initial={{ opacity: 0, y: 15 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
               className="mb-20 w-full max-w-[1120px] space-y-6"
             >
               <section className="overflow-hidden rounded border-[2px] border-slate-900 bg-slate-900 text-white shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border)] dark:shadow-[4px_4px_0_var(--dark-shadow)]">

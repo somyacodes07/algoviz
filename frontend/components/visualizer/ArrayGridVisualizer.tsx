@@ -156,6 +156,22 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     return sample.every(v => typeof v === 'number');
   }, [preview]);
 
+  // Use a square-root scale so numeric ordering stays obvious even when values
+  // cluster near the bottom of a much larger range. Heights are illustrative,
+  // not proportional measurements.
+  const numericBarBounds = useMemo(() => {
+    if (arrayViewType !== 'bars' || !preview || preview.type !== 'array') return null;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const value of preview.value) {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+    }
+    return min === Infinity ? null : { min, max };
+  }, [arrayViewType, preview]);
+
   const heapTreePreview = useMemo(() => {
     if (!viewAsHeap || !preview || preview.type !== 'array') return null;
     const arr = preview.value;
@@ -333,12 +349,6 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
       }
     }
 
-    let maxVal = 1;
-    if (arrayViewType === 'bars') {
-      for (const value of arr) {
-        if (typeof value === 'number') maxVal = Math.max(maxVal, Math.abs(value));
-      }
-    }
     const visibleItems = Array.from({ length: Math.max(0, renderEnd - renderStart) }, (_, offset) => renderStart + offset);
 
     return (
@@ -420,7 +430,17 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
             // Heights for numeric bars
             const isNum = typeof val === 'number';
-            const barHeight = isNum ? Math.max(12, (Math.abs(val) / maxVal) * 80) : 0;
+            const barRange = numericBarBounds ? numericBarBounds.max - numericBarBounds.min : 0;
+            const normalizedBarValue = numericBarBounds && barRange > 0
+              ? barRange === Infinity
+                ? (val / 2 - numericBarBounds.min / 2) / (numericBarBounds.max / 2 - numericBarBounds.min / 2)
+                : (val - numericBarBounds.min) / barRange
+              : 0;
+            const barHeight = isNum && Number.isFinite(val)
+              ? !numericBarBounds || barRange === 0
+                ? 52
+                : 18 + Math.sqrt(Math.max(0, Math.min(1, normalizedBarValue))) * 66
+              : isNum ? 18 : 0;
 
             let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
             let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
@@ -504,8 +524,9 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                     )}
                     <motion.div
                       initial={{ height: 0 }}
-                      animate={{ height: `${barHeight}%` }}
+                      animate={{ height: `${barHeight}px` }}
                       transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+                      title="Bar height shows relative order, not exact proportions"
                       className={`w-4 border-[2px] border-b-0 border-slate-900 dark:border-[var(--dark-border-bright)] ${barBg} ${
                         arrayViewType === 'bars' ? 'w-8 border-b-[2px]' : ''
                       }`}
