@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { VariableMap } from '../../types';
+import { VariableMap, VisualizationEvent } from '../../types';
 import { ThemeColor } from '../theme/theme';
 import {
   buildLinkedListPreview,
@@ -43,6 +43,7 @@ interface StructureVisualizerProps {
   currentStepIndex: number;
   arrayViewType?: 'cells' | 'bars';
   playerControlsProps?: PlayerControlsProps;
+  events?: VisualizationEvent[];
 }
 
 /**
@@ -58,6 +59,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   currentStepIndex,
   arrayViewType = 'cells',
   playerControlsProps,
+  events = [],
 }) => {
   const [enlargedType, setEnlargedType] = useState<'tree' | 'list' | 'graph' | 'array' | 'heap' | 'hashmap' | 'stackqueue' | null>(null);
   const lastTree = useRef<TreePreview | null>(null);
@@ -227,6 +229,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
             prevVariables={prevVariables}
             themeColor={themeColor}
             arrayViewType={arrayViewType}
+            events={events}
             onEnlarge={() => setEnlargedType('array')}
           />
         </div>
@@ -291,6 +294,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
             <ArrayGridVisualizer
               variables={variables}
               prevVariables={prevVariables}
+              events={events}
               themeColor={themeColor}
               arrayViewType={arrayViewType}
             />

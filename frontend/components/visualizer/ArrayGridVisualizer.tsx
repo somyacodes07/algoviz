@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Columns, Grid, Play, RefreshCw, Sparkles, ArrowDown, Maximize2 } from 'lucide-react';
-import { VariableMap } from '../../../types';
+import { VariableMap, VisualizationEvent } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 import { getPtrColor } from './LinkedListVisualizer';
 import { TreePanel } from './TreeVisualizer';
@@ -10,6 +10,7 @@ import { TreePanel } from './TreeVisualizer';
 interface ArrayGridVisualizerProps {
   variables: VariableMap;
   prevVariables: VariableMap;
+  events?: VisualizationEvent[];
   themeColor: ThemeColor;
   arrayViewType?: 'cells' | 'bars';
   onEnlarge?: () => void;
@@ -22,6 +23,12 @@ export interface ArrayGridPreview {
   prevValue?: any[];
 }
 
+const ARRAY_ITEM_STRIDE = 72;
+const ARRAY_OVERSCAN = 6;
+const ARRAY_VIRTUALIZATION_THRESHOLD = 120;
+const MATRIX_CELL_STRIDE = 62;
+const MATRIX_OVERSCAN = 2;
+
 function isMatrix(value: unknown): value is any[][] {
   if (!Array.isArray(value) || value.length === 0) return false;
   const firstRow = value[0];
@@ -29,18 +36,26 @@ function isMatrix(value: unknown): value is any[][] {
   
   // Must be a grid (all rows have same length) and contains primitives
   const cols = firstRow.length;
-  return value.every(row => 
-    Array.isArray(row) && 
-    row.length === cols && 
-    row.every(cell => cell === null || typeof cell === 'number' || typeof cell === 'string' || typeof cell === 'boolean')
-  );
+  // Check every row's shape (O(rows)) and sample cell types so very large grids
+  // don't require a full O(rows × columns) classification pass before rendering.
+  return value.every((row, rowIndex) => {
+    if (!Array.isArray(row) || row.length !== cols) return false;
+    if (value.length <= 128 && cols <= 128) {
+      return row.every((cell) => cell === null || ['number', 'string', 'boolean'].includes(typeof cell));
+    }
+    if (rowIndex >= 32 && rowIndex < value.length - 32 && rowIndex % Math.ceil(value.length / 32) !== 0) return true;
+    const sampleColumns = new Set([0, Math.floor(cols / 2), cols - 1]);
+    return Array.from(sampleColumns).every((column) => row[column] === null || ['number', 'string', 'boolean'].includes(typeof row[column]));
+  });
 }
 
 function isPrimitiveArray(value: unknown): value is any[] {
   return (
     Array.isArray(value) &&
     value.length > 0 &&
-    value.every(cell => cell === null || typeof cell === 'number' || typeof cell === 'string' || typeof cell === 'boolean')
+    (value.length <= 5000
+      ? value.every(cell => cell === null || typeof cell === 'number' || typeof cell === 'string' || typeof cell === 'boolean')
+      : [...value.slice(0, 64), ...value.slice(-64)].every(cell => cell === null || typeof cell === 'number' || typeof cell === 'string' || typeof cell === 'boolean'))
   );
 }
 
@@ -80,6 +95,7 @@ export function buildArrayGridPreview(variables: VariableMap, prevVariables: Var
 export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   variables,
   prevVariables,
+  events = [],
   themeColor,
   arrayViewType = 'cells',
   onEnlarge,
@@ -88,12 +104,56 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   const isSaffron = themeColor === 'saffron';
 
   const [viewAsHeap, setViewAsHeap] = useState(false);
+  const arrayViewportRef = useRef<HTMLDivElement>(null);
+  const matrixViewportRef = useRef<HTMLDivElement>(null);
+  const [arrayWindow, setArrayWindow] = useState({ start: 0, end: 0, firstVisible: 0, lastVisible: 0 });
+  const [matrixWindow, setMatrixWindow] = useState({ rowStart: 0, rowEnd: 0, colStart: 0, colEnd: 0 });
 
   const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables), [variables, prevVariables]);
+  const arrayLength = preview?.type === 'array' ? preview.value.length : 0;
+  const matrixRows = preview?.type === 'matrix' ? preview.value.length : 0;
+  const matrixCols = preview?.type === 'matrix' ? (preview.value[0]?.length || 0) : 0;
+
+  const updateArrayWindow = useCallback(() => {
+    const viewport = arrayViewportRef.current;
+    if (!viewport) return;
+    const firstVisible = Math.max(0, Math.floor(Math.max(0, viewport.scrollLeft - 8) / ARRAY_ITEM_STRIDE));
+    const visibleCount = Math.ceil(viewport.clientWidth / ARRAY_ITEM_STRIDE);
+    const lastVisible = Math.min(arrayLength, firstVisible + visibleCount + 1);
+    const start = Math.max(0, firstVisible - ARRAY_OVERSCAN);
+    const end = Math.min(arrayLength, lastVisible + ARRAY_OVERSCAN);
+    setArrayWindow((current) => current.start === start && current.end === end && current.firstVisible === firstVisible && current.lastVisible === lastVisible
+      ? current
+      : { start, end, firstVisible, lastVisible });
+  }, [arrayLength]);
+
+  const updateMatrixWindow = useCallback(() => {
+    const viewport = matrixViewportRef.current;
+    if (!viewport) return;
+    const firstCol = Math.max(0, Math.floor(Math.max(0, viewport.scrollLeft - 40) / MATRIX_CELL_STRIDE));
+    const firstRow = Math.max(0, Math.floor(Math.max(0, viewport.scrollTop - 32) / MATRIX_CELL_STRIDE));
+    const visibleCols = Math.ceil(Math.max(1, viewport.clientWidth - 40) / MATRIX_CELL_STRIDE);
+    const visibleRows = Math.ceil(Math.max(1, viewport.clientHeight - 32) / MATRIX_CELL_STRIDE);
+    const colStart = Math.max(0, firstCol - MATRIX_OVERSCAN);
+    const rowStart = Math.max(0, firstRow - MATRIX_OVERSCAN);
+    const colEnd = Math.min(matrixCols, firstCol + visibleCols + MATRIX_OVERSCAN + 1);
+    const rowEnd = Math.min(matrixRows, firstRow + visibleRows + MATRIX_OVERSCAN + 1);
+    setMatrixWindow((current) => current.rowStart === rowStart && current.rowEnd === rowEnd && current.colStart === colStart && current.colEnd === colEnd
+      ? current
+      : { rowStart, rowEnd, colStart, colEnd });
+  }, [matrixCols, matrixRows]);
+
+  useLayoutEffect(() => {
+    updateArrayWindow();
+    updateMatrixWindow();
+  }, [updateArrayWindow, updateMatrixWindow]);
 
   const isNumericArray = useMemo(() => {
     if (!preview || preview.type !== 'array') return false;
-    return preview.value.length > 0 && preview.value.every(v => typeof v === 'number');
+    const value = preview.value;
+    if (value.length === 0) return false;
+    const sample = value.length <= 5000 ? value : [...value.slice(0, 64), ...value.slice(-64)];
+    return sample.every(v => typeof v === 'number');
   }, [preview]);
 
   const heapTreePreview = useMemo(() => {
@@ -105,7 +165,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     
     // BFS construction
     const buildSubtree = (i: number): string | undefined => {
-      if (i >= arr.length || arr[i] == null) return undefined;
+      if (i >= Math.min(arr.length, 31) || arr[i] == null) return undefined;
       const nodeId = `${preview.sourceName}-heap-${i}`;
       const leftId = buildSubtree(2 * i + 1);
       const rightId = buildSubtree(2 * i + 2);
@@ -135,6 +195,57 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
       truncated: arr.length > 31,
     };
   }, [viewAsHeap, preview]);
+
+  const activeArrayIndices = useMemo(() => {
+    if (!preview || preview.type !== 'array') return [];
+    const pointers = ['i', 'j', 'k', 'left', 'right', 'low', 'high', 'lo', 'hi', 'mid', 'current', 'curr', 'index', 'start', 'end'];
+    return pointers
+      .map((name) => variables[name])
+      .filter((value): value is number => Number.isInteger(value) && value >= 0 && value < preview.value.length);
+  }, [preview, variables]);
+
+  const activeMatrixTarget = useMemo(() => {
+    if (!preview || preview.type !== 'matrix') return null;
+    const rowName = ['row', 'r', 'i', 'y'].find((name) => Number.isInteger(variables[name]) && variables[name] >= 0 && variables[name] < preview.value.length);
+    const colName = ['col', 'c', 'j', 'x'].find((name) => Number.isInteger(variables[name]) && variables[name] >= 0 && variables[name] < (preview.value[0]?.length || 0));
+    return rowName && colName ? { row: variables[rowName] as number, col: variables[colName] as number } : null;
+  }, [preview, variables]);
+
+  useEffect(() => {
+    const viewport = arrayViewportRef.current;
+    if (!viewport || arrayLength <= ARRAY_VIRTUALIZATION_THRESHOLD || activeArrayIndices.length === 0) return;
+    const capacity = Math.max(1, Math.floor(viewport.clientWidth / ARRAY_ITEM_STRIDE) - 2);
+    const sorted = [...new Set<number>(activeArrayIndices as number[])].sort((a, b) => a - b);
+    let first = sorted[0];
+    let last = sorted[sorted.length - 1];
+    if (last - first + 1 > capacity) {
+      const preferredValue = variables.i ?? variables.current ?? variables.curr ?? variables.mid ?? variables.left ?? first;
+      const preferred = typeof preferredValue === 'number' ? preferredValue : first;
+      first = Number.isInteger(preferred) && preferred >= 0 ? preferred : first;
+      last = first;
+    }
+    const left = first * ARRAY_ITEM_STRIDE;
+    const right = (last + 1) * ARRAY_ITEM_STRIDE;
+    if (left < viewport.scrollLeft || right > viewport.scrollLeft + viewport.clientWidth) {
+      const nextLeft = Math.max(0, left - Math.max(0, (viewport.clientWidth - (right - left)) / 2));
+      viewport.scrollTo({ left: nextLeft, behavior: 'smooth' });
+      requestAnimationFrame(updateArrayWindow);
+    }
+  }, [activeArrayIndices, arrayLength, updateArrayWindow, variables]);
+
+  useEffect(() => {
+    const viewport = matrixViewportRef.current;
+    if (!viewport || !activeMatrixTarget) return;
+    const left = 40 + activeMatrixTarget.col * MATRIX_CELL_STRIDE;
+    const top = 32 + activeMatrixTarget.row * MATRIX_CELL_STRIDE;
+    if (left < viewport.scrollLeft || left + MATRIX_CELL_STRIDE > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollLeft = Math.max(0, left - Math.max(0, (viewport.clientWidth - MATRIX_CELL_STRIDE) / 2));
+    }
+    if (top < viewport.scrollTop || top + MATRIX_CELL_STRIDE > viewport.scrollTop + viewport.clientHeight) {
+      viewport.scrollTop = Math.max(0, top - Math.max(0, (viewport.clientHeight - MATRIX_CELL_STRIDE) / 2));
+    }
+    updateMatrixWindow();
+  }, [activeMatrixTarget, updateMatrixWindow]);
 
   useEffect(() => {
     if (!isNumericArray) {
@@ -195,10 +306,19 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     const hasSlidingWindow = rangeStart !== null && rangeEnd !== null && rangeStart <= rangeEnd;
 
     // Detect changed indices
+    const virtualized = arr.length > ARRAY_VIRTUALIZATION_THRESHOLD;
+    const renderStart = virtualized ? Math.min(arrayWindow.start, Math.max(0, arr.length - 1)) : 0;
+    const renderEnd = virtualized ? Math.min(arr.length, Math.max(renderStart, arrayWindow.end)) : arr.length;
     const changedIndices = new Set<number>();
-    if (prevArr && prevArr.length === arr.length) {
-      for (let idx = 0; idx < arr.length; idx++) {
-        if (prevArr.at(idx) !== arr.at(idx)) changedIndices.add(idx);
+    const explicitArrayEvents = events.filter((event) => event.variable === preview.sourceName && (event.type === 'array-write' || event.type === 'swap'));
+    if (explicitArrayEvents.length > 0) {
+      explicitArrayEvents.forEach((event) => {
+        if (event.type === 'array-write' && event.index !== undefined) changedIndices.add(event.index);
+        if (event.type === 'swap' && event.indices) event.indices.forEach((index) => changedIndices.add(index));
+      });
+    } else if (prevArr && prevArr.length === arr.length) {
+      for (let idx = renderStart; idx < renderEnd; idx++) {
+        if (prevArr[idx] !== arr[idx]) changedIndices.add(idx);
       }
     }
 
@@ -211,7 +331,13 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
       }
     }
 
-    const maxVal = Math.max(...arr.map(v => typeof v === 'number' ? Math.abs(v) : 1), 1);
+    let maxVal = 1;
+    if (arrayViewType === 'bars') {
+      for (const value of arr) {
+        if (typeof value === 'number') maxVal = Math.max(maxVal, Math.abs(value));
+      }
+    }
+    const visibleItems = Array.from({ length: Math.max(0, renderEnd - renderStart) }, (_, offset) => renderStart + offset);
 
     return (
       <section className={`${theme.panelClass} p-4`}>
@@ -253,15 +379,37 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
           </div>
         </div>
 
+        {virtualized && (
+          <div className="mt-3 flex items-center gap-3 border-y border-slate-200 py-2 text-[10px] font-mono text-slate-500 dark:border-[var(--dark-border-dim)] dark:text-slate-400">
+            <span className="shrink-0">Items {arrayWindow.firstVisible + 1}–{arrayWindow.lastVisible} of {arr.length}</span>
+            <input
+              aria-label={`Array window for ${preview.sourceName}`}
+              type="range"
+              min={0}
+              max={Math.max(0, arr.length - Math.max(1, arrayWindow.lastVisible - arrayWindow.firstVisible))}
+              value={Math.min(arrayWindow.firstVisible, Math.max(0, arr.length - Math.max(1, arrayWindow.lastVisible - arrayWindow.firstVisible)))}
+              onChange={(event) => {
+                const viewport = arrayViewportRef.current;
+                if (!viewport) return;
+                viewport.scrollLeft = Number(event.target.value) * ARRAY_ITEM_STRIDE;
+                updateArrayWindow();
+              }}
+              className={`min-w-0 flex-1 ${isSaffron ? 'accent-orange-500' : 'accent-blue-500'}`}
+            />
+          </div>
+        )}
+
         {swapIndices && (
           <div className={`mt-3 text-center text-[10px] font-black uppercase tracking-widest ${isSaffron ? 'text-saffron-600 dark:text-saffron-400' : 'text-blue-600 dark:text-blue-400'}`}>
             ↔ Swapped indexes [{swapIndices[0]}] ⟷ [{swapIndices[1]}]
           </div>
         )}
 
-        <div className="mt-8 overflow-x-auto overflow-y-hidden no-scrollbar pb-4 pt-16 min-h-[190px] w-full">
-          <div className="flex items-end gap-2 px-2 mx-auto w-max">
-            {arr.map((val, i) => {
+        <div ref={arrayViewportRef} role="region" aria-label={`${preview.sourceName} array diagram`} tabIndex={0} onScroll={updateArrayWindow} className={`diagram-viewport mt-6 ${virtualized ? 'custom-scrollbar' : 'no-scrollbar'} pb-4 pt-16 min-h-[190px] w-full`}>
+          <div className="flex min-w-full items-end gap-2 px-2 w-max">
+            {virtualized && <div aria-hidden="true" className="shrink-0" style={{ width: renderStart * ARRAY_ITEM_STRIDE }} />}
+            {visibleItems.map((i) => {
+            const val = arr[i];
             const hasPointers = activePointers.has(i);
             const pointers = activePointers.get(i) || [];
             const isChanged = changedIndices.has(i);
@@ -304,7 +452,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               <motion.div
                 key={i}
                 layout
-                className="flex flex-col items-center flex-1 min-w-[48px] max-w-[72px] relative"
+                className="relative flex w-16 shrink-0 flex-col items-center"
               >
                 {/* Sliding Window Brackets & Link Lines */}
                 {isInRange && (
@@ -386,6 +534,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               </motion.div>
             );
           })}
+          {virtualized && <div aria-hidden="true" className="shrink-0" style={{ width: Math.max(0, arr.length - renderEnd) * ARRAY_ITEM_STRIDE }} />}
           </div>
         </div>
       </section>
@@ -452,11 +601,21 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     }
   });
 
-  // Find cell differences
+  const rowStart = Math.min(matrixWindow.rowStart, Math.max(0, rowsCount - 1));
+  const rowEnd = Math.min(rowsCount, Math.max(rowStart, matrixWindow.rowEnd));
+  const colStart = Math.min(matrixWindow.colStart, Math.max(0, colsCount - 1));
+  const colEnd = Math.min(colsCount, Math.max(colStart, matrixWindow.colEnd));
+
+  // Compare only mounted cells; scrolling into another window computes its own
+  // diffs and never scans or creates DOM for the entire matrix at once.
   const changedCells = new Set<string>();
-  if (prevMatrix && prevMatrix.length === rowsCount && prevMatrix.at(0)?.length === colsCount) {
-    for (let r = 0; r < rowsCount; r++) {
-      for (let c = 0; c < colsCount; c++) {
+  const explicitGridEvents = events.filter((event) => event.variable === preview.sourceName && event.type === 'grid-write');
+  explicitGridEvents.forEach((event) => {
+    if (event.row !== undefined && event.column !== undefined) changedCells.add(`${event.row},${event.column}`);
+  });
+  if (explicitGridEvents.length === 0 && prevMatrix && prevMatrix.length === rowsCount && prevMatrix.at(0)?.length === colsCount) {
+    for (let r = rowStart; r < rowEnd; r++) {
+      for (let c = colStart; c < colEnd; c++) {
         if (prevMatrix.at(r)?.at(c) !== matrix.at(r)?.at(c)) {
           changedCells.add(`${r},${c}`);
         }
@@ -488,111 +647,63 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto overflow-y-hidden custom-scrollbar pb-3 max-h-[360px] flex justify-center">
-        <div className="grid grid-cols-[auto_1fr] gap-x-2 pt-8 pl-8">
-          {/* Top Column Labels */}
-          <div className="col-start-2 flex">
-            {Array.from({ length: colsCount }).map((_, c) => {
-              const pointers = activeColPtrs.get(c) || [];
-              const hasColPointers = pointers.length > 0;
+      <div className="mt-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+        Showing rows {rowStart + 1}–{rowEnd} and columns {colStart + 1}–{colEnd} of {rowsCount} × {colsCount}.
+        Scroll to explore; the active coordinate stays in view.
+      </div>
+      <div ref={matrixViewportRef} role="region" aria-label={`${preview.sourceName} matrix diagram`} tabIndex={0} onScroll={updateMatrixWindow} className="diagram-viewport mt-3 w-full custom-scrollbar">
+        <div className="relative" style={{ width: 40 + colsCount * MATRIX_CELL_STRIDE, height: 32 + rowsCount * MATRIX_CELL_STRIDE }}>
+          {Array.from({ length: Math.max(0, colEnd - colStart) }, (_, offset) => colStart + offset).map((c) => {
+            const pointers = activeColPtrs.get(c) || [];
+            const hasColPointers = pointers.length > 0;
+            return (
+              <div key={`col-head-${c}`} className="absolute flex h-8 w-14 flex-col items-center justify-end" style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 0 }}>
+                {hasColPointers && <span className="absolute -top-2 bg-cyan-500 px-1 text-[8px] font-black uppercase text-black shadow-[1px_1px_0_rgba(0,0,0,1)]">{pointers.join(',')}</span>}
+                <span className={`text-[10px] font-mono font-bold ${hasColPointers ? 'text-cyan-500' : 'text-slate-400 dark:text-slate-600'}`}>[{c}]</span>
+              </div>
+            );
+          })}
+
+          {Array.from({ length: Math.max(0, rowEnd - rowStart) }, (_, offset) => rowStart + offset).map((r) => {
+            const pointers = activeRowPtrs.get(r) || [];
+            const hasRowPointers = pointers.length > 0;
+            return (
+              <div key={`row-head-${r}`} className="absolute flex h-14 w-10 items-center justify-end pr-2" style={{ left: 0, top: 32 + r * MATRIX_CELL_STRIDE }}>
+                {hasRowPointers && <span className="absolute left-0 -translate-x-1/2 bg-purple-500 px-1 text-[8px] font-black uppercase text-white shadow-[1px_1px_0_rgba(0,0,0,1)]">{pointers.join(',')}</span>}
+                <span className={`text-[10px] font-mono font-bold ${hasRowPointers ? 'text-purple-500' : 'text-slate-400 dark:text-slate-600'}`}>[{r}]</span>
+              </div>
+            );
+          })}
+
+          {Array.from({ length: Math.max(0, rowEnd - rowStart) }, (_, rowOffset) => rowStart + rowOffset).flatMap((r) =>
+            Array.from({ length: Math.max(0, colEnd - colStart) }, (_, colOffset) => colStart + colOffset).map((c) => {
+              const cell = matrix[r][c];
+              const key = `${r},${c}`;
+              const hasPointers = highlightedCells.has(key);
+              const pointerNames = highlightedCells.get(key) || [];
+              const isChanged = changedCells.has(key);
+
+              let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
+              let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
+              let cellText = 'text-slate-900 dark:text-slate-100';
+              if (hasPointers) {
+                cellBg = isSaffron ? 'bg-saffron-100 dark:bg-saffron-950/40' : 'bg-blue-100 dark:bg-blue-950/40';
+                cellBorder = isSaffron ? 'border-saffron-500 dark:border-saffron-600 border-[3px]' : 'border-blue-500 dark:border-blue-600 border-[3px]';
+                cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300 font-black' : 'text-blue-900 dark:text-blue-300 font-black';
+              } else if (isChanged) {
+                cellBg = 'bg-yellow-50 dark:bg-yellow-950/15';
+                cellBorder = 'border-yellow-500 dark:border-yellow-600 border-[3px]';
+                cellText = 'text-yellow-700 dark:text-yellow-300';
+              }
+
               return (
-                <div
-                  key={`col-head-${c}`}
-                  className="w-14 h-8 flex flex-col items-center justify-end relative"
-                >
-                  {hasColPointers && (
-                    <div className="absolute -top-7 flex flex-col items-center">
-                      <span className="bg-cyan-500 text-black border border-cyan-700 text-[8px] font-black px-1 py-0.2 shadow-[1px_1px_0_rgba(0,0,0,1)] uppercase">
-                        {pointers.join(',')}
-                      </span>
-                      <ArrowDown size={8} className="text-cyan-600" />
-                    </div>
-                  )}
-                  <span className={`text-[10px] font-mono font-bold ${hasColPointers ? 'text-cyan-500' : 'text-slate-400 dark:text-slate-600'}`}>
-                    [{c}]
-                  </span>
+                <div key={key} aria-label={`Row ${r}, column ${c}: ${cell === null ? 'nil' : String(cell)}`} className={`absolute flex h-14 w-14 select-none flex-col items-center justify-center border-2 transition-colors duration-150 ${cellBg} ${cellBorder} ${cellText} shadow-[2px_2px_0_rgba(15,23,42,0.15)] dark:shadow-[2px_2px_0_var(--dark-shadow)]`} style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 32 + r * MATRIX_CELL_STRIDE }}>
+                  {hasPointers && <span className="absolute -top-2 z-20 bg-emerald-500 px-1 text-[7px] font-black uppercase text-white">{pointerNames[0]}</span>}
+                  <span className="text-[14px] font-mono font-black">{cell === null ? 'nil' : String(cell)}</span>
                 </div>
               );
-            })}
-          </div>
-
-          {/* Left Row Labels + Matrix cells */}
-          <div className="col-start-1 flex flex-col">
-            {Array.from({ length: rowsCount }).map((_, r) => {
-              const pointers = activeRowPtrs.get(r) || [];
-              const hasRowPointers = pointers.length > 0;
-              return (
-                <div
-                  key={`row-head-${r}`}
-                  className="h-14 w-8 flex items-center justify-end pr-2 relative"
-                >
-                  {hasRowPointers && (
-                    <div className="absolute -left-12 flex items-center">
-                      <span className="bg-purple-500 text-white border border-purple-700 text-[8px] font-black px-1 py-0.2 shadow-[1px_1px_0_rgba(0,0,0,1)] uppercase">
-                        {pointers.join(',')}
-                      </span>
-                      <span className="text-purple-500 font-bold ml-0.5">→</span>
-                    </div>
-                  )}
-                  <span className={`text-[10px] font-mono font-bold ${hasRowPointers ? 'text-purple-500' : 'text-slate-400 dark:text-slate-600'}`}>
-                    [{r}]
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Cells grid container */}
-          <div
-            className="col-start-2 grid gap-1.5"
-            style={{
-              gridTemplateColumns: `repeat(${colsCount}, minmax(0, 1fr))`,
-            }}
-          >
-            {matrix.map((row, r) =>
-              row.map((cell, c) => {
-                const key = `${r},${c}`;
-                const hasPointers = highlightedCells.has(key);
-                const pointerNames = highlightedCells.get(key) || [];
-                const isChanged = changedCells.has(key);
-
-                let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
-                let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
-                let cellText = 'text-slate-900 dark:text-slate-100';
-
-                if (hasPointers) {
-                  cellBg = isSaffron ? 'bg-saffron-100 dark:bg-saffron-950/40' : 'bg-blue-100 dark:bg-blue-950/40';
-                  cellBorder = isSaffron ? 'border-saffron-500 dark:border-saffron-600 border-[3px]' : 'border-blue-500 dark:border-blue-600 border-[3px]';
-                  cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300 font-black' : 'text-blue-900 dark:text-blue-300 font-black';
-                } else if (isChanged) {
-                  cellBg = 'bg-yellow-50 dark:bg-yellow-950/15';
-                  cellBorder = 'border-yellow-500 dark:border-yellow-600 border-[3px]';
-                  cellText = 'text-yellow-700 dark:text-yellow-300';
-                }
-
-                return (
-                  <motion.div
-                    key={key}
-                    layout
-                    className={`w-14 h-14 border-2 flex flex-col items-center justify-center relative select-none ${cellBg} ${cellBorder} ${cellText} shadow-[2px_2px_0_rgba(15,23,42,0.15)] dark:shadow-[2px_2px_0_var(--dark-shadow)] group hover:-translate-y-[1px] transition-transform`}
-                  >
-                    {/* Intersection pointer indicator */}
-                    {hasPointers && (
-                      <div className="absolute -top-3.5 z-20 pointer-events-none">
-                        <span className="bg-emerald-500 text-white text-[7px] font-black px-1 border border-emerald-700 shadow-[1px_1px_0_rgba(0,0,0,1)] uppercase">
-                          {pointerNames[0]}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <span className="text-[14px] font-mono font-black">
-                      {cell === null ? 'nil' : String(cell)}
-                    </span>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
+            }),
+          )}
         </div>
       </div>
     </section>

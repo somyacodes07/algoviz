@@ -82,7 +82,7 @@ export const HeapPanel: React.FC<HeapPanelProps> = ({ preview, themeColor, onEnl
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div role="region" aria-label={`${preview.sourceName} heap diagram`} tabIndex={0} className="diagram-viewport overflow-x-auto">
         <svg width="300" height={maxY} className="mx-auto block">
           {nodes.map(node => {
             if (node.parentIndex === null) return null;

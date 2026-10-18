@@ -71,7 +71,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
       <div className="p-3">
         {isStack ? (
           // Stack: vertical column, top at the top
-          <div className="flex flex-col-reverse gap-1 items-center max-h-[200px] overflow-y-auto custom-scrollbar py-1">
+          <div role="region" aria-label={`${preview.sourceName} stack items`} tabIndex={0} className="diagram-viewport flex flex-col-reverse gap-1 items-center custom-scrollbar py-1">
             <div className="w-full flex justify-center">
               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">BOTTOM</span>
             </div>
@@ -98,7 +98,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
         ) : (
           // Queue: horizontal row, head on the left
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
+            <div role="region" aria-label={`${preview.sourceName} queue items`} tabIndex={0} className="diagram-viewport flex items-center gap-1 no-scrollbar py-1">
               <div className="flex flex-col items-center shrink-0">
                 <span className="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase mb-1">FRONT →</span>
               </div>

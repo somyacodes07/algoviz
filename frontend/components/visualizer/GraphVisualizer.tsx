@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 import { getPointerSvgColor } from './TreeVisualizer';
+import { useDiagramFocus } from './useDiagramFocus';
 
 export interface GraphNodeView {
   id: string;
@@ -362,6 +363,10 @@ export const GraphPanel: React.FC<{
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const activeFocusKey = preview.nodes.filter((node) => node.pointerNames.length > 0).at(-1)?.id
+    || preview.nodes.filter((node) => node.visited).at(-1)?.id;
+  useDiagramFocus(viewportRef, activeFocusKey);
   // Traversal visits rebuild the preview each step, but the force layout only
   // depends on graph topology. Reuse coordinates when only visited state changes.
   const layoutKey = JSON.stringify([
@@ -466,7 +471,7 @@ export const GraphPanel: React.FC<{
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
         {/* SVG Canvas */}
-        <div className={`${theme.subPanelClass} p-3 flex justify-center overflow-hidden`}>
+        <div ref={viewportRef} role="region" aria-label={`${preview.sourceName} graph diagram`} tabIndex={0} className={`diagram-viewport ${theme.subPanelClass} p-3 flex justify-center`}>
           <svg
             viewBox={`0 0 ${svgSize} ${svgSize}`}
             className={onEnlarge ? "h-[300px] w-full max-w-[340px]" : "h-[550px] w-full max-w-[580px]"}
@@ -602,6 +607,7 @@ export const GraphPanel: React.FC<{
                 return (
                   <motion.g
                     key={node.id}
+                    data-diagram-active={node.id === activeFocusKey ? 'true' : undefined}
                     initial={{ translateX: pos.x, translateY: pos.y, scale: 0.5, opacity: 0 }}
                     animate={{ translateX: pos.x, translateY: pos.y, scale: 1, opacity: 1 }}
                     transition={{

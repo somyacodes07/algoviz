@@ -145,8 +145,9 @@ function parseTraceOutput(stdout: string): Timeline {
       timeline.push({
         line: traceData.line,
         variables: traceData.variables || {},
-        callStack: ['main'],
+        callStack: Array.isArray(traceData.callStack) ? traceData.callStack : ['main'],
         consoleOutput: [...currentLogs],
+        events: Array.isArray(traceData.events) ? traceData.events : [],
       });
       currentLogs = [];
     } catch (e) {

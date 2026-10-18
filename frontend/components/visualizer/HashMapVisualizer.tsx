@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
+import { useDiagramFocus } from './useDiagramFocus';
 import { Maximize2 } from 'lucide-react';
 
 export interface HashMapPreview {
@@ -44,6 +45,7 @@ interface HashMapPanelProps {
 export const HashMapPanel: React.FC<HashMapPanelProps> = ({ preview, themeColor, prevVariables, onEnlarge }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const prevEntries: Record<string, unknown> = useMemo(() => {
     if (!prevVariables) return {};
@@ -51,6 +53,11 @@ export const HashMapPanel: React.FC<HashMapPanelProps> = ({ preview, themeColor,
     if (isPlainObjectMap(prev)) return prev as Record<string, unknown>;
     return {};
   }, [prevVariables, preview.sourceName]);
+  const activeFocusKey = preview.entries
+    .filter(([key, value]) => key in prevEntries && String(prevEntries[key]) !== String(value))
+    .map(([key]) => key)
+    .at(-1);
+  useDiagramFocus(viewportRef, activeFocusKey);
 
   return (
     <div className="border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
@@ -68,7 +75,7 @@ export const HashMapPanel: React.FC<HashMapPanelProps> = ({ preview, themeColor,
         </div>
       </div>
 
-      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
+      <div ref={viewportRef} role="region" aria-label={`${preview.sourceName} map entries`} tabIndex={0} className="diagram-viewport p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 no-scrollbar">
         <AnimatePresence>
           {preview.entries.map(([key, value]) => {
             const isNew = !(key in prevEntries);
@@ -77,6 +84,7 @@ export const HashMapPanel: React.FC<HashMapPanelProps> = ({ preview, themeColor,
             return (
               <motion.div
                 key={key}
+                data-diagram-active={key === activeFocusKey ? 'true' : undefined}
                 layout
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

@@ -39,11 +39,41 @@ export interface ComplexityAnalysis {
   hotspots: ComplexityHotspot[];
 }
 
+export type VisualizationEventType =
+  | 'line'
+  | 'write'
+  | 'array-write'
+  | 'grid-write'
+  | 'swap'
+  | 'pointer-move'
+  | 'call'
+  | 'return'
+  | 'visit'
+  | 'compare'
+  | 'output';
+
+/** A concrete, language-neutral action emitted alongside an execution snapshot. */
+export interface VisualizationEvent {
+  type: VisualizationEventType;
+  line: number;
+  variable?: string;
+  index?: number;
+  row?: number;
+  column?: number;
+  indices?: [number, number];
+  before?: unknown;
+  after?: unknown;
+  expression?: string;
+  result?: boolean;
+  message?: string;
+}
+
 export interface ExecutionStep {
   line: number;
   variables: VariableMap;
   callStack: string[];
   consoleOutput: ConsoleLog[];
+  events?: VisualizationEvent[];
   isError?: boolean;
   errorMessage?: string;
 }

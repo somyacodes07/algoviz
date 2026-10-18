@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, ArrowRight, ArrowLeft, ChevronsDown, Repeat2, Trash2, Maximize2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
+import { useDiagramFocus } from './useDiagramFocus';
 
 export interface LinkedListNodeView {
   id: string;
@@ -267,6 +268,9 @@ export const LinkedListPanel: React.FC<{
 
   // Measure positions for the cycle overlay
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const activeFocusKey = preview.nodes.filter((node) => node.pointerNames.length > 0).at(-1)?.id;
+  useDiagramFocus(viewportRef, activeFocusKey);
   const [nodePositions, setNodePositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
 
   useEffect(() => {
@@ -395,7 +399,7 @@ export const LinkedListPanel: React.FC<{
       </div>
 
       {/* ── Visualization ── */}
-      <div className="mt-4 overflow-x-auto overflow-y-hidden no-scrollbar pb-2">
+      <div ref={viewportRef} role="region" aria-label={`${preview.sourceName} linked list diagram`} tabIndex={0} className="diagram-viewport mt-4 pb-2 no-scrollbar">
         <div className="flex items-start gap-1 w-max pt-12 pb-14 px-12 relative" ref={containerRef}>
           {/* NULL sentinel — start */}
           {preview.cycleToIndex !== 0 && (
@@ -422,6 +426,7 @@ export const LinkedListPanel: React.FC<{
               return (
                 <motion.div
                   key={node.id}
+                  data-diagram-active={node.id === activeFocusKey ? 'true' : undefined}
                   layout
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
                   animate={isDeleted ? { opacity: 0, scale: 0.6, y: 28 } : { opacity: 1, scale: 1, y: 0 }}

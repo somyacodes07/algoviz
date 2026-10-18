@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Terminal,
   Code2,
@@ -121,12 +121,17 @@ const T = {
 const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
 function useScramble(target: string, delay = 100) {
   const [display, setDisplay] = useState(target);
-  const frame = useRef(0);
+  const prefersReducedMotion = useReducedMotion();
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setDisplay(target);
+      return;
+    }
     let iter = 0;
+    let interval: ReturnType<typeof setInterval> | undefined;
     const totalFrames = target.length * 3;
     const timer = setTimeout(() => {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setDisplay(
           target
             .split('')
@@ -143,10 +148,12 @@ function useScramble(target: string, delay = 100) {
           setDisplay(target);
         }
       }, 40);
-      return () => clearInterval(interval);
     }, delay);
-    return () => clearTimeout(timer);
-  }, [target, delay]);
+    return () => {
+      clearTimeout(timer);
+      if (interval) clearInterval(interval);
+    };
+  }, [target, delay, prefersReducedMotion]);
   return display;
 }
 
@@ -157,6 +164,7 @@ function useCountUp(target: number, duration = 1800) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    let timer: ReturnType<typeof setInterval> | undefined;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
@@ -165,7 +173,7 @@ function useCountUp(target: number, duration = 1800) {
         const step = 16;
         const steps = duration / step;
         const increment = target / steps;
-        const timer = setInterval(() => {
+        timer = setInterval(() => {
           start += increment;
           if (start >= target) {
             setCount(target);
@@ -176,7 +184,10 @@ function useCountUp(target: number, duration = 1800) {
       { threshold: 0.3 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timer) clearInterval(timer);
+    };
   }, [target, duration]);
   return { count, ref };
 }
@@ -220,21 +231,33 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
+  const [heroVisible, setHeroVisible] = useState(true);
+  const heroRef = useRef<HTMLElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const scrambledTitle = useScramble('AlgoViz.', 600);
 
-  // Auto-play the execution mock
+  // Pause the animated preview when it is offscreen and respect reduced motion.
   useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setHeroVisible(entry.isIntersecting), { threshold: 0.05 });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!heroVisible || prefersReducedMotion) return;
     const interval = setInterval(() => {
       setStepIndex((prev) => (prev + 1) % EXECUTION_STEPS.length);
-    }, 1500);
+    }, 2200);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroVisible, prefersReducedMotion]);
 
   const currentStep = EXECUTION_STEPS.find((_, idx) => idx === stepIndex) || EXECUTION_STEPS[0];
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[var(--dark-base)] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
-      <section className="relative flex min-h-screen flex-col">
+      <section ref={heroRef} className="relative flex min-h-screen flex-col">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <LandingInteractiveBackdrop hoverLang={hoverLang} defaultLang={language} theme={theme} />
         </div>

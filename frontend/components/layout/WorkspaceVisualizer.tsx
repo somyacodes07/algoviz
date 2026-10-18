@@ -63,6 +63,19 @@ function describeStep(current: ExecutionStep, previous: ExecutionStep | undefine
   if (current.isError) return current.errorMessage || 'Execution stopped with an error.';
   if (!previous) return 'Execution is ready. Step forward to see what changes.';
 
+  const event = (current.events || []).find((item) => item.type !== 'line' && item.type !== 'output');
+  if (event) {
+    if (event.type === 'compare') return `${event.expression || 'Condition'} evaluated to ${event.result ? 'true' : 'false'}.`;
+    if (event.type === 'swap' && event.indices) return `${event.variable || 'Values'} swapped indices ${event.indices[0]} and ${event.indices[1]}.`;
+    if (event.type === 'array-write') return `${event.variable}[${event.index}] changed from ${compactValue(event.before)} to ${compactValue(event.after)}.`;
+    if (event.type === 'grid-write') return `${event.variable}[${event.row}][${event.column}] changed from ${compactValue(event.before)} to ${compactValue(event.after)}.`;
+    if (event.type === 'pointer-move') return `${event.variable} moved from ${compactValue(event.before)} to ${compactValue(event.after)}.`;
+    if (event.type === 'call') return `Entered ${event.variable || 'a function'}; the call stack grew to ${event.after} frames.`;
+    if (event.type === 'return') return `Returned from ${event.variable || 'a function'}; the call stack is now ${event.after} frames.`;
+    if (event.type === 'visit') return `${event.variable || 'A visited item'} was marked${event.index !== undefined ? ` at index ${event.index}` : event.row !== undefined ? ` at [${event.row}, ${event.column}]` : ''}.`;
+    if (event.type === 'write') return `${event.variable || 'Program state'} changed${event.after !== undefined ? ` to ${compactValue(event.after)}` : ''}.`;
+  }
+
   const before = previous.variables || {};
   const after = current.variables || {};
   const changed = Object.keys(after).filter((name) => !valuesEqual(before[name], after[name]));
@@ -192,6 +205,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         <StructureVisualizer
           variables={currentStep.variables || {}}
           prevVariables={prevStepVariables.variables || {}}
+          events={currentStep.events || []}
           themeColor={themeColor}
           currentStepIndex={currentStepIndex}
           arrayViewType={settings.arrayViewType}

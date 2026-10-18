@@ -92,6 +92,7 @@ self.onmessage = async (e: MessageEvent) => {
 
   const timeline: Timeline = [];
   const currentLogs: ConsoleLog[] = [];
+  let pendingEvents: import('../../../types').VisualizationEvent[] = [];
   let logSnapshotIndex = 0; // Track where we last snapshotted logs
   let lastLine = 0;
   let complexityAnalysis: ComplexityAnalysis | null = null;
@@ -124,12 +125,19 @@ self.onmessage = async (e: MessageEvent) => {
 
       enter: (name: string) => {
         tracer.stack.push(name);
+        pendingEvents.push({ type: 'call', line: tracer.currentLine, variable: name, after: tracer.stack.length });
       },
 
       exit: () => {
         if (tracer.stack.length > 1) {
-          tracer.stack.pop();
+          const name = tracer.stack.pop()!;
+          pendingEvents.push({ type: 'return', line: tracer.currentLine, variable: name, after: tracer.stack.length });
         }
+      },
+
+      test: (line: number, expression: string, value: unknown) => {
+        pendingEvents.push({ type: 'compare', line, expression, result: Boolean(value) });
+        return value;
       },
 
       setLine: (line: number) => {
@@ -161,7 +169,9 @@ self.onmessage = async (e: MessageEvent) => {
           callStack: [...tracer.stack],
           // Only store NEW logs since last step (delta, not full history)
           consoleOutput: getNewLogs(),
+          events: [...pendingEvents, { type: 'line', line }],
         });
+        pendingEvents = [];
       },
 
       checkLoop: () => {
@@ -215,6 +225,7 @@ self.onmessage = async (e: MessageEvent) => {
       `;
 
     new Function(wrappedCode).call(null, tracer);
+    flushPendingEvents();
 
     complexityAnalysis = analyzeComplexity(userCode, timeline);
     self.postMessage({ type: 'success', timeline, analysis: complexityAnalysis });
@@ -224,6 +235,7 @@ self.onmessage = async (e: MessageEvent) => {
 
   // ── Helper: post error with partial timeline ──
   function postError(message: string, errorLine: number, errorType: ErrorType) {
+    flushPendingEvents();
     const errorTimeline = [
       ...timeline,
       {
@@ -250,5 +262,12 @@ self.onmessage = async (e: MessageEvent) => {
       errorType,
       analysis: complexityAnalysis,
     });
+  }
+
+  function flushPendingEvents() {
+    if (pendingEvents.length > 0 && timeline.length > 0) {
+      timeline[timeline.length - 1].events = [...(timeline[timeline.length - 1].events || []), ...pendingEvents];
+      pendingEvents = [];
+    }
   }
 };

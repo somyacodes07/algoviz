@@ -169,6 +169,18 @@ export function instrumentCode(code: string): string {
       // Line Tracking & Call Stack Instrumentation
       const line = acorn.getLineInfo(code, node.start).line;
 
+      // Emit one explicit comparison event for each branch/loop condition.
+      // The expression is passed as an argument, so it is evaluated exactly once.
+      if (
+        ['IfStatement', 'ConditionalExpression', 'WhileStatement', 'DoWhileStatement', 'ForStatement'].includes(node.type) &&
+        node.test
+      ) {
+        const condition = node.test as Node;
+        const expression = code.slice(condition.start, condition.end);
+        addPatch(condition.start, `__tracer.test(${line}, ${JSON.stringify(expression)}, (`);
+        addPatch(condition.end, '))');
+      }
+
       // Function Entry/Exit with Try-Finally
       if (isFunction) {
         const body = node.body as Node;

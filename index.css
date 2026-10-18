@@ -353,3 +353,23 @@ main {
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
+
+/* Shared scroll, sizing, and keyboard-focus behavior for structure canvases. */
+.diagram-viewport {
+  max-height: min(55vh, 440px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+}
+
+.diagram-viewport:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-viewport {
+    scroll-behavior: auto;
+  }
+}

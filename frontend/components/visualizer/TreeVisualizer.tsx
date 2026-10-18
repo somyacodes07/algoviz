@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, Maximize2 } from 'lucide-react';
 import { VariableMap } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
+import { useDiagramFocus } from './useDiagramFocus';
 
 export const POINTER_SVG_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
   root:    { fill: '#10b981', stroke: '#064e3b', text: '#ffffff' },
@@ -297,6 +298,9 @@ export const TreePanel: React.FC<{
   // Track previously seen node IDs to detect insertions
   const prevNodeIds = useRef<Set<string>>(new Set());
   const newNodeIds = useRef<Set<string>>(new Set());
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const activeFocusKey = preview.nodes.filter((node) => node.pointerNames.length > 0).at(-1)?.id;
+  useDiagramFocus(viewportRef, activeFocusKey);
 
   useEffect(() => {
     const currentIds = new Set<string>(preview.nodes.map((n) => n.id));
@@ -403,7 +407,7 @@ export const TreePanel: React.FC<{
       </div>
 
       {/* Canvas */}
-      <div className={`mt-4 ${theme.subPanelClass} p-4 overflow-x-auto overflow-y-hidden no-scrollbar`}>
+      <div ref={viewportRef} role="region" aria-label={`${preview.sourceName} tree diagram`} tabIndex={0} className={`diagram-viewport mt-4 ${theme.subPanelClass} p-4 no-scrollbar`}>
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
           className="w-full"
@@ -469,6 +473,7 @@ export const TreePanel: React.FC<{
               return (
                 <motion.g
                   key={node.id}
+                  data-diagram-active={node.id === activeFocusKey ? 'true' : undefined}
                   animate={{ translateX: pos.x, translateY: pos.y, opacity: 1, scale: 1 }}
                   initial={
                     isNew

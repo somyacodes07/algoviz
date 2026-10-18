@@ -39,8 +39,6 @@ const BlueprintCanvas: React.FC<{ isDark: boolean; isCpp: boolean }> = ({ isDark
     ? isDark ? 'rgba(56,189,248,0.08)' : 'rgba(14,116,144,0.08)'
     : isDark ? 'rgba(245,158,11,0.08)' : 'rgba(180,83,9,0.08)';
 
-  const animDur = prefersReducedMotion ? '0s' : undefined;
-
   // Stagger delays for fade-in
   const stagger = (i: number) => prefersReducedMotion ? 0 : 0.4 + i * 0.35;
 
@@ -81,12 +79,16 @@ const BlueprintCanvas: React.FC<{ isDark: boolean; isCpp: boolean }> = ({ isDark
 
         {/* Traversal pulses */}
         <circle r="3" fill={accent} filter="url(#bp-glow)">
-          <animateMotion dur={animDur || "3s"} repeatCount="indefinite" path="M1120,170 L1060,230 L1030,290" />
-          <animate attributeName="opacity" values="0;0.9;0.9;0" dur={animDur || "3s"} repeatCount="indefinite" />
+          {!prefersReducedMotion && <>
+            <animateMotion dur="3s" repeatCount="indefinite" path="M1120,170 L1060,230 L1030,290" />
+            <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" />
+          </>}
         </circle>
         <circle r="3" fill={accent} filter="url(#bp-glow)">
-          <animateMotion dur={animDur || "3.5s"} repeatCount="indefinite" begin="1.5s" path="M1120,170 L1180,230 L1210,290" />
-          <animate attributeName="opacity" values="0;0.9;0.9;0" dur={animDur || "3.5s"} repeatCount="indefinite" begin="1.5s" />
+          {!prefersReducedMotion && <>
+            <animateMotion dur="3.5s" repeatCount="indefinite" begin="1.5s" path="M1120,170 L1180,230 L1210,290" />
+            <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3.5s" repeatCount="indefinite" begin="1.5s" />
+          </>}
         </circle>
 
         {/* Nodes */}
@@ -101,8 +103,10 @@ const BlueprintCanvas: React.FC<{ isDark: boolean; isCpp: boolean }> = ({ isDark
           <g key={`tree-${i}`}>
             <circle cx={n.cx} cy={n.cy} r="16" fill={nodeFill} stroke={nodeStroke} strokeWidth="1.5" />
             {i === 0 && <circle cx={n.cx} cy={n.cy} r="16" fill="none" stroke={accent} strokeWidth="1" strokeOpacity="0.4">
-              <animate attributeName="r" values="16;22;16" dur={animDur || "4s"} repeatCount="indefinite" />
-              <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur={animDur || "4s"} repeatCount="indefinite" />
+              {!prefersReducedMotion && <>
+                <animate attributeName="r" values="16;22;16" dur="4s" repeatCount="indefinite" />
+                <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur="4s" repeatCount="indefinite" />
+              </>}
             </circle>}
             <text x={n.cx} y={n.cy + 4} textAnchor="middle" fill={textFill} fontSize="11" fontFamily="monospace" fontWeight="600">{n.label}</text>
           </g>
@@ -138,8 +142,10 @@ const BlueprintCanvas: React.FC<{ isDark: boolean; isCpp: boolean }> = ({ isDark
 
         {/* Traversal pulse */}
         <circle r="4" fill={accent2} filter="url(#bp-glow)" opacity="0.8">
-          <animateMotion dur={animDur || "4s"} repeatCount="indefinite" path="M1000,430 L1080,430 L1160,430 L1240,430 L1320,430" />
-          <animate attributeName="opacity" values="0;0.9;0.9;0.9;0" dur={animDur || "4s"} repeatCount="indefinite" />
+          {!prefersReducedMotion && <>
+            <animateMotion dur="4s" repeatCount="indefinite" path="M1000,430 L1080,430 L1160,430 L1240,430 L1320,430" />
+            <animate attributeName="opacity" values="0;0.9;0.9;0.9;0" dur="4s" repeatCount="indefinite" />
+          </>}
         </circle>
       </motion.g>
 
@@ -179,8 +185,10 @@ const BlueprintCanvas: React.FC<{ isDark: boolean; isCpp: boolean }> = ({ isDark
 
         {/* BFS traversal pulse */}
         <circle r="3" fill={accent} filter="url(#bp-glow)">
-          <animateMotion dur={animDur || "5s"} repeatCount="indefinite" path="M1080,580 L1160,600 L1240,580 L1220,660 L1140,680 L1050,660 L1080,580" />
-          <animate attributeName="opacity" values="0;0.8;0.8;0.8;0.8;0.8;0" dur={animDur || "5s"} repeatCount="indefinite" />
+          {!prefersReducedMotion && <>
+            <animateMotion dur="5s" repeatCount="indefinite" path="M1080,580 L1160,600 L1240,580 L1220,660 L1140,680 L1050,660 L1080,580" />
+            <animate attributeName="opacity" values="0;0.8;0.8;0.8;0.8;0.8;0" dur="5s" repeatCount="indefinite" />
+          </>}
         </circle>
       </motion.g>
 

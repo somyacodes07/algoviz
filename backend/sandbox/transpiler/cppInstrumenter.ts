@@ -78,6 +78,29 @@ export class CppInstrumenter {
       this.handleDeclaration(node);
     }
 
+    // Conditions are wrapped at their original evaluation site and evaluated
+    // exactly once by the helper. Only condition fields are touched.
+    if (['if_statement', 'while_statement', 'do_statement', 'for_statement'].includes(type)) {
+      const condition = node.childForFieldName('condition');
+      const test = condition?.type === 'condition_clause'
+        ? condition.namedChildren.find((child) => child.type !== 'init_statement' && !child.type.includes('declaration'))
+        : condition;
+      if (test && !test.type.includes('declaration')) {
+        this.addPatch(test.startIndex, `(__trace_condition(${startLine}, (`);
+        this.addPatch(test.endIndex, ')))');
+      }
+    }
+
+    if (type === 'function_definition') {
+      const body = node.childForFieldName('body');
+      const declarator = node.childForFieldName('declarator');
+      const functionName = declarator?.text.match(/([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\(/)?.[1];
+      if (body && functionName) {
+        const literal = JSON.stringify(functionName);
+        this.addPatch(body.startIndex + 1, ` __CallScope __trace_call_${body.startIndex}(${literal}, ${startLine}); `);
+      }
+    }
+
     // Inject Line Trace for statements
     if (this.isTraceable(node)) {
       this.injectTraceCall(node, startLine);
@@ -182,7 +205,10 @@ export class CppInstrumenter {
       '#include <queue>',
       '#include <deque>',
       '#include <type_traits>',
+      '#include <initializer_list>',
+      '#include <utility>',
       '',
+      'void __trace(int line, std::initializer_list<std::pair<std::string, std::string>> vars);',
       '// Forward declarations',
       'template<typename T> std::string __to_json(const T& v);',
       'template<typename T> std::string __to_json(const std::vector<T>& v);',
@@ -191,6 +217,32 @@ export class CppInstrumenter {
       'template<typename T> std::string __to_json(const std::stack<T>& s);',
       'template<typename T> std::string __to_json(const std::queue<T>& q);',
       'template<typename T> std::string __to_json(T* ptr, int depth = 0);',
+      'std::vector<std::string> __pending_events;',
+      'std::vector<std::string> __call_stack;',
+      'std::string __json_quote(const std::string& value) {',
+      String.raw`    std::string result = "\"";`,
+      '    for (char c : value) {',
+      String.raw`        if (c == '\"' || c == '\\') result += '\\';`,
+      '        if (c == \'\\n\') { result += "\\\\n"; continue; }',
+      '        if (c == \'\\r\') { result += "\\\\r"; continue; }',
+      '        if (c == \'\\t\') { result += "\\\\t"; continue; }',
+      '        result += c;',
+      '    }',
+      String.raw`    result += "\"";`,
+      '    return result;',
+      '}',
+      'void __trace_call_event(const char* type, int line, const std::string& name, size_t depth) {',
+      String.raw`    __pending_events.push_back(std::string("{\"type\":") + __json_quote(type) + ",\"line\":" + std::to_string(line) + ",\"variable\":" + __json_quote(name) + ",\"after\":" + std::to_string(depth) + "}");`,
+      '}',
+      'struct __CallScope {',
+      '    std::string name; int line;',
+      '    __CallScope(std::string fn, int ln) : name(std::move(fn)), line(ln) { __call_stack.push_back(name); __trace_call_event("call", line, name, __call_stack.size()); }',
+      '    ~__CallScope() { if (!__call_stack.empty()) __call_stack.pop_back(); __trace_call_event("return", line, name, __call_stack.size()); __trace(line, {}); }',
+      '};',
+      'bool __trace_condition(int line, bool result) {',
+      '    __pending_events.push_back(std::string("{\\"type\\":\\"compare\\",\\"line\\":") + std::to_string(line) + ",\\"result\\":" + (result ? "true}" : "false}"));',
+      '    return result;',
+      '}',
       'std::string __to_json(const std::string& v);',
       'std::string __to_json(const char* v);',
       'std::string __to_json(bool v);',
@@ -322,7 +374,19 @@ export class CppInstrumenter {
       `        std::cout << ${DQ}${BSQ}${DQ} << p.first << ${DQ}${BSQ}: ${DQ} << p.second;`,
       '        first = false;',
       '    }',
-      `    std::cout << ${DQ}}}__TRACE__${DQ} << std::endl;`,
+      `    std::cout << ${DQ}}, ${BSQ}callStack${BSQ}: [${DQ};`,
+      String.raw`    if (__call_stack.empty()) std::cout << "\"main\"";`,
+      '    for (size_t i = 0; i < __call_stack.size(); ++i) {',
+      `        if (i) std::cout << ${DQ}, ${DQ};`,
+      '        std::cout << __json_quote(__call_stack[i]);',
+      '    }',
+      `    std::cout << ${DQ}], ${BSQ}events${BSQ}: [${DQ};`,
+      '    for (size_t i = 0; i < __pending_events.size(); ++i) {',
+      `        if (i) std::cout << ${DQ}, ${DQ};`,
+      '        std::cout << __pending_events[i];',
+      '    }',
+      '    __pending_events.clear();',
+      `    std::cout << ${DQ}]}__TRACE__${DQ} << std::endl;`,
       '}',
       '',
     ];
