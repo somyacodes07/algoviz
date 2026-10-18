@@ -44,6 +44,7 @@ interface StructureVisualizerProps {
   arrayViewType?: 'cells' | 'bars';
   playerControlsProps?: PlayerControlsProps;
   events?: VisualizationEvent[];
+  onStructureAvailabilityChange?: (available: boolean) => void;
 }
 
 /**
@@ -60,6 +61,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   arrayViewType = 'cells',
   playerControlsProps,
   events = [],
+  onStructureAvailabilityChange,
 }) => {
   const [enlargedType, setEnlargedType] = useState<'tree' | 'list' | 'graph' | 'array' | 'heap' | 'hashmap' | 'stackqueue' | null>(null);
   const lastTree = useRef<TreePreview | null>(null);
@@ -110,8 +112,13 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   const heapPreview = freshHeap || (currentStepIndex === 0 ? null : lastHeap.current);
   const hashMapPreview = freshHashMap || (currentStepIndex === 0 ? null : lastHashMap.current);
   const stackQueuePreview = freshStackQueue || (currentStepIndex === 0 ? null : lastStackQueue.current);
+  const hasStructure = Boolean(treePreview || linkedListPreview || graphPreview || arrayGridPreview || heapPreview || hashMapPreview || stackQueuePreview);
 
-  if (!treePreview && !linkedListPreview && !graphPreview && !arrayGridPreview && !heapPreview && !hashMapPreview && !stackQueuePreview) {
+  useEffect(() => {
+    onStructureAvailabilityChange?.(hasStructure);
+  }, [hasStructure, onStructureAvailabilityChange]);
+
+  if (!hasStructure) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-6 border-[2px] border-dashed border-slate-900 dark:border-[var(--dark-border)] bg-slate-100 dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all duration-300">
         <span

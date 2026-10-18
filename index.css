@@ -4,7 +4,8 @@
 
 /* Keep the editor split tied to CSS breakpoints so rotate/resize stays correct. */
 .workspace-editor-pane {
-  flex: 0 0 auto;
+  flex: 1 1 0%;
+  min-height: 0;
 }
 @media (min-width: 768px) {
   .workspace-editor-pane {

@@ -151,6 +151,7 @@ const App: React.FC = () => {
 
   const [code, setCode] = useState<string>(initialAppState.code);
   const [activeTab, setActiveTab] = useState<"variables" | "stack" | "performance" | "diagrams">("diagrams");
+  const [mobileWorkspaceView, setMobileWorkspaceView] = useState<"code" | "workspace">("code");
   const [linkCopied, setLinkCopied] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [templates, setTemplates] = useState<CodeTemplate[]>([]);
@@ -723,8 +724,22 @@ const App: React.FC = () => {
               </Suspense>
             )}
 
-            <main ref={mainContainerRef} className="min-h-0 flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-5 pb-4 gap-3 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
-              <div style={{ '--editor-split': `${splitRatio}%` } as React.CSSProperties} className="workspace-editor-pane flex flex-col min-w-0 h-[70dvh] min-h-[420px] shrink-0 w-full md:h-full md:min-h-0 md:shrink">
+            <main ref={mainContainerRef} className="min-h-0 flex-1 flex flex-col md:flex-row overflow-hidden p-2 sm:p-3 md:p-5 pb-2 md:pb-4 gap-2 md:gap-3 bg-[#faf9f6]/95 dark:bg-[var(--dark-base)] z-10 relative">
+              <div role="group" aria-label="Mobile workspace view" className="grid grid-cols-2 gap-1 border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] p-1 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] md:hidden shrink-0">
+                {([{ id: 'code', label: 'Code' }, { id: 'workspace', label: 'Workspace' }] as const).map((view) => (
+                  <button
+                    key={view.id}
+                    type="button"
+                    aria-pressed={mobileWorkspaceView === view.id}
+                    onClick={() => setMobileWorkspaceView(view.id)}
+                    className={`min-h-10 px-3 text-xs font-black uppercase tracking-[0.14em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${mobileWorkspaceView === view.id ? themeColor === 'saffron' ? 'bg-saffron-500 text-slate-950' : 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[var(--dark-surface-2)]'}`}
+                  >
+                    {view.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ '--editor-split': `${splitRatio}%` } as React.CSSProperties} className={`workspace-editor-pane min-w-0 w-full min-h-0 flex-col md:h-full md:min-h-0 md:shrink ${mobileWorkspaceView === 'code' ? 'flex' : 'hidden'} md:flex`}>
                 <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface-2)]" aria-label="Loading code editor" />}>
                   <WorkspaceEditor
                     language={language}
@@ -740,7 +755,9 @@ const App: React.FC = () => {
                     onCodeChange={handleCodeChange}
                     onRun={async () => {
                       setIsPlaying(false);
-                      return await handleRun(code, language, { cppCompiler: settings.cppCompiler });
+                      const success = await handleRun(code, language, { cppCompiler: settings.cppCompiler });
+                      if (success && window.matchMedia('(max-width: 767px)').matches) setMobileWorkspaceView('workspace');
+                      return success;
                     }}
                     onShare={handleCopyLink}
                     onOpenTemplates={handleOpenTemplates}
@@ -772,7 +789,7 @@ const App: React.FC = () => {
                 />
               </div>
 
-              <div className="flex-1 flex flex-col min-w-0 h-[76dvh] min-h-[440px] shrink-0 w-full md:h-full md:min-h-0 md:shrink">
+              <div className={`flex-1 flex-col min-w-0 min-h-0 w-full md:h-full md:shrink ${mobileWorkspaceView === 'workspace' ? 'flex' : 'hidden'} md:flex`}>
                 <Suspense fallback={<div className="h-full min-h-[260px] w-full border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface)]" aria-label="Loading visualization" />}>
                   <WorkspaceVisualizer
                     activeTab={activeTab}

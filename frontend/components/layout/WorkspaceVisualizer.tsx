@@ -19,11 +19,11 @@ import { ThemeColor } from '../../theme/theme';
 import { ExecutionStep, Timeline, ComplexityAnalysis } from '../../../types';
 import { AppSettings } from '../SettingsModal';
 
-type DetailTab = 'variables' | 'stack' | 'performance';
+type WorkspacePanel = 'variables' | 'stack' | 'performance' | 'diagrams';
 
 interface WorkspaceVisualizerProps {
-  activeTab: 'variables' | 'stack' | 'performance' | 'diagrams';
-  setActiveTab: (tab: 'variables' | 'stack' | 'performance' | 'diagrams') => void;
+  activeTab: WorkspacePanel;
+  setActiveTab: (tab: WorkspacePanel) => void;
   consoleExpanded: boolean;
   setConsoleExpanded: (expanded: boolean) => void;
   themeColor: ThemeColor;
@@ -126,14 +126,11 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   onSeekStep,
   playerControlsProps,
 }) => {
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [hasStructure, setHasStructure] = useState(false);
   const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
   const isSaffron = themeColor === 'saffron';
-  const accentText = isSaffron ? 'text-saffron-700 dark:text-saffron-300' : 'text-blue-700 dark:text-blue-300';
   const accentBg = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
-  const selectedTabClass = isSaffron
-    ? 'bg-saffron-50 text-saffron-800 dark:bg-saffron-900/30 dark:text-saffron-200'
-    : 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
+  const panel = activeTab === 'diagrams' && !hasStructure ? 'variables' : activeTab;
 
   const handleTogglePin = useCallback((name: string) => {
     setPinnedVars((prev) => {
@@ -155,43 +152,36 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
     return null;
   }, [timeline, currentStepIndex]);
 
-  const openDetails = (tab: DetailTab) => {
-    setActiveTab(tab);
-    setDetailsOpen(true);
-  };
-
-  const detailButtons: { id: DetailTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'variables', label: 'Variables', icon: <Code2 size={14} /> },
-    { id: 'stack', label: 'Call stack', icon: <Layers size={14} /> },
-    { id: 'performance', label: 'Complexity', icon: <Activity size={14} /> },
+  const panelOptions: { id: WorkspacePanel; label: string }[] = [
+    { id: 'diagrams', label: 'Visualization' },
+    { id: 'variables', label: 'Variables' },
+    { id: 'stack', label: 'Call stack' },
+    { id: 'performance', label: 'Complexity' },
   ];
+
+  const panelHeading = panelOptions.find((option) => option.id === panel)?.label || 'Visualization';
 
   return (
     <div className="relative h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <Network size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} />
-          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">Live visualization</span>
+          {panel === 'diagrams' ? <Network size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} /> : panel === 'variables' ? <Code2 size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} /> : panel === 'stack' ? <Layers size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} /> : <Activity size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} />}
+          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">{panelHeading}</span>
           {currentStep.line > 0 && <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Line {currentStep.line}</span>}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            if (!detailsOpen) {
-              if (activeTab === 'diagrams') setActiveTab('variables');
-              // On narrow screens the console and Inspect drawer compete for
-              // the same small viewport. Keep the console header available.
-              if (window.matchMedia('(max-width: 767px)').matches) setConsoleExpanded(false);
-            }
-            setDetailsOpen((open) => !open);
-          }}
-          aria-expanded={detailsOpen}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-200 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] hover:bg-slate-100 dark:hover:bg-[var(--dark-surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-        >
-          <Code2 size={13} />
-          Inspect
-          {detailsOpen ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
-        </button>
+        <label className="flex items-center gap-2 shrink-0">
+          <span className="hidden sm:inline text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Panel</span>
+          <select
+            aria-label="Workspace panel"
+            value={panel}
+            onChange={(event) => setActiveTab(event.target.value as WorkspacePanel)}
+            className="max-w-[145px] sm:max-w-none px-2 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wide border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-200 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          >
+            {panelOptions.map((option) => (
+              <option key={option.id} value={option.id} disabled={option.id === 'diagrams' && !hasStructure}>{option.label}</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] bg-slate-50 dark:bg-[var(--dark-base)] min-h-10 shrink-0" aria-live="polite" aria-atomic="true">
@@ -207,56 +197,24 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
       )}
 
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-transparent p-3 relative">
-        <StructureVisualizer
-          variables={currentStep.variables || {}}
-          prevVariables={prevStepVariables.variables || {}}
-          events={currentStep.events || []}
-          themeColor={themeColor}
-          currentStepIndex={currentStepIndex}
-          arrayViewType={settings.arrayViewType}
-          playerControlsProps={playerControlsProps}
-        />
-      </div>
-
-      <AnimatePresence initial={false}>
-        {detailsOpen && (
-          <motion.section
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'min(30vh, 240px)', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute inset-x-0 bottom-10 z-30 overflow-hidden border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shadow-[0_-4px_16px_rgba(15,23,42,0.18)] md:relative md:inset-auto md:z-auto md:shrink-0 md:shadow-none"
-            aria-label="Execution details"
-          >
-              <div role="tablist" aria-label="Execution details" className="flex items-center gap-1 px-2 pt-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] overflow-x-auto">
-              {detailButtons.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  role="tab"
-                  id={`execution-detail-tab-${tab.id}`}
-                  aria-selected={activeTab === tab.id}
-                  aria-controls="execution-detail-panel"
-                  className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-2 text-[10px] sm:text-xs font-bold border-b-2 whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${activeTab === tab.id ? `${selectedTabClass} border-current` : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'}`}
-                >
-                  {tab.icon}{tab.label}
-                </button>
-              ))}
-              <span className={`ml-auto hidden sm:block pr-2 text-[10px] font-mono ${accentText}`}>Step {Math.max(0, currentStepIndex + 1)} / {timeline.length}</span>
-            </div>
-            <div role="tabpanel" id="execution-detail-panel" aria-labelledby={`execution-detail-tab-${activeTab}`} className="h-[calc(100%-42px)] overflow-y-auto custom-scrollbar p-3">
-              {activeTab === 'variables' ? (
-                <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} pinnedVars={pinnedVars} onTogglePin={handleTogglePin} timeline={timeline} currentStepIndex={currentStepIndex} onSeekStep={onSeekStep} />
-              ) : activeTab === 'stack' ? (
-                <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} timeline={timeline} currentStepIndex={currentStepIndex} />
-              ) : (
-                <PerformancePanel timeline={timeline} currentStepIndex={currentStepIndex} analysis={complexityAnalysis} themeColor={themeColor} />
-              )}
-            </div>
-          </motion.section>
+        <div className={panel === 'diagrams' ? 'h-full' : 'absolute inset-0 invisible pointer-events-none'} aria-hidden={panel !== 'diagrams'}>
+          <StructureVisualizer
+            variables={currentStep.variables || {}}
+            prevVariables={prevStepVariables.variables || {}}
+            events={currentStep.events || []}
+            themeColor={themeColor}
+            currentStepIndex={currentStepIndex}
+            arrayViewType={settings.arrayViewType}
+            playerControlsProps={playerControlsProps}
+            onStructureAvailabilityChange={setHasStructure}
+          />
+        </div>
+        {panel === 'variables' && (
+          <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} pinnedVars={pinnedVars} onTogglePin={handleTogglePin} timeline={timeline} currentStepIndex={currentStepIndex} onSeekStep={onSeekStep} />
         )}
-      </AnimatePresence>
+        {panel === 'stack' && <CallStackPanel stack={currentStep.callStack || []} themeColor={themeColor} timeline={timeline} currentStepIndex={currentStepIndex} />}
+        {panel === 'performance' && <PerformancePanel timeline={timeline} currentStepIndex={currentStepIndex} analysis={complexityAnalysis} themeColor={themeColor} />}
+      </div>
 
       <div className={`flex flex-col border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-base)] transition-[height] duration-200 ease-out ${consoleExpanded ? 'h-40 sm:h-48 shrink-0' : 'h-10 shrink-0'}`}>
         <button
