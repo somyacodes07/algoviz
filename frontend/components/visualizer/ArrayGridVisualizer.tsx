@@ -213,7 +213,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
   useEffect(() => {
     const viewport = arrayViewportRef.current;
-    if (!viewport || arrayLength <= ARRAY_VIRTUALIZATION_THRESHOLD || activeArrayIndices.length === 0) return;
+    if (!viewport || activeArrayIndices.length === 0) return;
     const capacity = Math.max(1, Math.floor(viewport.clientWidth / ARRAY_ITEM_STRIDE) - 2);
     const sorted = [...new Set<number>(activeArrayIndices as number[])].sort((a, b) => a - b);
     let first = sorted[0];
@@ -224,7 +224,9 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
       first = Number.isInteger(preferred) && preferred >= 0 ? preferred : first;
       last = first;
     }
-    const left = first * ARRAY_ITEM_STRIDE;
+    // Include the row's horizontal inset so small arrays and virtual windows
+    // use the same index-to-scroll coordinate system.
+    const left = 8 + first * ARRAY_ITEM_STRIDE;
     const right = (last + 1) * ARRAY_ITEM_STRIDE;
     if (left < viewport.scrollLeft || right > viewport.scrollLeft + viewport.clientWidth) {
       const nextLeft = Math.max(0, left - Math.max(0, (viewport.clientWidth - (right - left)) / 2));
@@ -405,7 +407,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
           </div>
         )}
 
-        <div ref={arrayViewportRef} role="region" aria-label={`${preview.sourceName} array diagram`} tabIndex={0} onScroll={updateArrayWindow} className={`diagram-viewport mt-6 ${virtualized ? 'custom-scrollbar' : 'no-scrollbar'} pb-4 pt-16 min-h-[190px] w-full`}>
+        <div ref={arrayViewportRef} role="region" aria-label={`${preview.sourceName} array diagram`} tabIndex={0} onScroll={updateArrayWindow} className="diagram-viewport custom-scrollbar mt-6 pb-4 pt-16 min-h-[190px] w-full">
           <div className="flex min-w-full items-end gap-2 px-2 w-max">
             {virtualized && <div aria-hidden="true" className="shrink-0" style={{ width: renderStart * ARRAY_ITEM_STRIDE }} />}
             {visibleItems.map((i) => {

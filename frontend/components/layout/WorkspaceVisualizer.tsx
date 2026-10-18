@@ -167,7 +167,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   ];
 
   return (
-    <div className="h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 overflow-hidden">
+    <div className="relative h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <Network size={16} className={isSaffron ? 'text-saffron-500' : 'text-blue-500'} />
@@ -177,7 +177,12 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         <button
           type="button"
           onClick={() => {
-            if (!detailsOpen && activeTab === 'diagrams') setActiveTab('variables');
+            if (!detailsOpen) {
+              if (activeTab === 'diagrams') setActiveTab('variables');
+              // On narrow screens the console and Inspect drawer compete for
+              // the same small viewport. Keep the console header available.
+              if (window.matchMedia('(max-width: 767px)').matches) setConsoleExpanded(false);
+            }
             setDetailsOpen((open) => !open);
           }}
           aria-expanded={detailsOpen}
@@ -217,27 +222,30 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
         {detailsOpen && (
           <motion.section
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'min(38vh, 300px)', opacity: 1 }}
+            animate={{ height: 'min(30vh, 240px)', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="shrink-0 overflow-hidden border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)]"
+            className="absolute inset-x-0 bottom-10 z-30 overflow-hidden border-t-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shadow-[0_-4px_16px_rgba(15,23,42,0.18)] md:relative md:inset-auto md:z-auto md:shrink-0 md:shadow-none"
             aria-label="Execution details"
           >
-            <div className="flex items-center gap-1 px-2 pt-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] overflow-x-auto">
+              <div role="tablist" aria-label="Execution details" className="flex items-center gap-1 px-2 pt-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] overflow-x-auto">
               {detailButtons.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  aria-pressed={activeTab === tab.id}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 text-[10px] sm:text-xs font-bold border-b-2 whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${activeTab === tab.id ? `${selectedTabClass} border-current` : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'}`}
+                  role="tab"
+                  id={`execution-detail-tab-${tab.id}`}
+                  aria-selected={activeTab === tab.id}
+                  aria-controls="execution-detail-panel"
+                  className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-2 text-[10px] sm:text-xs font-bold border-b-2 whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${activeTab === tab.id ? `${selectedTabClass} border-current` : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'}`}
                 >
                   {tab.icon}{tab.label}
                 </button>
               ))}
               <span className={`ml-auto hidden sm:block pr-2 text-[10px] font-mono ${accentText}`}>Step {Math.max(0, currentStepIndex + 1)} / {timeline.length}</span>
             </div>
-            <div className="h-[calc(100%-42px)] overflow-y-auto custom-scrollbar p-3">
+            <div role="tabpanel" id="execution-detail-panel" aria-labelledby={`execution-detail-tab-${activeTab}`} className="h-[calc(100%-42px)] overflow-y-auto custom-scrollbar p-3">
               {activeTab === 'variables' ? (
                 <VariablesPanel variables={currentStep.variables || {}} prevVariables={prevStepVariables.variables || {}} themeColor={themeColor} pinnedVars={pinnedVars} onTogglePin={handleTogglePin} timeline={timeline} currentStepIndex={currentStepIndex} onSeekStep={onSeekStep} />
               ) : activeTab === 'stack' ? (
