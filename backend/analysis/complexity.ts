@@ -266,6 +266,7 @@ function buildEstimate(input: {
   observedOperations: number;
   uniqueExecutedLines: number;
   peakStackDepth: number;
+  hasRecursiveTreeInsertion: boolean;
 }) {
   const rationale: string[] = [];
   const recursionDetected = input.recursiveFunctions.length > 0;
@@ -287,6 +288,11 @@ function buildEstimate(input: {
 
   if (input.hasArraySort) {
     candidates.add('n log n');
+  }
+
+  if (input.hasRecursiveTreeInsertion) {
+    candidates.add('n^2');
+    rationale.push('Repeated recursive binary-search-tree insertion is O(n²) in the worst case.');
   }
 
   if (recursionDetected) {
@@ -319,7 +325,7 @@ function buildEstimate(input: {
     );
   } else if (dominant === 'n') {
     rationale.push('Detected one dominant iterative or recursive pass.');
-    rationale.push(`Detected self-recursion in ${input.recursiveFunctions.join(', ')}.`);
+    if (recursionDetected) rationale.push(`Detected self-recursion in ${input.recursiveFunctions.join(', ')}.`);
     if (!recursionDetected) {
       rationale.pop();
       rationale.push('Detected one dominant linear traversal in the analyzed control flow.');
@@ -328,7 +334,9 @@ function buildEstimate(input: {
     rationale.push('Detected a combined linear and logarithmic growth pattern.');
   } else if (/^n\^\d+$/.test(dominant)) {
     const power = dominant.split('^')[1];
-    rationale.push(`Detected a polynomial loop nest with dominant power ${power}.`);
+    if (!input.hasRecursiveTreeInsertion) {
+      rationale.push(`Detected a polynomial loop nest with dominant power ${power}.`);
+    }
   } else if (dominant.includes('log n')) {
     rationale.push(`Detected a mixed loop stack shaped like ${dominant}.`);
   }
@@ -492,7 +500,19 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
 
   // ── Timeline-based heuristic (used when AST parsing fails, i.e. for C++) ──
   if (!astParsed && timeline.length > 0) {
-    const heuristic = inferComplexityFromTimeline(code, timeline, hotspots);
+    // Runtime call frames are available even when the source is C++ and Acorn
+    // cannot parse it. Repeated frame names in one trace reveal recursion.
+    for (const step of timeline) {
+      const frameCounts = new Map<string, number>();
+      for (const frame of step.callStack) {
+        const name = frame.split('(')[0].trim();
+        if (name) {
+          frameCounts.set(name, (frameCounts.get(name) || 0) + 1);
+        }
+      }
+      for (const [name, count] of frameCounts) if (count > 1) recursiveFunctions.add(name);
+    }
+    const heuristic = inferComplexityFromTimeline(code);
     maxLoopDepth = heuristic.maxLoopDepth;
     hasLogarithmicLoop = heuristic.hasLogarithmicLoop;
     hasArraySort = heuristic.hasArraySort;
@@ -509,6 +529,8 @@ export function analyzeComplexity(code: string, timeline: Timeline): ComplexityA
     observedOperations,
     uniqueExecutedLines,
     peakStackDepth,
+    hasRecursiveTreeInsertion: /\b(left|right)\b/i.test(code) &&
+      Array.from(recursiveFunctions).some((name) => /insert/i.test(name)),
   });
 
   const spaceEstimate = buildSpaceEstimate({
@@ -543,14 +565,12 @@ function buildSpaceEstimate(input: {
   const maxAlloc = estimateInputSize(input.timeline);
 
   if (input.recursiveFunctions.length > 0) {
-    if (input.peakStackDepth > 2) {
-      rationale.push(`Auxiliary call stack space O(h) with peak stack depth ${input.peakStackDepth}.`);
-      return {
-        notation: input.hasBranchingRecursion ? 'O(n)' : 'O(n)',
-        confidence: 'high' as const,
-        rationale,
-      };
-    }
+    rationale.push(`Recursive calls use O(h) auxiliary stack space; worst-case depth is O(n) (peak observed: ${input.peakStackDepth}).`);
+    return {
+      notation: 'O(n)',
+      confidence: 'medium' as const,
+      rationale,
+    };
   }
 
   if (maxAlloc > 50) {
@@ -572,72 +592,57 @@ function buildSpaceEstimate(input: {
 
 // ─── Timeline-Based Complexity Heuristic ──────────────────────────────────────
 //
-// When we can't parse the source as JS (e.g. C++), we infer loop structure
-// from the runtime trace:
-//
-//  1. Count how many distinct "hot lines" appear (lines hit > 1x).
-//  2. Estimate loop nesting depth from line-repetition patterns.
-//  3. Look for geometric growth signatures (log n loops).
-//  4. Check the source text for sort() calls.
-//
-// This gives a surprisingly accurate estimate for most DSA algorithms.
+// When Acorn cannot parse the source (e.g. C++), inspect loop nesting in the
+// source itself. A single short run is too small to infer asymptotic growth
+// from line hit counts reliably.
 
 function inferComplexityFromTimeline(
   code: string,
-  timeline: Timeline,
-  hotspots: { line: number; hits: number; share: number }[],
 ): {
   maxLoopDepth: number;
   hasLogarithmicLoop: boolean;
   hasArraySort: boolean;
   loopCandidates: string[];
 } {
-  // Count how many lines are "hot" (hit more than once) — these are loop bodies
-  const hotLines = hotspots.filter((h) => h.hits > 1);
-  const totalOps = timeline.length;
-  const inputSize = estimateInputSize(timeline);
-
-  // Estimate loop nesting from hit patterns.
-  // A single loop body line hit N times → O(n).
-  // Two hot lines where one is hit N² times → O(n²).
+  const sanitized = code
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ')
+    .replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, ' ');
+  const loops: Array<{ start: number; end: number; geometric: boolean }> = [];
+  const loopPattern = /\b(for|while|do)\b/g;
+  let match: RegExpExecArray | null;
+  while ((match = loopPattern.exec(sanitized))) {
+    let bodyStart = match.index + match[0].length;
+    let geometric = false;
+    if (match[1] !== 'do') {
+      while (/\s/.test(sanitized[bodyStart] || '')) bodyStart++;
+      if (sanitized[bodyStart] !== '(') continue;
+      let parens = 0;
+      let headerEnd = bodyStart;
+      for (; headerEnd < sanitized.length; headerEnd++) {
+        if (sanitized[headerEnd] === '(') parens++;
+        if (sanitized[headerEnd] === ')' && --parens === 0) break;
+      }
+      const header = sanitized.slice(bodyStart, headerEnd + 1);
+      geometric = /(?:\*=|\/=|<<=|>>=|=\s*\w+\s*[*/]\s*\d)/.test(header);
+      bodyStart = headerEnd + 1;
+      while (/\s/.test(sanitized[bodyStart] || '')) bodyStart++;
+    }
+    if (sanitized[bodyStart] !== '{') continue;
+    let braces = 0;
+    let bodyEnd = bodyStart;
+    for (; bodyEnd < sanitized.length; bodyEnd++) {
+      if (sanitized[bodyEnd] === '{') braces++;
+      if (sanitized[bodyEnd] === '}' && --braces === 0) break;
+    }
+    loops.push({ start: bodyStart, end: bodyEnd, geometric });
+  }
   let maxLoopDepth = 0;
-  if (hotLines.length > 0) {
-    const maxHits = hotLines[0].hits; // hotspots are sorted by hits desc
-
-    if (inputSize > 1) {
-      if (maxHits >= 0.2 * Math.pow(inputSize, 3)) {
-        maxLoopDepth = 3; // O(n³)
-      } else if (maxHits >= 0.2 * Math.pow(inputSize, 2)) {
-        maxLoopDepth = 2; // O(n²)
-      } else if (maxHits >= 0.2 * inputSize * Math.log2(inputSize)) {
-        // This is characteristic of O(n log n). We set maxLoopDepth = 1, but we will add 'n log n' to candidates below
-        maxLoopDepth = 1;
-        // In this specific case, it's n log n without array sort
-        if (maxHits > 1.5 * inputSize) {
-          // Signal strong enough to be n log n
-        }
-      } else if (maxHits >= 0.2 * inputSize) {
-        maxLoopDepth = 1; // O(n)
-      }
-    } else {
-      // Fallback: use absolute hit counts
-      if (maxHits > 100) maxLoopDepth = 2;
-      else if (maxHits > 1) maxLoopDepth = 1;
-    }
+  for (const loop of loops) {
+    const depth = loops.filter((other) => other.start <= loop.start && other.end >= loop.end).length;
+    maxLoopDepth = Math.max(maxLoopDepth, depth);
   }
-
-  // Check for logarithmic growth: if a hot line is hit roughly log2(n) times
-  let hasLogarithmicLoop = false;
-  if (hotLines.length > 0) {
-    if (inputSize > 2) {
-      const logN = Math.log2(inputSize);
-      const topHits = hotLines[0].hits;
-      if (topHits <= logN * 2 && topHits >= logN * 0.5 && totalOps < inputSize) {
-        hasLogarithmicLoop = true;
-        maxLoopDepth = Math.max(maxLoopDepth, 1);
-      }
-    }
-  }
+  const hasLogarithmicLoop = loops.some((loop) => loop.geometric);
 
   // Check source for sort() calls (works for both C++ and JS)
   const lowerCode = code.toLowerCase();
@@ -646,20 +651,7 @@ function inferComplexityFromTimeline(
 
   // Build loop candidates
   const loopCandidates: string[] = [];
-  let isNLogN = hasArraySort && maxLoopDepth <= 1;
-
-  if (inputSize > 1) {
-    if (
-      hotLines.length > 0 &&
-      hotLines[0].hits >= 0.2 * inputSize * Math.log2(inputSize) &&
-      hotLines[0].hits > 1.5 * inputSize
-    ) {
-      // if we hit something more than 1.5N times, and it matches N log N scale, it's likely N log N (like merge sort)
-      if (maxLoopDepth <= 1) {
-        isNLogN = true;
-      }
-    }
-  }
+  const isNLogN = hasArraySort && maxLoopDepth <= 1;
 
   if (isNLogN) {
     loopCandidates.push('n log n');

@@ -16,6 +16,7 @@ interface ExecutionState {
 
 interface ExecutionControls {
   handleRun: (code: string, language: string, config?: ExecutionConfig) => Promise<boolean>;
+  clearExecution: () => void;
   setIsPlaying: (playing: boolean) => void;
   setSpeed: (speed: number) => void;
   setCurrentStepIndex: (index: number | ((prev: number) => number)) => void;
@@ -40,6 +41,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
 
   const timerRef = useRef<number | null>(null);
   const breakpointsRef = useRef<Set<number>>(breakpoints);
+  const executionRequestRef = useRef(0);
 
   // Keep ref in sync with state for use inside interval callback
   useEffect(() => {
@@ -47,11 +49,16 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
   }, [breakpoints]);
 
   const handleRun = useCallback(async (code: string, language: string, config?: ExecutionConfig): Promise<boolean> => {
+    const requestId = ++executionRequestRef.current;
     setExecutionError(null);
     setIsPlaying(false);
     setIsExecuting(true);
+    setTimeline([]);
+    setComplexityAnalysis(null);
+    setCurrentStepIndex(-1);
     try {
       const { timeline: rawTimeline, analysis } = await executeCode(code, language, config);
+      if (requestId !== executionRequestRef.current) return false;
 
       // Apply structural sharing & state diff engine to raw timeline steps
       const { steps: result } = processTimelineDiffEngine(rawTimeline);
@@ -65,14 +72,26 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
       setCurrentStepIndex(0);
       return true;
     } catch (e: any) {
+      if (requestId !== executionRequestRef.current) return false;
       setExecutionError(e.message || 'Execution Failed');
       setTimeline([]);
       setComplexityAnalysis(null);
       setCurrentStepIndex(-1);
       return false;
     } finally {
-      setIsExecuting(false);
+      if (requestId === executionRequestRef.current) setIsExecuting(false);
     }
+  }, []);
+
+  const clearExecution = useCallback(() => {
+    // Invalidate an in-flight run so it cannot repopulate results for older source.
+    executionRequestRef.current += 1;
+    setTimeline([]);
+    setComplexityAnalysis(null);
+    setCurrentStepIndex(-1);
+    setIsPlaying(false);
+    setIsExecuting(false);
+    setExecutionError(null);
   }, []);
 
   useEffect(() => {
@@ -159,6 +178,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
     },
     controls: {
       handleRun,
+      clearExecution,
       setIsPlaying,
       setSpeed,
       setCurrentStepIndex,

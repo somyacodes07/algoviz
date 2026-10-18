@@ -316,7 +316,7 @@ const PerformancePanel: React.FC<PerformancePanelProps> = ({
           </div>
         ) : null}
         <p className="mt-3 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
-          Estimates are pattern-based learning hints. One run cannot prove an algorithm’s Big-O bound.
+          Inferred from the code and this run. Compare input sizes to reason about worst-case Big-O.
         </p>
       </motion.section>
 

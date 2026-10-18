@@ -87,7 +87,7 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   // Keep last-known structures across temporary scope changes, but never mutate
   // refs during render: concurrent renders may be abandoned by React.
   useEffect(() => {
-    if (currentStepIndex === 0) {
+    if (currentStepIndex <= 0) {
       lastTree.current = null;
       lastLinkedList.current = null;
       lastGraph.current = null;
@@ -106,13 +106,13 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
   }, [currentStepIndex, freshTree, freshLinkedList, freshGraph, freshArrayGrid, freshHeap, freshHashMap, freshStackQueue]);
 
   // Use fresh values if available, otherwise fall back to last known
-  const treePreview = freshTree || (currentStepIndex === 0 ? null : lastTree.current);
-  const linkedListPreview = freshLinkedList || (currentStepIndex === 0 ? null : lastLinkedList.current);
-  const graphPreview = freshGraph || (currentStepIndex === 0 ? null : lastGraph.current);
-  const arrayGridPreview = freshArrayGrid || (currentStepIndex === 0 ? null : lastArrayGrid.current);
-  const heapPreview = freshHeap || (currentStepIndex === 0 ? null : lastHeap.current);
-  const hashMapPreview = freshHashMap || (currentStepIndex === 0 ? null : lastHashMap.current);
-  const stackQueuePreview = freshStackQueue || (currentStepIndex === 0 ? null : lastStackQueue.current);
+  const treePreview = freshTree || (currentStepIndex <= 0 ? null : lastTree.current);
+  const linkedListPreview = freshLinkedList || (currentStepIndex <= 0 ? null : lastLinkedList.current);
+  const graphPreview = freshGraph || (currentStepIndex <= 0 ? null : lastGraph.current);
+  const arrayGridPreview = freshArrayGrid || (currentStepIndex <= 0 ? null : lastArrayGrid.current);
+  const heapPreview = freshHeap || (currentStepIndex <= 0 ? null : lastHeap.current);
+  const hashMapPreview = freshHashMap || (currentStepIndex <= 0 ? null : lastHashMap.current);
+  const stackQueuePreview = freshStackQueue || (currentStepIndex <= 0 ? null : lastStackQueue.current);
   const hasStructure = Boolean(treePreview || linkedListPreview || graphPreview || arrayGridPreview || heapPreview || hashMapPreview || stackQueuePreview);
 
   useEffect(() => {
@@ -129,10 +129,12 @@ const StructureVisualizer: React.FC<StructureVisualizerProps> = ({
           Visualizer
         </span>
         <span className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500 text-center">
-          No active structure detected.
+          {currentStepIndex < 0 ? 'Run code to build a live diagram.' : 'No structure at this step.'}
         </span>
         <span className="text-xs font-medium text-slate-400 dark:text-slate-600 max-w-[250px] text-center">
-          No visual structure is present at this step. Inspect values below, or use an array or data structure to build a live view.
+          {currentStepIndex < 0
+            ? 'Arrays, lists, trees, and graphs appear here as your code runs.'
+            : 'Try an array, list, tree, or graph example to see its state here.'}
         </span>
       </div>
     );

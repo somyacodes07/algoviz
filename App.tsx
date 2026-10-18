@@ -250,6 +250,7 @@ const App: React.FC = () => {
   } = state;
   const {
     handleRun,
+    clearExecution,
     setIsPlaying,
     setSpeed,
     togglePlayPause,
@@ -373,6 +374,7 @@ const App: React.FC = () => {
       const message = event.data;
       if (message.command === 'setContext') {
         const newLang = normalizeLanguage(message.language);
+        clearExecution();
         setLanguage(newLang);
         setCode(message.code || getDefaultCode(newLang));
         setPage('editor');
@@ -395,7 +397,7 @@ const App: React.FC = () => {
     }
 
     return () => window.removeEventListener('message', handleMessage);
-  }, [setIsPlaying]);
+  }, [clearExecution, setIsPlaying]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -412,6 +414,7 @@ const App: React.FC = () => {
       setLinkCopied(false);
 
       if (nextPage === "editor") {
+        clearExecution();
         setLanguage(nextLanguage);
         if (shared?.code) {
           setCode(shared.code);
@@ -423,7 +426,7 @@ const App: React.FC = () => {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [language, setIsPlaying]);
+  }, [clearExecution, language, setIsPlaying]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -477,7 +480,8 @@ const App: React.FC = () => {
   }, [templateMenuOpen]);
 
   const handleCodeChange = (newCode: string | undefined) => {
-    if (newCode !== undefined) {
+    if (newCode !== undefined && newCode !== code) {
+      clearExecution();
       setCode(newCode);
       setIsPlaying(false);
     }
@@ -498,6 +502,7 @@ const App: React.FC = () => {
   const handleLanguageSelect = (lang: string) => {
     const nextLanguage = normalizeLanguage(lang);
 
+    clearExecution();
     setIsPlaying(false);
     setLanguage(nextLanguage);
     setCode(getDefaultCode(nextLanguage));
@@ -507,6 +512,7 @@ const App: React.FC = () => {
   };
 
   const handleTemplateSelect = (template: CodeTemplate) => {
+    clearExecution();
     setCode(template.code);
     setIsPlaying(false);
     setTemplateMenuOpen(false);
@@ -882,6 +888,7 @@ const App: React.FC = () => {
               themeColor={themeColor}
               onSave={saveSnapshot}
               onLoad={(snap) => {
+                clearExecution();
                 setCode(snap.code);
                 setLanguage(snap.language as AppLanguage);
                 setSnapshotsOpen(false);
