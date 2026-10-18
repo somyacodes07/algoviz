@@ -1067,11 +1067,11 @@ int main() {
     insert(root, 20);
     insert(root, 40);
     
-    cout << "\nInorder traversal: ";
+    cout << endl << "Inorder traversal: ";
     inorder(root);
-    cout << "\nPreorder traversal: ";
+    cout << endl << "Preorder traversal: ";
     preorder(root);
-    cout << "\nPostorder traversal: ";
+    cout << endl << "Postorder traversal: ";
     postorder(root);
     cout << endl;
     return 0;
