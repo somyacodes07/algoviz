@@ -43,9 +43,6 @@ const Controls: React.FC<ControlsProps> = ({
   const [hoverPct, setHoverPct] = useState<number | null>(null);
   const [isDraggingState, setIsDraggingState] = useState(false);
 
-  const playBtnClass = isSaffron
-    ? 'bg-saffron-500 hover:bg-saffron-600'
-    : 'bg-blue-500 hover:bg-blue-600';
   const progressFillClass = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
   const stepBadgeClass = isSaffron
     ? 'text-saffron-700 dark:text-saffron-400 bg-saffron-50 dark:bg-[var(--dark-surface-2)] border-saffron-500 dark:border-saffron-600'
@@ -130,7 +127,7 @@ const Controls: React.FC<ControlsProps> = ({
 
         <button
           onClick={onPlayPause}
-          className={`p-2 sm:p-2 text-white border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none ${playBtnClass}`}
+          className="theme-accent-button p-2 sm:p-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none"
           title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
         >
           {isPlaying ? (

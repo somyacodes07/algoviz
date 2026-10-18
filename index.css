@@ -295,6 +295,9 @@ main {
 
 /* Fallback / default — cool blue (matches C++ theme) */
 :root {
+  --theme-button-bg: #3b82f6;
+  --theme-button-hover: #2563eb;
+  --theme-button-text: #ffffff;
   --dark-base:              #0c1220;
   --dark-surface:           #111827;
   --dark-surface-2:         #162032;
@@ -315,24 +318,28 @@ main {
 }
 
 /* ─── WARM palette (JavaScript / Saffron) ──────────────────────────────── */
-/* Neutral charcoal surfaces let the saffron accent carry the warmth.       */
+/* Amber-tinted darks with earthy warmth                                    */
 .theme-saffron {
-  --dark-base:              #111214;
-  --dark-surface:           #18191b;
-  --dark-surface-2:         #202123;
-  --dark-surface-3:         #292a2c;
-  --dark-border:            #3a342d;
-  --dark-border-dim:        #2e2b27;
-  --dark-border-bright:     #554637;
+  --theme-button-bg:        #f97316;
+  --theme-button-hover:     #ea580c;
+  --dark-base:              #12100a;
+  --dark-surface:           #1a1610;
+  --dark-surface-2:         #221c14;
+  --dark-surface-3:         #2c241a;
+  --dark-border:            #3d3525;
+  --dark-border-dim:        #302818;
+  --dark-border-bright:     #554830;
   --dark-shadow:            rgba(0, 0, 0, 0.50);
-  --dark-scrollbar-track:   #18191b;
-  --dark-scrollbar-thumb:   rgba(205, 125, 55, 0.42);
-  --dark-scrollbar-thumb-hover: rgba(235, 145, 65, 0.64);
+  --dark-scrollbar-track:   #18140e;
+  --dark-scrollbar-thumb:   rgba(180, 140, 90, 0.40);
+  --dark-scrollbar-thumb-hover: rgba(200, 160, 100, 0.60);
 }
 
 /* ─── COOL palette (C++ / Blue) ────────────────────────────────────────── */
 /* Navy-tinted darks with icy precision                                     */
 .theme-blue {
+  --theme-button-bg:        #3b82f6;
+  --theme-button-hover:     #2563eb;
   --dark-base:              #0a0e1a;
   --dark-surface:           #0f1524;
   --dark-surface-2:         #141c30;
@@ -344,6 +351,15 @@ main {
   --dark-scrollbar-track:   #0c1220;
   --dark-scrollbar-thumb:   rgba(100, 140, 200, 0.40);
   --dark-scrollbar-thumb-hover: rgba(130, 170, 220, 0.60);
+}
+
+.theme-accent-button {
+  background-color: var(--theme-button-bg);
+  color: var(--theme-button-text);
+}
+
+.theme-accent-button:hover:not(:disabled) {
+  background-color: var(--theme-button-hover);
 }
 
 /* ─── Neo-brutalist dark mode glow on interactive elements ────────────── */

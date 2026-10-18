@@ -132,11 +132,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             }}
             disabled={isExecuting}
             title="Run Code (Cmd/Ctrl + Enter)"
-            className={`flex items-center justify-center gap-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none min-w-[90px] ${
-              isExecuting
-                ? isSaffron ? 'bg-saffron-600 animate-pulse cursor-wait' : 'bg-blue-600 animate-pulse cursor-wait'
-                : isSaffron ? 'bg-saffron-500 hover:bg-saffron-600' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
+            className={`theme-accent-button flex items-center justify-center gap-2 border-[2px] border-slate-900 dark:border-[var(--dark-border)] px-6 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] shadow-[2px_2px_0_rgba(15,23,42,1)] dark:shadow-[2px_2px_0_var(--dark-shadow)] transition-all hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-none min-w-[90px] ${isExecuting ? 'animate-pulse cursor-wait' : ''}`}
           >
             {isExecuting ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="currentColor" />}
             {isExecuting ? 'Running' : 'Run'}
