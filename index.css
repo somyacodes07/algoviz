@@ -315,19 +315,19 @@ main {
 }
 
 /* ─── WARM palette (JavaScript / Saffron) ──────────────────────────────── */
-/* Amber-tinted darks with earthy warmth                                    */
+/* Neutral charcoal surfaces let the saffron accent carry the warmth.       */
 .theme-saffron {
-  --dark-base:              #12100a;
-  --dark-surface:           #1a1610;
-  --dark-surface-2:         #221c14;
-  --dark-surface-3:         #2c241a;
-  --dark-border:            #3d3525;
-  --dark-border-dim:        #302818;
-  --dark-border-bright:     #554830;
+  --dark-base:              #111214;
+  --dark-surface:           #18191b;
+  --dark-surface-2:         #202123;
+  --dark-surface-3:         #292a2c;
+  --dark-border:            #3a342d;
+  --dark-border-dim:        #2e2b27;
+  --dark-border-bright:     #554637;
   --dark-shadow:            rgba(0, 0, 0, 0.50);
-  --dark-scrollbar-track:   #18140e;
-  --dark-scrollbar-thumb:   rgba(180, 140, 90, 0.40);
-  --dark-scrollbar-thumb-hover: rgba(200, 160, 100, 0.60);
+  --dark-scrollbar-track:   #18191b;
+  --dark-scrollbar-thumb:   rgba(205, 125, 55, 0.42);
+  --dark-scrollbar-thumb-hover: rgba(235, 145, 65, 0.64);
 }
 
 /* ─── COOL palette (C++ / Blue) ────────────────────────────────────────── */

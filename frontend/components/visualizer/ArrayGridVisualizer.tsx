@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Columns, Grid, Play, RefreshCw, Sparkles, ArrowDown, Maximize2 } from 'lucide-react';
 import { VariableMap, VisualizationEvent } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
-import { getPtrColor } from './LinkedListVisualizer';
+import { DEFAULT_PTR_COLOR, getPtrColor } from './LinkedListVisualizer';
 import { TreePanel } from './TreeVisualizer';
 
 
@@ -102,6 +102,19 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
+  const getArrayPointerColor = (name: string) => {
+    const color = getPtrColor(name);
+    if (isSaffron && color === DEFAULT_PTR_COLOR) {
+      return {
+        bg: 'bg-orange-500',
+        text: 'text-white',
+        border: 'border-orange-600',
+        glow: 'rgba(249,115,22,0.3)',
+        hex: '#f97316',
+      };
+    }
+    return color;
+  };
 
   const [viewAsHeap, setViewAsHeap] = useState(false);
   const arrayViewportRef = useRef<HTMLDivElement>(null);
@@ -449,7 +462,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300' : 'text-blue-900 dark:text-blue-300';
               barBg = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
             } else if (hasPointers) {
-              const pc = getPtrColor(pointers[0]);
+              const pc = getArrayPointerColor(pointers[0]);
               cellBackgroundColor = pc.glow.replace('0.3)', '0.22)');
               cellBorder = pc.border.replace('border-', 'border-'); // fallback
               cellText = 'text-slate-900 dark:text-slate-100 font-black';
@@ -485,7 +498,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                   <div className="absolute -top-10 left-0 right-0 flex flex-col items-center z-20">
                     <div className="flex gap-0.5 pointer-events-none">
                       {pointers.map((p) => {
-                        const pc = getPtrColor(p);
+                        const pc = getArrayPointerColor(p);
                         return (
                           <span
                             key={p}
