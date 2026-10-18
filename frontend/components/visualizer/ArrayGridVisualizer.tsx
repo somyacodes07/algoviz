@@ -111,6 +111,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
   const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables), [variables, prevVariables]);
   const arrayLength = preview?.type === 'array' ? preview.value.length : 0;
+  const fitSmallArray = arrayLength > 0 && arrayLength <= 10;
   const matrixRows = preview?.type === 'matrix' ? preview.value.length : 0;
   const matrixCols = preview?.type === 'matrix' ? (preview.value[0]?.length || 0) : 0;
 
@@ -156,21 +157,20 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     return sample.every(v => typeof v === 'number');
   }, [preview]);
 
-  // Use a square-root scale so numeric ordering stays obvious even when values
-  // cluster near the bottom of a much larger range. Heights are illustrative,
-  // not proportional measurements.
-  const numericBarBounds = useMemo(() => {
-    if (arrayViewType !== 'bars' || !preview || preview.type !== 'array') return null;
-    let min = Infinity;
-    let max = -Infinity;
-    for (const value of preview.value) {
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        min = Math.min(min, value);
-        max = Math.max(max, value);
-      }
-    }
-    return min === Infinity ? null : { min, max };
-  }, [arrayViewType, preview]);
+  // Give each distinct number its own height in both views. These heights
+  // communicate order without suggesting a proportional scale.
+  const numericBarHeights = useMemo(() => {
+    if (!preview || preview.type !== 'array') return new Map<number, number>();
+    const finiteValues = preview.value.filter((value: unknown): value is number =>
+      typeof value === 'number' && Number.isFinite(value),
+    );
+    const orderedValues = Array.from(new Set<number>(finiteValues)).sort((a, b) => a - b);
+    const heights = new Map<number, number>();
+    orderedValues.forEach((value, rank) => {
+      heights.set(value, orderedValues.length <= 1 ? 52 : 18 + (rank / (orderedValues.length - 1)) * 66);
+    });
+    return heights;
+  }, [preview]);
 
   const heapTreePreview = useMemo(() => {
     if (!viewAsHeap || !preview || preview.type !== 'array') return null;
@@ -418,7 +418,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
         )}
 
         <div ref={arrayViewportRef} role="region" aria-label={`${preview.sourceName} array diagram`} tabIndex={0} onScroll={updateArrayWindow} className="diagram-viewport custom-scrollbar mt-6 pb-4 pt-16 min-h-[190px] w-full">
-          <div className="flex min-w-full items-end gap-2 px-2 w-max">
+          <div className={`flex min-w-full items-end gap-2 px-2 ${fitSmallArray ? 'w-full' : 'w-max'}`}>
             {virtualized && <div aria-hidden="true" className="shrink-0" style={{ width: renderStart * ARRAY_ITEM_STRIDE }} />}
             {visibleItems.map((i) => {
             const val = arr[i];
@@ -430,22 +430,13 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
             // Heights for numeric bars
             const isNum = typeof val === 'number';
-            const barRange = numericBarBounds ? numericBarBounds.max - numericBarBounds.min : 0;
-            const normalizedBarValue = numericBarBounds && barRange > 0
-              ? barRange === Infinity
-                ? (val / 2 - numericBarBounds.min / 2) / (numericBarBounds.max / 2 - numericBarBounds.min / 2)
-                : (val - numericBarBounds.min) / barRange
-              : 0;
-            const barHeight = isNum && Number.isFinite(val)
-              ? !numericBarBounds || barRange === 0
-                ? 52
-                : 18 + Math.sqrt(Math.max(0, Math.min(1, normalizedBarValue))) * 66
-              : isNum ? 18 : 0;
+            const barHeight = isNum ? numericBarHeights.get(val) ?? 18 : 0;
 
             let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
+            let cellBackgroundColor: string | undefined;
             let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
             let cellText = 'text-slate-900 dark:text-slate-100';
-            let barBg = 'bg-slate-200 dark:bg-slate-700/50';
+            let barBg = 'bg-slate-300 dark:bg-slate-500';
 
             if (isSwapped) {
               cellBg = 'bg-yellow-50 dark:bg-yellow-950/20';
@@ -459,7 +450,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               barBg = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
             } else if (hasPointers) {
               const pc = getPtrColor(pointers[0]);
-              cellBg = pc.glow.replace('0.3)', '0.08)');
+              cellBackgroundColor = pc.glow.replace('0.3)', '0.22)');
               cellBorder = pc.border.replace('border-', 'border-'); // fallback
               cellText = 'text-slate-900 dark:text-slate-100 font-black';
               barBg = pc.bg;
@@ -474,7 +465,8 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               <motion.div
                 key={i}
                 layout
-                className="relative flex w-16 shrink-0 flex-col items-center"
+                style={fitSmallArray ? { flex: '1 1 64px', minWidth: 38, maxWidth: 64 } : undefined}
+                className={`relative flex w-16 flex-col items-center ${fitSmallArray ? 'shrink' : 'shrink-0'}`}
               >
                 {/* Sliding Window Brackets & Link Lines */}
                 {isInRange && (
@@ -537,6 +529,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                 {/* Memory cell block / String fallback */}
                 {((arrayViewType === 'cells') || !isNum) ? (
                   <div
+                    style={cellBackgroundColor ? { backgroundColor: cellBackgroundColor } : undefined}
                     className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10`}
                   >
                     {val === null ? 'nil' : String(val)}

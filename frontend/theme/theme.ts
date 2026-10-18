@@ -35,8 +35,8 @@ export function getThemeConfig(themeColor: ThemeColor): ThemeConfig {
       'border-[2px] border-slate-900 dark:border-[var(--dark-border-dim)] bg-slate-100 dark:bg-[var(--dark-base)]',
     badgeClass: `inline-flex items-center gap-1 border-[2px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${
       isSaffron
-        ? 'bg-saffron-100/50 dark:bg-saffron-900/25 text-saffron-700 dark:text-saffron-400 border-saffron-300 dark:border-saffron-700/60'
-        : 'bg-blue-100/50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700/60'
+        ? 'bg-saffron-100 text-saffron-800 border-saffron-400 dark:bg-[#42220c] dark:text-orange-200 dark:border-orange-700'
+        : 'bg-blue-100 text-blue-800 border-blue-400 dark:bg-[#102c51] dark:text-blue-100 dark:border-blue-700'
     }`,
   };
 }

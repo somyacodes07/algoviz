@@ -379,6 +379,13 @@ main {
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
+.dark .diagram-viewport {
+  background-color: var(--dark-surface-2);
+  border-color: var(--dark-border);
 }
 
 .diagram-viewport:focus-visible {
