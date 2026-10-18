@@ -447,28 +447,33 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
             let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
             let cellBackgroundColor: string | undefined;
+            let cellBorderColor: string | undefined;
             let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
             let cellText = 'text-slate-900 dark:text-slate-100';
             let barBg = isSaffron ? 'bg-orange-300 dark:bg-orange-700' : 'bg-blue-300 dark:bg-blue-700';
 
             if (isSwapped) {
               cellBg = 'bg-yellow-50 dark:bg-yellow-950/20';
+              cellBorderColor = '#eab308';
               cellBorder = 'border-yellow-500 dark:border-yellow-600';
               cellText = 'text-yellow-900 dark:text-yellow-300';
               barBg = 'bg-yellow-400 dark:bg-yellow-500';
             } else if (isChanged) {
               cellBg = isSaffron ? 'bg-saffron-50 dark:bg-saffron-950/20' : 'bg-blue-50 dark:bg-blue-950/20';
+              cellBorderColor = isSaffron ? '#f97316' : '#3b82f6';
               cellBorder = isSaffron ? 'border-saffron-500 dark:border-saffron-600' : 'border-blue-500 dark:border-blue-600';
               cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300' : 'text-blue-900 dark:text-blue-300';
               barBg = isSaffron ? 'bg-saffron-400 dark:bg-saffron-500' : 'bg-blue-400 dark:bg-blue-500';
             } else if (hasPointers) {
               const pc = getArrayPointerColor(pointers[0]);
               cellBackgroundColor = pc.glow.replace('0.3)', '0.22)');
-              cellBorder = pc.border.replace('border-', 'border-'); // fallback
+              cellBorderColor = pc.hex;
+              cellBorder = pc.border;
               cellText = 'text-slate-900 dark:text-slate-100 font-black';
               barBg = pc.bg;
             } else if (isInRange) {
               cellBg = isSaffron ? 'bg-saffron-50/50 dark:bg-saffron-900/10' : 'bg-blue-50/50 dark:bg-blue-900/10';
+              cellBorderColor = isSaffron ? 'rgba(249,115,22,0.5)' : 'rgba(59,130,246,0.5)';
               cellBorder = isSaffron ? 'border-saffron-500/50 dark:border-saffron-600/40' : 'border-blue-500/50 dark:border-blue-600/40';
               cellText = isSaffron ? 'text-saffron-900 dark:text-saffron-300 font-bold' : 'text-blue-900 dark:text-blue-300 font-bold';
               barBg = isSaffron ? 'bg-saffron-300 dark:bg-saffron-800/40' : 'bg-blue-300 dark:bg-blue-800/40';
@@ -542,7 +547,10 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                 {/* Memory cell block / String fallback */}
                 {((arrayViewType === 'cells') || !isNum) ? (
                   <div
-                    style={cellBackgroundColor ? { backgroundColor: cellBackgroundColor } : undefined}
+                    style={cellBackgroundColor || cellBorderColor ? {
+                      ...(cellBackgroundColor ? { backgroundColor: cellBackgroundColor } : {}),
+                      ...(cellBorderColor ? { borderColor: cellBorderColor } : {}),
+                    } : undefined}
                     className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10`}
                   >
                     {val === null ? 'nil' : String(val)}

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
@@ -128,6 +128,9 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 }) => {
   const [hasStructure, setHasStructure] = useState(false);
   const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
+  const [panelMenuOpen, setPanelMenuOpen] = useState(false);
+  const panelMenuRef = useRef<HTMLDivElement>(null);
+  const panelMenuButtonRef = useRef<HTMLButtonElement>(null);
   const isSaffron = themeColor === 'saffron';
   const accentBg = isSaffron ? 'bg-saffron-500' : 'bg-blue-500';
   const panel = activeTab === 'diagrams' && !hasStructure ? 'variables' : activeTab;
@@ -161,6 +164,25 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
 
   const panelHeading = panelOptions.find((option) => option.id === panel)?.label || 'Visualization';
 
+  useEffect(() => {
+    if (!panelMenuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!panelMenuRef.current?.contains(event.target as Node)) setPanelMenuOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setPanelMenuOpen(false);
+        panelMenuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [panelMenuOpen]);
+
   return (
     <div className="relative h-full min-h-0 w-full flex flex-col flex-1 bg-slate-50 dark:bg-[var(--dark-surface)] border-[2px] border-slate-900 dark:border-[var(--dark-border)] shadow-[2px_2px_0_#1e293b] dark:shadow-[3px_3px_0_var(--dark-shadow)] z-10 overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shrink-0">
@@ -169,19 +191,90 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
           <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100">{panelHeading}</span>
           {currentStep.line > 0 && <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Line {currentStep.line}</span>}
         </div>
-        <label className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:inline text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Panel</span>
-          <select
-            aria-label="Workspace panel"
-            value={panel}
-            onChange={(event) => setActiveTab(event.target.value as WorkspacePanel)}
-            className="max-w-[145px] sm:max-w-none px-2 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wide border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] text-slate-700 dark:text-slate-200 shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          <div
+            ref={panelMenuRef}
+            className="relative"
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPanelMenuOpen(false);
+            }}
           >
-            {panelOptions.map((option) => (
-              <option key={option.id} value={option.id} disabled={option.id === 'diagrams' && !hasStructure}>{option.label}</option>
-            ))}
-          </select>
-        </label>
+            <button
+              ref={panelMenuButtonRef}
+              type="button"
+              aria-label="Workspace panel"
+              aria-haspopup="menu"
+              aria-expanded={panelMenuOpen}
+              onClick={() => setPanelMenuOpen((open) => !open)}
+              onKeyDown={(event) => {
+                if (panelMenuOpen || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+                event.preventDefault();
+                setPanelMenuOpen(true);
+                requestAnimationFrame(() => {
+                  const items = panelMenuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]:not(:disabled)');
+                  const item = event.key === 'ArrowUp' ? items?.[items.length - 1] : items?.[0];
+                  item?.focus();
+                });
+              }}
+              className={`flex max-w-[165px] items-center gap-2 border-[2px] border-slate-900 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide shadow-[2px_2px_0_#0f172a] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-[var(--dark-border)] dark:shadow-[2px_2px_0_var(--dark-shadow)] sm:text-xs ${
+                isSaffron
+                  ? 'bg-saffron-50 text-saffron-800 hover:bg-saffron-100 dark:bg-[var(--dark-surface-2)] dark:text-orange-200 dark:hover:bg-[var(--dark-surface-3)]'
+                  : 'bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-[var(--dark-surface-2)] dark:text-blue-100 dark:hover:bg-[var(--dark-surface-3)]'
+              }`}
+            >
+              <span className="truncate">{panelHeading}</span>
+              <ChevronDown size={13} className={`shrink-0 transition-transform ${panelMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {panelMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Workspace panels"
+                className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[190px] overflow-hidden border-2 border-slate-900 bg-white p-1.5 shadow-[4px_4px_0_#0f172a] dark:border-[var(--dark-border-bright)] dark:bg-[var(--dark-surface-2)] dark:shadow-[4px_4px_0_var(--dark-shadow)]"
+              >
+                {panelOptions.map((option) => {
+                  const selected = option.id === panel;
+                  const disabled = option.id === 'diagrams' && !hasStructure;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={selected}
+                      disabled={disabled}
+                      onKeyDown={(event) => {
+                        const items: HTMLButtonElement[] = Array.from(panelMenuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]:not(:disabled)') || []);
+                        const index = items.indexOf(event.currentTarget);
+                        let nextIndex = index;
+                        if (event.key === 'ArrowDown') nextIndex = (index + 1) % items.length;
+                        else if (event.key === 'ArrowUp') nextIndex = (index - 1 + items.length) % items.length;
+                        else if (event.key === 'Home') nextIndex = 0;
+                        else if (event.key === 'End') nextIndex = items.length - 1;
+                        else return;
+                        event.preventDefault();
+                        items[nextIndex]?.focus();
+                      }}
+                      onClick={() => {
+                        setActiveTab(option.id);
+                        setPanelMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between gap-4 px-3 py-2.5 text-left text-[11px] font-black uppercase tracking-[0.12em] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        selected
+                          ? isSaffron
+                            ? 'bg-saffron-100 text-saffron-800 dark:bg-saffron-900/35 dark:text-orange-200'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/35 dark:text-blue-100'
+                          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-[var(--dark-surface-3)]'
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {selected && <span className={isSaffron ? 'text-saffron-600 dark:text-orange-300' : 'text-blue-600 dark:text-blue-300'} aria-hidden="true">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-slate-200 dark:border-[var(--dark-border-dim)] bg-slate-50 dark:bg-[var(--dark-base)] min-h-10 shrink-0" aria-live="polite" aria-atomic="true">
