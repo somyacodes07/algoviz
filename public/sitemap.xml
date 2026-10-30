@@ -1,42 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://algoviz.somyacodes.in/</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-    <image:image>
-      <image:loc>https://algoviz.somyacodes.in/og-image.png</image:loc>
-      <image:title>AlgoViz Interactive Algorithm &amp; Code Visualizer Workbench</image:title>
-      <image:caption>Visual execution debugger tracking variables, call stack frames, binary search trees, and linked lists in real-time.</image:caption>
-    </image:image>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://algoviz.somyacodes.in/visualizer/javascript/</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://algoviz.somyacodes.in/og-image.png</image:loc>
-      <image:title>JavaScript Code Visualizer &amp; Algorithm Debugger</image:title>
-    </image:image>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://algoviz.somyacodes.in/visualizer/cpp/</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://algoviz.somyacodes.in/og-image.png</image:loc>
-      <image:title>C++ Code Visualizer &amp; WebAssembly Clang Debugger</image:title>
-    </image:image>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://algoviz.somyacodes.in/docs/</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <lastmod>2026-10-31</lastmod>
   </url>
 </urlset>
 

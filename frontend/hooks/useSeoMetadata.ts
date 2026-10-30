@@ -40,7 +40,6 @@ function upsertLink(rel: string, href: string) {
 }
 
 export function useSeoMetadata(config: SeoConfig) {
-  const keywords = config.keywords.join(', ');
   const schemaJson = JSON.stringify(config.schema);
 
   useEffect(() => {
@@ -49,7 +48,6 @@ export function useSeoMetadata(config: SeoConfig) {
     document.documentElement.lang = 'en';
 
     upsertMetaByName('description', config.description);
-    upsertMetaByName('keywords', keywords);
     upsertMetaByName('robots', config.robots);
     upsertMetaByName('googlebot', config.robots);
     upsertMetaByName('bingbot', config.robots);
@@ -61,7 +59,6 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('apple-mobile-web-app-status-bar-style', 'black-translucent');
     upsertMetaByName('theme-color', '#f97316');
     upsertMetaByName('referrer', 'strict-origin-when-cross-origin');
-    upsertMetaByName('revisit-after', '1 days');
 
     upsertMetaByProperty('og:title', config.title);
     upsertMetaByProperty('og:description', config.description);
@@ -80,9 +77,6 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('twitter:description', config.description);
     upsertMetaByName('twitter:image', config.imageUrl);
     upsertMetaByName('twitter:image:alt', 'AlgoViz Interactive Code Execution Visualizer');
-    upsertMetaByName('twitter:site', '@algoviz');
-    upsertMetaByName('twitter:creator', '@somyajeet');
-
     upsertLink('canonical', config.canonicalUrl);
     upsertLink('manifest', '/site.webmanifest');
 
@@ -108,7 +102,6 @@ export function useSeoMetadata(config: SeoConfig) {
     config.imageUrl,
     config.robots,
     config.type,
-    keywords,
     schemaJson,
   ]);
 }

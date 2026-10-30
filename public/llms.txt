@@ -1,0 +1,28 @@
+# AlgoViz
+
+> AlgoViz is a free, browser-based learning tool for stepping through JavaScript and C++ code and visualizing data structures and algorithms.
+
+AlgoViz is intended for students, educators, and developers who want to inspect how a program changes as it runs. Users can write or paste code, run it, then step through execution while inspecting variables, console output, call stacks, and supported structure diagrams.
+
+## Product facts
+
+- Supported languages: JavaScript (ES6+) and C++. C++ support is labeled beta in the app.
+- JavaScript execution runs in the browser. C++ compilation uses WebAssembly in the browser.
+- Visualizations include arrays and matrices, linked lists, trees, stacks, queues, heaps, hash maps, and graphs when the runtime state can be recognized.
+- The template library includes examples for searching, sorting, recursion, graph traversal, and other data-structure and algorithm topics.
+- Time and space complexity panels provide pattern-based estimates for learning. They are not proofs or substitutes for analyzing worst-case behavior.
+- The app is free to use and does not require an account. The source code is public on GitHub.
+- Shared session links encode source code in the URL fragment. Users should review code before sharing a link.
+
+## Start here
+
+- [Home](https://algoviz.somyacodes.in/): Product overview and frequently asked questions.
+- [JavaScript visualizer](https://algoviz.somyacodes.in/visualizer/javascript/): Open the JavaScript workbench.
+- [C++ visualizer](https://algoviz.somyacodes.in/visualizer/cpp/): Open the C++ workbench.
+- [Documentation](https://algoviz.somyacodes.in/docs/): Learn the interface and technical architecture.
+- [Source repository](https://github.com/somyacodes07/algoviz): Browse the public source code and project issues.
+- [Sitemap](https://algoviz.somyacodes.in/sitemap.xml): List of canonical public pages.
+
+## Suggested citation
+
+AlgoViz, an interactive JavaScript and C++ code visualizer for learning data structures and algorithms, by Somyajeet. https://algoviz.somyacodes.in/

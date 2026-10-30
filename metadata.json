@@ -1,5 +1,5 @@
 {
   "name": "AlgoViz",
-  "description": "A production-grade JavaScript code execution visualizer for educational purposes. Step through code, watch variables change, and understand control flow.",
+  "description": "A browser-based JavaScript and C++ code visualizer for learning algorithms. Step through execution and inspect variables, call stacks, console output, and supported data structures.",
   "requestFramePermissions": []
 }

@@ -4,14 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <title>AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Execution Visualizer</title>
+  <title>AlgoViz | JavaScript &amp; C++ Code Visualizer for Learning Algorithms</title>
   <meta
     name="description"
-    content="AlgoViz is the ultimate interactive algorithm visualizer and code execution debugger for JavaScript & C++. Visualize recursion stacks, binary trees, linked lists, sorting algorithms, call stacks, and variables in real time."
-  />
-  <meta
-    name="keywords"
-    content="algorithm visualizer, code visualizer, javascript code visualizer, c++ code visualizer, data structures and algorithms visualizer, call stack visualizer, recursion visualizer, debugger for students, programming education tool, algoviz, tree visualizer, linked list visualizer, binary search tree visualizer, stack visualizer, queue visualizer, graph visualizer, sorting visualizer, matrix path visualizer, bubble sort visualizer, insertion sort visualizer, merge sort visualizer, quick sort visualizer, dfs visualizer, bfs visualizer, dijkstra visualizer, interactive code execution visualizer, c++ compiler online visualizer, dsa animator, binary tree simulator, dsa visualization website, coding execution visualizer, visualize code online, big o notation visualizer, javascript step by step execution, cpp execution trace"
+    content="Step through JavaScript and C++ code in your browser. Inspect variables and call stacks, and visualize arrays, trees, linked lists, graphs, and algorithms."
   />
   <meta
     name="robots"
@@ -34,15 +30,14 @@
   <meta name="theme-color" content="#f97316" />
   <meta name="msapplication-TileColor" content="#f97316" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="revisit-after" content="1 days" />
   <meta name="rating" content="general" />
   <meta name="distribution" content="global" />
   
   <!-- Open Graph / Facebook / Discord -->
-  <meta property="og:title" content="AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Execution Visualizer" />
+  <meta property="og:title" content="AlgoViz | JavaScript &amp; C++ Code Visualizer for Learning Algorithms" />
   <meta
     property="og:description"
-    content="Step through JavaScript and C++ code line by line. Animate binary trees, linked lists, recursion stacks, variables, and console output in real time with AlgoViz."
+    content="Step through JavaScript and C++ code in your browser. Inspect variables and call stacks, and visualize arrays, trees, linked lists, graphs, and algorithms."
   />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://algoviz.somyacodes.in/" />
@@ -56,17 +51,16 @@
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="AlgoViz | Interactive Algorithm, Tree, Linked List & C++/JS Code Visualizer" />
+  <meta name="twitter:title" content="AlgoViz | JavaScript &amp; C++ Code Visualizer for Learning Algorithms" />
   <meta
     name="twitter:description"
-    content="Visualize JavaScript and C++ execution step by step with call stack, variables, and console tracing built for students and educators."
+    content="Step through JavaScript and C++ code. Inspect variables and call stacks, and visualize common data structures and algorithms."
   />
   <meta name="twitter:image" content="https://algoviz.somyacodes.in/og-image.png" />
   <meta name="twitter:image:alt" content="AlgoViz Interactive Algorithm Workbench" />
-  <meta name="twitter:site" content="@algoviz" />
-  <meta name="twitter:creator" content="@somyajeet" />
   
   <link rel="canonical" href="https://algoviz.somyacodes.in/" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="AlgoViz information for language models" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="apple-touch-icon" href="/logo.svg" />
@@ -87,8 +81,8 @@
   </style>
   <link rel="stylesheet" href="/index.css">
 
-  <!-- Rich Structured Data Schemas (JSON-LD) -->
-  <script type="application/ld+json">
+  <!-- Structured data describes the visible product and FAQ content. -->
+  <script type="application/ld+json" data-seo="structured-data">
     {
       "@context": "https://schema.org",
       "@graph": [
@@ -97,32 +91,24 @@
           "@id": "https://algoviz.somyacodes.in/#website",
           "url": "https://algoviz.somyacodes.in/",
           "name": "AlgoViz",
-          "description": "Interactive Algorithm, Data Structures & Code Execution Visualizer for JavaScript and C++",
+          "description": "Step through JavaScript and C++ code in your browser. Inspect variables and call stacks, and visualize arrays, trees, linked lists, graphs, and algorithms.",
           "publisher": {
             "@type": "Person",
             "name": "Somyajeet",
             "url": "https://github.com/somyacodes07"
-          },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-              "@type": "EntryPoint",
-              "urlTemplate": "https://algoviz.somyacodes.in/visualizer/javascript/?q={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
           }
         },
         {
           "@type": "SoftwareApplication",
           "@id": "https://algoviz.somyacodes.in/#application",
-          "name": "AlgoViz Interactive Algorithm Visualizer",
+          "name": "AlgoViz JavaScript and C++ Code Visualizer",
           "applicationCategory": "EducationalApplication",
-          "applicationSubCategory": "Developer Tool",
-          "operatingSystem": "Web, All Operating Systems",
+          "applicationSubCategory": "Code Visualizer",
+          "operatingSystem": "Web browser",
           "url": "https://algoviz.somyacodes.in/",
           "image": "https://algoviz.somyacodes.in/og-image.png",
           "sameAs": [
-            "https://github.com/somyacodes07/AlgoViz"
+            "https://github.com/somyacodes07/algoviz"
           ],
           "offers": {
             "@type": "Offer",
@@ -130,26 +116,15 @@
             "priceCurrency": "USD",
             "availability": "https://schema.org/InStock"
           },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "ratingCount": "1250",
-            "bestRating": "5",
-            "worstRating": "1"
-          },
           "featureList": [
-            "Step-by-step code execution debugger for JavaScript and C++",
-            "Interactive Binary Search Tree (BST) visualizer",
-            "Singly and Doubly Linked List visualizer with cycle detection",
-            "Recursion call stack frames inspector and variable watch",
-            "Stack & Queue LIFO / FIFO visualizer",
-            "Array and 2D Matrix traversal animator",
-            "Sorting algorithm visualizers (Bubble, Selection, Insertion, Merge, Quick Sort)",
-            "Graph pathfinding visualizers (DFS, BFS, Dijkstra)",
-            "Real-time Big-O time complexity estimation & hot line heatmaps",
-            "In-browser C++ compilation via WebAssembly Clang"
+            "Step-by-step JavaScript and C++ execution playback",
+            "Variable and call-stack inspection",
+            "Array, matrix, tree, linked-list, stack, queue, and graph diagrams",
+            "Algorithm templates for sorting, search, recursion, and graph traversal",
+            "Pattern-based time-complexity estimates",
+            "C++ compilation in the browser with WebAssembly"
           ],
-          "description": "AlgoViz is a free, interactive educational workbench that helps computer science students, software engineers, and teachers visualize code execution line by line."
+        "description": "Step through JavaScript and C++ code in your browser. Inspect variables and call stacks, and visualize arrays, trees, linked lists, graphs, and algorithms."
         },
         {
           "@type": "FAQPage",
@@ -157,10 +132,10 @@
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "What is AlgoViz used for?",
+            "name": "What is AlgoViz used for?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "AlgoViz helps students, developers, and computer science educators visualize JavaScript and C++ execution step by step, including memory state, variables, call stack frames, binary trees, linked lists, and console output."
+                "text": "AlgoViz is an interactive code visualizer and algorithm debugger that helps students, developers, and educators visualize JavaScript and C++ code execution step by step. It renders live variables, call stack frames, supported data-structure diagrams, and console logs."
               }
             },
             {
@@ -168,15 +143,15 @@
               "name": "Can AlgoViz visualize recursion and sorting algorithms?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes. AlgoViz handles recursion, call stack push/pop operations, Quick Sort, Merge Sort, Bubble Sort, Binary Search Trees, graph DFS/BFS, and matrix traversal."
+                "text": "Use the templates to explore recursion, sorting, binary search trees, graph traversal, and matrix algorithms one execution step at a time."
               }
             },
             {
               "@type": "Question",
-              "name": "Does AlgoViz support C++ as well as JavaScript?",
+            "name": "Does AlgoViz support C++ code execution as well as JavaScript?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes! JavaScript executes natively in the browser, while C++ is compiled locally via WebAssembly Clang and instrumented via Tree-sitter for line-by-line debugging."
+                "text": "Yes. JavaScript runs natively in the browser execution sandbox, while C++ code is compiled locally using a WebAssembly build of Clang and instrumented via Tree-sitter AST parsing for line-by-line step debugging."
               }
             },
             {
@@ -184,23 +159,39 @@
               "name": "Is AlgoViz free to use?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes, AlgoViz is 100% free and open-source. It requires no signup, installation, or server configuration."
+                "text": "Yes. AlgoViz is free to use and does not require an account. Its source code is available in the public GitHub repository."
               }
             },
             {
               "@type": "Question",
-              "name": "How does the tree and linked list visualizer work?",
+            "name": "How does the binary tree and linked list visualizer work?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "When your code instantiates tree nodes (TreeNode) or list nodes (ListNode), AlgoViz automatically parses object references and renders zoomable SVG diagrams with node connections and pointer trackers in real time."
+                "text": "As your code runs, AlgoViz detects supported tree and linked-list structures from runtime state and draws diagrams with node connections and pointer markers."
               }
             },
             {
               "@type": "Question",
-              "name": "How is time complexity calculated in AlgoViz?",
+            "name": "How does AlgoViz estimate time complexity?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "AlgoViz tracks loop iterations, statement evaluations, and recursion depths to estimate asymptotic Big-O bounds and highlight 'hot lines' hit counts."
+                "text": "AlgoViz gives a pattern-based complexity estimate from the source and execution trace, alongside line hit counts. Treat it as a learning aid, not a proof of worst-case Big-O."
+              }
+            },
+            {
+              "@type": "Question",
+            "name": "Can I share a link to my algorithm visualization session?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Click the \"Share Link\" button in the editor toolbar to encode your current code and language state directly into a shareable URL hash."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is there a VS Code extension for AlgoViz?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, the AlgoViz VS Code extension allows developers to launch code visualization sessions directly inside Visual Studio Code."
               }
             }
           ]
@@ -246,22 +237,22 @@
     <main style="font-family: Inter, system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.7; color: #0f172a;">
       <header style="border-bottom: 3px solid #ea580c; padding-bottom: 1.5rem; margin-bottom: 2rem;">
         <h1 style="font-size: 2.5rem; font-weight: 900; color: #ea580c; margin: 0 0 0.5rem 0; letter-spacing: -0.02em;">
-          AlgoViz - Interactive Algorithm & Code Execution Visualizer
+          AlgoViz - JavaScript & C++ Code Visualizer
         </h1>
         <p style="font-size: 1.2rem; font-weight: 600; color: #475569; margin: 0;">
-          The ultimate browser-based educational debugger for computer science students, teachers, and software engineers learning JavaScript and C++.
+          A browser-based code visualizer for learning JavaScript and C++ through step-by-step execution, runtime inspection, and data-structure diagrams.
         </p>
       </header>
 
       <nav aria-label="Main Navigation" style="margin-bottom: 2.5rem; background: #fff7ed; padding: 1.25rem; border: 2px solid #ea580c; border-radius: 6px;">
         <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; color: #c2410c; margin-top: 0; font-weight: 800;">
-          Explore AlgoViz Features & Visualizer Modes
+          Open a visualizer or read the documentation
         </h2>
         <ul style="list-style: none; padding: 0; margin: 0.5rem 0 0 0; display: flex; gap: 1.25rem; flex-wrap: wrap;">
-          <li><a href="/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">Home Overview</a></li>
-          <li><a href="/visualizer/javascript/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">JavaScript Code Visualizer & Debugger</a></li>
-          <li><a href="/visualizer/cpp/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">C++ WebAssembly Compiler & Visualizer</a></li>
-          <li><a href="/docs/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">Technical Documentation & Architecture</a></li>
+          <li><a href="/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">Home</a></li>
+          <li><a href="/visualizer/javascript/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">JavaScript visualizer</a></li>
+          <li><a href="/visualizer/cpp/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">C++ visualizer</a></li>
+          <li><a href="/docs/" style="color: #ea580c; font-weight: 700; text-decoration: underline;">Documentation</a></li>
         </ul>
       </nav>
 
@@ -270,7 +261,7 @@
           What is AlgoViz?
         </h2>
         <p>
-          AlgoViz (<strong>algoviz.somyacodes.in</strong>) is a free, zero-config interactive visual debugging environment. Designed specifically to strip away the mystery of data structures and algorithms, AlgoViz enables users to step through code execution line by line, inspect variable mutations, follow pointer movements, track call stack frames during recursion, and analyze Big-O time complexity in real time.
+          AlgoViz (<strong>algoviz.somyacodes.in</strong>) is a free browser-based learning tool. Write or paste JavaScript or C++, step through execution, and inspect variables, call-stack frames, console output, and supported data-structure diagrams. Complexity panels provide pattern-based estimates for learning.
         </p>
       </section>
 
@@ -281,32 +272,32 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.25rem;">
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Binary Search Trees & Binary Trees</h3>
-            <p style="margin-bottom: 0;">Visualizes BST insertion, node search, and recursive traversals (In-order, Pre-order, Post-order). Dynamically renders parent-child SVG node branches.</p>
+            <p style="margin-bottom: 0;">When runtime values match supported tree structures, diagrams show node relationships as the program runs.</p>
           </article>
           
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Linked Lists & Cycle Detection</h3>
-            <p style="margin-bottom: 0;">Animates singly and doubly linked list node operations. Automatically flags circular linked list cycles using Floyd's Tortoise and Hare algorithm.</p>
+            <p style="margin-bottom: 0;">Follow supported linked-list node connections and pointer values as execution advances.</p>
           </article>
 
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Stack & Queue Mechanics</h3>
-            <p style="margin-bottom: 0;">Step through Last-In-First-Out (LIFO) stack pushes/pops and First-In-First-Out (FIFO) queue enqueue/dequeue operations with state transition animations.</p>
+            <p style="margin-bottom: 0;">Use examples of stack and queue operations to inspect how the program state changes step by step.</p>
           </article>
 
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Sorting Algorithms Library</h3>
-            <p style="margin-bottom: 0;">Compare Quick Sort, Merge Sort, Bubble Sort, Selection Sort, and Insertion Sort with index pointer trackers (i, j, left, right, pivot) moving live.</p>
+            <p style="margin-bottom: 0;">Explore sorting templates and follow array values and index markers where supported.</p>
           </article>
 
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Graph & Grid Pathfinding</h3>
-            <p style="margin-bottom: 0;">Animate Depth-First Search (DFS), Breadth-First Search (BFS), Dijkstra's shortest path, 2D matrix traversal, and flood fill algorithms.</p>
+            <p style="margin-bottom: 0;">Explore graph traversal templates such as depth-first and breadth-first search, plus matrix algorithms.</p>
           </article>
 
           <article style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 6px;">
             <h3 style="font-size: 1.2rem; font-weight: 700; color: #ea580c; margin-top: 0;">Recursion & Call Stack Tracker</h3>
-            <p style="margin-bottom: 0;">Deconstruct deep recursion (Fibonacci, N-Queens backtracking, factorial) by observing active stack frames and isolated scope variable tables.</p>
+            <p style="margin-bottom: 0;">Step through recursive calls and inspect call-stack frames and variables.</p>
           </article>
         </div>
       </section>
@@ -319,13 +310,13 @@
           <dt style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 1rem;">How does C++ visualization work in the browser?</dt>
           <dd style="color: #475569; margin-left: 0; margin-bottom: 1rem;">C++ source code is compiled locally using a WebAssembly build of Clang. AlgoViz uses Tree-sitter AST parsing to instrument memory assignments and control flows, allowing seamless step-by-step execution in your web browser.</dd>
 
-          <dt style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 1rem;">Is AlgoViz suitable for computer science courses?</dt>
-          <dd style="color: #475569; margin-left: 0; margin-bottom: 1rem;">Absolutely! Professors, TAs, and CS students use AlgoViz in Data Structures & Algorithms (DSA) courses to demonstrate code execution logic, loop invariants, pointer manipulation, and asymptotic runtime complexities.</dd>
+          <dt style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 1rem;">Can I use AlgoViz to study data structures and algorithms?</dt>
+          <dd style="color: #475569; margin-left: 0; margin-bottom: 1rem;">Yes. AlgoViz is designed as a learning aid for stepping through code and inspecting supported data structures, variables, and call stacks.</dd>
         </dl>
       </section>
 
       <footer style="border-top: 2px solid #e2e8f0; padding-top: 1.5rem; text-align: center; color: #64748b; font-size: 0.9rem;">
-        <p>&copy; 2026 AlgoViz by Somyajeet. Built for students, educators, and software engineers worldwide.</p>
+        <p>&copy; 2026 AlgoViz by Somyajeet.</p>
       </footer>
     </main>
   </noscript>
