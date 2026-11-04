@@ -1,25 +1,18 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import {
-  Terminal,
-  Code2,
-  Cpu,
-  ArrowRight,
-  Activity,
-  ChevronRight,
-  Play,
-  Star,
-  Eye,
-  Layers,
-  BookOpen,
-  Sun,
-  Moon,
-} from 'lucide-react';
-import homepagePreview from '../../assets/homepage.png';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+import { BookOpen, Code2, Cpu, Eye, Layers, Moon, Star, Sun, Terminal } from 'lucide-react';
 import editorPreview from '../../assets/editor.png';
 import { HOME_FAQ_ITEMS } from '../seo';
-import LandingInteractiveBackdrop from './LandingInteractiveBackdrop.tsx';
+import { barSlotX, createScene, ParticleScene, SceneState, TREE_H, TREE_W } from './landing/particleScene';
+import TraceSection from './landing/TraceSection';
+import { BAR_VALUES, FIB_TRACE, SORT_FRAMES } from './landing/trace';
+import './landing/landing.css';
 import Logo from './Logo';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface HomePageProps {
   language: string;
@@ -33,190 +26,70 @@ interface HomePageProps {
   onHoverLanguage?: (lang: string | null) => void;
 }
 
-// Animation Data for fake execution tracking
-const EXECUTION_STEPS = [
-  { line: 1, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
-  { line: 2, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
-  { line: 4, n: 6, callStack: [{ id: 0, call: 'fibonacci(6)' }] },
-  {
-    line: 1,
-    n: 5,
-    callStack: [
-      { id: 1, call: 'fibonacci(5)' },
-      { id: 0, call: 'fibonacci(6)' },
-    ],
-  },
-  {
-    line: 2,
-    n: 5,
-    callStack: [
-      { id: 1, call: 'fibonacci(5)' },
-      { id: 0, call: 'fibonacci(6)' },
-    ],
-  },
-  {
-    line: 4,
-    n: 5,
-    callStack: [
-      { id: 1, call: 'fibonacci(5)' },
-      { id: 0, call: 'fibonacci(6)' },
-    ],
-  },
-  {
-    line: 1,
-    n: 4,
-    callStack: [
-      { id: 2, call: 'fibonacci(4)' },
-      { id: 1, call: 'fibonacci(5)' },
-      { id: 0, call: 'fibonacci(6)' },
-    ],
-  },
-  {
-    line: 2,
-    n: 4,
-    callStack: [
-      { id: 2, call: 'fibonacci(4)' },
-      { id: 1, call: 'fibonacci(5)' },
-      { id: 0, call: 'fibonacci(6)' },
-    ],
-  },
-];
-
-// ── Landing Page Enhancements ──────────────────────────────────────────────────
+const GITHUB_URL = 'https://github.com/somyacodes07/AlgoViz';
+const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode';
 
 const T = {
   docs: 'Docs',
-  githubStar: 'Star us on GitHub',
-  interactiveVisualizer: 'Interactive Code Visualizer',
-  see: 'See',
-  how: 'how',
-  your: 'your',
-  code: 'code',
-  really: 'really',
-  works: 'works.',
+  githubStar: 'Star on GitHub',
+  chip: 'Interactive code visualizer',
   heroSub: 'Stop guessing. Step through your logic line-by-line, watch variables mutate in real-time, and untangle the call stack.',
-  selectFile: 'Select a file to begin execution session.',
-  editorFunction: 'function',
-  editorFibonacci: 'fibonacci',
-  editorReturn: 'return',
-  editorConsole: 'console.',
-  editorLog: 'log',
-  variablesWatch: 'Variables / Watch',
-  callStack: 'Call Stack',
+  selectFile: 'Select a file to begin.',
+  readDocs: 'Read documentation',
+  vscode: 'Get VS Code extension',
+  running: 'fibonacci(6) call tree',
+  traceTitle: 'Control the flow of time.',
+  traceSub: 'A real run of fibonacci(6). Press run, pause anywhere, or step one line at a time.',
   whyTitle: 'Why use AlgoViz?',
-  whySub: 'Built for students and educators to strip away the magic and show exactly how algorithms compute data in memory.',
-  featureTitle: 'See the algorithm visualizer interface before you start',
-  featureSub: 'AlgoViz combines a code editor, variable inspector, console playback, and call stack timeline into one place so students can understand how JavaScript and C++ algorithms actually execute.',
-  launchTitle: 'Launch into JavaScript or C++ visual debugging',
-  launchDesc: 'The homepage is built to get students into the right visualizer fast, whether they want to trace JavaScript logic or inspect C++ algorithm flow.',
+  featureTitle: 'See the interface before you start',
+  featureSub: 'A code editor, variable inspector, console playback, and call stack timeline in one place, for JavaScript and C++.',
+  launchTitle: 'Launch into JavaScript or C++',
+  launchDesc: 'Get straight to the right visualizer, whether you want to trace JavaScript logic or inspect C++ algorithm flow.',
   followTitle: 'Follow variables, stack frames, and console output',
-  followDesc: 'The workbench focuses on the exact runtime state students care about during recursion, sorting, graph traversal, and debugging.',
-  faqTitle: 'Frequently asked questions about AlgoViz',
-  faqSub: 'If you are comparing code visualization tools for teaching data structures, recursion, or debugging practice, these are the questions people usually ask first.',
-  tryJs: 'Try the JavaScript visualizer',
-  exploreDocs: 'Explore the documentation',
+  followDesc: 'The workbench focuses on the runtime state that matters during recursion, sorting, graph traversal, and debugging.',
+  faqTitle: 'Frequently asked questions',
+  faqSub: 'What people usually ask first when comparing code visualization tools.',
 };
 
-// Hero text scramble hook
-const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
-function useScramble(target: string, delay = 100) {
-  const [display, setDisplay] = useState(target);
-  const prefersReducedMotion = useReducedMotion();
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setDisplay(target);
-      return;
-    }
-    let iter = 0;
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const totalFrames = target.length * 3;
-    const timer = setTimeout(() => {
-      interval = setInterval(() => {
-        setDisplay(
-          target
-            .split('')
-            .map((ch, i) => {
-              if (ch === ' ') return ' ';
-              if (i < Math.floor(iter / 3)) return ch;
-              return SCRAMBLE_CHARS.charAt(Math.floor(Math.random() * SCRAMBLE_CHARS.length));
-            })
-            .join(''),
-        );
-        iter++;
-        if (iter > totalFrames) {
-          clearInterval(interval);
-          setDisplay(target);
-        }
-      }, 40);
-    }, delay);
-    return () => {
-      clearTimeout(timer);
-      if (interval) clearInterval(interval);
-    };
-  }, [target, delay, prefersReducedMotion]);
-  return display;
-}
-
-// Stats counter hook
-function useCountUp(target: number, duration = 1800) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        let start = 0;
-        const step = 16;
-        const steps = duration / step;
-        const increment = target / steps;
-        timer = setInterval(() => {
-          start += increment;
-          if (start >= target) {
-            setCount(target);
-            clearInterval(timer);
-          } else setCount(Math.floor(start));
-        }, step);
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      if (timer) clearInterval(timer);
-    };
-  }, [target, duration]);
-  return { count, ref };
-}
-
-const STATS = [
-  { label: 'Languages', value: 2, suffix: '+' },
-  { label: 'Algorithms', value: 50, suffix: '+' },
-  { label: 'Execution Steps', value: 10000, suffix: '+' },
-  { label: 'Open Source', value: 100, suffix: '%' },
+const FEATURES = [
+  {
+    icon: Terminal,
+    color: '#bfdbfe',
+    title: 'Multi-language support',
+    desc: 'Learn web paradigms in JavaScript or dig into memory management in C++.',
+  },
+  {
+    icon: Eye,
+    color: '#fde68a',
+    title: 'Step-by-step debugging',
+    desc: 'Pause, step forwards, trace backwards, and watch variables change on each line.',
+  },
+  {
+    icon: Layers,
+    color: '#bbf7d0',
+    title: 'Visual call stack',
+    desc: 'See the stack grow and shrink as recursive frames are pushed and popped.',
+  },
 ];
 
-const StatCard: React.FC<{ label: string; value: number; suffix: string }> = ({
-  label,
-  value,
-  suffix,
-}) => {
-  const { count, ref } = useCountUp(value);
-  return (
-    <div ref={ref} className="flex flex-col items-center">
-      <span className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-        {count.toLocaleString()}
-        {suffix}
-      </span>
-      <span className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-        {label}
-      </span>
-    </div>
-  );
-};
+const STATS = [
+  { label: 'Languages', value: '2+' },
+  { label: 'Algorithms', value: '50+' },
+  { label: 'Execution steps', value: '10,000+' },
+  { label: 'Open source', value: '100%' },
+];
+
+const NAV_LINKS = [
+  { id: 'trace', label: 'Run it' },
+  { id: 'features', label: 'Features' },
+  { id: 'workbench', label: 'Workbench' },
+  { id: 'faq', label: 'FAQ' },
+];
+
+const TICKER = ['Binary Search', 'Merge Sort', 'Quick Sort', 'BST Traversal', 'Breadth-First Search', 'Dijkstra', 'Coin Change', '0/1 Knapsack', 'N-Queens', 'Heap Sort', 'Trie', 'LRU Cache', 'Union-Find', 'Topological Sort'];
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const smooth = (t: number) => t * t * (3 - 2 * t);
 
 const HomePage: React.FC<HomePageProps> = ({
   language,
@@ -230,579 +103,549 @@ const HomePage: React.FC<HomePageProps> = ({
   onHoverLanguage,
 }) => {
   const [hoverLang, setHoverLang] = useState<string | null>(null);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [heroVisible, setHeroVisible] = useState(true);
-  const heroRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sceneRef = useRef<ParticleScene | null>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+  const langRef = useRef({ value: language === 'c++' ? 1 : 0 });
+  const playhead = useRef({ step: 0, current: 0 });
   const prefersReducedMotion = useReducedMotion();
-  const scrambledTitle = useScramble('AlgoViz.', 600);
+  const reduced = Boolean(prefersReducedMotion);
 
-  // Pause the animated preview when it is offscreen and respect reduced motion.
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => setHeroVisible(entry.isIntersecting), { threshold: 0.05 });
-    observer.observe(hero);
-    return () => observer.disconnect();
-  }, []);
+  const activeLang = hoverLang ?? (language === 'c++' ? 'c++' : 'javascript');
 
   useEffect(() => {
-    if (!heroVisible || prefersReducedMotion) return;
-    const interval = setInterval(() => {
-      setStepIndex((prev) => (prev + 1) % EXECUTION_STEPS.length);
-    }, 2200);
-    return () => clearInterval(interval);
-  }, [heroVisible, prefersReducedMotion]);
+    gsap.to(langRef.current, { value: activeLang === 'c++' ? 1 : 0, duration: reduced ? 0 : 0.35, ease: 'power2.out' });
+  }, [activeLang, reduced]);
 
-  const currentStep = EXECUTION_STEPS.find((_, idx) => idx === stepIndex) || EXECUTION_STEPS[0];
+  useEffect(() => {
+    sceneRef.current?.setDark(theme === 'dark');
+  }, [theme]);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const canvas = canvasRef.current;
+    if (!root || !canvas) return;
+
+    let scene: ParticleScene | null = null;
+    try {
+      scene = createScene(canvas, { reduced });
+    } catch (error) {
+      console.warn('Landing WebGL scene disabled:', error);
+    }
+    sceneRef.current = scene;
+    scene?.setDark(document.documentElement.classList.contains('dark'));
+
+    let lenis: Lenis | null = null;
+    const tickLenis = (time: number) => lenis?.raf(time * 1000);
+    if (!reduced) {
+      lenis = new Lenis({ lerp: 0.14, wheelMultiplier: 1 });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(tickLenis);
+    }
+    // Slow machines catch up instead of playing every animation in slow motion.
+    gsap.ticker.lagSmoothing(0);
+    lenisRef.current = lenis;
+
+    const introState = { morph: reduced ? 1 : 0 };
+    let tickScene: ((time: number, deltaMs: number) => void) | null = null;
+    let cancelled = false;
+    let measureSlots = () => {};
+
+    const ctx = gsap.context(() => {
+      const section = (id: string) => root.querySelector(`#${id}`) as HTMLElement;
+      const navH = () => (root.querySelector('.lp-nav') as HTMLElement).offsetHeight;
+
+      // ── Progress sources for the WebGL scene ──────────────────
+      const track = (trigger: HTMLElement, start: string, end: string) => ScrollTrigger.create({ trigger, start, end });
+      const heroToTrace = ScrollTrigger.create({ trigger: section('trace'), start: 'top 85%', end: () => `top ${navH()}px` });
+      const barsIn = track(section('features'), 'top 75%', 'top 15%');
+      const barsRun = track(section('features'), 'top 15%', 'bottom bottom');
+      const graphIn = track(section('stats'), 'top 90%', 'top 20%');
+      const graphRun = track(section('stats'), 'top 20%', 'bottom bottom');
+      const hide = track(section('workbench'), 'top 95%', 'top 45%');
+      const pulseIn = track(section('cta'), 'top 90%', 'top 25%');
+
+      const state: SceneState = {
+        morph: reduced ? 1 : 0,
+        step: 0,
+        current: 0,
+        graphStep: 0,
+        lang: 0,
+        fade: 1,
+        offsetX: 0,
+        offsetY: 0,
+        scale: 1,
+        rotY: 0,
+        barX: new Float32Array(BAR_VALUES.length),
+        barMoving: -1,
+      };
+
+      // Trees rest inside DOM slots, measured with the page at rest.
+      const slots = {
+        hero: { x: 0, y: 0, s: 1 },
+        trace: { x: 0, y: 0, s: 1 },
+        traceRest: 0,
+      };
+      measureSlots = () => {
+        if (!scene) return;
+        const { width, height } = scene.getSize();
+        const aspect = scene.getAspect();
+        const toWorld = (el: Element, shift: number) => {
+          const box = el.getBoundingClientRect();
+          const top = box.top + window.scrollY - shift;
+          const cx = box.left + box.width / 2;
+          const cy = top + box.height / 2;
+          const w = (box.width / width) * 2 * aspect;
+          const h = (box.height / height) * 2;
+          return {
+            x: ((cx / width) * 2 - 1) * aspect,
+            y: 1 - (cy / height) * 2,
+            s: Math.min(w / (TREE_W * 2.12), h / (TREE_H * 2.12)),
+          };
+        };
+        const traceTop = section('trace').getBoundingClientRect().top + window.scrollY;
+        slots.traceRest = traceTop - navH();
+        slots.hero = toWorld(root.querySelector('[data-slot="hero"]') as Element, 0);
+        slots.trace = toWorld(root.querySelector('[data-slot="trace"]') as Element, slots.traceRest);
+      };
+      measureSlots();
+      ScrollTrigger.addEventListener('refresh', measureSlots);
+
+      const bfsEl = root.querySelector('.lp-bfs-count');
+      const sortEl = root.querySelector('.lp-sort-count');
+      const totalComparisons = SORT_FRAMES[SORT_FRAMES.length - 1].comparisons;
+      const totalSteps = FIB_TRACE.steps.length;
+      const { nodes, steps } = FIB_TRACE;
+
+      let slowFrames = 0;
+      let drawnFrames = 0;
+      let degraded = 0;
+      let lastSort = -1;
+      let lastBfs = -1;
+      let docked = false;
+      const labelsEl = root.querySelector('.lp-tree-labels');
+
+      if (scene) {
+        const activeScene = scene;
+        tickScene = (time, deltaMs) => {
+          const aspect = activeScene.getAspect();
+          const narrow = aspect < 0.95;
+          // Everything eases toward its scroll target, so the morphs never snap to the scrollbar.
+          const k = reduced ? 1 : 1 - Math.exp(-(Math.min(deltaMs, 400) / 1000) * 7);
+          const damp = (from: number, to: number) => from + (to - from) * k;
+
+          const seg = (p: number) => (reduced ? Math.round(p) : p);
+          const targetMorph = Math.min(introState.morph + seg(barsIn.progress) + seg(graphIn.progress) + seg(pulseIn.progress), 4);
+          state.morph = reduced ? targetMorph : Math.abs(targetMorph - state.morph) < 0.0005 ? targetMorph : damp(state.morph, targetMorph);
+          state.lang = langRef.current.value;
+
+          // In the hero the tree runs by itself; after that it follows the debugger's playhead.
+          const inHero = heroToTrace.progress < 0.3 && !reduced;
+          if (inHero) {
+            const loop = totalSteps + 10;
+            const idle = Math.floor(time * 3) % loop;
+            const index = Math.min(idle, totalSteps - 1);
+            state.step = (index + 0.5) / totalSteps;
+            state.current = nodes[steps[index].nodeId].enter / totalSteps;
+          } else {
+            state.step = playhead.current.step;
+            state.current = playhead.current.current;
+          }
+
+          // Where each shape sits on screen.
+          const heroT = smooth(heroToTrace.progress);
+          const overscroll = Math.max(0, window.scrollY - slots.traceRest);
+          const tree = {
+            x: lerp(slots.hero.x, slots.trace.x, heroT),
+            y: lerp(slots.hero.y, slots.trace.y, heroT) + (overscroll / activeScene.getSize().height) * 2,
+            s: lerp(slots.hero.s, slots.trace.s, heroT),
+          };
+          const graph = narrow ? { x: 0, y: 0.22, s: 1.05 } : { x: 0, y: 0.2, s: 0.66 };
+          const flat = { x: 0, y: 0, s: 1 };
+          const layouts = [flat, tree, flat, graph, { x: 0, y: 0.35, s: 1 }];
+          const i = Math.min(Math.floor(state.morph), 3);
+          const t = smooth(state.morph - i);
+          state.offsetX = lerp(layouts[i].x, layouts[i + 1].x, t);
+          state.offsetY = lerp(layouts[i].y, layouts[i + 1].y, t);
+          state.scale = lerp(layouts[i].s, layouts[i + 1].s, t);
+
+          const graphWeight = 1 - Math.min(Math.abs(state.morph - 3), 1);
+          state.rotY = reduced ? 0 : damp(state.rotY, graphRun.progress * 3.2 * graphWeight);
+          state.graphStep = graphRun.progress * 1.05;
+
+          // Sort: slide bars between recorded frames.
+          const framePos = barsRun.progress * (SORT_FRAMES.length - 1);
+          const a = SORT_FRAMES[Math.floor(framePos)];
+          const b = SORT_FRAMES[Math.min(Math.floor(framePos) + 1, SORT_FRAMES.length - 1)];
+          const frac = smooth(framePos - Math.floor(framePos));
+          for (let slot = 0; slot < a.order.length; slot++) state.barX[a.order[slot]] = barSlotX(aspect, slot);
+          for (let slot = 0; slot < b.order.length; slot++) {
+            const rank = b.order[slot];
+            state.barX[rank] = lerp(state.barX[rank], barSlotX(aspect, slot), frac);
+          }
+          state.barMoving = barsRun.progress >= 1 || barsRun.progress <= 0 ? -1 : a.moving;
+          if (sortEl && a.comparisons !== lastSort) {
+            lastSort = a.comparisons;
+            sortEl.textContent = `Insertion sort: comparison ${a.comparisons} of ${totalComparisons}`;
+          }
+          const bfsCount = Math.min(18, Math.floor(graphRun.progress * 19));
+          if (bfsEl && bfsCount !== lastBfs) {
+            lastBfs = bfsCount;
+            bfsEl.textContent = `Breadth-first search: visited ${bfsCount} of 18`;
+          }
+
+          // Pixels shrink away behind the text-heavy sections, and the canvas stops drawing there.
+          const targetFade = Math.max(1 - hide.progress, pulseIn.progress);
+          state.fade = reduced ? targetFade : Math.abs(targetFade - state.fade) < 0.001 ? targetFade : damp(state.fade, targetFade);
+
+          // Node numbers show only while the tree sits still in its slot.
+          const isDocked = heroToTrace.progress >= 0.995 && state.morph < 1.01;
+          if (isDocked !== docked) {
+            docked = isDocked;
+            labelsEl?.classList.toggle('is-docked', docked);
+          }
+
+          const drew = activeScene.render(state);
+
+          // Lower the quality once if this machine cannot keep up. Long gaps are tab switches.
+          if (drew && deltaMs < 250 && degraded < 2) {
+            drawnFrames++;
+            if (deltaMs > 28) slowFrames++;
+            if (drawnFrames >= 50) {
+              if (slowFrames > 30) {
+                degraded++;
+                activeScene.degrade();
+              }
+              drawnFrames = 0;
+              slowFrames = 0;
+            }
+          }
+        };
+        gsap.ticker.add(tickScene);
+      }
+
+      // ── Page progress and scroll-linked nav chips ─────────────
+      gsap.to('.lp-progress', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: true } });
+      NAV_LINKS.forEach(({ id }) => {
+        const link = root.querySelector(`[data-nav="${id}"]`);
+        const fill = link?.querySelector('.lp-link-fill');
+        if (!link || !fill) return;
+        gsap.fromTo(
+          fill,
+          { scaleX: 0 },
+          {
+            scaleX: 1,
+            ease: 'none',
+            scrollTrigger: { trigger: section(id), start: 'top 60%', end: 'bottom bottom', scrub: true, toggleClass: { targets: link, className: 'is-active' } },
+          },
+        );
+      });
+
+      const boot = document.getElementById('boot');
+      if (reduced) {
+        boot?.remove();
+        return;
+      }
+
+      // ── Stamp cards in as they arrive. Fast, then they stay put. ──
+      root.querySelectorAll('.lp-stamp').forEach((el) => {
+        gsap.from(el, {
+          y: 28,
+          rotate: -1.2,
+          autoAlpha: 0,
+          duration: 0.4,
+          ease: 'back.out(1.8)',
+          clearProps: 'all',
+          scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+        });
+      });
+
+      // ── Workbench window straightens as it arrives ────────────
+      gsap.fromTo(
+        '.lp-plate-window',
+        { rotate: -2.5, scale: 0.94 },
+        { rotate: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: '.lp-plate-window', start: 'top 95%', end: 'top 35%', scrub: true } },
+      );
+
+      // ── Load moment: the page gets stamped into place ─────────
+      const intro = gsap.timeline({ paused: true, defaults: { ease: 'back.out(1.7)' } });
+      intro.to(introState, { morph: 1, duration: 1.5, ease: 'power3.inOut' }, 0);
+      intro.from('.lp-intro', { y: 30, rotate: -1.5, autoAlpha: 0, duration: 0.5, stagger: 0.07, clearProps: 'transform,opacity,visibility' }, 0.05);
+
+      const elapsed = performance.now();
+      const fontsReady = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 1500))]);
+      const minShown = new Promise((r) => setTimeout(r, boot ? Math.max(0, 900 - elapsed) : 0));
+      Promise.all([fontsReady, minShown]).then(() => {
+        if (cancelled) return;
+        ScrollTrigger.refresh();
+        if (!boot) {
+          intro.play();
+          return;
+        }
+        // Shutter: the loading window drops out and the two halves slide away.
+        gsap
+          .timeline({ onComplete: () => boot.remove() })
+          .to(boot.querySelector('.boot-window'), { scale: 0.8, autoAlpha: 0, duration: 0.18, ease: 'power2.in' })
+          .to(boot.querySelector('.boot-top'), { yPercent: -101, duration: 0.5, ease: 'expo.inOut' }, 0.12)
+          .to(boot.querySelector('.boot-bottom'), { yPercent: 101, duration: 0.5, ease: 'expo.inOut' }, 0.12)
+          .add(() => intro.play(), 0.3);
+      });
+    }, root);
+
+    const onResize = () => {
+      scene?.resize();
+      measureSlots();
+    };
+    const refresh = () => ScrollTrigger.refresh();
+    window.addEventListener('resize', onResize);
+    root.querySelectorAll('img').forEach((img) => img.addEventListener('load', refresh, { once: true }));
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('resize', onResize);
+      ScrollTrigger.removeEventListener('refresh', measureSlots);
+      if (tickScene) gsap.ticker.remove(tickScene);
+      ctx.revert();
+      gsap.ticker.remove(tickLenis);
+      gsap.ticker.lagSmoothing(500, 33);
+      lenis?.destroy();
+      lenisRef.current = null;
+      scene?.destroy();
+      sceneRef.current = null;
+    };
+  }, [reduced]);
+
+  const goToSection = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    const target = rootRef.current?.querySelector(`#${id}`) as HTMLElement | null;
+    if (!target) return;
+    const offset = -(rootRef.current?.querySelector('.lp-nav') as HTMLElement).offsetHeight;
+    if (lenisRef.current) lenisRef.current.scrollTo(target, { duration: 1.1, offset });
+    else window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY + offset);
+  };
+
+  const launchProps = (lang: 'javascript' | 'c++') => ({
+    href: lang === 'c++' ? cppHref : javascriptHref,
+    onClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      onSelectLanguage(lang);
+    },
+    onMouseEnter: () => {
+      setHoverLang(lang);
+      onHoverLanguage?.(lang);
+    },
+    onMouseLeave: () => {
+      setHoverLang(null);
+      onHoverLanguage?.(null);
+    },
+    onFocus: () => setHoverLang(lang),
+    onBlur: () => setHoverLang(null),
+  });
+
+  const docsProps = {
+    href: docsHref,
+    onClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      onOpenDocs();
+    },
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f7f0e3] dark:bg-[var(--dark-base)] text-slate-800 dark:text-slate-200 font-sans selection:bg-amber-200 dark:selection:bg-amber-900/50">
-      <section ref={heroRef} className="relative flex min-h-screen flex-col">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <LandingInteractiveBackdrop hoverLang={hoverLang} defaultLang={language} theme={theme} />
-        </div>
+    <div ref={rootRef} className="lp" data-lang={activeLang === 'c++' ? 'cpp' : 'js'} data-reduced={reduced}>
+      <div className="lp-stage" aria-hidden="true">
+        <canvas ref={canvasRef} />
+      </div>
 
-        {/* Top Navigation / Header */}
-        <header className="relative z-10 flex w-full shrink-0 items-center justify-between border-b-2 border-slate-900/90 bg-white/35 p-4 sm:p-6 backdrop-blur-md dark:border-[var(--dark-border)] dark:bg-slate-950/20">
-          <div className="flex items-center gap-2">
-            <Logo
-              language={hoverLang === 'cpp' ? 'c++' : 'javascript'}
-              className="w-[2.2rem] h-[2.2rem] sm:w-[2.4rem] sm:h-[2.4rem] drop-shadow-[2px_2px_0_rgba(15,23,42,1)] dark:drop-shadow-[2px_2px_0_#000]"
-            />
-            <span className="font-bold text-lg sm:text-xl tracking-tight font-mono">{scrambledTitle}</span>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-6 text-sm font-bold text-slate-600 dark:text-slate-300">
-            <a
-              href={docsHref}
-              onClick={(e) => {
-                e.preventDefault();
-                onOpenDocs();
-              }}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1"
-            >
-              <BookOpen size={14} className="sm:hidden" />
-              <span>{T.docs}</span>
+      <header className="lp-nav">
+        <a href="/" className="lp-brand" aria-label="AlgoViz home">
+          <Logo language={activeLang} className="h-8 w-8 drop-shadow-[1px_1px_0_rgba(15,23,42,1)] dark:drop-shadow-[1px_1px_0_rgba(0,0,0,0.6)]" />
+          <span>AlgoViz</span>
+        </a>
+        <nav className="lp-sections" aria-label="Page sections">
+          {NAV_LINKS.map((link) => (
+            <a key={link.id} href={`#${link.id}`} data-nav={link.id} className="lp-section-link" onClick={(e) => goToSection(e, link.id)}>
+              {link.label}
+              <span className="lp-link-fill" />
             </a>
-            <a
-              href="https://github.com/somyacodes07/AlgoViz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/70 dark:bg-slate-900/55 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-[var(--dark-border)] rounded-full transition-colors group cursor-pointer backdrop-blur-sm text-xs sm:text-sm"
-            >
-              <Star size={14} className="group-hover:text-amber-500 transition-colors" />
-              <span className="hidden sm:inline">{T.githubStar}</span>
-              <span className="sm:hidden">Star</span>
-            </a>
-            <button
-              data-theme-toggle
-              onClick={(e) => toggleTheme(e)}
-              className="p-1.5 sm:p-2 border border-slate-300 dark:border-[var(--dark-border)] rounded-full bg-white/70 dark:bg-slate-900/55 text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors backdrop-blur-sm shadow-sm hover:shadow"
-              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
-              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-            </button>
-          </div>
-        </header>
-
-        <main className="relative z-10 flex flex-1 flex-col items-stretch md:flex-row">
-          {/* Left Side: Copy & Actions */}
-          <div className="relative flex flex-1 flex-col justify-between gap-8 sm:gap-12 border-slate-900/80 bg-white/35 p-6 sm:p-12 lg:p-20 backdrop-blur-sm md:border-r-2 dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-a40)]">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-2xl"
-            >
-              <div className="inline-block px-3 py-1 mb-6 border-2 border-slate-900 dark:border-white/20 rounded-full font-mono text-xs font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300">
-                {T.interactiveVisualizer}
-              </div>
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
-                className="mb-6 flex flex-wrap items-center gap-x-3 sm:gap-x-4 text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1]"
-              >
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {T.see}
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {T.how}
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {T.your}
-                </motion.span>
-                <div className="h-0 w-full" />
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: 0.4,
-                    type: 'spring',
-                    stiffness: 200,
-                  }}
-                  whileHover={{ scale: 1.05, rotate: -2 }}
-                  className="group relative mb-2 mt-2 inline-block cursor-pointer"
-                >
-                  <span className="relative z-10 inline-block transform -skew-x-6 bg-slate-900 px-3.5 py-1.5 leading-none text-white transition-colors group-hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:group-hover:bg-slate-200">
-                    {T.code}
-                  </span>
-                  <span className="absolute inset-0 -z-10 translate-x-2 translate-y-2 transform skew-x-6 bg-amber-400 transition-transform group-hover:translate-x-3 group-hover:translate-y-3 dark:bg-amber-500"></span>
-                </motion.span>
-                <div className="h-0 w-full" />
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.5 }}
-                >
-                  {T.really}
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                >
-                  {T.works}
-                </motion.span>
-              </motion.h1>
-
-              <p className="mb-8 sm:mb-10 max-w-md text-base sm:text-lg md:text-xl font-medium leading-relaxed text-slate-600 dark:text-slate-400">
-                {T.heroSub}
-              </p>
-
-              <div className="mb-4 flex flex-col gap-4 sm:flex-row">
-                <a
-                  href={javascriptHref}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onSelectLanguage('javascript');
-                  }}
-                  onMouseEnter={() => { setHoverLang('js'); onHoverLanguage?.('javascript'); }}
-                  onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
-                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-yellow-400 px-6 py-4 text-base sm:text-lg font-bold text-slate-900 shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-yellow-300 active:translate-y-1 dark:bg-yellow-500 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-yellow-400"
-                >
-                  <span className="flex items-center gap-3">
-                    <Code2 strokeWidth={2.5} />
-                    Launch index.js
-                  </span>
-                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                </a>
-
-                <a
-                  href={cppHref}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onSelectLanguage('c++');
-                  }}
-                  onMouseEnter={() => { setHoverLang('cpp'); onHoverLanguage?.('c++'); }}
-                  onMouseLeave={() => { setHoverLang(null); onHoverLanguage?.(null); }}
-                  className="group relative flex items-center justify-between border-2 border-slate-900 bg-blue-500 px-6 py-4 text-base sm:text-lg font-bold text-white shadow-[4px_4px_0px_#0f172a] transition-transform hover:-translate-y-1 hover:bg-blue-400 active:translate-y-1 dark:border-white/10 dark:bg-blue-600 dark:shadow-[4px_4px_0px_var(--dark-shadow)] dark:hover:bg-blue-500"
-                >
-                  <span className="flex items-center gap-3">
-                    <Cpu strokeWidth={2.5} />
-                    Launch main.cpp
-                  </span>
-                  <ArrowRight className="-translate-x-4 transform opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                </a>
-              </div>
-
-              <div className="mb-4 mt-6 sm:mt-8 flex items-center gap-3 sm:gap-4 flex-wrap">
-                <a
-                  href={docsHref}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onOpenDocs();
-                  }}
-                  className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-900 active:translate-y-[1px] dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                  <BookOpen size={14} /> Read Documentation
-                </a>
-                <a
-                  href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-full border border-[#007acc] bg-[#007acc]/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-[#007acc] transition-colors hover:bg-[#007acc] hover:text-white active:translate-y-[1px] dark:border-[#007acc]/50 dark:text-[#3794ff] dark:hover:bg-[#007acc] dark:hover:text-white"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M2 17a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5H7a5 5 0 0 0-5 5v10z"></path>
-                    <path d="M12 15h.01"></path>
-                    <path d="M8 15h.01"></path>
-                    <path d="M16 15h.01"></path>
-                    <path d="M2 11h20"></path>
-                  </svg>
-                  Get VS Code Extension
-                </a>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2 font-mono text-xs sm:text-sm text-slate-500">
-                <Terminal size={14} />
-                <span>{T.selectFile}</span>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right Side: Visualizer abstract graphic (Responsive on desktop AND mobile) */}
-          <div className="relative z-0 flex flex-1 items-center justify-center bg-slate-100/35 p-4 sm:p-8 backdrop-blur-[2px] md:p-12 lg:p-16 dark:bg-[var(--dark-surface-a30)]">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex h-[380px] sm:h-[420px] lg:h-[460px] w-full max-w-[40rem] flex-col overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[6px_6px_0px_#0f172a] sm:shadow-[8px_8px_0px_#0f172a] dark:border-[var(--dark-border)] dark:bg-[var(--dark-surface-2)]"
-              style={{
-                boxShadow: theme === 'dark'
-                  ? `8px 8px 0px var(--dark-shadow), 0 0 40px ${(hoverLang === 'cpp' || (!hoverLang && language === 'c++')) ? 'var(--dark-glow-blue)' : 'var(--dark-glow-saffron)'}`
-                  : '8px 8px 0px #0f172a',
-              }}
-            >
-              <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-3)]">
-                <div className="w-3 h-3 rounded-full bg-red-400 border border-slate-900/20"></div>
-                <div className="w-3 h-3 rounded-full bg-amber-400 border border-slate-900/20"></div>
-                <div className="w-3 h-3 rounded-full bg-green-400 border border-slate-900/20"></div>
-                <div className="ml-2 font-mono text-xs opacity-60 flex-1 text-center font-semibold text-slate-900 dark:text-slate-100">
-                  {hoverLang === 'js'
-                    ? 'index.js'
-                    : hoverLang === 'cpp'
-                      ? 'main.cpp'
-                      : 'scratchpad.js'}{' '}
-                  - Execution View
-                </div>
-              </div>
-
-              {/* Editor Body */}
-              <div className="flex-1 flex bg-white dark:bg-[var(--dark-surface-2)]">
-                {/* Lines */}
-                <div className="w-12 bg-slate-50 dark:bg-[var(--dark-surface-2)] border-r-2 border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 font-mono text-[14px] text-slate-400 select-none leading-8 relative">
-                  <motion.div
-                    className="absolute left-0 w-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold flex justify-center items-center h-[32px] z-0"
-                    initial={false}
-                    animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                    transition={{ type: 'spring', stiffness: 220, damping: 20 }}
-                  >
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-                    <ChevronRight size={14} strokeWidth={3} className="absolute left-1" />
-                  </motion.div>
-                  <div className="relative z-10 w-full text-center">1</div>
-                  <div className="relative z-10 w-full text-center">2</div>
-                  <div className="relative z-10 w-full text-center">3</div>
-                  <div className="relative z-10 w-full text-center">4</div>
-                  <div className="relative z-10 w-full text-center">5</div>
-                  <div className="relative z-10 w-full text-center">6</div>
-                  <div className="relative z-10 w-full text-center">7</div>
-                </div>
-
-                {/* Dummy Code */}
-                <div className="flex-1 py-4 px-5 font-mono text-[14px] leading-8 overflow-hidden text-slate-700 dark:text-slate-300 relative">
-                  {/* Highlight Background that moves */}
-                  <motion.div
-                    className="absolute left-0 right-0 h-[32px] bg-amber-100/50 dark:bg-amber-900/20 border-y border-amber-300/50 dark:border-amber-700/30 z-0"
-                    initial={false}
-                    animate={{ top: 16 + (currentStep.line - 1) * 32 }}
-                    transition={{ type: 'spring', stiffness: 220, damping: 20 }}
-                  />
-
-                  <motion.div
-                    className={`opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 1 ? 'font-bold text-slate-900 dark:text-white' : ''}`}
-                    animate={{
-                      opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
-                    }}
-                  >
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{T.editorFunction}</span>{' '}
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorFibonacci}</span>
-                    (n) {'{'}
-                  </motion.div>
-                  <motion.div
-                    className={`pl-4 opacity-80 h-[32px] relative z-10 transition-colors ${currentStep.line === 2 ? 'font-bold text-slate-900 dark:text-white' : ''}`}
-                  >
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">if</span> (n{' '}
-                    {'<='} 1){' '}
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{T.editorReturn}</span>{' '}
-                    n;
-                  </motion.div>
-                  <motion.div
-                    className={`pl-4 h-[32px] relative z-10 transition-colors ${currentStep.line === 4 ? 'font-bold text-slate-900 dark:text-white' : 'opacity-80'}`}
-                  >
-                    <span>
-                      <span className="text-blue-700 dark:text-blue-400">{T.editorReturn}</span>{' '}
-                      <span className="text-amber-700 dark:text-amber-400">{T.editorFibonacci}</span>
-                      (n - 1) +{' '}
-                      <span className="text-amber-700 dark:text-amber-400">{T.editorFibonacci}</span>
-                      (n - 2);
-                    </span>
-                  </motion.div>
-                  <motion.div className="opacity-60 h-[32px]">{'}'}</motion.div>
-                  <motion.div
-                    className="opacity-60 h-[32px]"
-                    animate={{
-                      opacity: hoverLang === 'js' ? 1 : hoverLang === 'cpp' ? 0.3 : 0.8,
-                    }}
-                  >
-                    {T.editorConsole}
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorLog}</span>(
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">{T.editorFibonacci}</span>(
-                    <span className="text-green-600 dark:text-green-400 font-bold">6</span>
-                    ));
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Variables Panel Mini */}
-              <div className="h-[140px] border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)] flex flex-col">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1.5 bg-slate-200 dark:bg-[var(--dark-surface-3)] border-b border-slate-300 dark:border-[var(--dark-border)] flex justify-between items-center text-slate-700 dark:text-slate-300">
-                  <span>{T.variablesWatch}</span>
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <Play size={10} fill="currentColor" /> PAUSED on line {currentStep.line}
-                  </span>
-                </div>
-                <div className="flex-1 p-3 font-mono text-xs overflow-hidden flex flex-col gap-2">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold">n</span>
-                    <motion.span
-                      key={currentStep.n}
-                      initial={{
-                        backgroundColor: 'rgb(254, 240, 138)',
-                        color: 'rgb(161, 98, 7)',
-                      }}
-                      animate={{
-                        backgroundColor: 'rgba(220, 252, 231, 0)',
-                        color: 'rgb(22, 163, 74)',
-                      }}
-                      className="text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 rounded"
-                    >
-                      {currentStep.n}
-                    </motion.span>
-                  </div>
-                  <div className="flex-1 flex flex-col p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800/50 transition-colors overflow-hidden relative">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold mb-1 border-b border-amber-200/50 dark:border-amber-800/50 pb-0.5 z-10 bg-inherit">
-                      {T.callStack}
-                    </span>
-                    <div className="flex-1 overflow-hidden relative">
-                      <AnimatePresence initial={false}>
-                        {currentStep.callStack.map((frame, idx) => (
-                          <motion.div
-                            key={`frame-${frame.id}-${idx}`}
-                            initial={{ opacity: 0, x: -15, scale: 0.95, height: 0 }}
-                            animate={{ opacity: 1, x: 0, scale: 1, height: 'auto' }}
-                            exit={{ opacity: 0, x: 15, scale: 0.95, height: 0 }}
-                            transition={{
-                              type: 'spring',
-                              stiffness: 200,
-                              damping: 24,
-                              delay: idx * 0.05,
-                            }}
-                            className={`flex gap-2 ${idx === 0 ? 'font-bold text-slate-900 dark:text-emerald-400 bg-white/40 dark:bg-black/20 rounded px-1' : 'text-slate-500 dark:text-slate-400'}`}
-                          >
-                            <span className="opacity-50 w-3 text-right">
-                              {currentStep.callStack.length - 1 - idx}
-                            </span>
-                            <span>{frame.call}</span>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </main>
-      </section>
-
-      {/* ── Stats Counter Section ───────────────────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] relative z-10 py-14 px-8 md:px-16">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {STATS.map((stat) => (
-            <StatCard key={stat.label} label={stat.label} value={stat.value} suffix={stat.suffix} />
           ))}
+        </nav>
+        <div className="lp-nav-actions">
+          <a {...docsProps} className="lp-icon-btn lp-press">
+            {T.docs}
+          </a>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="lp-icon-btn lp-press" aria-label={T.githubStar}>
+            <Star size={15} strokeWidth={2.5} />
+            <span className="hidden lg:inline">{T.githubStar}</span>
+          </a>
+          <button
+            data-theme-toggle
+            onClick={(e) => toggleTheme(e)}
+            className="lp-icon-btn lp-press"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? <Moon size={16} strokeWidth={2.5} /> : <Sun size={16} strokeWidth={2.5} />}
+          </button>
         </div>
-      </section>
+        <div className="lp-progress" />
+      </header>
 
-      {/* ── Features Section with stagger reveal ──────────────────────────── */}
-      <section className="border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-[#faf9f6]/80 dark:bg-[var(--dark-surface-a80)] backdrop-blur-md relative z-10 py-24 px-8 md:px-16 lg:px-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-5xl font-black tracking-tight mb-4"
-            >
-              {T.whyTitle}
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto"
-            >
-              {T.whySub}
-            </motion.p>
+      <main className="lp-content">
+        <section id="hero" className="lp-hero">
+          <div className="lp-hero-copy">
+            <span className="lp-chip lp-intro">{T.chip}</span>
+            <h1 className="lp-h1 lp-intro">
+              <span className="lp-h1-line">See how your</span>
+              <span className="lp-code-row">
+                <span className="lp-code-word">
+                  <b>code</b>
+                </span>
+                <span className="lp-poster-tag">JS + C++</span>
+              </span>
+              <span className="lp-h1-line">really works.</span>
+            </h1>
+            <p className="lp-lede lp-intro">{T.heroSub}</p>
+            <div className="lp-launchers lp-intro">
+              <a {...launchProps('javascript')} className="lp-launch lp-launch-js lp-press">
+                <Code2 size={20} strokeWidth={2.5} /> Launch index.js
+              </a>
+              <a {...launchProps('c++')} className="lp-launch lp-launch-cpp lp-press">
+                <Cpu size={20} strokeWidth={2.5} /> Launch main.cpp
+              </a>
+            </div>
+            <div className="lp-hero-links lp-intro">
+              <a {...docsProps} className="lp-tag lp-press">
+                <BookOpen size={14} strokeWidth={2.5} /> {T.readDocs}
+              </a>
+              <a href={VSCODE_URL} target="_blank" rel="noopener noreferrer" className="lp-tag lp-press">
+                {T.vscode}
+              </a>
+            </div>
           </div>
+          <div className="lp-hero-visual">
+            <div className="lp-tree-slot" data-slot="hero" />
+            <p className="lp-sticker lp-sticker-run">{T.running}</p>
+          </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Terminal,
-                iconClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-800/50',
-                title: 'Multi-Language Support',
-                desc: "Whether you're learning web paradigms in JavaScript or digging into memory management in C++, AlgoViz speaks your language.",
-              },
-              {
-                icon: Eye,
-                iconClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800/50',
-                title: 'Step-by-Step Debugging',
-                desc: 'Control the flow of time. Pause execution, step forwards, trace backwards, and watch variables mutate exactly when lines evaluate.',
-              },
-              {
-                icon: Layers,
-                iconClass: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-2 border-green-200 dark:border-green-800/50',
-                title: 'Visual Call Stack',
-                desc: 'Demystify recursion and nested function calls. See the stack grow and shrink in real-time as frames are pushed and popped.',
-              },
-            ].map((card, i) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.5, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-white dark:bg-[var(--dark-surface-2)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-8 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_#0f172a] dark:hover:shadow-[4px_4px_0px_var(--dark-shadow)] transition-all"
-              >
-                <div className={`w-12 h-12 flex items-center justify-center mb-6 ${card.iconClass}`}>
-                  <card.icon strokeWidth={2.5} size={24} />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{card.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                  {card.desc}
-                </p>
-              </motion.div>
+        <div className="lp-ticker" aria-hidden="true">
+          <div className="lp-ticker-track">
+            {[...TICKER, ...TICKER].map((name, i) => (
+              <span key={`${name}-${i}`}>{name}</span>
             ))}
           </div>
         </div>
-      </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mb-14">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-              {T.featureTitle}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              {T.featureSub}
-            </p>
-          </div>
+        <TraceSection title={T.traceTitle} intro={T.traceSub} playhead={playhead} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
-              <img
-                src={homepagePreview}
-                alt="AlgoViz homepage showing the algorithm visualizer landing page and launch options for JavaScript and C++."
-                className="w-full border-2 border-slate-900 dark:border-[var(--dark-border)]"
-                loading="lazy"
-              />
-              <h3 className="text-xl font-bold mt-5 mb-2">
-                {T.launchTitle}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                {T.launchDesc}
+        <section id="features" className="lp-features">
+          <div className="lp-features-inner">
+            <h2 className="lp-h2 lp-h2-small">{T.whyTitle}</h2>
+            <div className="lp-feature-grid">
+              {FEATURES.map((feature) => (
+                <article key={feature.title} className="lp-card lp-feature lp-stamp">
+                  <h3>
+                    <span className="lp-feature-icon" style={{ background: feature.color }}>
+                      <feature.icon size={18} strokeWidth={2.5} />
+                    </span>
+                    {feature.title}
+                  </h3>
+                  <p>{feature.desc}</p>
+                </article>
+              ))}
+            </div>
+            <div className="lp-sort-gap">
+              <p className="lp-sticker lp-sort-caption lp-sort-count" aria-hidden="true">
+                Insertion sort
               </p>
-            </article>
-
-            <article className="bg-[#faf9f6] dark:bg-[var(--dark-surface)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-5 shadow-[6px_6px_0px_#0f172a] dark:shadow-[6px_6px_0px_var(--dark-shadow)]">
-              <img
-                src={editorPreview}
-                alt="AlgoViz code visualizer workbench with a Monaco editor, execution controls, variable watch panel, and call stack."
-                className="w-full border-2 border-slate-900 dark:border-[var(--dark-border)]"
-                loading="lazy"
-              />
-              <h3 className="text-xl font-bold mt-5 mb-2">
-                {T.followTitle}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                {T.followDesc}
-              </p>
-            </article>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="border-t-2 border-slate-900 dark:border-[var(--dark-border)] bg-[#faf9f6] dark:bg-[var(--dark-surface)] relative z-10 py-24 px-8 md:px-16 lg:px-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="max-w-3xl mb-12">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-              {T.faqTitle}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-              {T.faqSub}
+        <section id="stats" className="lp-stats">
+          <div className="lp-stats-inner">
+            <p className="lp-sticker lp-bfs-caption lp-bfs-count" aria-hidden="true">
+              Breadth-first search
             </p>
+            <div className="lp-stats-grid">
+              {STATS.map((stat) => (
+                <div key={stat.label} className="lp-stat">
+                  <b>{stat.value}</b>
+                  <span>{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="space-y-4">
+        <section id="workbench" className="lp-workbench">
+          <h2 className="lp-h2">{T.featureTitle}</h2>
+          <p className="lp-lede">{T.featureSub}</p>
+          <div className="lp-window lp-plate-window">
+            <div className="lp-window-bar">
+              <span>AlgoViz workbench</span>
+              <span className="lp-chip">Live preview</span>
+            </div>
+            <img
+              src={editorPreview}
+              alt="AlgoViz code visualizer workbench with a Monaco editor, execution controls, variable watch panel, and call stack."
+              className="lp-plate"
+              width={3420}
+              height={1810}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className="lp-notes">
+            <div className="lp-card lp-stamp">
+              <h3>{T.launchTitle}</h3>
+              <p>{T.launchDesc}</p>
+            </div>
+            <div className="lp-card lp-stamp">
+              <h3>{T.followTitle}</h3>
+              <p>{T.followDesc}</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" className="lp-faq">
+          <div className="lp-faq-inner">
+            <h2 className="lp-h2">{T.faqTitle}</h2>
+            <p className="lp-lede">{T.faqSub}</p>
             {HOME_FAQ_ITEMS.map((item) => (
-              <details
-                key={item.question}
-                className="group bg-white dark:bg-[var(--dark-surface-2)] border-2 border-slate-900 dark:border-[var(--dark-border)] p-6 shadow-[5px_5px_0px_#0f172a] dark:shadow-[5px_5px_0px_var(--dark-shadow)]"
-              >
-                <summary className="cursor-pointer list-none text-lg font-bold pr-8 relative">
-                  {item.question}
-                  <span className="absolute right-0 top-0 text-slate-400 group-open:rotate-45 transition-transform">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                  {item.answer}
-                </p>
+              <details key={item.question} onToggle={() => ScrollTrigger.refresh()}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
               </details>
             ))}
           </div>
+        </section>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <a
-              href={javascriptHref}
-              onClick={(e) => {
-                e.preventDefault();
-                onSelectLanguage('javascript');
-              }}
-              className="inline-flex items-center justify-center px-5 py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold border-2 border-slate-900 transition-colors"
-            >
-              {T.tryJs}
+        <section id="cta" className="lp-cta">
+          <h2 className="lp-h2">{T.selectFile}</h2>
+          <div className="lp-cta-grid">
+            <a {...launchProps('javascript')} className="lp-giant lp-giant-js lp-press">
+              index.js
+              <Code2 className="h-[0.8em] w-[0.8em]" strokeWidth={2.5} />
             </a>
-            <a
-              href={docsHref}
-              onClick={(e) => {
-                e.preventDefault();
-                onOpenDocs();
-              }}
-              className="inline-flex items-center justify-center px-5 py-3 bg-white dark:bg-[var(--dark-surface-2)] text-slate-900 dark:text-slate-100 font-bold border-2 border-slate-900 dark:border-[var(--dark-border)] transition-colors"
-            >
-              {T.exploreDocs}
+            <a {...launchProps('c++')} className="lp-giant lp-giant-cpp lp-press">
+              main.cpp
+              <Cpu className="h-[0.8em] w-[0.8em]" strokeWidth={2.5} />
             </a>
           </div>
-        </div>
-      </section>
+          <footer className="lp-footer">
+            <a {...docsProps} className="lp-tag lp-press">
+              {T.readDocs}
+            </a>
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="lp-tag lp-press">
+              {T.githubStar}
+            </a>
+            <a href={VSCODE_URL} target="_blank" rel="noopener noreferrer" className="lp-tag lp-press">
+              {T.vscode}
+            </a>
+          </footer>
+        </section>
+      </main>
     </div>
   );
 };

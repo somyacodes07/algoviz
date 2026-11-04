@@ -68,7 +68,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <style>
     body {
@@ -78,6 +78,28 @@
     .code-font {
       font-family: 'JetBrains Mono', monospace;
     }
+  </style>
+  <style>
+    /* Loading screen for the landing page. Inline so it paints before any JS or CSS file. */
+    html { background: #f7f0e3; }
+    .boot { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; font-family: Inter, system-ui, sans-serif; color: #0f172a; --boot-paper: #f7f0e3; --boot-card: #fff; --boot-line: #0f172a; --boot-shadow: #0f172a; --boot-dot: rgba(15, 23, 42, 0.13); }
+    .boot-top, .boot-bottom { position: absolute; left: 0; right: 0; height: 50.2%; background-color: var(--boot-paper); background-image: radial-gradient(var(--boot-dot) 1.5px, transparent 1.5px); background-size: 24px 24px; }
+    .boot-top { top: 0; border-bottom: 2px solid var(--boot-line); }
+    .boot-bottom { bottom: 0; border-top: 2px solid var(--boot-line); }
+    .boot-window { position: relative; width: min(420px, calc(100vw - 40px)); background: var(--boot-card); border: 2px solid var(--boot-line); box-shadow: 8px 8px 0 var(--boot-shadow); }
+    .boot-bar { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 2px solid var(--boot-line); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700; }
+    .boot-body { padding: 18px 16px 20px; }
+    .boot-title { margin: 0 0 14px; font-size: 30px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+    .boot-cells { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+    .boot-cell { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border: 2px solid var(--boot-line); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700; animation: boot-fill 1.5s steps(1) infinite; }
+    .boot-cell:nth-child(2) { animation-delay: 0.1s; } .boot-cell:nth-child(3) { animation-delay: 0.2s; } .boot-cell:nth-child(4) { animation-delay: 0.3s; }
+    .boot-cell:nth-child(5) { animation-delay: 0.4s; } .boot-cell:nth-child(6) { animation-delay: 0.5s; } .boot-cell:nth-child(7) { animation-delay: 0.6s; } .boot-cell:nth-child(8) { animation-delay: 0.7s; }
+    @keyframes boot-fill { 0% { background: #facc15; color: #0f172a; } 75% { background: transparent; color: inherit; } }
+    @media (prefers-color-scheme: dark) {
+      html { background: #12100a; }
+      .boot { color: #f1f5f9; --boot-paper: #12100a; --boot-card: #221c14; --boot-line: #5c5038; --boot-shadow: #000; --boot-dot: rgba(148, 163, 184, 0.14); }
+    }
+    @media (prefers-reduced-motion: reduce) { .boot-cell { animation: none; background: #facc15; color: #0f172a; } }
   </style>
   <link rel="stylesheet" href="/index.css">
 
@@ -232,6 +254,26 @@
 </head>
 
 <body>
+  <div id="boot" class="boot" role="status" aria-label="Loading AlgoViz">
+    <div class="boot-top"></div>
+    <div class="boot-bottom"></div>
+    <div class="boot-window">
+      <div class="boot-bar"><span>scratchpad.js</span><span>fibonacci(n)</span></div>
+      <div class="boot-body">
+        <p class="boot-title">AlgoViz</p>
+        <div class="boot-cells"><span class="boot-cell">1</span><span class="boot-cell">1</span><span class="boot-cell">2</span><span class="boot-cell">3</span><span class="boot-cell">5</span><span class="boot-cell">8</span><span class="boot-cell">13</span><span class="boot-cell">21</span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Only the landing page uses this screen, and it must never trap a page if the app fails to start.
+    (function () {
+      var boot = document.getElementById('boot');
+      var home = location.pathname.replace(/\/+$/, '') === '';
+      if (!home) { boot.remove(); return; }
+      setTimeout(function () { boot.remove(); }, 12000);
+    })();
+  </script>
   <div id="root"></div>
   <noscript>
     <main style="font-family: Inter, system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.7; color: #0f172a;">

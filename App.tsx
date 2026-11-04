@@ -283,7 +283,8 @@ const App: React.FC = () => {
       document.documentElement.classList.remove("page-workbench");
       document.body.classList.remove("page-workbench");
       document.documentElement.style.overflowY = "auto";
-      document.body.style.overflowY = "auto";
+      // Body must not become a scroll container: the landing page relies on position: sticky.
+      document.body.style.overflowY = "";
     } else {
       document.documentElement.classList.add("page-workbench");
       document.body.classList.add("page-workbench");
@@ -669,7 +670,7 @@ const App: React.FC = () => {
 
   const routeVariants: Variants = {
     initial: { opacity: 0, y: 24, scale: 0.985, filter: "blur(10px)" },
-    animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1] } },
+    animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1] }, transitionEnd: { filter: "none" } },
     exit: { opacity: 0, y: -18, scale: 1.01, filter: "blur(8px)", transition: { duration: 0.28, ease: [0.4, 0, 1, 1] } },
   };
 
@@ -684,8 +685,8 @@ const App: React.FC = () => {
       <Analytics />
       <AnimatePresence initial={false} mode="wait">
         {page === "home" ? (
-          <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative w-full h-full will-change-transform">
-            <Suspense fallback={<LoadingSkeleton variant="home" />}>
+          <motion.div key="home" variants={routeVariants} initial="initial" animate="animate" exit="exit" className="relative w-full h-full">
+            <Suspense fallback={<div className="min-h-screen" />}>
               <HomePage
                 language={language}
                 onSelectLanguage={handleLanguageSelect}
