@@ -65,10 +65,11 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByProperty('og:type', config.type);
     upsertMetaByProperty('og:url', config.canonicalUrl);
     upsertMetaByProperty('og:image', config.imageUrl);
+    upsertMetaByProperty('og:image:secure_url', config.imageUrl);
     upsertMetaByProperty('og:image:width', '1200');
     upsertMetaByProperty('og:image:height', '630');
     upsertMetaByProperty('og:image:type', 'image/png');
-    upsertMetaByProperty('og:image:alt', 'AlgoViz Interactive Code Execution Visualizer');
+    upsertMetaByProperty('og:image:alt', 'AlgoViz: see how your code really works. A fibonacci(6) call tree running step by step, for JavaScript and C++.');
     upsertMetaByProperty('og:site_name', 'AlgoViz');
     upsertMetaByProperty('og:locale', 'en_US');
 
@@ -76,7 +77,7 @@ export function useSeoMetadata(config: SeoConfig) {
     upsertMetaByName('twitter:title', config.title);
     upsertMetaByName('twitter:description', config.description);
     upsertMetaByName('twitter:image', config.imageUrl);
-    upsertMetaByName('twitter:image:alt', 'AlgoViz Interactive Code Execution Visualizer');
+    upsertMetaByName('twitter:image:alt', 'AlgoViz: see how your code really works. A fibonacci(6) call tree running step by step, for JavaScript and C++.');
     upsertLink('canonical', config.canonicalUrl);
     upsertLink('manifest', '/site.webmanifest');
 
