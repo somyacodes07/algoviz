@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pause, Play, RotateCcw, StepBack, StepForward } from 'lucide-react';
+import gsap from 'gsap';
+import { ExternalLink, Pause, Play, RotateCcw, StepBack, StepForward } from 'lucide-react';
 import { TREE_H, treeNodePoint } from './particleScene';
 import { FIB_CODE_LINES, FIB_TRACE } from './trace';
 
@@ -12,12 +13,13 @@ interface TraceSectionProps {
   title: string;
   intro: string;
   // Read every frame by the particle scene.
-  playhead: React.MutableRefObject<{ step: number; current: number }>;
+  playhead: React.MutableRefObject<{ step: number; current: number; burst: number }>;
+  onLaunch: (lang: 'javascript', origin: HTMLElement, startingCode: string) => void;
 }
 
 function describe(index: number) {
   const step = steps[index];
-  if (step.output !== null) return `Done. console.log printed ${step.output}.`;
+  if (step.output !== null) return `Done. Printed ${step.output}.`;
   const top = step.stack[0];
   if (step.returned !== null) return `${top} received ${step.returned}`;
   if (step.line === 1) return `Calling ${top}`;
@@ -26,7 +28,7 @@ function describe(index: number) {
 }
 
 // Click-to-play debugger. Same controls as the workbench: run, pause, step, scrub.
-const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead }) => {
+const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead, onLaunch }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
   const [slot, setSlot] = useState({ width: 0, height: 0 });
@@ -63,6 +65,29 @@ const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead }) =
     return () => observer.disconnect();
   }, []);
 
+  // Reaching the end plays the payoff: returns climb the tree, then the answer stamps down.
+  useEffect(() => {
+    if (!atEnd) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const wave = gsap.fromTo(
+      playhead.current,
+      { burst: 0.001 },
+      {
+        burst: 1,
+        duration: 1,
+        ease: 'none',
+        onComplete: () => {
+          playhead.current.burst = 0;
+        },
+      },
+    );
+    return () => {
+      wave.kill();
+      playhead.current.burst = 0;
+    };
+  }, [atEnd, playhead]);
+
   // Stop when the debugger scrolls out of view, so the run is never missed.
   useEffect(() => {
     const section = sectionRef.current;
@@ -95,6 +120,11 @@ const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead }) =
     return id === step.nodeId ? 'is-now' : 'is-stack';
   };
 
+  const jumpTo = (id: number) => {
+    setPlaying(false);
+    setIndex(nodes[id].enter);
+  };
+
   const untouched = index === 0 && !playing;
   const playLabel = playing ? 'Pause' : atEnd ? 'Run again' : untouched ? 'Run' : 'Resume';
 
@@ -103,22 +133,37 @@ const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead }) =
       <div className="lp-trace-tree">
         <div ref={slotRef} className="lp-tree-slot" data-slot="trace">
           <div className="lp-tree-labels" aria-hidden="true">
-            {nodes.map((node) => (
+            {nodes.map((node) => {
+              const state = nodeState(node.id);
+              return (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  key={`${node.id}-${atEnd}`}
+                  className={`${state} ${atEnd ? 'is-final' : ''}`}
+                  style={{
+                    left: slot.width / 2 + NODE_POINTS[node.id].x * unit,
+                    top: slot.height / 2 - NODE_POINTS[node.id].y * unit,
+                    animationDelay: `${(node.exit / steps.length).toFixed(2)}s`,
+                  }}
+                  onClick={() => jumpTo(node.id)}
+                >
+                  {state === 'is-done' ? node.value : node.n}
+                </button>
+              );
+            })}
+            {atEnd && (
               <span
-                key={node.id}
-                className={nodeState(node.id)}
-                style={{
-                  left: slot.width / 2 + NODE_POINTS[node.id].x * unit,
-                  top: slot.height / 2 - NODE_POINTS[node.id].y * unit,
-                }}
+                className="lp-tree-stamp"
+                style={{ left: slot.width / 2 + NODE_POINTS[0].x * unit, top: slot.height / 2 - NODE_POINTS[0].y * unit }}
               >
-                {node.n}
+                {step.output}
               </span>
-            ))}
+            )}
           </div>
         </div>
         <p className="lp-sticker lp-sticker-event" aria-live="off">
-          {describe(index)}
+          {untouched ? 'Press Run, or tap any node' : describe(index)}
         </p>
         <ul className="lp-legend" aria-label="Call tree colours">
           <li><i className="is-wait" /> Waiting</li>
@@ -205,18 +250,31 @@ const TraceSection: React.FC<TraceSectionProps> = ({ title, intro, playhead }) =
               {speed}x
             </button>
           </div>
-          <input
-            type="range"
-            className="lp-scrub"
-            min={0}
-            max={last}
-            value={index}
-            aria-label="Execution timeline"
-            onChange={(e) => {
-              setPlaying(false);
-              setIndex(Number(e.target.value));
-            }}
-          />
+          <div className="lp-dock-row">
+            {atEnd ? (
+              <button
+                type="button"
+                className="lp-open"
+                onClick={(e) => onLaunch('javascript', e.currentTarget, FIB_CODE_LINES.join('\n'))}
+              >
+                <ExternalLink size={16} strokeWidth={2.5} />
+                Open this code in the workbench
+              </button>
+            ) : (
+              <input
+                type="range"
+                className="lp-scrub"
+                min={0}
+                max={last}
+                value={index}
+                aria-label="Execution timeline"
+                onChange={(e) => {
+                  setPlaying(false);
+                  setIndex(Number(e.target.value));
+                }}
+              />
+            )}
+          </div>
           </div>
         </div>
       </div>

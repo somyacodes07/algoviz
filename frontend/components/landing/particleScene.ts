@@ -18,6 +18,7 @@ export interface SceneState {
   rotY: number;
   barX: Float32Array;
   barMoving: number;
+  burst: number;
 }
 
 const VERT = `#version 300 es
@@ -26,7 +27,7 @@ in vec3 aFrom;
 in vec3 aTo;
 in vec3 aMeta;  // rand, edge flags (tree + 2 * graph), bar index
 in vec3 aFlow;  // tree enter, tree exit, graph order
-uniform float uF, uAspect, uStep, uCurrent, uGraphStep, uLang, uFade, uPixel, uScale, uRotY, uTurb, uBarMoving, uShadowPass;
+uniform float uF, uAspect, uStep, uCurrent, uGraphStep, uLang, uFade, uPixel, uScale, uRotY, uTurb, uBarMoving, uShadowPass, uBurst;
 uniform int uFromId, uToId;
 uniform vec2 uOffset, uMouse, uShadow;
 uniform vec3 uCard, uLine, uInk;
@@ -58,7 +59,10 @@ vec4 look(int id, vec3 accent, vec3 second) {
     vec3 c = mix(mix(uCard, uLine, treeEdge), accent, entered);
     c = mix(c, second, left);
     c = mix(c, YELLOW, current);
-    return vec4(c, treeEdge > 0.5 ? 3.5 : 6.5);
+    // After a finished run, a wave climbs from the first return up to the root.
+    float wave = uBurst > 0.0 ? max(0.0, 1.0 - abs(uBurst * 1.15 - aFlow.y) / 0.09) : 0.0;
+    c = mix(c, YELLOW, wave * (1.0 - treeEdge));
+    return vec4(c, (treeEdge > 0.5 ? 3.5 : 6.5) * (1.0 + wave * 0.9));
   }
   if (id == 2) {
     float t = aMeta.z / ${(BAR_COUNT - 1).toFixed(1)};
@@ -72,7 +76,8 @@ vec4 look(int id, vec3 accent, vec3 second) {
     vec3 c = mix(mix(uCard, uLine, graphEdge), accent, seen);
     return vec4(mix(c, YELLOW, front * (1.0 - graphEdge)), graphEdge > 0.5 ? 3.5 : 6.5);
   }
-  return vec4(accent, 5.0);
+  float head = step(0.0, uGraphStep - r) * step(uGraphStep - r, 0.03);
+  return vec4(mix(accent, YELLOW, head), 4.5 + head * 3.0);
 }
 
 void main() {
@@ -242,10 +247,10 @@ function buildShapes(count: number, aspect: number) {
     const px = (r * 2 - 1) * (aspect + 0.1);
     const u = (((px / Math.max(aspect, 0.8)) * 1.5 + 1000) % 1 + 1) % 1;
     let py = 0;
-    if (u > 0.38 && u < 0.46) py = ((u - 0.38) / 0.08) * 0.42;
-    else if (u >= 0.46 && u < 0.56) py = 0.42 - ((u - 0.46) / 0.1) * 0.72;
-    else if (u >= 0.56 && u < 0.62) py = -0.3 + ((u - 0.56) / 0.06) * 0.3;
-    set(4, i, px, py + (Math.random() - 0.5) * 0.014, 0);
+    if (u > 0.38 && u < 0.46) py = ((u - 0.38) / 0.08) * 0.27;
+    else if (u >= 0.46 && u < 0.56) py = 0.27 - ((u - 0.46) / 0.1) * 0.46;
+    else if (u >= 0.56 && u < 0.62) py = -0.19 + ((u - 0.56) / 0.06) * 0.19;
+    set(4, i, px, py + (Math.random() - 0.5) * 0.008, 0);
 
     meta[i * 3] = r;
     meta[i * 3 + 1] = edgeFlags;
@@ -391,15 +396,15 @@ export function createScene(canvas: HTMLCanvasElement, opts: { reduced: boolean 
     mouse.x += (mouse.tx - mouse.x) * 0.1;
     mouse.y += (mouse.ty - mouse.y) * 0.1;
 
-    const values = [state.morph, state.step, state.current, state.graphStep, state.lang, state.fade, state.offsetX, state.offsetY, state.scale, state.rotY, state.barMoving, mouse.x, mouse.y];
+    const values = [state.morph, state.step, state.current, state.graphStep, state.lang, state.fade, state.offsetX, state.offsetY, state.scale, state.rotY, state.barMoving, state.burst, mouse.x, mouse.y];
     let changed = dirty;
     for (let i = 0; i < values.length; i++) {
       if (Math.abs(values[i] - last[i]) > 0.0002) changed = true;
       last[i] = values[i];
     }
     for (let i = 0; i < state.barX.length; i++) {
-      if (Math.abs(state.barX[i] - last[13 + i]) > 0.0002) changed = true;
-      last[13 + i] = state.barX[i];
+      if (Math.abs(state.barX[i] - last[values.length + i]) > 0.0002) changed = true;
+      last[values.length + i] = state.barX[i];
     }
     if (!changed) return false;
     dirty = false;
@@ -428,6 +433,7 @@ export function createScene(canvas: HTMLCanvasElement, opts: { reduced: boolean 
     gl.uniform1f(u('uScale'), state.scale);
     gl.uniform1f(u('uRotY'), state.rotY);
     gl.uniform1f(u('uBarMoving'), state.barMoving);
+    gl.uniform1f(u('uBurst'), state.burst);
     gl.uniform2f(u('uOffset'), state.offsetX, state.offsetY);
     gl.uniform2f(u('uMouse'), mouse.x, mouse.y);
     gl.uniform1fv(u('uBarX'), state.barX);

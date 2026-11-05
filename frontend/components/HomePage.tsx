@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -7,6 +7,7 @@ import { BookOpen, Code2, Cpu, Eye, Layers, Moon, Star, Sun, Terminal } from 'lu
 import editorPreview from '../../assets/editor.png';
 import { HOME_FAQ_ITEMS } from '../seo';
 import { barSlotX, createScene, ParticleScene, SceneState, TREE_H, TREE_W } from './landing/particleScene';
+import { playLaunchTransition } from './landing/launchTransition';
 import TraceSection from './landing/TraceSection';
 import { BAR_VALUES, FIB_TRACE, SORT_FRAMES } from './landing/trace';
 import './landing/landing.css';
@@ -16,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 interface HomePageProps {
   language: string;
-  onSelectLanguage: (lang: string) => void;
+  onSelectLanguage: (lang: string, startingCode?: string) => void;
   onOpenDocs: () => void;
   docsHref: string;
   javascriptHref: string;
@@ -35,11 +36,12 @@ const T = {
   chip: 'Interactive code visualizer',
   heroSub: 'Stop guessing. Step through your logic line-by-line, watch variables mutate in real-time, and untangle the call stack.',
   selectFile: 'Select a file to begin.',
+  ctaSub: 'Free to use, with no account needed. Step through your own code in seconds.',
   readDocs: 'Read documentation',
   vscode: 'Get VS Code extension',
   running: 'fibonacci(6) call tree',
   traceTitle: 'Control the flow of time.',
-  traceSub: 'A real run of fibonacci(6). Press run, pause anywhere, or step one line at a time.',
+  traceSub: 'A real run of fibonacci(6). Press run, step one line at a time, or tap a node to jump to that call.',
   whyTitle: 'Why use AlgoViz?',
   featureTitle: 'See the interface before you start',
   featureSub: 'A code editor, variable inspector, console playback, and call stack timeline in one place, for JavaScript and C++.',
@@ -79,6 +81,25 @@ const STATS = [
   { label: 'Open source', value: '100%' },
 ];
 
+const FILES = [
+  {
+    name: 'index.js',
+    lang: 'javascript' as const,
+    label: 'JavaScript',
+    className: 'lp-file-js',
+    icon: Code2,
+    code: ['function fibonacci(n) {', '  if (n <= 1) return n;', '  return fibonacci(n - 1) + fibonacci(n - 2);', '}'],
+  },
+  {
+    name: 'main.cpp',
+    lang: 'c++' as const,
+    label: 'C++',
+    className: 'lp-file-cpp',
+    icon: Cpu,
+    code: ['int fibonacci(int n) {', '  if (n <= 1) return n;', '  return fibonacci(n - 1) + fibonacci(n - 2);', '}'],
+  },
+];
+
 const NAV_LINKS = [
   { id: 'trace', label: 'Run it' },
   { id: 'features', label: 'Features' },
@@ -108,7 +129,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const sceneRef = useRef<ParticleScene | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
   const langRef = useRef({ value: language === 'c++' ? 1 : 0 });
-  const playhead = useRef({ step: 0, current: 0 });
+  const playhead = useRef({ step: 0, current: 0, burst: 0 });
   const prefersReducedMotion = useReducedMotion();
   const reduced = Boolean(prefersReducedMotion);
 
@@ -179,6 +200,7 @@ const HomePage: React.FC<HomePageProps> = ({
         rotY: 0,
         barX: new Float32Array(BAR_VALUES.length),
         barMoving: -1,
+        burst: 0,
       };
 
       // Trees rest inside DOM slots, measured with the page at rest.
@@ -186,6 +208,7 @@ const HomePage: React.FC<HomePageProps> = ({
         hero: { x: 0, y: 0, s: 1 },
         trace: { x: 0, y: 0, s: 1 },
         traceRest: 0,
+        pulseY: 0.5,
       };
       measureSlots = () => {
         if (!scene) return;
@@ -208,6 +231,10 @@ const HomePage: React.FC<HomePageProps> = ({
         slots.traceRest = traceTop - navH();
         slots.hero = toWorld(root.querySelector('[data-slot="hero"]') as Element, 0);
         slots.trace = toWorld(root.querySelector('[data-slot="trace"]') as Element, slots.traceRest);
+        // The pulse is seen with the page scrolled to its end.
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const pulseCenter = toWorld(root.querySelector('[data-slot="pulse"]') as Element, maxScroll).y;
+        slots.pulseY = Math.min(pulseCenter - 0.05, 0.66);
       };
       measureSlots();
       ScrollTrigger.addEventListener('refresh', measureSlots);
@@ -239,6 +266,7 @@ const HomePage: React.FC<HomePageProps> = ({
           const targetMorph = Math.min(introState.morph + seg(barsIn.progress) + seg(graphIn.progress) + seg(pulseIn.progress), 4);
           state.morph = reduced ? targetMorph : Math.abs(targetMorph - state.morph) < 0.0005 ? targetMorph : damp(state.morph, targetMorph);
           state.lang = langRef.current.value;
+          state.burst = playhead.current.burst;
 
           // In the hero the tree runs by itself; after that it follows the debugger's playhead.
           const inHero = heroToTrace.progress < 0.3 && !reduced;
@@ -263,7 +291,7 @@ const HomePage: React.FC<HomePageProps> = ({
           };
           const graph = narrow ? { x: 0, y: 0.22, s: 1.05 } : { x: 0, y: 0.2, s: 0.66 };
           const flat = { x: 0, y: 0, s: 1 };
-          const layouts = [flat, tree, flat, graph, { x: 0, y: 0.35, s: 1 }];
+          const layouts = [flat, tree, flat, graph, { x: 0, y: slots.pulseY, s: 1 }];
           const i = Math.min(Math.floor(state.morph), 3);
           const t = smooth(state.morph - i);
           state.offsetX = lerp(layouts[i].x, layouts[i + 1].x, t);
@@ -272,7 +300,8 @@ const HomePage: React.FC<HomePageProps> = ({
 
           const graphWeight = 1 - Math.min(Math.abs(state.morph - 3), 1);
           state.rotY = reduced ? 0 : damp(state.rotY, graphRun.progress * 3.2 * graphWeight);
-          state.graphStep = graphRun.progress * 1.05;
+          // Once the pulse has settled, a playhead keeps running along it.
+          state.graphStep = !reduced && state.morph >= 3.995 ? (time * 0.16) % 1.15 : graphRun.progress * 1.05;
 
           // Sort: slide bars between recorded frames.
           const framePos = barsRun.progress * (SORT_FRAMES.length - 1);
@@ -425,11 +454,27 @@ const HomePage: React.FC<HomePageProps> = ({
     else window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY + offset);
   };
 
+  const selectRef = useRef(onSelectLanguage);
+  selectRef.current = onSelectLanguage;
+  const launch = useCallback(
+    (lang: 'javascript' | 'c++', origin: HTMLElement, startingCode?: string) => {
+      playLaunchTransition(origin, {
+        name: lang === 'c++' ? 'main.cpp' : 'index.js',
+        lang,
+        reduced,
+        navigate: () => selectRef.current(lang, startingCode),
+      });
+    },
+    [reduced],
+  );
+
   const launchProps = (lang: 'javascript' | 'c++') => ({
     href: lang === 'c++' ? cppHref : javascriptHref,
-    onClick: (e: React.MouseEvent) => {
+    onClick: (e: React.MouseEvent<HTMLElement>) => {
+      // Let the browser handle open-in-new-tab clicks.
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
       e.preventDefault();
-      onSelectLanguage(lang);
+      launch(lang, e.currentTarget);
     },
     onMouseEnter: () => {
       setHoverLang(lang);
@@ -536,7 +581,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        <TraceSection title={T.traceTitle} intro={T.traceSub} playhead={playhead} />
+        <TraceSection title={T.traceTitle} intro={T.traceSub} playhead={playhead} onLaunch={launch} />
 
         <section id="features" className="lp-features">
           <div className="lp-features-inner">
@@ -622,29 +667,53 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         <section id="cta" className="lp-cta">
-          <h2 className="lp-h2">{T.selectFile}</h2>
-          <div className="lp-cta-grid">
-            <a {...launchProps('javascript')} className="lp-giant lp-giant-js lp-press">
-              index.js
-              <Code2 className="h-[0.8em] w-[0.8em]" strokeWidth={2.5} />
-            </a>
-            <a {...launchProps('c++')} className="lp-giant lp-giant-cpp lp-press">
-              main.cpp
-              <Cpu className="h-[0.8em] w-[0.8em]" strokeWidth={2.5} />
-            </a>
+          <div className="lp-pulse-slot" data-slot="pulse" aria-hidden="true" />
+          <div className="lp-cta-head">
+            <h2 className="lp-cta-title">{T.selectFile}</h2>
+            <p className="lp-lede">{T.ctaSub}</p>
           </div>
-          <footer className="lp-footer">
-            <a {...docsProps} className="lp-tag lp-press">
+          <div className="lp-cta-grid">
+            {FILES.map((file) => (
+              <a key={file.name} {...launchProps(file.lang)} className={`lp-file ${file.className} lp-press`} aria-label={`Launch ${file.name}`}>
+                <span className="lp-file-head">
+                  <span className="lp-file-name">{file.name}</span>
+                  <span className="lp-file-lang">{file.label}</span>
+                </span>
+                <code className="lp-file-code" aria-hidden="true">
+                  {file.code.map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                </code>
+                <span className="lp-file-go">
+                  <span>
+                    Launch<span className="lp-file-go-long"> visualizer</span>
+                  </span>
+                  <span className="lp-file-icon">
+                    <file.icon size={20} strokeWidth={2.5} />
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <footer className="lp-footer">
+          <a href="/" className="lp-brand" aria-label="AlgoViz home">
+            <Logo language={activeLang} className="h-7 w-7" />
+            <span>AlgoViz</span>
+          </a>
+          <nav className="lp-footer-links" aria-label="Footer">
+            <a {...docsProps} className="lp-link">
               {T.readDocs}
             </a>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="lp-tag lp-press">
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="lp-link">
               {T.githubStar}
             </a>
-            <a href={VSCODE_URL} target="_blank" rel="noopener noreferrer" className="lp-tag lp-press">
+            <a href={VSCODE_URL} target="_blank" rel="noopener noreferrer" className="lp-link">
               {T.vscode}
             </a>
-          </footer>
-        </section>
+          </nav>
+        </footer>
       </main>
     </div>
   );

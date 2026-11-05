@@ -26,6 +26,7 @@ export interface CallNode {
   enter: number;
   exit: number;
   x: number;
+  value: number;
 }
 
 function buildFibTrace(input: number) {
@@ -40,7 +41,7 @@ function buildFibTrace(input: number) {
 
   const fib = (n: number, parent: number, depth: number): number => {
     const id = nodes.length;
-    const node: CallNode = { id, n, parent, depth, enter: steps.length, exit: 0, x: 0 };
+    const node: CallNode = { id, n, parent, depth, enter: steps.length, exit: 0, x: 0, value: 0 };
     nodes.push(node);
     stack.push(`fibonacci(${n})`);
     record(1, n, id);
@@ -61,6 +62,7 @@ function buildFibTrace(input: number) {
       record(3, n, id, right);
     }
 
+    node.value = value;
     node.exit = steps.length;
     stack.pop();
     return value;

@@ -500,13 +500,13 @@ const App: React.FC = () => {
     syncUrl("home", language);
   }, [language, setIsPlaying, syncUrl]);
 
-  const handleLanguageSelect = (lang: string) => {
+  const handleLanguageSelect = (lang: string, startingCode?: string) => {
     const nextLanguage = normalizeLanguage(lang);
 
     clearExecution();
     setIsPlaying(false);
     setLanguage(nextLanguage);
-    setCode(getDefaultCode(nextLanguage));
+    setCode(startingCode ?? getDefaultCode(nextLanguage));
     setPage("editor");
     setTemplateMenuOpen(false);
     syncUrl("editor", nextLanguage);
