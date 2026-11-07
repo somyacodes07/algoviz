@@ -80,18 +80,63 @@ export function instrumentCode(code: string): string {
       patches.push({ index, text });
     }
 
-    // Scope tracking
-    const scopeStack: Set<string>[] = [new Set()];
-    function getCurrentScopeVars(): string[] {
-      const vars = new Set<string>();
-      scopeStack.forEach((s) => s.forEach((v) => vars.add(v)));
-      return Array.from(vars);
+    // Scope tracking. Each scope maps a name to whether reading it needs a TDZ guard:
+    // let/const are known from the start of their scope (so functions see globals declared below them),
+    // but reading one before its line runs throws, so the trace reads it inside try/catch.
+    const scopeStack: Map<string, boolean>[] = [new Map()];
+    // Parallel to scopeStack: true where the scope is a function body or the program, which is where `var` lives.
+    const functionScope: boolean[] = [true];
+
+    function declare(scope: Map<string, boolean>, name: string, guarded: boolean) {
+      if (!scope.has(name) || !guarded) scope.set(name, guarded);
+    }
+    function declarePattern(pattern: any, scope: Map<string, boolean>, guarded: boolean) {
+      const names = new Set<string>();
+      collectBindingNames(pattern, names);
+      names.forEach((name) => declare(scope, name, guarded));
+    }
+
+    // let/const and function declarations directly in this block.
+    function predeclareBlock(statements: Node[], scope: Map<string, boolean>) {
+      statements.forEach((statement) => {
+        if (statement.type === 'VariableDeclaration' && statement.kind !== 'var') {
+          statement.declarations?.forEach((decl) => declarePattern(decl.id, scope, true));
+        } else if (statement.type === 'FunctionDeclaration' && statement.id) {
+          declare(scope, statement.id.name, false);
+        }
+      });
+    }
+
+    // Every `var` in a function body, however deep, without entering nested functions.
+    function predeclareVars(node: any, scope: Map<string, boolean>) {
+      if (!node || typeof node.type !== 'string') return;
+      if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+        node.declarations?.forEach((decl: Node) => declarePattern(decl.id, scope, false));
+      }
+      for (const key of Object.keys(node)) {
+        const value = node[key];
+        const children = Array.isArray(value) ? value : [value];
+        children.forEach((child: any) => {
+          if (!child || typeof child.type !== 'string') return;
+          if (['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'ClassDeclaration', 'ClassExpression'].includes(child.type)) return;
+          predeclareVars(child, scope);
+        });
+      }
+    }
+
+    function getCurrentScopeVars(): Map<string, boolean> {
+      const vars = new Map<string, boolean>();
+      scopeStack.forEach((scope) => scope.forEach((guarded, name) => vars.set(name, guarded)));
+      return vars;
     }
 
     function generateTraceCall(line: number, type: string = 'step') {
-      const vars = getCurrentScopeVars();
-      const varObj = `{ ${vars.map((v) => `${v}: (typeof ${v} !== 'undefined' ? ${v} : undefined)`).join(', ')} }`;
-      return `__tracer.step(${line}, ${varObj});`;
+      const fields = Array.from(getCurrentScopeVars()).map(([v, guarded]) =>
+        guarded
+          ? `${v}: (() => { try { return ${v}; } catch (__e) { return __tracer.TDZ; } })()`
+          : `${v}: (typeof ${v} !== 'undefined' ? ${v} : undefined)`,
+      );
+      return `__tracer.step(${line}, { ${fields.join(', ')} });`;
     }
 
     function shouldWrapInSyntheticBlock(node: Node, parent?: Node): boolean {
@@ -127,23 +172,37 @@ export function instrumentCode(code: string): string {
         node.type === 'FunctionDeclaration' ||
         node.type === 'ArrowFunctionExpression' ||
         node.type === 'FunctionExpression';
+      // `for (let i ...)` binds i to the loop, so it must leave scope when the loop ends.
+      const isLoopScope = ['ForStatement', 'ForInStatement', 'ForOfStatement'].includes(node.type);
+      const opensScope = isBlock || isFunction || isLoopScope;
 
-      if (isBlock || isFunction) {
-        scopeStack.push(new Set());
+      if (opensScope) {
+        const scope = new Map<string, boolean>();
+        scopeStack.push(scope);
+        functionScope.push(isFunction || node.type === 'Program');
+        if (isBlock && Array.isArray(node.body)) predeclareBlock(node.body as Node[], scope);
+        if (node.type === 'Program') predeclareVars(node, scope);
+        if (isFunction) predeclareVars(node.body, scope);
       }
 
-      // Variable Collection — supports destructuring (ArrayPattern, ObjectPattern)
+      // Variable Collection — supports destructuring (ArrayPattern, ObjectPattern).
+      // Loop bindings (`for (let i ...)`) land here; they are initialised before the body runs.
       if (node.type === 'VariableDeclaration') {
+        let target = scopeStack.length - 1;
+        if (node.kind === 'var') {
+          while (target > 0 && !functionScope[target]) target--;
+        }
         node.declarations?.forEach((decl) => {
-          collectBindingNames(decl.id, scopeStack[scopeStack.length - 1]);
+          declarePattern(decl.id, scopeStack[target], node.kind !== 'var' && !isLoopInitializer);
         });
       }
-      if (isFunction && node.id?.type === 'Identifier') {
-        if (scopeStack.length > 1) scopeStack[scopeStack.length - 2].add(node.id.name);
+      if (isFunction && node.id?.type === 'Identifier' && node.type !== 'FunctionDeclaration') {
+        // A named function expression is visible inside itself.
+        declare(scopeStack[scopeStack.length - 1], node.id.name, false);
       }
       if (isFunction && node.params) {
         node.params.forEach((param) => {
-          collectBindingNames(param, scopeStack[scopeStack.length - 1]);
+          declarePattern(param, scopeStack[scopeStack.length - 1], false);
         });
       }
 
@@ -253,8 +312,9 @@ export function instrumentCode(code: string): string {
       }
 
       // Exit Scope
-      if (isBlock || isFunction) {
+      if (opensScope) {
         scopeStack.pop();
+        functionScope.pop();
       }
     }
 

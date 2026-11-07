@@ -26,15 +26,37 @@ const TemplatePalette: React.FC<TemplatePaletteProps> = ({
 
   const categories = Array.from(new Set(templates.map((t) => t.category)));
 
-  const filteredTemplates = templates.filter((t) => {
-    const q = searchQuery.toLowerCase();
-    const searchString = [t.name, t.description, t.category, ...(t.tags || [])]
-      .join(' ')
-      .toLowerCase();
-    const matchesSearch = searchString.includes(q);
-    const matchesCat = selectedCategory ? t.category === selectedCategory : true;
-    return matchesSearch && matchesCat;
-  });
+  // Each word of the query must match. Whole words in the name rank first, so "BST"
+  // finds "BST Insertion" before "Longest Substring".
+  const scoreTemplate = (t: CodeTemplate, words: string[]) => {
+    const name = t.name.toLowerCase();
+    const nameWords = name.split(/[^a-z0-9+#]+/).filter(Boolean);
+    const tags = (t.tags || []).map((tag) => tag.toLowerCase());
+    const category = t.category.toLowerCase();
+    const description = t.description.toLowerCase();
+    let total = 0;
+    for (const word of words) {
+      let best = 0;
+      if (nameWords.includes(word)) best = 40;
+      else if (nameWords.some((w) => w.startsWith(word))) best = 30;
+      else if (tags.includes(word)) best = 24;
+      else if (name.includes(word)) best = 14;
+      else if (tags.some((tag) => tag.includes(word))) best = 10;
+      else if (category.includes(word)) best = 6;
+      else if (description.split(/[^a-z0-9]+/).some((w) => w.startsWith(word))) best = 4;
+      else if (description.includes(word)) best = 2;
+      if (best === 0) return 0;
+      total += best;
+    }
+    return total;
+  };
+
+  const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+  const filteredTemplates = templates
+    .map((t, index) => ({ t, index, score: queryWords.length ? scoreTemplate(t, queryWords) : 1 }))
+    .filter(({ t, score }) => score > 0 && (selectedCategory ? t.category === selectedCategory : true))
+    .sort((a, b) => (queryWords.length ? b.score - a.score : 0) || a.index - b.index)
+    .map(({ t }) => t);
 
   useEffect(() => {
     if (isOpen) {

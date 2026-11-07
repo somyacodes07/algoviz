@@ -21,6 +21,8 @@ interface Patch {
 export class CppInstrumenter {
   private patches: Patch[] = [];
   private scopeStack: Set<string>[] = [];
+  // Parameter names of the function whose body is about to open; they join that body's scope.
+  private pendingParams: string[] | null = null;
 
   constructor() {}
 
@@ -34,6 +36,7 @@ export class CppInstrumenter {
     const tree = parseCpp(code);
     this.patches = [];
     this.scopeStack = [new Set()];
+    this.pendingParams = null;
 
     this.walk(tree.rootNode);
 
@@ -59,6 +62,22 @@ export class CppInstrumenter {
     const type = node.type;
     const startLine = node.startPosition.row + 1; // 1-indexed for visualizer
 
+    // A lambda cannot read the enclosing function's locals unless it captures them,
+    // so its traces only see globals and its own parameters.
+    if (type === 'lambda_expression') {
+      const saved = this.scopeStack;
+      this.scopeStack = [new Set(saved[0])];
+      this.pendingParams = this.functionParams(node);
+      for (let i = 0; i < node.namedChildCount; i++) this.walk(node.namedChild(i)!);
+      this.scopeStack = saved;
+      this.pendingParams = null;
+      return;
+    }
+
+    if (type === 'struct_specifier' || type === 'class_specifier') {
+      this.addStructSerializer(node);
+    }
+
     // Push scope for compound_statement AND for loop/while/do statements.
     // In C++, `for (int i = ...)` declares `i` in the for-statement's own scope,
     // so we must push/pop here to prevent `i` from leaking into the parent scope.
@@ -70,7 +89,16 @@ export class CppInstrumenter {
       type === 'for_range_loop';
 
     if (isBlock || isLoopScope) {
-      this.scopeStack.push(new Set());
+      const scope = new Set<string>();
+      if (isBlock && this.pendingParams) {
+        this.pendingParams.forEach((name) => scope.add(name));
+        this.pendingParams = null;
+      }
+      this.scopeStack.push(scope);
+    }
+
+    if (type === 'function_definition') {
+      this.pendingParams = this.functionParams(node);
     }
 
     // Capture Variable Declarations
@@ -146,6 +174,65 @@ export class CppInstrumenter {
     return node.text;
   }
 
+  /**
+   * Give every struct and class a hidden-friend `__to_json`, so values print as
+   * {"field": value} with their real field names. A friend can read private members, and
+   * argument-dependent lookup finds it from the generic serializers.
+   */
+  private addStructSerializer(node: Node) {
+    const body = node.childForFieldName('body');
+    const name = node.childForFieldName('name');
+    if (!body || !name || name.type !== 'type_identifier') return;
+    if (node.parent?.type === 'template_declaration') return;
+    // Local classes (declared inside a function) may not define friend functions.
+    for (let up = node.parent; up; up = up.parent) {
+      if (up.type === 'function_definition' || up.type === 'lambda_expression') return;
+    }
+
+    const fields: string[] = [];
+    const collect = (declarator: Node | null) => {
+      if (!declarator || declarator.type === 'function_declarator') return;
+      if (declarator.type === 'field_identifier') {
+        fields.push(declarator.text);
+        return;
+      }
+      if (declarator.type === 'bitfield_clause') return;
+      const inner = declarator.childForFieldName('declarator');
+      if (inner) collect(inner);
+      else declarator.namedChildren.forEach((child) => child.type === 'field_identifier' && fields.push(child.text));
+    };
+    for (const member of body.namedChildren) {
+      if (member.type !== 'field_declaration') continue;
+      if (member.namedChildren.some((child) => child.type === 'storage_class_specifier' && child.text === 'static')) continue;
+      member.namedChildren.forEach((child) => {
+        if (['field_identifier', 'pointer_declarator', 'array_declarator', 'reference_declarator', 'init_declarator'].includes(child.type)) collect(child);
+      });
+    }
+
+    const typeName = name.text;
+    const parts = fields.map((field, i) => `${i ? '", ' : '"'}\\"${field}\\": " + __to_json(__v.${field}) + `);
+    const json = fields.length ? `std::string("{") + ${parts.join('')}"}"` : 'std::string("{}")';
+    const serializer = ` friend std::string __to_json(const ${typeName}& __v) { __JsonDepth __guard; if (__guard.tooDeep()) return "\\"{...}\\""; return ${json}; } `;
+    this.addPatch(body.endIndex - 1, serializer);
+  }
+
+  // Named parameters of a function definition: `int insert(Node* root, int val)` gives root and val.
+  private functionParams(fn: Node): string[] {
+    let declarator = fn.childForFieldName('declarator');
+    while (declarator && declarator.type !== 'function_declarator' && declarator.type !== 'abstract_function_declarator') {
+      declarator = declarator.childForFieldName('declarator') || declarator.namedChildren.find((child) => child.type.includes('declarator')) || null;
+    }
+    const list = declarator?.childForFieldName('parameters');
+    if (!list) return [];
+    const names: string[] = [];
+    for (const param of list.namedChildren) {
+      if (!param.type.includes('parameter_declaration')) continue;
+      const name = this.extractIdentifier(param.childForFieldName('declarator'));
+      if (name && /^[A-Za-z_]\w*$/.test(name)) names.push(name);
+    }
+    return names;
+  }
+
   private handleDeclaration(node: Node) {
     for (let i = 0; i < node.namedChildCount; i++) {
       const child = node.namedChild(i)!;
@@ -199,23 +286,42 @@ export class CppInstrumenter {
       '#include <iostream>',
       '#include <string>',
       '#include <sstream>',
+      '#include <iomanip>',
+      '#include <cmath>',
       '#include <vector>',
+      '#include <array>',
       '#include <map>',
+      '#include <unordered_map>',
+      '#include <set>',
+      '#include <unordered_set>',
       '#include <stack>',
       '#include <queue>',
       '#include <deque>',
       '#include <type_traits>',
       '#include <initializer_list>',
       '#include <utility>',
+      '#include <cstring>',
       '',
       'void __trace(int line, std::initializer_list<std::pair<std::string, std::string>> vars);',
-      '// Forward declarations',
+      '// Forward declarations: every serializer can call every other one.',
+      'std::string __to_json(bool v);',
+      'std::string __to_json(char v);',
+      'std::string __to_json(const std::string& v);',
+      'std::string __to_json(const char* v);',
       'template<typename T> std::string __to_json(const T& v);',
-      'template<typename T> std::string __to_json(const std::vector<T>& v);',
+      'template<typename T, typename A> std::string __to_json(const std::vector<T, A>& v);',
+      'template<typename T, size_t N> std::string __to_json(const std::array<T, N>& v);',
+      'template<typename T, size_t N> std::string __to_json(const T (&v)[N]);',
+      'template<size_t N> std::string __to_json(const char (&v)[N]);',
       'template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p);',
-      'template<typename K, typename V> std::string __to_json(const std::map<K, V>& m);',
-      'template<typename T> std::string __to_json(const std::stack<T>& s);',
-      'template<typename T> std::string __to_json(const std::queue<T>& q);',
+      'template<typename K, typename V, typename C, typename A> std::string __to_json(const std::map<K, V, C, A>& m);',
+      'template<typename K, typename V, typename H, typename E, typename A> std::string __to_json(const std::unordered_map<K, V, H, E, A>& m);',
+      'template<typename T, typename C, typename A> std::string __to_json(const std::set<T, C, A>& s);',
+      'template<typename T, typename H, typename E, typename A> std::string __to_json(const std::unordered_set<T, H, E, A>& s);',
+      'template<typename T, typename A> std::string __to_json(const std::deque<T, A>& d);',
+      'template<typename T, typename C> std::string __to_json(const std::stack<T, C>& s);',
+      'template<typename T, typename C> std::string __to_json(const std::queue<T, C>& q);',
+      'template<typename T, typename C, typename P> std::string __to_json(const std::priority_queue<T, C, P>& q);',
       'template<typename T> std::string __to_json(T* ptr, int depth = 0);',
       'std::vector<std::string> __pending_events;',
       'std::vector<std::string> __call_stack;',
@@ -243,67 +349,94 @@ export class CppInstrumenter {
       '    __pending_events.push_back(std::string("{\\"type\\":\\"compare\\",\\"line\\":") + std::to_string(line) + ",\\"result\\":" + (result ? "true}" : "false}"));',
       '    return result;',
       '}',
-      'std::string __to_json(const std::string& v);',
-      'std::string __to_json(const char* v);',
-      'std::string __to_json(bool v);',
       '',
-      '// Generic arithmetic fallback',
+      '// Numbers. JSON has no infinity, but 1e999 parses to Infinity in JavaScript.',
       'template<typename T> std::string __to_json(const T& v) {',
-      '    if constexpr (std::is_arithmetic_v<T>) {',
+      '    if constexpr (std::is_floating_point_v<T>) {',
+      '        if (std::isnan(v)) return "null";',
+      '        if (std::isinf(v)) return v > 0 ? "1e999" : "-1e999";',
+      '        std::ostringstream out;',
+      '        out << std::setprecision(10) << v;',
+      '        return out.str();',
+      '    } else if constexpr (std::is_arithmetic_v<T>) {',
       '        return std::to_string(v);',
+      '    } else if constexpr (std::is_enum_v<T>) {',
+      '        return std::to_string(static_cast<long long>(v));',
       '    } else {',
-      `        return ${DQ}${BSQ}unsupported${BSQ}${DQ};`,
+      String.raw`        return "\"{...}\"";`,
       '    }',
       '}',
       '',
-      // string overloads
-      `std::string __to_json(const std::string& v) { return ${DQ}${BSQ}${DQ} + v + ${DQ}${BSQ}${DQ}; }`,
-      `std::string __to_json(const char* v) { return ${DQ}${BSQ}${DQ} + std::string(v) + ${DQ}${BSQ}${DQ}; }`,
-      `std::string __to_json(bool v) { return v ? ${DQ}true${DQ} : ${DQ}false${DQ}; }`,
+      'std::string __to_json(bool v) { return v ? "true" : "false"; }',
+      'std::string __to_json(char v) { return __json_quote(std::string(1, v)); }',
+      'std::string __to_json(const std::string& v) { return __json_quote(v); }',
+      String.raw`std::string __to_json(const char* v) { return v ? __json_quote(std::string(v)) : "null"; }`,
       '',
-      '// vector',
-      'template<typename T> std::string __to_json(const std::vector<T>& v) {',
-      `    std::string res = ${DQ}[${DQ};`,
-      '    for (size_t i = 0; i < v.size(); ++i) {',
-      '        res += __to_json(v[i]);',
-      `        if (i < v.size() - 1) res += ${DQ}, ${DQ};`,
+      '// Struct serializers are generated per struct; this guard stops pointer cycles and runaway nesting.',
+      'struct __JsonDepth {',
+      '    static int& level() { static int depth = 0; return depth; }',
+      '    __JsonDepth() { ++level(); }',
+      '    ~__JsonDepth() { --level(); }',
+      '    bool tooDeep() const { return level() > 7; }',
+      '};',
+      '',
+      '// Object keys must be JSON strings, whatever the C++ key type is.',
+      'template<typename K> std::string __json_key(const K& key) {',
+      '    std::string text = __to_json(key);',
+      String.raw`    return !text.empty() && text[0] == '"' ? text : __json_quote(text);`,
+      '}',
+      '',
+      'template<typename It> std::string __json_list(It begin, It end) {',
+      '    std::string res = "[";',
+      '    for (It it = begin; it != end; ++it) {',
+      '        if (it != begin) res += ", ";',
+      '        res += __to_json(static_cast<typename std::iterator_traits<It>::value_type>(*it));',
       '    }',
-      `    res += ${DQ}]${DQ};`,
-      '    return res;',
+      '    return res + "]";',
       '}',
-      '',
-      '// pair',
-      'template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p) {',
-      `    return ${DQ}{${BSQ}first${BSQ}: ${DQ} + __to_json(p.first) + ${DQ}, ${BSQ}second${BSQ}: ${DQ} + __to_json(p.second) + ${DQ}}${DQ};`,
-      '}',
-      '',
-      '// map',
-      'template<typename K, typename V> std::string __to_json(const std::map<K, V>& m) {',
-      `    std::string res = ${DQ}{${DQ};`,
-      '    bool first = true;',
-      '    for (auto const& [key, val] : m) {',
-      `        if (!first) res += ${DQ}, ${DQ};`,
-      `        res += __to_json(key) + ${DQ}: ${DQ} + __to_json(val);`,
-      '        first = false;',
+      'template<typename It> std::string __json_object(It begin, It end) {',
+      '    std::string res = "{";',
+      '    for (It it = begin; it != end; ++it) {',
+      '        if (it != begin) res += ", ";',
+      '        res += __json_key(it->first) + ": " + __to_json(it->second);',
       '    }',
-      `    res += ${DQ}}${DQ};`,
-      '    return res;',
+      '    return res + "}";',
       '}',
       '',
-      '// stack',
-      'template<typename T> std::string __to_json(const std::stack<T>& s) {',
-      '    std::stack<T> copy = s;',
+      'template<typename T, typename A> std::string __to_json(const std::vector<T, A>& v) { return __json_list(v.begin(), v.end()); }',
+      'template<typename T, size_t N> std::string __to_json(const std::array<T, N>& v) { return __json_list(v.begin(), v.end()); }',
+      'template<typename T, size_t N> std::string __to_json(const T (&v)[N]) { return __json_list(v, v + N); }',
+      'template<size_t N> std::string __to_json(const char (&v)[N]) { return __json_quote(std::string(v, strnlen(v, N))); }',
+      '// Pairs become two-item arrays, so a vector of pairs reads as a table.',
+      'template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p) { return "[" + __to_json(p.first) + ", " + __to_json(p.second) + "]"; }',
+      'template<typename K, typename V, typename C, typename A> std::string __to_json(const std::map<K, V, C, A>& m) { return __json_object(m.begin(), m.end()); }',
+      'template<typename K, typename V, typename H, typename E, typename A> std::string __to_json(const std::unordered_map<K, V, H, E, A>& m) { return __json_object(m.begin(), m.end()); }',
+      'template<typename T, typename C, typename A> std::string __to_json(const std::set<T, C, A>& s) { return __json_list(s.begin(), s.end()); }',
+      'template<typename T, typename H, typename E, typename A> std::string __to_json(const std::unordered_set<T, H, E, A>& s) { return __json_list(s.begin(), s.end()); }',
+      'template<typename T, typename A> std::string __to_json(const std::deque<T, A>& d) { return __json_list(d.begin(), d.end()); }',
+      '',
+      '// stack: bottom first, top last',
+      'template<typename T, typename C> std::string __to_json(const std::stack<T, C>& s) {',
+      '    std::stack<T, C> copy = s;',
       '    std::vector<T> v;',
       '    while (!copy.empty()) { v.insert(v.begin(), copy.top()); copy.pop(); }',
       '    return __to_json(v);',
       '}',
       '',
-      '// queue',
-      'template<typename T> std::string __to_json(const std::queue<T>& q) {',
-      '    std::queue<T> copy = q;',
+      '// queue: front first',
+      'template<typename T, typename C> std::string __to_json(const std::queue<T, C>& q) {',
+      '    std::queue<T, C> copy = q;',
       '    std::vector<T> v;',
       '    while (!copy.empty()) { v.push_back(copy.front()); copy.pop(); }',
       '    return __to_json(v);',
+      '}',
+      '',
+      '// priority_queue: its real heap array, read through the protected member every adaptor has.',
+      'template<typename T, typename C, typename P> struct __PQAccess : std::priority_queue<T, C, P> {',
+      '    static const C& get(const std::priority_queue<T, C, P>& q) { return q.*(&__PQAccess::c); }',
+      '};',
+      'template<typename T, typename C, typename P> std::string __to_json(const std::priority_queue<T, C, P>& q) {',
+      '    return __to_json(__PQAccess<T, C, P>::get(q));',
       '}',
       '',
       '// SFINAE Member Detectors (C++17)',

@@ -493,7 +493,7 @@ const VariableCard: React.FC<{
                   }}
                 />
               )}
-              <span className="text-base font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 truncate">
+              <span className="font-mono text-base font-bold text-slate-700 dark:text-slate-200 truncate">
                 {name}
               </span>
 

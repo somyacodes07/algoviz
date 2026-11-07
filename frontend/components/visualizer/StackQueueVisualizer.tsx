@@ -8,6 +8,20 @@ export interface StackQueuePreview {
   sourceName: string;
   value: unknown[];
   type: 'stack' | 'queue';
+  isPriority?: boolean;
+}
+
+export function formatItem(item: unknown): string {
+  if (item === null || item === undefined) return String(item);
+  if (Array.isArray(item)) return `[${item.map(formatItem).join(', ')}]`;
+  if (typeof item === 'object') {
+    const record = item as Record<string, unknown>;
+    for (const key of ['val', 'value', 'data', 'id', 'key', 'name']) {
+      if (typeof record[key] === 'number' || typeof record[key] === 'string') return String(record[key]);
+    }
+    return '{…}';
+  }
+  return String(item);
 }
 
 const STACK_NAMES = /^(stack|stk|s)$/i;
@@ -56,7 +70,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
     <div className="border-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-white dark:bg-[var(--dark-surface)] shadow-[2px_2px_0_#0f172a] dark:shadow-[2px_2px_0_var(--dark-shadow)]">
       <div className="flex items-center justify-between px-3 py-1.5 border-b-[2px] border-slate-900 dark:border-[var(--dark-border)] bg-slate-50 dark:bg-[var(--dark-surface-2)]">
         <span className={`text-[10px] font-black uppercase tracking-[0.16em] ${theme.accentText}`}>
-          {isStack ? 'Stack (LIFO)' : 'Queue (FIFO)'} — <span className="font-mono">{preview.sourceName}</span>
+          {isStack ? 'Stack (LIFO)' : preview.isPriority ? 'Priority queue' : 'Queue (FIFO)'} — <span className="font-mono">{preview.sourceName}</span>
         </span>
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">{preview.value.length} items</span>
@@ -86,7 +100,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
                     exit={{ opacity: 0, x: 12 }}
                     className={`${cellBase} w-24 h-8 ${isTop ? topCellColor : cellColor}`}
                   >
-                    {String(item)}
+                    {formatItem(item)}
                   </motion.div>
                 );
               })}
@@ -115,7 +129,7 @@ export const StackQueuePanel: React.FC<StackQueuePanelProps> = ({ preview, theme
                       className={`flex flex-col items-center shrink-0`}
                     >
                       <div className={`${cellBase} w-10 h-8 ${isFront ? topCellColor : cellColor}`}>
-                        {String(item)}
+                        {formatItem(item)}
                       </div>
                       {(isFront || isBack) && (
                         <span className="text-[7px] font-bold text-slate-400 mt-0.5">

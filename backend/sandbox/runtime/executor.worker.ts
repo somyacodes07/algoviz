@@ -1,5 +1,6 @@
 import { analyzeComplexity } from '../../analysis/complexity';
 import { instrumentCode } from '../../tracer/instrumenter';
+import { cloneTraceVariables } from './cloneTraceVariables';
 import {
   Timeline,
   ConsoleLog,
@@ -153,14 +154,17 @@ self.onmessage = async (e: MessageEvent) => {
         tracer.currentLine = line;
         lastLine = line;
 
-        // Deep-clone variables — structuredClone is faster than JSON round-trip
-        // and handles more types (Map, Set, Date, RegExp, etc.)
+        // Names declared further down are still in their temporal dead zone: leave them out.
+        for (const key of Object.keys(vars)) {
+          if (vars[key] === tracer.TDZ) delete vars[key];
+        }
+
+        // structuredClone is fast but throws as soon as a function is in scope.
         let safeVars: any;
         try {
           safeVars = structuredClone(vars);
         } catch {
-          // Fallback for non-cloneable values (functions, symbols)
-          safeVars = JSON.parse(serializeForDisplay(vars));
+          safeVars = cloneTraceVariables(vars);
         }
 
         timeline.push({
@@ -173,6 +177,9 @@ self.onmessage = async (e: MessageEvent) => {
         });
         pendingEvents = [];
       },
+
+      // Marker the instrumented code returns for a let/const read before its declaration ran.
+      TDZ: Object.freeze({}),
 
       checkLoop: () => {
         return stepCount > MAX_STEPS;

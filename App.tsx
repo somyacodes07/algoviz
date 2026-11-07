@@ -800,6 +800,7 @@ const App: React.FC = () => {
               <div className={`flex-1 flex-col min-w-0 min-h-0 w-full md:h-full md:shrink ${mobileWorkspaceView === 'workspace' ? 'flex' : 'hidden'} md:flex`}>
                 <Suspense fallback={<LoadingSkeleton variant="workspace" />}>
                   <WorkspaceVisualizer
+                    code={code}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     consoleExpanded={consoleExpanded}

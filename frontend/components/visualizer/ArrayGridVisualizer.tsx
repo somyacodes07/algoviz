@@ -5,6 +5,7 @@ import { VariableMap, VisualizationEvent } from '../../../types';
 import { getThemeConfig, ThemeColor } from '../../theme/theme';
 import { DEFAULT_PTR_COLOR, getPtrColor } from './LinkedListVisualizer';
 import { TreePanel } from './TreeVisualizer';
+import { CellAccess, displayValue } from './codeAccess';
 
 
 interface ArrayGridVisualizerProps {
@@ -14,6 +15,15 @@ interface ArrayGridVisualizerProps {
   themeColor: ThemeColor;
   arrayViewType?: 'cells' | 'bars';
   onEnlarge?: () => void;
+  // Which variable to draw. Without it, the best-looking array in scope is picked.
+  sourceName?: string;
+  // Cells the current line reads or writes.
+  accesses?: CellAccess[];
+  // Variables the code uses as an index, per dimension. Only these count as pointers.
+  indexVars?: string[][];
+  // Matrix headers, e.g. the characters of two strings for an LCS table.
+  rowLabels?: string[];
+  colLabels?: string[];
 }
 
 export interface ArrayGridPreview {
@@ -26,7 +36,6 @@ export interface ArrayGridPreview {
 const ARRAY_ITEM_STRIDE = 72;
 const ARRAY_OVERSCAN = 6;
 const ARRAY_VIRTUALIZATION_THRESHOLD = 120;
-const MATRIX_CELL_STRIDE = 62;
 const MATRIX_OVERSCAN = 2;
 
 function isMatrix(value: unknown): value is any[][] {
@@ -59,7 +68,16 @@ function isPrimitiveArray(value: unknown): value is any[] {
   );
 }
 
-export function buildArrayGridPreview(variables: VariableMap, prevVariables: VariableMap): ArrayGridPreview | null {
+export function buildArrayGridPreview(variables: VariableMap, prevVariables: VariableMap, sourceName?: string): ArrayGridPreview | null {
+  if (sourceName) {
+    const asCells = (value: unknown) => (typeof value === 'string' ? value.split('') : value);
+    const value = asCells(variables[sourceName]);
+    const prevValue = asCells(prevVariables[sourceName]);
+    if (isMatrix(value)) return { type: 'matrix', sourceName, value, prevValue: prevValue as any[][] };
+    if (isPrimitiveArray(value)) return { type: 'array', sourceName, value, prevValue: prevValue as any[] };
+    return null;
+  }
+
   // Scan for 2D matrices first (higher priority)
   const matrixEntries = Object.entries(variables).filter(([, val]) => isMatrix(val));
   if (matrixEntries.length > 0) {
@@ -99,6 +117,11 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   themeColor,
   arrayViewType = 'cells',
   onEnlarge,
+  sourceName,
+  accesses = [],
+  indexVars,
+  rowLabels,
+  colLabels,
 }) => {
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
@@ -121,12 +144,17 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   const matrixViewportRef = useRef<HTMLDivElement>(null);
   const [arrayWindow, setArrayWindow] = useState({ start: 0, end: 0, firstVisible: 0, lastVisible: 0 });
   const [matrixWindow, setMatrixWindow] = useState({ rowStart: 0, rowEnd: 0, colStart: 0, colEnd: 0 });
+  const [matrixViewportWidth, setMatrixViewportWidth] = useState(0);
 
-  const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables), [variables, prevVariables]);
+  const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables, sourceName), [variables, prevVariables, sourceName]);
   const arrayLength = preview?.type === 'array' ? preview.value.length : 0;
   const fitSmallArray = arrayLength > 0 && arrayLength <= 10;
   const matrixRows = preview?.type === 'matrix' ? preview.value.length : 0;
   const matrixCols = preview?.type === 'matrix' ? (preview.value[0]?.length || 0) : 0;
+  // Cells shrink (down to 30px) so small tables fit without scrolling.
+  const MATRIX_CELL_STRIDE = matrixViewportWidth > 0 && matrixCols > 0
+    ? Math.max(30, Math.min(62, Math.floor((matrixViewportWidth - 48) / matrixCols)))
+    : 62;
 
   const updateArrayWindow = useCallback(() => {
     const viewport = arrayViewportRef.current;
@@ -155,7 +183,15 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     setMatrixWindow((current) => current.rowStart === rowStart && current.rowEnd === rowEnd && current.colStart === colStart && current.colEnd === colEnd
       ? current
       : { rowStart, rowEnd, colStart, colEnd });
-  }, [matrixCols, matrixRows]);
+  }, [matrixCols, matrixRows, MATRIX_CELL_STRIDE]);
+
+  useLayoutEffect(() => {
+    const viewport = matrixViewportRef.current;
+    if (!viewport || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => setMatrixViewportWidth(viewport.clientWidth));
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [preview?.type]);
 
   useLayoutEffect(() => {
     updateArrayWindow();
@@ -276,7 +312,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
       viewport.scrollTop = Math.max(0, top - Math.max(0, (viewport.clientHeight - MATRIX_CELL_STRIDE) / 2));
     }
     updateMatrixWindow();
-  }, [activeMatrixTarget, updateMatrixWindow]);
+  }, [activeMatrixTarget, updateMatrixWindow, MATRIX_CELL_STRIDE]);
 
   useEffect(() => {
     if (!isNumericArray) {
@@ -303,11 +339,13 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
     // Detect active pointer index variables (e.g., i, j, left, right, mid, low, high)
     const activePointers = new Map<number, string[]>();
+    const declaredIndexes = indexVars?.[0];
     Object.entries(variables).forEach(([name, val]) => {
       if (typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < arr.length) {
-        // Exclude common constants/boundaries
+        // With the code available, a pointer is a variable used inside arr[...]; otherwise guess, minus common constants.
         const ignored = new Set(['n', 'limit', 'target', 'sum', 'length']);
-        if (!ignored.has(name)) {
+        const conventional = /^(i|j|k|lo|hi|low|high|left|right|mid|start|end|l|r|p|q|slow|fast|curr|current|index|idx|ptr|pos)$/;
+        if (declaredIndexes ? declaredIndexes.includes(name) || conventional.test(name) : !ignored.has(name)) {
           if (!activePointers.has(val)) activePointers.set(val, []);
           activePointers.get(val)!.push(name);
         }
@@ -363,6 +401,8 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
     }
 
     const visibleItems = Array.from({ length: Math.max(0, renderEnd - renderStart) }, (_, offset) => renderStart + offset);
+    const readIndices = new Set(accesses.filter((a) => !a.write && a.indices.length === 1).map((a) => a.indices[0]));
+    const writeIndices = new Set(accesses.filter((a) => a.write && a.indices.length === 1).map((a) => a.indices[0]));
 
     return (
       <section className={`${theme.panelClass} p-4`}>
@@ -440,6 +480,8 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             const isChanged = changedIndices.has(i);
             const isSwapped = swapIndices && (i === swapIndices[0] || i === swapIndices[1]);
             const isInRange = hasSlidingWindow && i >= rangeStart! && i <= rangeEnd!;
+            const isWritten = writeIndices.has(i);
+            const isRead = !isWritten && readIndices.has(i);
 
             // Heights for numeric bars
             const isNum = typeof val === 'number';
@@ -452,7 +494,12 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             let cellText = 'text-slate-900 dark:text-slate-100';
             let barBg = isSaffron ? 'bg-orange-300 dark:bg-orange-700' : 'bg-blue-300 dark:bg-blue-700';
 
-            if (isSwapped) {
+            if (isWritten) {
+              cellBg = 'bg-orange-100 dark:bg-orange-950/40';
+              cellBorderColor = '#ea580c';
+              cellText = 'text-orange-950 dark:text-orange-200 font-black';
+              barBg = 'bg-orange-500';
+            } else if (isSwapped) {
               cellBg = 'bg-yellow-50 dark:bg-yellow-950/20';
               cellBorderColor = '#eab308';
               cellBorder = 'border-yellow-500 dark:border-yellow-600';
@@ -551,9 +598,9 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                       ...(cellBackgroundColor ? { backgroundColor: cellBackgroundColor } : {}),
                       ...(cellBorderColor ? { borderColor: cellBorderColor } : {}),
                     } : undefined}
-                    className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10`}
+                    className={`w-full text-center py-2.5 border-[3px] text-base font-mono font-black border-slate-900 ${cellBg} ${cellBorder} ${cellText} shadow-[3px_3px_0_#0f172a] dark:shadow-[3px_3px_0_var(--dark-shadow)] relative z-10 ${isRead ? 'outline outline-2 outline-dashed outline-sky-500 outline-offset-2' : ''}`}
                   >
-                    {val === null ? 'nil' : String(val)}
+                    {displayValue(val)}
                   </div>
                 ) : (
                   // For non-numeric items or in bars mode (if any exist)
@@ -568,6 +615,11 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                 <span className="text-[10px] mt-2 font-mono font-bold text-slate-400 dark:text-slate-500">
                   [{i}]
                 </span>
+                {(isWritten || isRead) && (
+                  <span className={`mt-0.5 px-1 text-[8px] font-black uppercase tracking-wider ${isWritten ? 'bg-orange-500 text-white' : 'bg-sky-500 text-white'}`}>
+                    {isWritten ? 'write' : 'read'}
+                  </span>
+                )}
               </motion.div>
             );
           })}
@@ -588,8 +640,14 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   // Resolve coordinate pointers (row/col)
   // Mapping variables matching row coordinates: row, r, i, y
   // Mapping variables matching col coordinates: col, c, j, x
-  const rowVars = ['row', 'r', 'i', 'y'];
-  const colVars = ['col', 'c', 'j', 'x'];
+  const rowVars = indexVars?.[0]?.length ? indexVars[0] : ['row', 'r', 'i', 'y'];
+  const colVars = indexVars?.[1]?.length ? indexVars[1] : ['col', 'c', 'j', 'x'];
+  const cellAccess = new Map<string, 'read' | 'write'>();
+  accesses.forEach((access) => {
+    if (access.indices.length !== 2) return;
+    const key = `${access.indices[0]},${access.indices[1]}`;
+    if (access.write || !cellAccess.has(key)) cellAccess.set(key, access.write ? 'write' : 'read');
+  });
 
   const activeRowPtrs = new Map<number, string[]>();
   const activeColPtrs = new Map<number, string[]>();
@@ -612,7 +670,8 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
   
   // Find intersections of matched row/col pointers (e.g. matching 'r' and 'c', or 'i' and 'j')
   // We also check all combinations
-  Object.entries(variables).forEach(([rName, rVal]) => {
+  // When the line touches exact cells those are shown instead; otherwise mark the (row, col) pointer pair.
+  Object.entries(cellAccess.size > 0 ? {} : variables).forEach(([rName, rVal]) => {
     if (rowVars.includes(rName) && typeof rVal === 'number' && rVal >= 0 && rVal < rowsCount) {
       Object.entries(variables).forEach(([cName, cVal]) => {
         if (colVars.includes(cName) && typeof cVal === 'number' && cVal >= 0 && cVal < colsCount) {
@@ -684,9 +743,19 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
         </div>
       </div>
 
-      <div className="mt-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
-        Showing rows {rowStart + 1}–{rowEnd} and columns {colStart + 1}–{colEnd} of {rowsCount} × {colsCount}.
-        Scroll to explore; the active coordinate stays in view.
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+        <span>{rowsCount} × {colsCount}</span>
+        {(rowEnd - rowStart < rowsCount || colEnd - colStart < colsCount) && (
+          <span>
+            Showing rows {rowStart + 1}–{rowEnd}, columns {colStart + 1}–{colEnd}. Scroll to explore.
+          </span>
+        )}
+        {cellAccess.size > 0 && (
+          <span className="flex items-center gap-2 font-sans font-bold">
+            <span className="inline-flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 border-2 border-orange-600 bg-orange-200" /> written</span>
+            <span className="inline-flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 border-2 border-dashed border-sky-500" /> read</span>
+          </span>
+        )}
       </div>
       <div ref={matrixViewportRef} role="region" aria-label={`${preview.sourceName} matrix diagram`} tabIndex={0} onScroll={updateMatrixWindow} className="diagram-viewport mt-3 w-full custom-scrollbar">
         <div className="relative" style={{ width: 40 + colsCount * MATRIX_CELL_STRIDE, height: 32 + rowsCount * MATRIX_CELL_STRIDE }}>
@@ -694,8 +763,9 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             const pointers = activeColPtrs.get(c) || [];
             const hasColPointers = pointers.length > 0;
             return (
-              <div key={`col-head-${c}`} className="absolute flex h-8 w-14 flex-col items-center justify-end" style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 0 }}>
+              <div key={`col-head-${c}`} className="absolute flex h-8 flex-col items-center justify-end" style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 0, width: MATRIX_CELL_STRIDE - 6 }}>
                 {hasColPointers && <span className="absolute -top-2 bg-cyan-500 px-1 text-[8px] font-black uppercase text-black shadow-[1px_1px_0_rgba(0,0,0,1)]">{pointers.join(',')}</span>}
+                {colLabels?.[c] !== undefined && <span className="text-[11px] font-mono font-black text-slate-700 dark:text-slate-200">{colLabels[c] || 'ε'}</span>}
                 <span className={`text-[10px] font-mono font-bold ${hasColPointers ? 'text-cyan-500' : 'text-slate-400 dark:text-slate-600'}`}>[{c}]</span>
               </div>
             );
@@ -705,8 +775,9 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
             const pointers = activeRowPtrs.get(r) || [];
             const hasRowPointers = pointers.length > 0;
             return (
-              <div key={`row-head-${r}`} className="absolute flex h-14 w-10 items-center justify-end pr-2" style={{ left: 0, top: 32 + r * MATRIX_CELL_STRIDE }}>
+              <div key={`row-head-${r}`} className="absolute flex w-10 items-center justify-end pr-2" style={{ left: 0, top: 32 + r * MATRIX_CELL_STRIDE, height: MATRIX_CELL_STRIDE - 6 }}>
                 {hasRowPointers && <span className="absolute left-0 -translate-x-1/2 bg-purple-500 px-1 text-[8px] font-black uppercase text-white shadow-[1px_1px_0_rgba(0,0,0,1)]">{pointers.join(',')}</span>}
+                {rowLabels?.[r] !== undefined && <span className="mr-1 text-[11px] font-mono font-black text-slate-700 dark:text-slate-200">{rowLabels[r] || 'ε'}</span>}
                 <span className={`text-[10px] font-mono font-bold ${hasRowPointers ? 'text-purple-500' : 'text-slate-400 dark:text-slate-600'}`}>[{r}]</span>
               </div>
             );
@@ -719,6 +790,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               const hasPointers = highlightedCells.has(key);
               const pointerNames = highlightedCells.get(key) || [];
               const isChanged = changedCells.has(key);
+              const access = cellAccess.get(key);
 
               let cellBg = 'bg-white dark:bg-[var(--dark-surface-2)]';
               let cellBorder = 'border-slate-900 dark:border-[var(--dark-border)]';
@@ -731,12 +803,24 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
                 cellBg = 'bg-yellow-50 dark:bg-yellow-950/15';
                 cellBorder = 'border-yellow-500 dark:border-yellow-600 border-[3px]';
                 cellText = 'text-yellow-700 dark:text-yellow-300';
+              } else if (cell === true || cell === 1 && preview.value.every((row: unknown[]) => row.every((v) => v === 0 || v === 1 || typeof v === 'boolean'))) {
+                // Boolean and 0/1 grids: filled cells read at a glance.
+                cellBg = 'bg-emerald-100 dark:bg-emerald-900/40';
               }
+              if (access === 'write') {
+                cellBg = 'bg-orange-200 dark:bg-orange-900/60';
+                cellBorder = 'border-orange-600 border-[3px]';
+                cellText = 'text-orange-950 dark:text-orange-100 font-black';
+              } else if (access === 'read') {
+                cellBorder = 'border-sky-500 border-[3px] border-dashed';
+                cellText = 'text-sky-900 dark:text-sky-200 font-black';
+              }
+              const cellSize = MATRIX_CELL_STRIDE - 6;
 
               return (
-                <div key={key} aria-label={`Row ${r}, column ${c}: ${cell === null ? 'nil' : String(cell)}`} className={`absolute flex h-14 w-14 select-none flex-col items-center justify-center border-2 transition-colors duration-150 ${cellBg} ${cellBorder} ${cellText} shadow-[2px_2px_0_rgba(15,23,42,0.15)] dark:shadow-[2px_2px_0_var(--dark-shadow)]`} style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 32 + r * MATRIX_CELL_STRIDE }}>
+                <div key={key} aria-label={`Row ${r}, column ${c}: ${displayValue(cell)}${access ? `, ${access}` : ''}`} className={`absolute flex select-none flex-col items-center justify-center border-2 transition-colors duration-150 ${cellBg} ${cellBorder} ${cellText} shadow-[2px_2px_0_rgba(15,23,42,0.15)] dark:shadow-[2px_2px_0_var(--dark-shadow)]`} style={{ left: 40 + c * MATRIX_CELL_STRIDE, top: 32 + r * MATRIX_CELL_STRIDE, width: cellSize, height: cellSize }}>
                   {hasPointers && <span className="absolute -top-2 z-20 bg-emerald-500 px-1 text-[7px] font-black uppercase text-white">{pointerNames[0]}</span>}
-                  <span className="text-[14px] font-mono font-black">{cell === null ? 'nil' : String(cell)}</span>
+                  <span className="font-mono font-black" style={{ fontSize: cellSize >= 48 ? 14 : cellSize >= 36 ? 12 : 10 }}>{displayValue(cell)}</span>
                 </div>
               );
             }),

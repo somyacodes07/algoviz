@@ -47,7 +47,11 @@ function collectVisitedNodeIds(variables: VariableMap): Set<string> {
       continue;
     }
     if (Array.isArray(value)) {
-      value.forEach((e) => visited.add(String(e)));
+      if (value.every((e) => typeof e === 'boolean' || e === 0 || e === 1)) {
+        value.forEach((e, index) => e && visited.add(String(index)));
+      } else {
+        value.forEach((e) => visited.add(String(e)));
+      }
       continue;
     }
     if (isPlainObject(value)) {
@@ -227,93 +231,135 @@ export function buildGraphPreview(variables: VariableMap): GraphPreview | null {
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
 
-function computeGraphLayout(preview: Pick<GraphPreview, 'nodes' | 'edges'>) {
-  const NODE_SIZE = 48;
+/**
+ * Directed acyclic graphs (task orders, DAG DP) get layers, so edges read top to bottom.
+ * Everything else gets a Fruchterman–Reingold layout, then is scaled to fill the frame.
+ * Deterministic: the same graph always lands in the same place.
+ */
+function computeGraphLayout(preview: Pick<GraphPreview, 'nodes' | 'edges'> & { directed?: boolean }) {
+  const NODE_SIZE = 44;
   const positions = new Map<string, { x: number; y: number }>();
-  const count = Math.max(preview.nodes.length, 1);
-  const radius = Math.max(80, count * 22);
-  const svgSize = radius * 2 + NODE_SIZE * 2 + 40;
-  const center = svgSize / 2;
+  const ids = preview.nodes.map((node) => node.id);
+  const count = Math.max(ids.length, 1);
+  const pad = NODE_SIZE + 18;
 
-  // Initial circular placement
-  preview.nodes.forEach((node, index) => {
-    const angle = ((Math.PI * 2) / count) * index - Math.PI / 2;
-    positions.set(node.id, {
-      x: center + Math.cos(angle) * radius,
-      y: center + Math.sin(angle) * radius,
-    });
+  // Layers for DAGs: breadth-first depth from the sources, which keeps the drawing wide and shallow.
+  const indegree = new Map(ids.map((id) => [id, 0]));
+  const out = new Map(ids.map((id) => [id, [] as string[]]));
+  preview.edges.forEach((edge) => {
+    if (!indegree.has(edge.to) || !out.has(edge.from) || edge.isBidirectional) return;
+    indegree.set(edge.to, (indegree.get(edge.to) || 0) + 1);
+    out.get(edge.from)!.push(edge.to);
   });
-
-  // Force-directed layout simulation (Spring-Embedder physics iteration)
-  const iterations = 45;
-  const kRepulsion = 12000;
-  const kSpring = 0.04;
-  const idealLength = 95;
-
-  for (let iter = 0; iter < iterations; iter++) {
-    const forces = new Map<string, { fx: number; fy: number }>();
-    preview.nodes.forEach((n) => forces.set(n.id, { fx: 0, fy: 0 }));
-
-    // 1. Repulsion forces between node pairs
-    for (let i = 0; i < preview.nodes.length; i++) {
-      for (let j = i + 1; j < preview.nodes.length; j++) {
-        const idA = preview.nodes[i].id;
-        const idB = preview.nodes[j].id;
-        const posA = positions.get(idA)!;
-        const posB = positions.get(idB)!;
-
-        const dx = posB.x - posA.x;
-        const dy = posB.y - posA.y;
-        const distSq = Math.max(dx * dx + dy * dy, 100);
-        const dist = Math.sqrt(distSq);
-        const force = kRepulsion / distSq;
-
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-
-        forces.get(idA)!.fx -= fx;
-        forces.get(idA)!.fy -= fy;
-        forces.get(idB)!.fx += fx;
-        forces.get(idB)!.fy += fy;
-      }
+  const directedOnly = preview.directed && preview.edges.length > 0 && preview.edges.every((edge) => !edge.isBidirectional);
+  if (directedOnly) {
+    const layer = new Map<string, number>();
+    const remaining = new Map(indegree);
+    const queue = ids.filter((id) => remaining.get(id) === 0);
+    queue.forEach((id) => layer.set(id, 0));
+    let seen = 0;
+    while (queue.length) {
+      const id = queue.shift()!;
+      seen++;
+      out.get(id)!.forEach((next) => {
+        if (!layer.has(next)) layer.set(next, (layer.get(id) || 0) + 1);
+        remaining.set(next, (remaining.get(next) || 0) - 1);
+        if (remaining.get(next) === 0) queue.push(next);
+      });
     }
-
-    // 2. Spring attraction forces along edges
-    for (const edge of preview.edges) {
-      const posA = positions.get(edge.from);
-      const posB = positions.get(edge.to);
-      if (!posA || !posB) continue;
-
-      const dx = posB.x - posA.x;
-      const dy = posB.y - posA.y;
-      const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-      const force = kSpring * (dist - idealLength);
-
-      const fx = (dx / dist) * force;
-      const fy = (dy / dist) * force;
-
-      forces.get(edge.from)!.fx += fx;
-      forces.get(edge.from)!.fy += fy;
-      forces.get(edge.to)!.fx -= fx;
-      forces.get(edge.to)!.fy -= fy;
+    const depth = Math.max(0, ...Array.from(layer.values())) + 1;
+    // A long thin chain reads better as a free layout.
+    if (seen === ids.length && depth <= Math.max(3, Math.ceil(ids.length / 2))) {
+      const rows: string[][] = [];
+      ids.forEach((id) => {
+        const l = layer.get(id) || 0;
+        (rows[l] = rows[l] || []).push(id);
+      });
+      const widest = Math.max(...rows.map((row) => row.length));
+      const width = Math.max(320, widest * 110 + pad * 2);
+      const height = Math.max(240, (rows.length - 1) * 110 + pad * 2);
+      rows.forEach((row, l) => {
+        row.forEach((id, i) => {
+          positions.set(id, { x: width / 2 + (i - (row.length - 1) / 2) * 110, y: pad + l * 110 });
+        });
+      });
+      return { positions, width, height, NODE_SIZE };
     }
-
-    // 3. Update positions with damping and boundary clamping
-    const damping = 0.8;
-    const padding = NODE_SIZE + 16;
-
-    preview.nodes.forEach((node) => {
-      const pos = positions.get(node.id)!;
-      const f = forces.get(node.id)!;
-
-      const newX = Math.max(padding, Math.min(svgSize - padding, pos.x + f.fx * damping));
-      const newY = Math.max(padding, Math.min(svgSize - padding, pos.y + f.fy * damping));
-
-      positions.set(node.id, { x: newX, y: newY });
-    });
   }
 
-  return { positions, svgSize, NODE_SIZE, center };
+  const side = Math.max(320, Math.sqrt(count) * 150);
+  const k = Math.sqrt((side * side) / count) * 0.75;
+  ids.forEach((id, index) => {
+    const angle = ((Math.PI * 2) / count) * index - Math.PI / 2;
+    positions.set(id, { x: side / 2 + Math.cos(angle) * side * 0.35, y: side / 2 + Math.sin(angle) * side * 0.35 });
+  });
+  let temperature = side / 8;
+  for (let iter = 0; iter < 260; iter++) {
+    const shift = new Map(ids.map((id) => [id, { x: 0, y: 0 }]));
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const a = positions.get(ids[i])!;
+        const b = positions.get(ids[j])!;
+        const dx = a.x - b.x || 0.01;
+        const dy = a.y - b.y || 0.01;
+        const dist = Math.max(Math.hypot(dx, dy), 1);
+        const force = (k * k) / dist;
+        shift.get(ids[i])!.x += (dx / dist) * force;
+        shift.get(ids[i])!.y += (dy / dist) * force;
+        shift.get(ids[j])!.x -= (dx / dist) * force;
+        shift.get(ids[j])!.y -= (dy / dist) * force;
+      }
+    }
+    preview.edges.forEach((edge) => {
+      const a = positions.get(edge.from);
+      const b = positions.get(edge.to);
+      if (!a || !b || edge.from === edge.to) return;
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      const dist = Math.max(Math.hypot(dx, dy), 1);
+      const force = (dist * dist) / k;
+      shift.get(edge.from)!.x -= (dx / dist) * force;
+      shift.get(edge.from)!.y -= (dy / dist) * force;
+      shift.get(edge.to)!.x += (dx / dist) * force;
+      shift.get(edge.to)!.y += (dy / dist) * force;
+    });
+    ids.forEach((id) => {
+      const p = positions.get(id)!;
+      const d = shift.get(id)!;
+      const len = Math.max(Math.hypot(d.x, d.y), 0.01);
+      // Weak pull to the middle keeps disconnected nodes from drifting off.
+      p.x += (d.x / len) * Math.min(len, temperature) + (side / 2 - p.x) * 0.01;
+      p.y += (d.y / len) * Math.min(len, temperature) + (side / 2 - p.y) * 0.01;
+    });
+    temperature = Math.max(1, temperature * 0.98);
+  }
+
+  // Scale so the closest two nodes sit ~120px apart (room for labels and badges), then frame it.
+  let closest = Infinity;
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const a = positions.get(ids[i])!;
+      const b = positions.get(ids[j])!;
+      closest = Math.min(closest, Math.hypot(a.x - b.x, a.y - b.y));
+    }
+  }
+  const xs = ids.map((id) => positions.get(id)!.x);
+  const ys = ids.map((id) => positions.get(id)!.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const spanX = Math.max(maxX - minX, 1), spanY = Math.max(maxY - minY, 1);
+  const scale = Math.min(Number.isFinite(closest) ? 120 / Math.max(closest, 1) : 1, 760 / spanX, 760 / spanY);
+  const width = Math.max(300, spanX * scale + pad * 2);
+  const height = Math.max(240, spanY * scale + pad * 2);
+  const offsetX = (width - spanX * scale) / 2;
+  const offsetY = (height - spanY * scale) / 2;
+  ids.forEach((id) => {
+    const p = positions.get(id)!;
+    positions.set(id, {
+      x: count === 1 ? width / 2 : offsetX + (p.x - minX) * scale,
+      y: count === 1 ? height / 2 : offsetY + (p.y - minY) * scale,
+    });
+  });
+  return { positions, width, height, NODE_SIZE };
 }
 
 function calculateEdgePath(
@@ -352,15 +398,28 @@ function calculateEdgePath(
 
 // ─── Panel ─────────────────────────────────────────────────────────────────────
 
+export interface GraphAnnotations {
+  // Shown under each node, e.g. dist = 4.
+  valueName?: string;
+  values?: Record<string, string>;
+  // Nodes waiting in a queue, stack or priority queue.
+  frontierName?: string;
+  frontier?: string[];
+}
+
 export const GraphPanel: React.FC<{
   preview: GraphPreview;
   themeColor: ThemeColor;
   onEnlarge?: () => void;
+  annotations?: GraphAnnotations;
 }> = ({
   preview,
   themeColor,
   onEnlarge,
+  annotations: notes,
 }) => {
+  const annotations: GraphAnnotations = notes || {};
+  const frontier = new Set(annotations.frontier || []);
   const theme = getThemeConfig(themeColor);
   const isSaffron = themeColor === 'saffron';
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -380,7 +439,7 @@ export const GraphPanel: React.FC<{
       edges: edgeTuples.map(([from, to, isBidirectional]) => ({ from, to, isBidirectional })),
     };
   }, [layoutKey]);
-  const { positions, svgSize, NODE_SIZE } = useMemo(() => computeGraphLayout(layoutTopology), [layoutTopology]);
+  const { positions, width: svgWidth, height: svgHeight, NODE_SIZE } = useMemo(() => computeGraphLayout({ ...layoutTopology, directed: preview.directed }), [layoutTopology, preview.directed]);
   const halfNode = NODE_SIZE / 2;
 
   // Track newly-visited nodes for ripple animation
@@ -462,6 +521,16 @@ export const GraphPanel: React.FC<{
             {visitedCount}/{preview.nodes.length} Visited
           </span>
         )}
+        {annotations.valueName && (
+          <span className="border-[2px] border-slate-900 bg-slate-900 px-2 py-1 text-[10px] font-black tracking-[0.06em] text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900">
+            under node: {annotations.valueName}
+          </span>
+        )}
+        {annotations.frontierName && frontier.size > 0 && (
+          <span className="border-[2px] border-dashed border-violet-600 bg-violet-50 px-2 py-1 text-[10px] font-black tracking-[0.06em] text-violet-800 dark:bg-violet-950/40 dark:text-violet-200">
+            dashed: in {annotations.frontierName}
+          </span>
+        )}
         {hasWeights && (
           <span className="border-[2px] border-purple-300 bg-purple-50 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
             Weighted
@@ -473,9 +542,9 @@ export const GraphPanel: React.FC<{
         {/* SVG Canvas */}
         <div ref={viewportRef} role="region" aria-label={`${preview.sourceName} graph diagram`} tabIndex={0} className={`diagram-viewport ${theme.subPanelClass} p-3 flex justify-center`}>
           <svg
-            viewBox={`0 0 ${svgSize} ${svgSize}`}
-            className={onEnlarge ? "h-[300px] w-full max-w-[340px]" : "h-[550px] w-full max-w-[580px]"}
-            style={{ overflow: 'visible' }}
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            className={onEnlarge ? 'w-full max-w-[460px]' : 'w-full max-w-[720px]'}
+            style={{ overflow: 'visible', aspectRatio: `${svgWidth} / ${svgHeight}`, maxHeight: onEnlarge ? 380 : 620 }}
           >
             <defs>
               <marker
@@ -510,11 +579,13 @@ export const GraphPanel: React.FC<{
                 const fromPos = positions.get(edge.from);
                 const toPos = positions.get(edge.to);
                 if (!fromPos || !toPos) return null;
+                // Undirected: A-B and B-A are one edge, drawn once as a straight line.
+                if (!preview.directed && edge.isBidirectional && edge.from > edge.to) return null;
                 const { d, midX, midY } = calculateEdgePath(
                   fromPos,
                   toPos,
                   halfNode,
-                  !!edge.isBidirectional,
+                  preview.directed && !!edge.isBidirectional,
                   preview.directed,
                 );
                 const fromNode = preview.nodes.find((n) => n.id === edge.from);
@@ -562,29 +633,20 @@ export const GraphPanel: React.FC<{
                         }}
                       >
                         <rect
-                          x={midX - 11 + 2}
-                          y={midY - 10 + 2}
-                          width="22"
-                          height="18"
-                          fill="#0f172a"
-                          className="dark:fill-[rgba(0,0,0,0.35)]"
-                          opacity="0.2"
-                        />
-                        <rect
-                          x={midX - 11}
+                          x={midX - (edge.weight.length * 4 + 9)}
                           y={midY - 10}
-                          width="22"
-                          height="18"
+                          width={edge.weight.length * 8 + 18}
+                          height="20"
                           fill="#ffffff"
                           stroke="#0f172a"
                           strokeWidth="2"
-                          className="dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border)]"
+                          className="dark:fill-[var(--dark-surface-2)] dark:stroke-[var(--dark-border-bright)]"
                         />
                         <text
                           x={midX}
-                          y={midY + 3}
+                          y={midY + 4}
                           textAnchor="middle"
-                          className="text-[10px] font-black fill-slate-800 dark:fill-slate-200"
+                          className="text-[12px] font-black fill-slate-900 dark:fill-slate-100"
                           style={{ fontFamily: 'ui-monospace, monospace' }}
                         >
                           {edge.weight}
@@ -630,12 +692,26 @@ export const GraphPanel: React.FC<{
                           stroke={isSaffron ? '#f97316' : '#3b82f6'}
                           strokeWidth="3"
                           initial={{ opacity: 0.9, scale: 1 }}
-                          animate={{ opacity: 0, scale: 1.9 }}
+                          animate={{ opacity: 0, scale: 1.35 }}
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.75, ease: 'easeOut' }}
                           style={{ originX: 0, originY: 0 }}
                         />
                       </AnimatePresence>
+                    )}
+
+                    {/* Waiting in the queue / stack */}
+                    {frontier.has(node.id) && (
+                      <rect
+                        x={-halfNode - 7}
+                        y={-halfNode - 7}
+                        width={NODE_SIZE + 14}
+                        height={NODE_SIZE + 14}
+                        fill="none"
+                        stroke="#7c3aed"
+                        strokeWidth="2.5"
+                        strokeDasharray="4 3"
+                      />
                     )}
 
                     {/* Active pointer ring animation */}
@@ -774,27 +850,27 @@ export const GraphPanel: React.FC<{
                       </motion.g>
                     )}
 
-                    {/* Degree badge */}
-                    {degree > 0 && (
-                      <>
+                    {/* Per-node value, e.g. its current distance */}
+                    {annotations.values?.[node.id] !== undefined && (
+                      <g>
                         <rect
-                          x={halfNode - 14}
-                          y={halfNode - 2}
-                          width={14}
-                          height={12}
+                          x={-Math.max(16, annotations.values[node.id].length * 4 + 7)}
+                          y={halfNode + 4}
+                          width={Math.max(32, annotations.values[node.id].length * 8 + 14)}
+                          height={17}
                           fill="#0f172a"
-                          className="dark:fill-[var(--dark-border)]"
+                          className="dark:fill-slate-200"
                         />
                         <text
-                          x={halfNode - 7}
-                          y={halfNode + 8}
+                          x={0}
+                          y={halfNode + 16}
                           textAnchor="middle"
-                          className="text-[8px] font-black fill-white pointer-events-none"
+                          className="text-[11px] font-black fill-white dark:fill-slate-900 pointer-events-none"
                           style={{ fontFamily: 'ui-monospace, monospace' }}
                         >
-                          {degree}
+                          {annotations.values[node.id]}
                         </text>
-                      </>
+                      </g>
                     )}
                   </motion.g>
                 );
@@ -824,10 +900,17 @@ export const GraphPanel: React.FC<{
                     {node.label}
                   </span>
                   <div className="flex items-center gap-1">
-                    {degree > 0 && (
+                    {annotations.values?.[node.id] !== undefined ? (
+                      <span className="font-mono text-[11px] font-black text-slate-800 dark:text-slate-100">
+                        {annotations.valueName}={annotations.values[node.id]}
+                      </span>
+                    ) : degree > 0 && (
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
                         deg:{degree}
                       </span>
+                    )}
+                    {frontier.has(node.id) && (
+                      <span className="border border-dashed border-violet-600 px-1 text-[9px] font-black text-violet-700 dark:text-violet-300">queued</span>
                     )}
                     {node.visited && (
                       <span

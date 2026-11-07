@@ -35,6 +35,7 @@ interface WorkspaceVisualizerProps {
   settings: AppSettings;
   onSeekStep?: (index: number) => void;
   playerControlsProps?: PlayerControlsProps;
+  code?: string;
 }
 
 function valuesEqual(a: unknown, b: unknown): boolean {
@@ -125,6 +126,7 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
   settings,
   onSeekStep,
   playerControlsProps,
+  code,
 }) => {
   const [hasStructure, setHasStructure] = useState(false);
   const [pinnedVars, setPinnedVars] = useState<Set<string>>(new Set());
@@ -300,6 +302,9 @@ const WorkspaceVisualizer: React.FC<WorkspaceVisualizerProps> = ({
             arrayViewType={settings.arrayViewType}
             playerControlsProps={playerControlsProps}
             onStructureAvailabilityChange={setHasStructure}
+            code={code}
+            callDepth={(currentStep.callStack || []).length}
+            line={currentStep.line}
           />
         </div>
         {panel === 'variables' && (

@@ -54,9 +54,9 @@ function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): st
   return `N${fallbackIndex + 1}`;
 }
 
-export function buildLinkedListPreview(variables: VariableMap): LinkedListPreview | null {
+export function buildLinkedListPreview(variables: VariableMap, rootName?: string): LinkedListPreview | null {
   const entries = Object.entries(variables).filter(
-    ([, value]) => isPlainObject(value) && 'next' in value,
+    ([name, value]) => (!rootName || name === rootName) && isPlainObject(value) && 'next' in value,
   );
 
   if (entries.length === 0) return null;

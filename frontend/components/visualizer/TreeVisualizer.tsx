@@ -73,10 +73,11 @@ function getNodeLabel(value: Record<string, unknown>, fallbackIndex: number): st
   return `N${fallbackIndex}`;
 }
 
-export function buildTreePreview(variables: VariableMap): TreePreview | null {
+export function buildTreePreview(variables: VariableMap, rootName?: string): TreePreview | null {
   const entries = Object.entries(variables).filter(
-    ([, value]) =>
-      isPlainObject(value) && ('left' in value || 'right' in value || 'children' in value),
+    ([name, value]) =>
+      (!rootName || name === rootName) &&
+      isPlainObject(value) && ('left' in value || 'right' in value || (!!value.children && typeof value.children === 'object')),
   );
 
   if (entries.length === 0) return null;
@@ -89,6 +90,7 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
 
     // Phase 1: BFS to collect nodes (cycle-safe via WeakMap)
     const objToId = new WeakMap<object, string>();
+    const edgeLabels = new WeakMap<object, string>();
 
     // Pending links: parent-id → { left?: obj, right?: obj, children?: obj[] }
     const pendingLinks: { parentId: string; left?: object; right?: object; children?: object[] }[] =
@@ -114,7 +116,7 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
 
       nodes.push({
         id: nodeId,
-        label: getNodeLabel(current, nodes.length),
+        label: edgeLabels.get(current) ?? (nodes.length === 0 && current.children && typeof current.children === 'object' && !('val' in current) && !('value' in current) ? 'root' : getNodeLabel(current, nodes.length)),
         pointerNames: [],
       });
 
@@ -130,10 +132,26 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
       }
       if (Array.isArray(current.children)) {
         link.children = [];
-        for (const child of current.children) {
+        // C++ tries often use `Node* children[26]`: slot i is the letter 'a' + i.
+        const byLetter = current.children.length === 26;
+        current.children.forEach((child, slot) => {
+          if (isPlainObject(child) && !objToId.has(child)) {
+            bfsQueue.push(child as Record<string, unknown>);
+            link.children!.push(child);
+            if (byLetter) {
+              const letter = String.fromCharCode(97 + slot);
+              edgeLabels.set(child, child.isEnd || child.isEndOfWord ? `${letter}*` : letter);
+            }
+          }
+        });
+      } else if (isPlainObject(current.children)) {
+        // Trie: children keyed by character. The key is the node's label.
+        link.children = [];
+        for (const [key, child] of Object.entries(current.children)) {
           if (isPlainObject(child) && !objToId.has(child)) {
             bfsQueue.push(child as Record<string, unknown>);
             link.children.push(child);
+            edgeLabels.set(child, child.isEnd || child.isEndOfWord ? `${key}*` : key);
           }
         }
       }
@@ -160,12 +178,21 @@ export function buildTreePreview(variables: VariableMap): TreePreview | null {
 
     if (nodes.length === 0) continue;
 
+    const addrToId = new Map<string, string>();
+    for (const link of pendingLinks) {
+      const node = bfsQueue.find((candidate) => objToId.get(candidate) === link.parentId);
+      if (node && (typeof node.__addr === 'string' || typeof node.__addr === 'number')) addrToId.set(String(node.__addr), link.parentId);
+    }
+
     for (const [name, value] of Object.entries(variables)) {
       if (value && typeof value === 'object') {
-        const mappedId = objToId.get(value as object);
+        const record = value as Record<string, unknown>;
+        const mappedId =
+          objToId.get(value as object) ??
+          (record.__addr !== undefined ? addrToId.get(String(record.__addr)) : undefined);
         if (mappedId !== undefined) {
           const node = nodeMap.get(mappedId);
-          if (node) node.pointerNames.push(name);
+          if (node && !node.pointerNames.includes(name)) node.pointerNames.push(name);
         }
       }
     }
