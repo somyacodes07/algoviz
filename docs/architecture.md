@@ -96,7 +96,8 @@ Worker execution environment for JavaScript:
 
 - Blocks dangerous globals (`fetch`, `WebSocket`, etc.)
 - Enforces step limits for infinite loop protection
-- Uses `structuredClone` for deep variable snapshots
+- Copies each step's variables with `structuredClone`, or with an identity-preserving copy when a function is in scope, so `undefined` stays `undefined` and shared tree nodes stay shared
+- Leaves out `let`/`const` names that are still in their temporal dead zone
 - Reports errors with partial timeline preservation
 
 ### Complexity Analyzer (`complexity.ts`)

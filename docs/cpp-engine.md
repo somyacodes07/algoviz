@@ -91,14 +91,23 @@ The trace header includes `__to_json()` overloads for:
 
 | Type | Serialization |
 |---|---|
-| `int`, `double`, `float`, `bool` | Numeric/boolean JSON |
-| `std::string`, `const char*` | Quoted string |
-| `std::vector<T>` | JSON array `[1, 2, 3]` |
-| `std::pair<T, U>` | `{"first": ..., "second": ...}` |
-| `std::map<K, V>` | JSON object `{key: value, ...}` |
-| `std::stack<T>` | JSON array (copied and unwound) |
-| `std::queue<T>` | JSON array (copied and unwound) |
-| Unknown types | `"unsupported"` fallback |
+| `int`, `long long`, `bool`, enums | Numbers and booleans |
+| `double`, `float` | Numbers; infinity is emitted as `1e999` (reads as `Infinity`), NaN as `null` |
+| `char` | One-character string |
+| `std::string`, `const char*`, `char[N]` | Escaped JSON string |
+| `std::vector<T>`, `std::array<T, N>`, `T[N]` (also 2D) | JSON array |
+| `std::pair<T, U>` | Two-item array `[first, second]`, so a vector of pairs reads as a table |
+| `std::map`, `std::unordered_map` | JSON object; every key is quoted, including `int` keys |
+| `std::set`, `std::unordered_set`, `std::deque` | JSON array |
+| `std::stack<T>` | Array, bottom first |
+| `std::queue<T>` | Array, front first |
+| `std::priority_queue<T>` | Its real heap array, so a numeric one draws as a heap |
+| Pointers to nodes with `next` or `left`/`right` | Nested objects with an `__addr` for pointer matching |
+| Your own `struct` / `class` | `{"field": value}` with real field names, from a generated serializer |
+
+Every struct or class declared at file or class scope gets a hidden-friend `__to_json`, so private members are readable and nested structs, tries (`Node* children[26]`) and graphs of pointers serialize too. A depth guard stops pointer cycles. Classes declared inside a function and templated structs are not serialized and show as `"{...}"`.
+
+Function parameters are traced along with local variables. Lambdas only see globals and their own parameters, because they cannot read uncaptured locals.
 
 ## Remote Engine: Wandbox API
 

@@ -25,14 +25,13 @@ The Variables view shows in-scope values:
 - Objects and maps display as key-value pairs
 - Changed values are highlighted on each step
 
-## 3. Algorithmic Array Pointers
+## 3. Array Pointers and Cell Access
 
-AlgoViz scans your variable scope for common algorithmic pointers:
-- `i`, `j`, `k`
-- `left`, `right`, `lo`, `hi`, `low`, `high`
-- `mid`, `pivot`
+A pointer tag sits above an array cell when a variable indexes it. AlgoViz reads the source to find the variables used inside `arr[...]`, and also keeps conventional names (`i`, `j`, `k`, `left`, `right`, `lo`, `hi`, `low`, `high`, `mid`, `slow`, `fast`). Constants that happen to be small numbers, like `target` or `maxVal`, are not drawn as pointers.
 
-These render as color-coded pointer tags above array columns, letting you watch sliding windows shrink, pivots move, and binary searches narrow.
+The current line is read too. Cells it **writes** are filled orange, and cells it **reads** get a dashed blue outline. In `dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])` you see the one cell being written and the two it depends on. This works for arrays, strings, grids and tables, and for index expressions such as `Math.floor((i - 1) / 2)` or `dp[i - 1][w - weights[i - 1]]`.
+
+![Bubble sort with read and written cells](../assets/image-1.png)
 
 ## 4. Complexity Estimates
 
@@ -81,15 +80,31 @@ The Console panel replays `console.log` (JS) and `cout` (C++) output:
 
 ## 9. Data Structure Visualizers
 
-AlgoViz automatically maps memory state to the appropriate visual representations:
-- **Array & 1D Vector**: Renders as a grid of memory cells or an interactive bar chart. Bar heights show the ordering of numeric values, not their exact proportions. Tracks standard algorithmic pointers (`i`, `j`, `left`, `right`, `mid`, etc.). Large arrays are windowed; scrolling and active pointers move the visible range.
-- **2D Array / Matrix**: Visualized as a 2D grid, rendering nested arrays or vectors perfectly.
-- **Linked Lists**: Infers `.next` chaining to render linear memory graphs with cycle detection.
-- **Binary Trees**: Reconstructs hierarchical structure recursively by traversing `.left` and `.right` pointers.
-- **Heaps**: Renders 1D arrays as Binary Heap trees (Min-Heap / Max-Heap) based on index math (`2*i+1`, `2*i+2`).
-- **Hash Maps / Sets**: Displays unique keys and values in organized bucket grids for constant-time lookups.
-- **Trie (Prefix Tree)**: Connects node character properties via `.children` object mappings into dynamic prefix trees.
-- **Graph Visualizer**: Analyzes adjacency matrices and neighbor arrays to draw nodes with directed SVG arrows and Bezier curves for bidirectional edges.
+Each variable is shown in exactly one diagram. AlgoViz decides from the value's **shape** first and only then from how the code uses it, so one array never appears as a heap, a stack and an array at once.
+
+| Shape in memory | Diagram | Notes |
+|---|---|---|
+| Array of numbers or strings | **Array** (cells or bars) | Read/write marks and pointer tags. |
+| String indexed by the code (`s[i]`) | **String** as characters | Two-pointer and sliding-window problems. |
+| Rectangular 2D array | **Grid** | Fits the panel; DP tables over two strings are labelled with their characters; `Infinity` and `INT_MAX` show as `∞`. |
+| Array pushed and popped | **Stack** | Also `std::stack`, or names like `stack`. |
+| Array pushed and shifted | **Queue** | Also `std::queue`/`std::deque`; `pq` or `std::priority_queue` of pairs is a priority queue. |
+| Numeric array named like a heap, or used by heap code | **Min / max heap** | Min or max is read from the values, not the name. |
+| Objects with `next` | **Linked list** | Two separate lists (like `prev` and `curr` while reversing) are both drawn. |
+| Objects with `left`/`right` or `children` | **Tree** | Tries with `children` maps or `Node* children[26]` are labelled by letter. |
+| Adjacency map, index list or `[to, weight]` list | **Graph** | Distances or in-degrees under each node, queued nodes dashed. |
+| Array of records with the same fields | **Table** | `vector<Edge>` with `{u, v, w}`, activity lists. |
+| Object or `Map` of plain values | **Hash map** | Changed keys flash. |
+
+Containers inside a class instance are found too: `new MinHeap()` shows its `heap` array, and a queue built from two stacks shows both.
+
+A strip of the current scalar values sits above the diagrams, so pointers like `left` and `right` stay visible next to the structure.
+
+When recursion passes a subtree under the same name (`insert(root.left, val)`), the whole tree stays on screen with a tag on the node the current call is working on. A structure that goes out of scope is kept, faded, and labelled *Out of scope, last known value*.
+
+![Dijkstra with distances under each node](../assets/screenshots/graph-dijkstra.png)
+
+![LCS table with read and written cells](../assets/screenshots/dp-lcs.png)
 
 ## 10. Share Feature
 

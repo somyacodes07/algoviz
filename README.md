@@ -1,179 +1,154 @@
 <div align="center">
-  <img src="assets/homepage.png" alt="AlgoViz Hero Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);" />
 
-  # ⚡ AlgoViz
+<img src="assets/homepage.png" alt="AlgoViz landing page: See how your code really works, next to a live fibonacci(6) call tree" width="100%" />
 
-  ### **Transforming Static Code into Living, Interactive Visual State**
+# AlgoViz
 
-  <p align="center">
-    <a href="https://github.com/somyacodes07/algoviz-copy/stargazers"><img src="https://img.shields.io/github/stars/somyacodes07/algoviz?style=for-the-badge&color=ff7316" alt="Stars" /></a>
-    <a href="https://github.com/sponsors/somyacodes07"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge&logo=github" alt="Sponsor" /></a>
-    <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/badge/VS%20Code-Extension-007acc?style=for-the-badge&logo=visualstudiocode" alt="VS Code Extension" /></a>
-    <br/>
-    <a href="."><img src="https://img.shields.io/badge/JavaScript-ES6+-f7df1e?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" /></a>
-    <a href="."><img src="https://img.shields.io/badge/C++-GCC_%26_WASM-00599c?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++" /></a>
-    <a href="."><img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React" /></a>
-    <a href="."><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" /></a>
-  </p>
+### Paste your JavaScript or C++. Watch it run, one line at a time.
 
-  **AlgoViz** is a state-of-the-art interactive code execution and algorithm visualization platform designed for students, interview candidates, and educators. Step line-by-line through **JavaScript & C++**, inspect dynamic heap memory, track recursive call stack frames, and visualize complex data structures in real time.
+Step through your own code in the browser and see every array, tree, graph, heap, stack and DP table change as it executes. No account, no install.
+
+<p>
+  <a href="https://algoviz.somyacodes.in"><img src="https://img.shields.io/badge/Try_it_live-algoviz.somyacodes.in-f97316?style=for-the-badge" alt="Try it live" /></a>
+  <a href="https://github.com/somyacodes07/algoviz/stargazers"><img src="https://img.shields.io/github/stars/somyacodes07/algoviz?style=for-the-badge&color=facc15&labelColor=0f172a" alt="GitHub stars" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/badge/VS_Code-Extension-3b82f6?style=for-the-badge&logo=visualstudiocode" alt="VS Code extension" /></a>
+</p>
+
+<img src="assets/demo/workbench.gif" alt="Dijkstra running in the AlgoViz workbench: the graph lights up node by node while distances update under each node" width="100%" />
+
 </div>
 
 ---
 
-## 🌟 Why AlgoViz?
+## Why AlgoViz
 
-Most code visualizers show static outputs or basic arrays. **AlgoViz** inspects runtime values and can render common data structures as code executes:
+- **It runs your code, not canned animations.** Paste any algorithm and AlgoViz traces it, line by line, in a sandbox in your browser.
+- **It figures out what to draw.** Arrays, strings, grids, linked lists, trees, tries, graphs, heaps, stacks, queues, hash maps and tables of structs are detected from the shape of your data.
+- **It shows what each line touches.** The cells a line reads and writes are marked, so `dp[i][j] = max(dp[i-1][j], dp[i][j-1])` finally makes sense.
+- **JavaScript and C++.** C++ STL containers, `priority_queue`, pairs and your own structs all show up with real field names.
 
-- 🧠 **Runtime Structure Views**: AlgoViz uses value shapes and variable names to identify common data structures. Detection is heuristic, so ambiguous code may need a clearer variable shape or name.
-- ⚡ **Two C++ Execution Options**: Choose local WebAssembly Clang or remote Wandbox GCC in Settings. Wandbox is the current default; Wasm mode can fall back to Wandbox if the local engine cannot start.
-- 📊 **Complexity Estimates**: JavaScript estimates use syntax structure; C++ estimates use runtime trace patterns. Both are heuristics and include hotspot information.
-- 📝 **Interactive Annotations**: Add per-step sticky notes and comments directly to the execution timeline to build shareable explanations.
-- 🔍 **Pan & Zoom Modal**: Expand trees, graphs, and matrices into a full-screen interactive view with drag-and-pan controls.
-- 🎨 **Sleek Neo-Brutalist & Glassmorphic UI**: High-contrast, zero-lag theme transitions (Dark Mode & Saffron/Blue themes).
-- 📱 **Responsive Workbench**: Keep code and workspace side by side on desktop, or switch between full-size Code and Workspace views on mobile.
-- 📈 **Readable Array Bars**: Numeric bars preserve value ordering with illustrative heights; use cell view when exact values and indexes are the focus. Large arrays and matrices render in a navigable window.
+## See it in action
 
----
-
-## 💖 Support the Project
-
-AlgoViz is **100% free and open-source**. If AlgoViz helped you ace your coding interviews, understand data structures, or teach computer science, consider supporting the project on GitHub:
-
-👉 **[Sponsor Somyajeet on GitHub](https://github.com/sponsors/somyacodes07)**
-
----
-
-## 🚀 Key Features Overview
-
-| Feature | Description |
-|---|---|
-| 🎬 **Scrubbable Timeline** | Inline player control bar with drag scrubber, step counters, and speed toggles (`0.5x`, `1x`, `2x`, `⚡`). |
-| 🌳 **Data Structure Suite** | Auto-detected visualizers for **Trees**, **Graphs**, **Linked Lists**, **Binary Heaps**, **Hash Maps**, **Stacks/Queues**, and **2D Matrices**. |
-| 🥞 **Visual Call Stack** | Deep recursion frame inspector tracking parameter mutations, stack depth, and return values. |
-| 📊 **Time & Space Estimates** | Heuristic Big-O and auxiliary-space estimates, with line-by-line execution heatmaps. |
-| ⌨️ **Command Palette** | Press `Cmd+K` / `Ctrl+K` to search over 50+ pre-built DSA templates across Sorting, DP, Graphs, Trees, and Recursion. |
-| 💻 **VS Code Extension** | Run the visualizer inside a VS Code split pane; JavaScript runs locally, while C++ uses the selected local or remote compiler. |
-| 📱 **Mobile Workbench** | Switch between a full-width editor and workspace on small screens; desktop keeps both panes visible and resizable. |
-
----
-
-## 💻 VS Code Extension
-
-Take the visualizer experience directly into your IDE:
-
-1. Search for **AlgoViz** in the VS Code Marketplace.
-2. Open any `.js` or `.cpp` file.
-3. Click **AlgoViz: Visualize Active File** from the editor run menu to view your code's step-by-step execution timeline right next to your source editor!
-
-👉 **[Download on VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode)**
-
----
-
-## 🖼️ Interface Gallery
-
-<table align="center">
+<table>
   <tr>
     <td width="50%" valign="top">
-      <img src="assets/image-1.png" alt="JavaScript Visualizer" />
-      <p align="center"><strong>Array & Pointer Tracking</strong><br />Visual pointer stalks tracking multi-window swaps.</p>
+      <img src="assets/screenshots/graph-dijkstra.png" alt="Dijkstra with each node's distance under it" />
+      <p align="center"><strong>Graphs with live distances</strong><br />Weights, visited nodes, the current node, and what is still waiting in the queue.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="assets/image-2.png" alt="C++ Bubble Sort" />
-      <p align="center"><strong>C++ STL Execution</strong><br />Real GCC compiler support for vector, map, stack, & queue.</p>
+      <img src="assets/screenshots/dp-lcs.png" alt="LCS DP table with read and written cells" />
+      <p align="center"><strong>DP tables that explain themselves</strong><br />Rows and columns labelled with the strings; the written cell and the cells it reads are marked.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="assets/image-3.png" alt="Call Stack Inspector" />
-      <p align="center"><strong>Recursive Call Stack</strong><br />Trace deep DFS call stack frames and local variables.</p>
+      <img src="assets/screenshots/tree-bst.png" alt="Binary search tree built by insert calls" />
+      <p align="center"><strong>Trees that survive recursion</strong><br />The whole tree stays on screen while recursive calls work on a subtree.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="assets/image-4.png" alt="Graph Visualizer" />
-      <p align="center"><strong>Graph & Tree Diagrams</strong><br />Interactive SVG rendering for directed graphs and binary trees.</p>
+      <img src="assets/image-1.png" alt="Bubble sort with pointer tags and read cells" />
+      <p align="center"><strong>Arrays, cell by cell</strong><br />Pointer tags come from the variables your code really uses as indexes.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/screenshots/cpp-bellman-dark.png" alt="C++ Bellman-Ford with a vector of Edge structs shown as a table" />
+      <p align="center"><strong>C++ structs as tables</strong><br /><code>vector&lt;Edge&gt;</code> shows <code>u</code>, <code>v</code> and <code>w</code> with their real names.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/image-3.png" alt="Call stack during a recursive depth-first search" />
+      <p align="center"><strong>The call stack, frame by frame</strong><br />Every recursive call with its own local variables.</p>
     </td>
   </tr>
 </table>
 
----
+<div align="center">
+  <img src="assets/demo/fibonacci.gif" alt="The landing page runs fibonacci(6) and lights up its call tree" width="100%" />
+  <p><em>The landing page runs <code>fibonacci(6)</code> live. Tap any node to jump to that call.</em></p>
+</div>
 
-## 🏗️ Technical Architecture
+## Works on your phone
 
-AlgoViz runs entirely in the browser without requiring heavy setup:
+<div align="center">
+  <img src="assets/screenshots/phone.png" alt="AlgoViz on a phone: the landing page and the Fibonacci debugger" width="70%" />
+</div>
 
-```mermaid
-graph TD
-    A[Source Code: JS / C++] --> B{Language Detector}
-    B -->|JavaScript| C[Acorn AST Parser & Web Worker]
-    B -->|C++| D{Wandbox API / Local WASM Engine}
-    C --> E[Execution Timeline State]
-    D --> E
-    E --> F[Monaco Editor Highlights]
-    E --> G[SVG Structure Visualizer]
-    E --> H[Telemetry & Complexity Analyzer]
-```
+## Features
 
-- **Frontend**: React 19, Vite, Monaco Editor, TailwindCSS, Framer Motion, Lucide Icons.
-- **Parsing & Instrumentation**: Acorn (JS) and Tree-sitter WASM (C++).
-- **Execution Sandbox**: Web Worker isolation for safety against infinite loops.
+| | |
+|---|---|
+| **Timeline** | Play, pause, step forward and back, scrub, and change speed. Set breakpoints by clicking the gutter. |
+| **Data structures** | Array, string, grid, linked list, tree, trie, graph, heap, stack, queue, priority queue, hash map, table. |
+| **Read / write marks** | The cells the current line reads (dashed) and writes (filled) are highlighted. |
+| **Call stack** | Each frame with its own variables, so recursion is readable. |
+| **Complexity** | Big-O estimates with a heatmap of the hottest lines. Estimates are guidance, not proofs. |
+| **Templates** | Press `Cmd/Ctrl + K` for 80+ ready-made algorithms in JavaScript and C++: sorting, DP, graphs, trees and more. |
+| **Share and embed** | Share a link that carries your code, or embed the workbench with `?embed=true`. |
+| **Annotations** | Pin notes to specific steps to build a walkthrough. |
+| **VS Code** | Run the visualizer in a split pane next to your file. |
 
----
+## Try it
 
-## 🧭 Interactive Documentation
+**In the browser:** open [algoviz.somyacodes.in](https://algoviz.somyacodes.in), pick `index.js` or `main.cpp`, and press **Run**.
 
-Want to understand how the instrumentation, compiler engine, or complex structure detection works? Check out the interactive docs site or read the markdown files directly:
+**In VS Code:** install [AlgoViz](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode), open a `.js` or `.cpp` file, and run **AlgoViz: Visualize Active File**.
 
-- [📖 Introduction & Core Mental Model](docs/introduction.md)
-- [🛠️ Setup & Installation Guide](docs/setup-guide.md)
-- [✨ Features & UI Layout Workbench](docs/features-and-ui.md)
-- [⚙️ C++ Dual Execution Engine](docs/cpp-engine.md)
-- [🛡️ Instrumentation Sandbox](docs/instrumentation-sandbox.md)
-- [📊 Complexity & Telemetry Analysis](docs/complexity-analysis.md)
-- [🎨 Template Library & Command Palette](docs/templates-and-palette.md)
-- [📐 Architecture Reference](docs/architecture.md)
-- [💻 VS Code Extension Guide](docs/vscode-extension.md)
-
-The documentation site mirrors these workflows and includes the same feature pages. Loading skeletons preserve the page structure while its larger editor, visualization, and documentation modules load.
-
----
-
-## ⚡ Local Setup
+**Locally:**
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/somyacodes07/algoviz.git
 cd algoviz
-
-# 2. Install dependencies
 npm install
-
-# 3. Start local development server
 npm run dev
 ```
 
-Open `http://localhost:3000` in your web browser.
+Then open `http://localhost:3000`.
 
----
+## How it works
 
-## 🤝 Contributing
+```mermaid
+graph LR
+    A[Your code] --> B{Language}
+    B -->|JavaScript| C[Acorn instrumenter + Web Worker]
+    B -->|C++| D[Tree-sitter instrumenter + Wasm Clang or Wandbox]
+    C --> E[Step timeline]
+    D --> E
+    E --> F[Structure detector]
+    F --> G[Diagrams, call stack, complexity]
+```
 
-Contributions, bug reports, and feature requests are very welcome! Feel free to check out the [issues page](https://github.com/somyacodes07/algoviz/issues).
+Your code is instrumented to record every variable at every step, run in a sandbox, and replayed as a timeline. A detector then decides, for each variable, which single diagram fits its shape.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- **Frontend:** React 19, Vite, Monaco Editor, Tailwind CSS, Framer Motion, GSAP and WebGL on the landing page.
+- **JavaScript:** Acorn instrumentation, run in a Web Worker with a step limit.
+- **C++:** Tree-sitter instrumentation, compiled with Wasm Clang in the browser or with Wandbox.
 
----
+## Documentation
 
-## 📜 License
+- [Introduction](docs/introduction.md)
+- [Setup guide](docs/setup-guide.md)
+- [Features and UI](docs/features-and-ui.md)
+- [C++ engine](docs/cpp-engine.md)
+- [Instrumentation sandbox](docs/instrumentation-sandbox.md)
+- [Complexity analysis](docs/complexity-analysis.md)
+- [Templates and palette](docs/templates-and-palette.md)
+- [Architecture](docs/architecture.md)
+- [VS Code extension](docs/vscode-extension.md)
 
-Distributed under the MIT License. See `LICENSE` for more information.
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. If a data structure shows up wrong, please [open an issue](https://github.com/somyacodes07/algoviz/issues) with the code you ran; those reports are the fastest way to make detection better.
+
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/your-idea`
+3. Commit your changes
+4. Open a pull request
+
+## Support
+
+AlgoViz is free and open source. If it helped you learn, teach or pass an interview, a ⭐ on this repo helps more people find it, and you can [sponsor the project](https://github.com/sponsors/somyacodes07).
 
 <div align="center">
   <br />
-  Made with ❤️ by <strong><a href="https://github.com/somyacodes07">Somyajeet Singh</a></strong>
-  <br /><br />
-  <a href="https://github.com/sponsors/somyacodes07"><img src="https://img.shields.io/badge/Sponsor_Me_On_GitHub-%E2%9D%A4-pink?style=for-the-badge&logo=github" alt="Sponsor Somyajeet" /></a>
+  Made by <a href="https://github.com/somyacodes07"><strong>Somyajeet Singh</strong></a>
 </div>

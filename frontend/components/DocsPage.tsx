@@ -223,18 +223,18 @@ const docsStructure: DocSection[] = [
       gallery: [
         {
           src: image1,
-          alt: 'JavaScript visualizer showing a reverse array example with highlighted variables and pointer markers.',
+          alt: 'Bubble sort in the JavaScript workbench: the array shows pointer tags for j and j + 1, and the cells the current line reads are outlined.',
           caption:
-            'Array and pointer state stays front-and-center, which makes swap-based problems much easier to explain live.',
-          label: 'Reverse Array Trace',
+            'Pointer tags come from the variables your code actually uses as indexes, and the cells the current line reads or writes are marked, so every comparison and swap is visible.',
+          label: 'Bubble Sort, Cell by Cell',
           tone: 'amber',
         },
         {
           src: image4,
-          alt: 'AlgoViz graph traversal view showing visited and result arrays updating while a C++ depth-first search runs.',
+          alt: 'Dijkstra in the JavaScript workbench: a weighted graph with each node\'s current distance under it and the current node tagged.',
           caption:
-            'The workbench can keep multiple evolving structures readable at once, which is where a lot of teaching tools usually collapse.',
-          label: 'Graph State View',
+            'Graphs get a spaced layout, readable edge weights, the current distance under every node and a dashed ring on nodes still waiting in the queue.',
+          label: 'Dijkstra with Live Distances',
           tone: 'emerald',
         },
         {
@@ -247,10 +247,10 @@ const docsStructure: DocSection[] = [
         },
         {
           src: image6,
-          alt: 'Source code editor highlighting hot lines and execution flow.',
+          alt: 'Longest common subsequence DP table labelled with the characters of both strings, with the written cell and the cells it reads marked.',
           caption:
-            'The editor visualizes the concentration of execution cycles with glowing hot lines, making bottlenecks and loop frequencies immediately recognizable during source flow tracking.',
-          label: 'Source Flow & Hot Lines',
+            'DP tables fit the panel, are labelled with the characters of the strings they compare, and mark the cell being written along with the cells it depends on.',
+          label: 'LCS Table, Reads and Writes',
           tone: 'amber',
         },
       ],
@@ -303,10 +303,10 @@ const docsStructure: DocSection[] = [
       gallery: [
         {
           src: image2,
-          alt: 'C++ bubble sort running in AlgoViz with the current line highlighted and runtime variables visible beside the source code.',
+          alt: 'C++ Dijkstra in AlgoViz: the adjacency list of [to, weight] pairs drawn as a weighted graph, with dist values under each node and priority queue entries dashed.',
           caption:
-            'C++ compiles with real GCC, producing accurate execution traces for any standard C++ code including full STL container support.',
-          label: 'C++ Bubble Sort',
+            'C++ STL containers, pairs, priority queues and your own structs all serialize with real field names, so C++ code gets the same diagrams as JavaScript.',
+          label: 'C++ Dijkstra',
           tone: 'blue',
         },
       ],
