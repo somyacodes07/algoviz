@@ -2,6 +2,24 @@
 
 All notable changes to the **AlgoViz** VS Code extension will be documented in this file.
 
+## [2.0.0] — 2026-11-23
+
+The extension no longer opens the AlgoViz website in an editor tab. It now works as part of the editor.
+
+### ✨ New
+- **AlgoViz sidebar view** with its own Activity Bar icon. It holds playback controls, a step scrubber, a plain-language description of each step, and collapsible Visualization, Variables, Call Stack, Output and Complexity sections. It uses your VS Code colour theme and fonts.
+- **Your own editor is the code editor.** The executing line is highlighted in the file you're editing, with a gutter marker, and the values that changed at that step appear at the end of the line.
+- **Editor toolbar controls** (step back, play/pause, step forward, stop) show on the file being visualized.
+- **Keyboard stepping**: ⌘⌥→ / ⌘⌥← (Ctrl+Alt on Windows/Linux), play/pause with ⌘⌥P, and **Run to Cursor** with ⌘⌥↵.
+- **Gutter breakpoints**: breakpoints set in the editor gutter pause playback.
+- **Re-run on save**: editing marks the trace as out of date, and saving traces the file again on the same step.
+- Program output is also written to the **AlgoViz** output channel, and the status bar shows the current step.
+- Settings: `algoviz.cppCompiler`, `algoviz.rerunOnSave`, `algoviz.inlineValues`, `algoviz.followExecution`, `algoviz.playbackSpeed`.
+
+### 🔁 Changed
+- Removed the "Open Visualizer Workbench" webview tab; `algoviz.start` now does the same as **Visualize Active File**.
+- The whole document is traced so that line numbers match the editor.
+
 ## [1.2.0] — 2026-10-18
 
 ### 🐛 Bug Fixes

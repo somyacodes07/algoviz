@@ -1,8 +1,8 @@
 {
   "name": "algoviz-vscode",
   "displayName": "AlgoViz",
-  "description": "Algorithm Visualizer inside VS Code",
-  "version": "1.2.0",
+  "description": "Watch your C++ and JavaScript run step by step in a sidebar, with the executing line highlighted in your own editor.",
+  "version": "2.0.0",
   "publisher": "somyacodes",
   "repository": {
     "type": "git",
@@ -29,16 +29,92 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "algoviz",
+          "title": "AlgoViz",
+          "icon": "media/algoviz.svg"
+        }
+      ]
+    },
+    "views": {
+      "algoviz": [
+        {
+          "type": "webview",
+          "id": "algoviz.visualizer",
+          "name": "Visualizer",
+          "icon": "media/algoviz.svg",
+          "contextualTitle": "AlgoViz"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "algoviz.start",
-        "title": "AlgoViz: Open Visualizer Workbench",
-        "icon": "$(play)"
+        "command": "algoviz.visualizeCurrentFile",
+        "title": "Visualize Active File",
+        "category": "AlgoViz",
+        "icon": "$(play-circle)"
       },
       {
-        "command": "algoviz.visualizeCurrentFile",
-        "title": "AlgoViz: Visualize Active File",
-        "icon": "$(play)"
+        "command": "algoviz.rerun",
+        "title": "Re-run",
+        "category": "AlgoViz",
+        "icon": "$(refresh)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.stepBack",
+        "title": "Step Back",
+        "category": "AlgoViz",
+        "icon": "$(debug-step-back)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.stepForward",
+        "title": "Step Forward",
+        "category": "AlgoViz",
+        "icon": "$(debug-step-over)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.play",
+        "title": "Play",
+        "category": "AlgoViz",
+        "icon": "$(debug-continue)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.pause",
+        "title": "Pause",
+        "category": "AlgoViz",
+        "icon": "$(debug-pause)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.runToCursor",
+        "title": "Run to Cursor",
+        "category": "AlgoViz",
+        "icon": "$(debug-step-into)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.stop",
+        "title": "Stop Visualizing",
+        "category": "AlgoViz",
+        "icon": "$(debug-stop)",
+        "enablement": "algoviz.sessionActive"
+      },
+      {
+        "command": "algoviz.focus",
+        "title": "Show Visualizer",
+        "category": "AlgoViz"
+      },
+      {
+        "command": "algoviz.openSettings",
+        "title": "Settings",
+        "category": "AlgoViz",
+        "icon": "$(gear)"
       }
     ],
     "keybindings": [
@@ -47,22 +123,153 @@
         "key": "ctrl+alt+v",
         "mac": "cmd+alt+v",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "algoviz.stepForward",
+        "key": "ctrl+alt+right",
+        "mac": "cmd+alt+right",
+        "when": "algoviz.sessionActive && !inDebugMode"
+      },
+      {
+        "command": "algoviz.stepBack",
+        "key": "ctrl+alt+left",
+        "mac": "cmd+alt+left",
+        "when": "algoviz.sessionActive && !inDebugMode"
+      },
+      {
+        "command": "algoviz.play",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "algoviz.sessionActive && !algoviz.playing"
+      },
+      {
+        "command": "algoviz.pause",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "algoviz.sessionActive && algoviz.playing"
+      },
+      {
+        "command": "algoviz.runToCursor",
+        "key": "ctrl+alt+enter",
+        "mac": "cmd+alt+enter",
+        "when": "algoviz.sessionActive && editorTextFocus"
+      },
+      {
+        "command": "algoviz.stop",
+        "key": "shift+escape",
+        "when": "algoviz.sessionActive && editorTextFocus && !inDebugMode"
       }
     ],
     "menus": {
       "editor/title/run": [
         {
           "command": "algoviz.visualizeCurrentFile",
-          "group": "1_run"
+          "group": "1_run",
+          "when": "(editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript || editorLangId == javascriptreact || editorLangId == typescriptreact)"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "algoviz.stepBack",
+          "group": "navigation@1",
+          "when": "algoviz.sessionActive && resourcePath in algoviz.boundPaths"
+        },
+        {
+          "command": "algoviz.play",
+          "group": "navigation@2",
+          "when": "algoviz.sessionActive && !algoviz.playing && resourcePath in algoviz.boundPaths"
+        },
+        {
+          "command": "algoviz.pause",
+          "group": "navigation@2",
+          "when": "algoviz.sessionActive && algoviz.playing && resourcePath in algoviz.boundPaths"
+        },
+        {
+          "command": "algoviz.stepForward",
+          "group": "navigation@3",
+          "when": "algoviz.sessionActive && resourcePath in algoviz.boundPaths"
+        },
+        {
+          "command": "algoviz.stop",
+          "group": "navigation@4",
+          "when": "algoviz.sessionActive && resourcePath in algoviz.boundPaths"
         }
       ],
       "editor/context": [
         {
           "command": "algoviz.visualizeCurrentFile",
-          "group": "navigation",
-          "when": "editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript || editorLangId == javascriptreact || editorLangId == typescriptreact"
+          "group": "algoviz@1",
+          "when": "(editorLangId == cpp || editorLangId == c || editorLangId == javascript || editorLangId == typescript || editorLangId == javascriptreact || editorLangId == typescriptreact)"
+        },
+        {
+          "command": "algoviz.runToCursor",
+          "group": "algoviz@2",
+          "when": "algoviz.sessionActive && resourcePath in algoviz.boundPaths"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "algoviz.visualizeCurrentFile",
+          "group": "navigation@1",
+          "when": "view == algoviz.visualizer"
+        },
+        {
+          "command": "algoviz.stop",
+          "group": "navigation@2",
+          "when": "view == algoviz.visualizer && algoviz.sessionActive"
+        },
+        {
+          "command": "algoviz.openSettings",
+          "group": "navigation@3",
+          "when": "view == algoviz.visualizer"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "algoviz.runToCursor",
+          "when": "algoviz.sessionActive && editorTextFocus"
         }
       ]
+    },
+    "configuration": {
+      "title": "AlgoViz",
+      "properties": {
+        "algoviz.cppCompiler": {
+          "type": "string",
+          "enum": [
+            "api",
+            "wasm"
+          ],
+          "enumDescriptions": [
+            "Compile remotely with GCC (needs internet).",
+            "Compile locally with in-browser Clang (WebAssembly); falls back to the remote compiler."
+          ],
+          "default": "api",
+          "description": "How C++ files are compiled before tracing."
+        },
+        "algoviz.rerunOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-run the visualization automatically when the file being visualized is saved."
+        },
+        "algoviz.inlineValues": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the values that changed at the current step at the end of the highlighted line."
+        },
+        "algoviz.followExecution": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scroll the editor to keep the executing line in view."
+        },
+        "algoviz.playbackSpeed": {
+          "type": "number",
+          "default": 600,
+          "minimum": 50,
+          "maximum": 3000,
+          "description": "Milliseconds per step while playing."
+        }
+      }
     }
   },
   "scripts": {
@@ -89,5 +296,15 @@
     "tailwindcss": "^3.4.19",
     "typescript": "^5.1.3",
     "vite": "^5.0.0"
-  }
+  },
+  "keywords": [
+    "algorithm",
+    "visualizer",
+    "data structures",
+    "education",
+    "c++",
+    "javascript",
+    "debugger",
+    "teaching"
+  ]
 }

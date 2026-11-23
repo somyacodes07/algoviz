@@ -1,258 +1,488 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs';
 
-let statusBarItem: vscode.StatusBarItem | undefined;
-let syncTimer: NodeJS.Timeout | undefined;
+/**
+ * AlgoViz for VS Code.
+ *
+ * The user's own editor stays the code editor. A webview view in the AlgoViz sidebar
+ * runs the trace and draws the data structures, and this host side keeps the two in step:
+ * it highlights the executing line in the real editor, shows changed values inline,
+ * reads the editor's own breakpoints, and exposes step/play commands on the editor toolbar.
+ */
+
+const VIEW_ID = 'algoviz.visualizer';
+
+const SUPPORTED_LANGUAGES: Record<string, 'c++' | 'javascript'> = {
+  cpp: 'c++',
+  c: 'c++',
+  javascript: 'javascript',
+  typescript: 'javascript',
+  javascriptreact: 'javascript',
+  typescriptreact: 'javascript',
+};
+
+type RunStatus = 'idle' | 'running' | 'ready' | 'error';
+
+/** Messages the webview sends to the extension. */
+type WebviewMessage =
+  | { type: 'ready' }
+  | { type: 'requestRun' }
+  | { type: 'rerun' }
+  | { type: 'stop' }
+  | { type: 'openSettings' }
+  | { type: 'revealLine'; line: number }
+  | { type: 'runState'; status: RunStatus; error?: string; output?: string[]; total?: number }
+  | { type: 'step'; index: number; total: number; line: number; playing: boolean; inline?: string };
+
+interface Session {
+  uri: vscode.Uri;
+  fileName: string;
+  language: 'c++' | 'javascript';
+  status: RunStatus;
+  stale: boolean;
+  index: number;
+  total: number;
+  line: number;
+  playing: boolean;
+  inline?: string;
+}
+
+let session: Session | undefined;
+let provider: VisualizerViewProvider;
+let statusBar: vscode.StatusBarItem;
+let output: vscode.OutputChannel;
+
+const stepDecoration = vscode.window.createTextEditorDecorationType({
+  isWholeLine: true,
+  backgroundColor: new vscode.ThemeColor('editor.stackFrameHighlightBackground'),
+  overviewRulerColor: new vscode.ThemeColor('editorOverviewRuler.infoForeground'),
+  overviewRulerLane: vscode.OverviewRulerLane.Full,
+});
+
+let gutterDecoration: vscode.TextEditorDecorationType;
+
+const inlineDecoration = vscode.window.createTextEditorDecorationType({
+  after: {
+    margin: '0 0 0 2.5em',
+    color: new vscode.ThemeColor('editorInlayHint.foreground'),
+    fontStyle: 'italic',
+  },
+});
 
 export function activate(context: vscode.ExtensionContext) {
-  // ── Status Bar Shortcut Button ──────────────────────────────────────────
-  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.command = 'algoviz.visualizeCurrentFile';
-  statusBarItem.text = '$(play) AlgoViz';
-  statusBarItem.tooltip = 'Visualize current file with AlgoViz (Cmd+Alt+V)';
-  statusBarItem.show();
-  context.subscriptions.push(statusBarItem);
-
-  // ── Command 1: Open Visualizer Workbench ────────────────────────────────
-  const startCmd = vscode.commands.registerCommand('algoviz.start', () => {
-    const editor = vscode.window.activeTextEditor;
-    const initialContext = getEditorContext(editor);
-    AlgoVizPanel.createOrShow(context.extensionUri, initialContext);
+  output = vscode.window.createOutputChannel('AlgoViz');
+  gutterDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: vscode.Uri.joinPath(context.extensionUri, 'media', 'step.svg'),
+    gutterIconSize: 'contain',
   });
 
-  // ── Command 2: Visualize Active File ────────────────────────────────────
-  const visualizeCmd = vscode.commands.registerCommand('algoviz.visualizeCurrentFile', () => {
+  provider = new VisualizerViewProvider(context.extensionUri);
+  context.subscriptions.push(
+    output,
+    stepDecoration,
+    gutterDecoration,
+    inlineDecoration,
+    vscode.window.registerWebviewViewProvider(VIEW_ID, provider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+  );
+
+  statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
+  statusBar.name = 'AlgoViz';
+  context.subscriptions.push(statusBar);
+  refreshStatusBar();
+
+  const register = (id: string, fn: (...args: any[]) => unknown) =>
+    context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+
+  register('algoviz.visualizeCurrentFile', () => {
     const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      vscode.window.showWarningMessage('AlgoViz: No active editor found. Please open a C++ or JavaScript file.');
+    const doc = editor?.document;
+    if (doc && languageOf(doc)) {
+      void startRun(doc, { reveal: true });
       return;
     }
-    const initialContext = getEditorContext(editor);
-    AlgoVizPanel.createOrShow(context.extensionUri, initialContext);
+    if (session) {
+      void rerun({ reveal: true });
+      return;
+    }
+    vscode.window.showInformationMessage('AlgoViz: open a C++ or JavaScript file to visualize it.');
+  });
+  // Kept so existing keybindings and docs that use the old command still work.
+  register('algoviz.start', () => vscode.commands.executeCommand('algoviz.visualizeCurrentFile'));
+  register('algoviz.rerun', () => rerun({ reveal: false }));
+  register('algoviz.stepForward', () => provider.post({ type: 'control', action: 'next' }));
+  register('algoviz.stepBack', () => provider.post({ type: 'control', action: 'prev' }));
+  register('algoviz.play', () => provider.post({ type: 'control', action: 'play' }));
+  register('algoviz.pause', () => provider.post({ type: 'control', action: 'pause' }));
+  register('algoviz.stop', () => stopSession());
+  register('algoviz.focus', () => provider.reveal(false));
+  register('algoviz.openSettings', () =>
+    vscode.commands.executeCommand('workbench.action.openSettings', '@ext:somyacodes.algoviz-vscode'),
+  );
+  register('algoviz.runToCursor', () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || !session || editor.document.uri.toString() !== session.uri.toString()) return;
+    provider.post({ type: 'control', action: 'runToLine', line: editor.selection.active.line + 1 });
   });
 
-  // ── Real-Time Sync: Active Editor Tab Switch ───────────────────────────
+  // ── Keep the editor and the trace in step ─────────────────────────────────
   context.subscriptions.push(
+    vscode.window.onDidChangeVisibleTextEditors(() => applyDecorations()),
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor && AlgoVizPanel.currentPanel) {
-        try {
-          const ctx = getEditorContext(editor);
-          if (ctx) {
-            AlgoVizPanel.currentPanel.sendContext(ctx.code, ctx.language);
-          }
-        } catch (e) {
-          // Editor may have been disposed between event fire and handler execution
-          console.warn('AlgoViz: Failed to read editor context', e);
-        }
+      provider.post({ type: 'activeFile', ...describeEditor(editor) });
+    }),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (!session || event.contentChanges.length === 0) return;
+      if (event.document.uri.toString() !== session.uri.toString()) return;
+      if (!session.stale) {
+        session.stale = true;
+        provider.post({ type: 'stale', stale: true });
+        applyDecorations();
+        refreshStatusBar();
       }
-    })
+    }),
+    vscode.workspace.onDidSaveTextDocument((doc) => {
+      if (!session || doc.uri.toString() !== session.uri.toString()) return;
+      if (!session.stale) return;
+      if (config().get<boolean>('rerunOnSave', true)) void startRun(doc, { reveal: false, keepStep: true });
+    }),
+    vscode.workspace.onDidCloseTextDocument((doc) => {
+      if (session && doc.uri.toString() === session.uri.toString() && doc.isUntitled) stopSession();
+    }),
+    vscode.debug.onDidChangeBreakpoints(() => sendBreakpoints()),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration('algoviz')) {
+        provider.post({ type: 'config', ...readConfig() });
+        applyDecorations();
+      }
+    }),
   );
 
-  // ── Real-Time Sync: Text Document Edits (Debounced 400ms) ──────────────
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument((e) => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor && editor.document === e.document && AlgoVizPanel.currentPanel) {
-        if (syncTimer) clearTimeout(syncTimer);
-        syncTimer = setTimeout(() => {
-          syncTimer = undefined;
-          const currentEditor = vscode.window.activeTextEditor;
-          if (currentEditor && currentEditor.document === e.document) {
-            try {
-              const ctx = getEditorContext(currentEditor);
-              if (ctx) AlgoVizPanel.currentPanel?.sendContext(ctx.code, ctx.language);
-            } catch (error) {
-              console.warn('AlgoViz: Failed to sync editor changes', error);
-            }
-          }
-        }, 400);
-      }
-    })
-  );
-
-  context.subscriptions.push(startCmd, visualizeCmd);
-}
-
-function getEditorContext(editor?: vscode.TextEditor): { code: string; language: string } | undefined {
-  if (!editor) return undefined;
-  const languageId = editor.document.languageId;
-  const supportedLangs: Record<string, string> = {
-    cpp: 'c++',
-    c: 'c++',
-    javascript: 'javascript',
-    typescript: 'javascript',
-    javascriptreact: 'javascript',
-    typescriptreact: 'javascript',
-  };
-
-  const algovizLang = supportedLangs[languageId];
-  if (!algovizLang) return undefined;
-
-  // Use selected text if non-empty, otherwise full document
-  const selection = editor.selection;
-  const selectedText = !selection.isEmpty ? editor.document.getText(selection) : '';
-  const code = selectedText.trim().length > 0 ? selectedText : editor.document.getText();
-
-  return { code, language: algovizLang };
-}
-
-class AlgoVizPanel {
-  public static currentPanel: AlgoVizPanel | undefined;
-  public static readonly viewType = 'algoviz';
-
-  private readonly _panel: vscode.WebviewPanel;
-  private readonly _extensionUri: vscode.Uri;
-  private _disposables: vscode.Disposable[] = [];
-  private _pendingContext?: { code: string; language: string };
-
-  public static createOrShow(extensionUri: vscode.Uri, initialContext?: { code: string; language: string }) {
-    // Open panel in split view beside active editor
-    const column = vscode.window.activeTextEditor
-      ? (vscode.window.activeTextEditor.viewColumn || 1) + 1
-      : vscode.ViewColumn.Two;
-
-    if (AlgoVizPanel.currentPanel) {
-      if (initialContext) {
-        AlgoVizPanel.currentPanel._pendingContext = initialContext;
-        AlgoVizPanel.currentPanel.sendContext(initialContext.code, initialContext.language);
-      }
-      AlgoVizPanel.currentPanel._panel.reveal(column > 3 ? vscode.ViewColumn.Two : column);
-      return;
-    }
-
-    const panel = vscode.window.createWebviewPanel(
-      AlgoVizPanel.viewType,
-      'AlgoViz Workbench',
-      column > 3 ? vscode.ViewColumn.Two : column,
-      {
-        enableScripts: true,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'webview-ui', 'dist')],
-        retainContextWhenHidden: true,
-      }
-    );
-
-    panel.iconPath = vscode.Uri.joinPath(extensionUri, 'icon.png');
-    AlgoVizPanel.currentPanel = new AlgoVizPanel(panel, extensionUri, initialContext);
-  }
-
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, initialContext?: { code: string; language: string }) {
-    this._panel = panel;
-    this._extensionUri = extensionUri;
-    this._pendingContext = initialContext;
-
-    this._update();
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-    // Handle panel visibility changes (e.g., tab switch)
-    this._panel.onDidChangeViewState(
-      () => {
-        if (this._panel.visible && this._pendingContext) {
-          this.sendContext(this._pendingContext.code, this._pendingContext.language);
-        }
-      },
-      null,
-      this._disposables
-    );
-
-    this._panel.webview.onDidReceiveMessage(
-      async (message) => {
-        switch (message.command) {
-          case 'webviewReady':
-            if (this._pendingContext) {
-              this.sendContext(this._pendingContext.code, this._pendingContext.language);
-              this._pendingContext = undefined;
-            }
-            return;
-          case 'runCode':
-            vscode.window.showInformationMessage(`AlgoViz: Running ${message.language} execution timeline...`);
-            return;
-        }
-      },
-      null,
-      this._disposables
-    );
-  }
-
-  public dispose() {
-    AlgoVizPanel.currentPanel = undefined;
-    this._panel.dispose();
-    while (this._disposables.length) {
-      const x = this._disposables.pop();
-      if (x) x.dispose();
-    }
-  }
-
-  public sendContext(code: string, language: string) {
-    this._panel.webview.postMessage({
-      command: 'setContext',
-      code,
-      language,
-    });
-  }
-
-  private _update() {
-    const webview = this._panel.webview;
-    this._panel.webview.html = this._getHtmlForWebview(webview);
-  }
-
-  private _getHtmlForWebview(webview: vscode.Webview) {
-    const distPath = vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist');
-    const htmlPath = vscode.Uri.joinPath(distPath, 'webview', 'index.html');
-
-    let html = '';
-    try {
-      html = fs.readFileSync(htmlPath.fsPath, 'utf8');
-    } catch (e) {
-      return `<!DOCTYPE html>
-<html lang="en">
-<body>
-  <h1>Error loading AlgoViz frontend</h1>
-  <p>Make sure you have built the webview-ui folder via <code>npm run build:webview</code>.</p>
-  <p>Error: ${e instanceof Error ? e.message : String(e)}</p>
-</body>
-</html>`;
-    }
-
-    // Generate a nonce for CSP
-    const nonce = getNonce();
-
-    const scriptPathOnDisk = vscode.Uri.joinPath(distPath, 'assets');
-    const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
-    const baseUri = webview.asWebviewUri(distPath).toString();
-
-    // Replace both ../assets/ and ./assets/ relative paths emitted by Vite
-    html = html.replace(/(href|src)="\.\.\/assets\//g, `$1="${scriptUri}/`);
-    html = html.replace(/(href|src)="\.\/assets\//g, `$1="${scriptUri}/`);
-
-    // Inject CSP meta tag + webview URI config
-    const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; font-src ${webview.cspSource} https://fonts.gstatic.com; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} data: https:; connect-src ${webview.cspSource} https:;">`;
-    html = html.replace('<head>', `<head>\n    ${cspMeta}\n    <script nonce="${nonce}">window.__WEBVIEW_URI__ = "${baseUri}";</script>`);
-
-    // Add nonce to all existing script tags
-    html = html.replace(/<script(?![^>]*nonce)/g, `<script nonce="${nonce}"`);
-
-    return html;
-  }
+  void vscode.commands.executeCommand('setContext', 'algoviz.sessionActive', false);
 }
 
 export function deactivate() {
-  if (syncTimer) {
-    clearTimeout(syncTimer);
-    syncTimer = undefined;
-  }
-  if (statusBarItem) {
-    statusBarItem.dispose();
-    statusBarItem = undefined;
+  session = undefined;
+}
+
+// ── Session lifecycle ───────────────────────────────────────────────────────
+
+async function startRun(doc: vscode.TextDocument, options: { reveal: boolean; keepStep?: boolean }) {
+  const language = languageOf(doc);
+  if (!language) return;
+
+  const sameFile = session?.uri.toString() === doc.uri.toString();
+  session = {
+    uri: doc.uri,
+    fileName: baseName(doc),
+    language,
+    status: 'running',
+    stale: false,
+    index: sameFile && options.keepStep ? session!.index : 0,
+    total: 0,
+    line: 0,
+    playing: false,
+  };
+  await setSessionContext();
+  applyDecorations();
+  refreshStatusBar();
+
+  await provider.reveal(!options.reveal);
+  provider.post({
+    type: 'run',
+    code: doc.getText(),
+    language,
+    fileName: session.fileName,
+    keepStep: !!options.keepStep && sameFile,
+    ...readConfig(),
+  });
+  sendBreakpoints();
+}
+
+async function rerun(options: { reveal: boolean }) {
+  if (!session) return;
+  try {
+    const doc = await vscode.workspace.openTextDocument(session.uri);
+    await startRun(doc, { reveal: options.reveal, keepStep: true });
+  } catch {
+    stopSession();
   }
 }
 
-/** Generate a random nonce for Content Security Policy */
-function getNonce(): string {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let nonce = '';
-  for (let i = 0; i < 32; i++) {
-    nonce += possible.charAt(Math.floor(Math.random() * possible.length));
+function stopSession() {
+  session = undefined;
+  void setSessionContext();
+  applyDecorations();
+  refreshStatusBar();
+  provider.post({ type: 'clear' });
+  provider.post({ type: 'activeFile', ...describeEditor(vscode.window.activeTextEditor) });
+}
+
+async function setSessionContext() {
+  await vscode.commands.executeCommand('setContext', 'algoviz.sessionActive', !!session);
+  await vscode.commands.executeCommand('setContext', 'algoviz.playing', !!session?.playing);
+  await vscode.commands.executeCommand(
+    'setContext',
+    'algoviz.boundPaths',
+    session ? [session.uri.fsPath, session.uri.path] : [],
+  );
+}
+
+function handleMessage(message: WebviewMessage) {
+  switch (message.type) {
+    case 'ready':
+      return;
+    case 'requestRun':
+      void vscode.commands.executeCommand('algoviz.visualizeCurrentFile');
+      return;
+    case 'rerun':
+      void rerun({ reveal: false });
+      return;
+    case 'stop':
+      stopSession();
+      return;
+    case 'openSettings':
+      void vscode.commands.executeCommand('algoviz.openSettings');
+      return;
+    case 'revealLine':
+      void revealLine(message.line);
+      return;
+    case 'runState': {
+      if (!session) return;
+      session.status = message.status;
+      if (message.total !== undefined) session.total = message.total;
+      if (message.status === 'error') {
+        session.line = 0;
+        session.inline = undefined;
+      }
+      if (message.output) writeProgramOutput(message.output, message.status === 'error' ? message.error : undefined);
+      applyDecorations();
+      refreshStatusBar();
+      return;
+    }
+    case 'step': {
+      if (!session) return;
+      const wasPlaying = session.playing;
+      Object.assign(session, {
+        index: message.index,
+        total: message.total,
+        line: message.line,
+        playing: message.playing,
+        inline: message.inline,
+      });
+      if (wasPlaying !== message.playing) {
+        void vscode.commands.executeCommand('setContext', 'algoviz.playing', message.playing);
+      }
+      applyDecorations();
+      refreshStatusBar();
+      return;
+    }
   }
+}
+
+function writeProgramOutput(lines: string[], error?: string) {
+  if (!session) return;
+  output.clear();
+  output.appendLine(`▶ ${session.fileName}`);
+  lines.forEach((line) => output.appendLine(line));
+  if (error) output.appendLine(`✖ ${error}`);
+}
+
+// ── Editor integration ──────────────────────────────────────────────────────
+
+function applyDecorations() {
+  for (const editor of vscode.window.visibleTextEditors) {
+    const bound = session && editor.document.uri.toString() === session.uri.toString();
+    const showLine = bound && !session!.stale && session!.status !== 'running' && session!.line > 0;
+    if (!showLine || session!.line > editor.document.lineCount) {
+      editor.setDecorations(stepDecoration, []);
+      editor.setDecorations(gutterDecoration, []);
+      editor.setDecorations(inlineDecoration, []);
+      continue;
+    }
+    const line = editor.document.lineAt(session!.line - 1);
+    const range = new vscode.Range(line.range.start, line.range.start);
+    editor.setDecorations(stepDecoration, [range]);
+    editor.setDecorations(gutterDecoration, [range]);
+
+    const inline = config().get<boolean>('inlineValues', true) ? session!.inline : undefined;
+    editor.setDecorations(
+      inlineDecoration,
+      inline ? [{ range: line.range, renderOptions: { after: { contentText: inline } } }] : [],
+    );
+
+    if (config().get<boolean>('followExecution', true) && editor === vscode.window.activeTextEditor) {
+      const visible = editor.visibleRanges.some((r) => r.contains(line.range.start));
+      if (!visible) editor.revealRange(line.range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+    }
+  }
+}
+
+async function revealLine(lineNumber: number) {
+  if (!session || lineNumber < 1) return;
+  const doc = await vscode.workspace.openTextDocument(session.uri);
+  const editor = await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: false });
+  const line = doc.lineAt(Math.min(lineNumber, doc.lineCount) - 1);
+  editor.revealRange(line.range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+}
+
+function sendBreakpoints() {
+  if (!session) return;
+  const target = session.uri.toString();
+  const lines = vscode.debug.breakpoints
+    .filter((bp): bp is vscode.SourceBreakpoint => bp instanceof vscode.SourceBreakpoint && bp.enabled)
+    .filter((bp) => bp.location.uri.toString() === target)
+    .map((bp) => bp.location.range.start.line + 1);
+  provider.post({ type: 'breakpoints', lines });
+}
+
+function refreshStatusBar() {
+  if (!session) {
+    statusBar.text = '$(play-circle) AlgoViz';
+    statusBar.tooltip = 'Visualize the active file (⌘⌥V / Ctrl+Alt+V)';
+    statusBar.command = 'algoviz.visualizeCurrentFile';
+    statusBar.show();
+    return;
+  }
+  statusBar.command = 'algoviz.focus';
+  if (session.status === 'running') {
+    statusBar.text = `$(sync~spin) AlgoViz: tracing ${session.fileName}`;
+    statusBar.tooltip = 'Running and recording every step';
+  } else if (session.status === 'error') {
+    statusBar.text = `$(error) AlgoViz: ${session.fileName}`;
+    statusBar.tooltip = 'The run stopped with an error. Open the visualizer for details.';
+  } else if (session.stale) {
+    statusBar.text = `$(circle-filled) AlgoViz: ${session.fileName} changed`;
+    statusBar.tooltip = config().get<boolean>('rerunOnSave', true)
+      ? 'Save the file to re-run the visualization'
+      : 'Run AlgoViz: Re-run to trace the new code';
+  } else {
+    const icon = session.playing ? '$(debug-pause)' : '$(debug-step-over)';
+    statusBar.text = `${icon} Step ${session.index + 1}/${session.total} · line ${session.line}`;
+    statusBar.tooltip = `AlgoViz is tracing ${session.fileName}`;
+  }
+  statusBar.show();
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function config() {
+  return vscode.workspace.getConfiguration('algoviz');
+}
+
+function readConfig() {
+  return {
+    cppCompiler: config().get<'api' | 'wasm'>('cppCompiler', 'api'),
+    speed: config().get<number>('playbackSpeed', 600),
+  };
+}
+
+function languageOf(doc: vscode.TextDocument) {
+  return SUPPORTED_LANGUAGES[doc.languageId];
+}
+
+function baseName(doc: vscode.TextDocument) {
+  const parts = doc.uri.path.split('/');
+  return parts[parts.length - 1] || 'untitled';
+}
+
+function describeEditor(editor: vscode.TextEditor | undefined) {
+  const doc = editor?.document;
+  if (!doc || doc.uri.scheme === 'output') return { fileName: null, language: null };
+  return { fileName: baseName(doc), language: languageOf(doc) ?? null };
+}
+
+// ── Webview view ────────────────────────────────────────────────────────────
+
+class VisualizerViewProvider implements vscode.WebviewViewProvider {
+  private view?: vscode.WebviewView;
+  private ready = false;
+  private queue: unknown[] = [];
+  private readyWaiters: (() => void)[] = [];
+
+  constructor(private readonly extensionUri: vscode.Uri) {}
+
+  resolveWebviewView(view: vscode.WebviewView) {
+    this.view = view;
+    this.ready = false;
+    const dist = vscode.Uri.joinPath(this.extensionUri, 'webview-ui', 'dist');
+    view.webview.options = { enableScripts: true, localResourceRoots: [dist] };
+    view.webview.html = this.html(view.webview, dist);
+    view.webview.onDidReceiveMessage((message: WebviewMessage) => {
+      if (message.type === 'ready') {
+        this.ready = true;
+        const pending = this.queue;
+        this.queue = [];
+        this.post({ type: 'config', ...readConfig() });
+        this.post({ type: 'activeFile', ...describeEditor(vscode.window.activeTextEditor) });
+        if (pending.length) pending.forEach((m) => this.post(m));
+        else if (session) void rerun({ reveal: false }); // the view was reloaded mid-session
+        this.readyWaiters.splice(0).forEach((resolve) => resolve());
+        return;
+      }
+      handleMessage(message);
+    });
+    view.onDidDispose(() => {
+      this.view = undefined;
+      this.ready = false;
+    });
+  }
+
+  post(message: unknown) {
+    if (this.view && this.ready) void this.view.webview.postMessage(message);
+    else if ((message as { type: string }).type === 'run') this.queue = [message];
+    else if (this.queue.length) this.queue.push(message);
+  }
+
+  /** Make the sidebar view visible, keeping keyboard focus in the editor when asked. */
+  async reveal(preserveFocus: boolean) {
+    if (this.view) {
+      this.view.show(preserveFocus);
+      return;
+    }
+    const editor = vscode.window.activeTextEditor;
+    await vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+    if (preserveFocus && editor) {
+      await vscode.window.showTextDocument(editor.document, { viewColumn: editor.viewColumn, preserveFocus: false });
+    }
+  }
+
+  private html(webview: vscode.Webview, dist: vscode.Uri) {
+    let html: string;
+    try {
+      html = fs.readFileSync(vscode.Uri.joinPath(dist, 'webview', 'index.html').fsPath, 'utf8');
+    } catch (e) {
+      return `<!DOCTYPE html><html><body style="padding:12px;font-family:var(--vscode-font-family)">
+        <p>AlgoViz could not load its view.</p>
+        <p>Build it with <code>npm run build:webview</code>.</p>
+        <p style="opacity:.7">${e instanceof Error ? e.message : String(e)}</p></body></html>`;
+    }
+    const nonce = getNonce();
+    const assets = webview.asWebviewUri(vscode.Uri.joinPath(dist, 'assets'));
+    const base = webview.asWebviewUri(dist).toString();
+    html = html.replace(/(href|src)="\.\.?\/assets\//g, `$1="${assets}/`);
+    const csp = [
+      `default-src 'none'`,
+      `style-src ${webview.cspSource} 'unsafe-inline'`,
+      `font-src ${webview.cspSource}`,
+      `img-src ${webview.cspSource} data: https:`,
+      // The tracer evaluates instrumented JS (new Function) and loads tree-sitter / clang wasm.
+      `script-src 'nonce-${nonce}' ${webview.cspSource} 'unsafe-eval' 'wasm-unsafe-eval'`,
+      `worker-src ${webview.cspSource} blob:`,
+      `connect-src ${webview.cspSource} https:`,
+    ].join('; ');
+    html = html.replace(
+      '<head>',
+      `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script nonce="${nonce}">window.__WEBVIEW_URI__ = "${base}";</script>`,
+    );
+    return html.replace(/<script(?![^>]*nonce)/g, `<script nonce="${nonce}"`);
+  }
+}
+
+function getNonce(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let nonce = '';
+  for (let i = 0; i < 32; i++) nonce += chars.charAt(Math.floor(Math.random() * chars.length));
   return nonce;
 }

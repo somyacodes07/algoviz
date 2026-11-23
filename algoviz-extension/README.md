@@ -1,48 +1,57 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/somyacodes07/AlgoViz-copy/main/public/icon-512.png" alt="AlgoViz Logo" width="120" />
   <h1>AlgoViz for VS Code</h1>
-  <p><em>See how your code really works, right inside your IDE.</em></p>
+  <p><em>Watch your algorithm run, line by line, in the editor you already use.</em></p>
 </div>
 
 ---
 
-**AlgoViz** is an interactive code visualizer that helps you stop guessing and start understanding. By bringing the AlgoViz environment directly into VS Code, you can trace logic, inspect memory, and watch algorithms compute without ever leaving your editor.
+AlgoViz adds a **Visualizer** view to VS Code. Write C++ or JavaScript in your normal editor, press **⌘⌥V** (Ctrl+Alt+V), and step through the run: the line that executed is highlighted in your file, the values that changed appear at the end of that line, and the sidebar draws your arrays, trees, linked lists, graphs, stacks, queues, heaps and hash maps as they change.
 
-## ✨ Features
+It works for students tracing their own code and for teachers walking a class through an algorithm.
 
-- **Language Support**: Trace JavaScript and C++ files, including TypeScript and React files interpreted as JavaScript.
-- **Step-by-Step Debugging**: Pause execution, step forwards or backwards, and watch variables mutate exactly when lines evaluate.
-- **Visual Call Stack**: Demystify recursion and nested function calls by seeing the stack grow and shrink in real-time.
-- **Run Menu Integration**: Select **AlgoViz: Visualize Active File** directly from your editor's Run/Play dropdown to instantly visualize the current file.
-- **Local JavaScript Execution**: JavaScript runs in a web worker inside the VS Code webview.
-- **Two C++ Compiler Options**: Choose local WebAssembly Clang or remote Wandbox in Settings. Wandbox is the current default; local Wasm can run offline when its compiler bundle is available.
+## How to use
 
-## 🚀 How to Use
+1. Open a `.cpp`, `.c`, `.js`, `.ts`, `.jsx` or `.tsx` file.
+2. Press **⌘⌥V** / **Ctrl+Alt+V**, choose **Visualize Active File** from the editor's Run menu, or click the AlgoViz icon in the Activity Bar.
+3. Step through the run with the sidebar controls, the editor toolbar buttons, or the keyboard.
 
-### Method 1: Editor Run Menu (Recommended)
-1. Open a `.js`, `.jsx`, `.ts`, `.tsx`, `.c`, or `.cpp` file in your editor.
-2. Click the **Play button dropdown** (Run menu) in the top-right corner of the editor.
-3. Select **`AlgoViz: Visualize Active File`**.
-4. The visualizer will open in a split pane, automatically importing your code and language!
+| Action | macOS | Windows / Linux |
+| --- | --- | --- |
+| Visualize the active file | ⌘⌥V | Ctrl+Alt+V |
+| Step forward / back | ⌘⌥→ / ⌘⌥← | Ctrl+Alt+→ / Ctrl+Alt+← |
+| Play / pause | ⌘⌥P | Ctrl+Alt+P |
+| Run to the cursor's line | ⌘⌥↵ | Ctrl+Alt+Enter |
+| Stop visualizing | ⇧Esc | Shift+Esc |
 
-### Method 2: Command Palette
-1. Open your command palette (`Cmd+Shift+P` on Mac or `Ctrl+Shift+P` on Windows/Linux).
-2. Type **`AlgoViz: Open Visualizer Workbench`** and hit Enter.
-3. The AlgoViz workbench will open in a new split panel.
-4. Simply write your code in the visualizer's editor or copy-paste it from your current workspace.
+## What you get
 
-Once the visualizer is open:
-- Click the **Play/Run** button to generate the execution timeline!
-- Use the playback controls (Step Forward, Step Back, Play, Pause) to walk through the algorithm.
+- **Editor highlighting**: the executing line, a gutter marker, and the changed values shown inline, like a debugger.
+- **Diagrams for data structures**, detected from your variables and drawn per step.
+- **Variables, Call Stack and Output** sections that follow the current step, styled like the Run and Debug view.
+- **Complexity estimate** with the busiest lines; click a line to jump to it.
+- **Breakpoints**: set them in the editor gutter as usual and playback stops on them.
+- **Re-run on save**: when you edit the file the trace is marked out of date, and saving traces it again on the same step.
+- Program output goes to the **AlgoViz** output channel too.
 
-## 🛠 Supported Languages
-- JavaScript (Node.js/ES6)
-- C++ (Beta - STL support via local AST transpilation)
+### Teaching tip
 
-## 🤝 Contributing
+Drag the Visualizer view into the **secondary side bar** (View → Appearance → Secondary Side Bar) or the bottom panel to give the diagrams more room while the code stays on screen.
 
-This extension is open source and powered by the [AlgoViz](https://algoviz.somyacodes.in) project. 
-If you find a bug or want to request a feature, please feel free to [open an issue](https://github.com/somyacodes07/AlgoViz-copy/issues) or contribute on GitHub!
+## Settings
 
----
-**Happy Visualizing!** 🚀
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `algoviz.cppCompiler` | `api` | `api` compiles C++ remotely with GCC (needs internet). `wasm` compiles locally with WebAssembly Clang and falls back to the remote compiler. |
+| `algoviz.rerunOnSave` | `true` | Trace the file again when you save it. |
+| `algoviz.inlineValues` | `true` | Show changed values at the end of the highlighted line. |
+| `algoviz.followExecution` | `true` | Scroll the editor to keep the executing line visible. |
+| `algoviz.playbackSpeed` | `600` | Milliseconds per step while playing. |
+
+## How it runs your code
+
+JavaScript (and TypeScript, traced as JavaScript) runs in a sandboxed web worker inside the view. C++ is instrumented locally, then compiled with the compiler chosen in `algoviz.cppCompiler`. With the default `api` setting your C++ source is sent to a remote compiler service.
+
+## Contributing
+
+AlgoViz is open source and powered by the [AlgoViz](https://algoviz.somyacodes.in) project. Report bugs or request features in the [issue tracker](https://github.com/somyacodes07/AlgoViz-copy/issues).

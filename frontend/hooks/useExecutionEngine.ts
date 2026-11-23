@@ -26,6 +26,7 @@ interface ExecutionControls {
   prevStep: () => void;
   jumpToStep: (index: number) => void;
   toggleBreakpoint: (line: number) => void;
+  setBreakpointLines: (lines: number[]) => void;
   clearError: () => void;
 }
 
@@ -188,6 +189,7 @@ export const useExecutionEngine = (): { state: ExecutionState; controls: Executi
       prevStep,
       jumpToStep,
       toggleBreakpoint,
+      setBreakpointLines: (lines: number[]) => setBreakpoints(new Set(lines)),
       clearError: () => setExecutionError(null),
     },
   };

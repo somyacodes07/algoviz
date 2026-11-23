@@ -693,7 +693,8 @@ async function doInit(): Promise<void> {
   try {
     console.log('[WasmClang] Initializing Clang-Wasm engine...');
 
-    const base = import.meta.env.BASE_URL || '/';
+    const webviewBase = typeof window !== 'undefined' ? (window as any).__WEBVIEW_URI__ : undefined;
+    const base = webviewBase || import.meta.env.BASE_URL || '/';
     const baseUrl = base.endsWith('/') ? base : base + '/';
 
     const memfsUrl = `${baseUrl}wasm-clang/memfs.wasm`;
