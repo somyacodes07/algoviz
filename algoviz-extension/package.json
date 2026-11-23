@@ -2,7 +2,7 @@
   "name": "algoviz-vscode",
   "displayName": "AlgoViz",
   "description": "Watch your C++ and JavaScript run step by step in a sidebar, with the executing line highlighted in your own editor.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "publisher": "somyacodes",
   "repository": {
     "type": "git",

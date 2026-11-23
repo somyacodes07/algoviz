@@ -148,7 +148,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
 
   const preview = useMemo(() => buildArrayGridPreview(variables, prevVariables, sourceName), [variables, prevVariables, sourceName]);
   const arrayLength = preview?.type === 'array' ? preview.value.length : 0;
-  const fitSmallArray = arrayLength > 0 && arrayLength <= 10;
+  const fitSmallArray = arrayLength > 0 && arrayLength <= 16;
   const matrixRows = preview?.type === 'matrix' ? preview.value.length : 0;
   const matrixCols = preview?.type === 'matrix' ? (preview.value[0]?.length || 0) : 0;
   // Cells shrink (down to 30px) so small tables fit without scrolling.
@@ -471,7 +471,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
         )}
 
         <div ref={arrayViewportRef} role="region" aria-label={`${preview.sourceName} array diagram`} tabIndex={0} onScroll={updateArrayWindow} className="diagram-viewport custom-scrollbar mt-6 pb-4 pt-16 min-h-[190px] w-full">
-          <div className={`flex min-w-full items-end gap-2 px-2 ${fitSmallArray ? 'w-full' : 'w-max'}`}>
+          <div className={`flex min-w-full items-end px-2 ${fitSmallArray ? 'w-full gap-1.5' : 'w-max gap-2'}`}>
             {virtualized && <div aria-hidden="true" className="shrink-0" style={{ width: renderStart * ARRAY_ITEM_STRIDE }} />}
             {visibleItems.map((i) => {
             const val = arr[i];
@@ -530,7 +530,7 @@ export const ArrayGridVisualizer: React.FC<ArrayGridVisualizerProps> = ({
               <motion.div
                 key={i}
                 layout
-                style={fitSmallArray ? { flex: '1 1 64px', minWidth: 38, maxWidth: 64 } : undefined}
+                style={fitSmallArray ? { flex: '1 1 64px', minWidth: 24, maxWidth: 64 } : undefined}
                 className={`relative flex w-16 flex-col items-center ${fitSmallArray ? 'shrink' : 'shrink-0'}`}
               >
                 {/* Sliding Window Brackets & Link Lines */}

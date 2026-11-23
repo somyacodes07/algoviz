@@ -31,7 +31,15 @@ type WebviewMessage =
   | { type: 'stop' }
   | { type: 'openSettings' }
   | { type: 'revealLine'; line: number }
-  | { type: 'runState'; status: RunStatus; error?: string; output?: string[]; total?: number }
+  | { type: 'reportIssue' }
+  | {
+      type: 'runState';
+      status: RunStatus;
+      error?: string;
+      problems?: { line: number; message: string }[];
+      output?: string[];
+      total?: number;
+    }
   | { type: 'step'; index: number; total: number; line: number; playing: boolean; inline?: string };
 
 interface Session {
@@ -51,6 +59,7 @@ let session: Session | undefined;
 let provider: VisualizerViewProvider;
 let statusBar: vscode.StatusBarItem;
 let output: vscode.OutputChannel;
+let diagnostics: vscode.DiagnosticCollection;
 
 const stepDecoration = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
@@ -71,6 +80,8 @@ const inlineDecoration = vscode.window.createTextEditorDecorationType({
 
 export function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel('AlgoViz');
+  diagnostics = vscode.languages.createDiagnosticCollection('algoviz');
+  context.subscriptions.push(diagnostics);
   gutterDecoration = vscode.window.createTextEditorDecorationType({
     gutterIconPath: vscode.Uri.joinPath(context.extensionUri, 'media', 'step.svg'),
     gutterIconSize: 'contain',
@@ -173,6 +184,7 @@ async function startRun(doc: vscode.TextDocument, options: { reveal: boolean; ke
   if (!language) return;
 
   const sameFile = session?.uri.toString() === doc.uri.toString();
+  diagnostics.clear();
   session = {
     uri: doc.uri,
     fileName: baseName(doc),
@@ -212,6 +224,7 @@ async function rerun(options: { reveal: boolean }) {
 
 function stopSession() {
   session = undefined;
+  diagnostics.clear();
   void setSessionContext();
   applyDecorations();
   refreshStatusBar();
@@ -242,6 +255,9 @@ function handleMessage(message: WebviewMessage) {
     case 'stop':
       stopSession();
       return;
+    case 'reportIssue':
+      void vscode.env.openExternal(vscode.Uri.parse('https://github.com/somyacodes07/AlgoViz-copy/issues/new'));
+      return;
     case 'openSettings':
       void vscode.commands.executeCommand('algoviz.openSettings');
       return;
@@ -257,6 +273,7 @@ function handleMessage(message: WebviewMessage) {
         session.inline = undefined;
       }
       if (message.output) writeProgramOutput(message.output, message.status === 'error' ? message.error : undefined);
+      if (message.status === 'error' && message.problems?.length) showProblems(message.problems);
       applyDecorations();
       refreshStatusBar();
       return;
@@ -279,6 +296,28 @@ function handleMessage(message: WebviewMessage) {
       return;
     }
   }
+}
+
+/** Compile and runtime errors become squiggles in the editor and entries in the Problems panel. */
+function showProblems(problems: { line: number; message: string }[]) {
+  if (!session) return;
+  const uri = session.uri;
+  void vscode.workspace.openTextDocument(uri).then((doc) => {
+    const items = problems
+      .filter((p) => p.line >= 1 && p.line <= doc.lineCount)
+      .map((p) => {
+        const line = doc.lineAt(p.line - 1);
+        const start = line.firstNonWhitespaceCharacterIndex;
+        const diagnostic = new vscode.Diagnostic(
+          new vscode.Range(p.line - 1, start, p.line - 1, Math.max(start + 1, line.text.length)),
+          p.message,
+          vscode.DiagnosticSeverity.Error,
+        );
+        diagnostic.source = 'AlgoViz';
+        return diagnostic;
+      });
+    diagnostics.set(uri, items);
+  });
 }
 
 function writeProgramOutput(lines: string[], error?: string) {

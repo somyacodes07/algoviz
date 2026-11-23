@@ -23,6 +23,8 @@ export class CppInstrumenter {
   private scopeStack: Set<string>[] = [];
   // Parameter names of the function whose body is about to open; they join that body's scope.
   private pendingParams: string[] | null = null;
+  // Array parameters of the current function and the parameter holding their length (`arr` -> `n`).
+  private arraySpans = new Map<string, string>();
 
   constructor() {}
 
@@ -119,7 +121,9 @@ export class CppInstrumenter {
       }
     }
 
+    const savedSpans = this.arraySpans;
     if (type === 'function_definition') {
+      this.arraySpans = this.arrayParamSpans(node);
       const body = node.childForFieldName('body');
       const declarator = node.childForFieldName('declarator');
       const functionName = declarator?.text.match(/([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\(/)?.[1];
@@ -142,6 +146,39 @@ export class CppInstrumenter {
     if (isBlock || isLoopScope) {
       this.scopeStack.pop();
     }
+    this.arraySpans = savedSpans;
+  }
+
+  /**
+   * `void sort(int arr[], int n)` or `void sort(int* a, int size)`: pair each array-like
+   * parameter of a scalar type with the integer parameter that looks like its length.
+   */
+  private arrayParamSpans(fn: Node): Map<string, string> {
+    const spans = new Map<string, string>();
+    let declarator = fn.childForFieldName('declarator');
+    while (declarator && declarator.type !== 'function_declarator') {
+      declarator = declarator.childForFieldName('declarator') || null;
+    }
+    const list = declarator?.childForFieldName('parameters');
+    if (!list) return spans;
+    const arrays: string[] = [];
+    const ints: string[] = [];
+    const SCALAR = /^(?:(?:unsigned|signed|long|short|const)\s+)*(?:int|long|short|char|float|double|bool|size_t|long\s+long)$/;
+    for (const param of list.namedChildren) {
+      if (param.type !== 'parameter_declaration') continue;
+      const typeText = (param.childForFieldName('type')?.text || '').trim();
+      const decl = param.childForFieldName('declarator');
+      if (!decl) continue;
+      const name = this.extractIdentifier(decl);
+      if (!name) continue;
+      const isArray = decl.type === 'array_declarator' || (decl.type === 'pointer_declarator' && decl.namedChildren.some((c) => c.type === 'identifier'));
+      if (isArray && SCALAR.test(typeText)) arrays.push(name);
+      else if (decl.type === 'identifier' && /^(?:(?:unsigned|signed|long|short|const)\s+)*(?:int|long|short|size_t|long\s+long)$/.test(typeText)) ints.push(name);
+    }
+    const LENGTH_NAMES = ['n', 'size', 'len', 'length', 'N', 'sz', 'count', 'num', 'm'];
+    const length = LENGTH_NAMES.find((candidate) => ints.includes(candidate)) || (ints.length === 1 ? ints[0] : undefined);
+    if (length) arrays.forEach((name) => spans.set(name, length));
+    return spans;
   }
 
   /**
@@ -251,7 +288,14 @@ export class CppInstrumenter {
   private injectTraceCall(node: Node, line: number) {
     const vars = this.getCurrentScopeVars();
     const varPairs =
-      vars.length === 0 ? '' : vars.map((v) => `{"${v}", __to_json(${v})}`).join(', ');
+      vars.length === 0
+        ? ''
+        : vars
+            .map((v) => {
+              const length = this.arraySpans.get(v);
+              return length ? `{"${v}", __json_span(${v}, ${length})}` : `{"${v}", __to_json(${v})}`;
+            })
+            .join(', ');
 
     const traceCall = `__trace(${line}, {${varPairs}});`;
 
@@ -308,7 +352,7 @@ export class CppInstrumenter {
       'std::string __to_json(char v);',
       'std::string __to_json(const std::string& v);',
       'std::string __to_json(const char* v);',
-      'template<typename T> std::string __to_json(const T& v);',
+      'template<typename T, typename std::enable_if<!std::is_array<T>::value, int>::type = 0> std::string __to_json(const T& v);',
       'template<typename T, typename A> std::string __to_json(const std::vector<T, A>& v);',
       'template<typename T, size_t N> std::string __to_json(const std::array<T, N>& v);',
       'template<typename T, size_t N> std::string __to_json(const T (&v)[N]);',
@@ -322,7 +366,7 @@ export class CppInstrumenter {
       'template<typename T, typename C> std::string __to_json(const std::stack<T, C>& s);',
       'template<typename T, typename C> std::string __to_json(const std::queue<T, C>& q);',
       'template<typename T, typename C, typename P> std::string __to_json(const std::priority_queue<T, C, P>& q);',
-      'template<typename T> std::string __to_json(T* ptr, int depth = 0);',
+      'template<typename T> std::string __to_json(T* const& ptr, int depth = 0);',
       'std::vector<std::string> __pending_events;',
       'std::vector<std::string> __call_stack;',
       'std::string __json_quote(const std::string& value) {',
@@ -351,7 +395,7 @@ export class CppInstrumenter {
       '}',
       '',
       '// Numbers. JSON has no infinity, but 1e999 parses to Infinity in JavaScript.',
-      'template<typename T> std::string __to_json(const T& v) {',
+      'template<typename T, typename std::enable_if<!std::is_array<T>::value, int>::type> std::string __to_json(const T& v) {',
       '    if constexpr (std::is_floating_point_v<T>) {',
       '        if (std::isnan(v)) return "null";',
       '        if (std::isinf(v)) return v > 0 ? "1e999" : "-1e999";',
@@ -406,6 +450,8 @@ export class CppInstrumenter {
       'template<typename T, typename A> std::string __to_json(const std::vector<T, A>& v) { return __json_list(v.begin(), v.end()); }',
       'template<typename T, size_t N> std::string __to_json(const std::array<T, N>& v) { return __json_list(v.begin(), v.end()); }',
       'template<typename T, size_t N> std::string __to_json(const T (&v)[N]) { return __json_list(v, v + N); }',
+      '// An array parameter (`int arr[], int n`) decays to a pointer; show its first n elements.',
+      'template<typename T> std::string __json_span(const T* p, long long n) { if (!p) return "null"; if (n < 0) n = 0; if (n > 2000) n = 2000; return __json_list(p, p + n); }',
       'template<size_t N> std::string __to_json(const char (&v)[N]) { return __json_quote(std::string(v, strnlen(v, N))); }',
       '// Pairs become two-item arrays, so a vector of pairs reads as a table.',
       'template<typename T, typename U> std::string __to_json(const std::pair<T, U>& p) { return "[" + __to_json(p.first) + ", " + __to_json(p.second) + "]"; }',
@@ -459,7 +505,7 @@ export class CppInstrumenter {
       'template<typename T> struct __has_prev<T, std::void_t<decltype(std::declval<T>().prev)>> : std::true_type {};',
       '',
       '// Pointers (Trees / Linked Lists)',
-      'template<typename T> std::string __to_json(T* ptr, int depth) {',
+      'template<typename T> std::string __to_json(T* const& ptr, int depth) {',
       `    if (ptr == nullptr) return ${DQ}null${DQ};`,
       `    if (depth > 15) return ${DQ}${BSQ}<max_depth>${BSQ}${DQ};`,
       '    if constexpr (__has_next<T>::value) {',

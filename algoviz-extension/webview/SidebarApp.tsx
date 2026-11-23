@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertCircle,
   ChevronDown,
   ChevronRight,
   ChevronsLeft,
@@ -7,10 +8,8 @@ import {
   Pause,
   Play,
   RotateCw,
-  Settings,
   SkipBack,
   SkipForward,
-  Square,
 } from 'lucide-react';
 import { useExecutionEngine } from '@/frontend/hooks/useExecutionEngine';
 import StructureVisualizer from '@/frontend/components/StructureVisualizer';
@@ -18,6 +17,7 @@ import { describeStep, valuesEqual } from '@/frontend/utils/describeStep';
 import { prewarmWasmEngines } from '@/backend/sandbox/transpiler/parser';
 import type { ExecutionStep, VariableMap } from '@/types';
 import { vscode, HostMessage } from './vscode';
+import { parseError, ParsedError } from './errors';
 
 type SectionId = 'visual' | 'variables' | 'stack' | 'output' | 'complexity';
 
@@ -65,6 +65,8 @@ export default function SidebarApp() {
   );
 
   const keepIndexRef = useRef<number | null>(null);
+  const runRef = useRef<RunInfo | null>(null);
+  runRef.current = run;
   // Set while a run is in flight; the effect below reports the result once it settles.
   const pendingReportRef = useRef(false);
   const runIdRef = useRef(0);
@@ -102,7 +104,15 @@ export default function SidebarApp() {
     const last = timeline[timeline.length - 1];
     const outputLines = (last?.consoleOutput || []).map((log) => log.message);
     if (executionError) {
-      vscode.postMessage({ type: 'runState', status: 'error', error: executionError, output: outputLines, total: timeline.length });
+      const parsed = parseError(executionError, runRef.current?.code || '', last?.isError && last.line > 0 ? last.line : undefined);
+      vscode.postMessage({
+        type: 'runState',
+        status: 'error',
+        error: parsed.summary,
+        problems: parsed.problems.filter((p) => p.line > 0),
+        output: outputLines,
+        total: timeline.length,
+      });
     } else {
       vscode.postMessage({ type: 'runState', status: 'ready', output: outputLines, total: timeline.length });
     }
@@ -194,6 +204,33 @@ export default function SidebarApp() {
   }, [run, hasTrace, currentStepIndex, total, currentStep, previousStep, isPlaying]);
 
   const insight = useMemo(() => (hasTrace ? describeStep(currentStep, previousStep) : ''), [hasTrace, currentStep, previousStep]);
+  const parsedError = useMemo<ParsedError | null>(() => {
+    if (!executionError || !run) return null;
+    const last = timeline[timeline.length - 1];
+    return parseError(executionError, run.code, last?.isError && last.line > 0 ? last.line : undefined);
+  }, [executionError, run, timeline]);
+
+  // Steps that stop on a gutter breakpoint, drawn as marks on the timeline.
+  const breakpointSteps = useMemo(() => {
+    if (breakpoints.size === 0) return [];
+    const marks: number[] = [];
+    timeline.forEach((step, i) => {
+      if (breakpoints.has(step.line) && timeline[i - 1]?.line !== step.line) marks.push(i);
+    });
+    return marks.slice(0, 400);
+  }, [timeline, breakpoints]);
+
+  const status: { label: string; tone: 'busy' | 'ok' | 'warn' | 'error' | 'play' } = isExecuting
+    ? { label: 'Tracing', tone: 'busy' }
+    : parsedError
+      ? { label: parsedError.kind === 'compile' ? 'Compile error' : parsedError.kind === 'tracer' ? 'Trace failed' : 'Error', tone: 'error' }
+      : stale
+        ? { label: 'Changed', tone: 'warn' }
+        : isPlaying
+          ? { label: 'Playing', tone: 'play' }
+          : currentStepIndex >= total - 1 && total > 0
+            ? { label: 'Finished', tone: 'ok' }
+            : { label: 'Paused', tone: 'ok' };
 
   const toggleSection = (id: SectionId) => setOpen((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -217,15 +254,13 @@ export default function SidebarApp() {
         <div className="avz-filebar">
           <span className={`avz-lang avz-lang-${run.language === 'c++' ? 'cpp' : 'js'}`}>{run.language === 'c++' ? 'C++' : 'JS'}</span>
           <span className="avz-filename" title={run.fileName}>{run.fileName}</span>
+          <span className={`avz-status avz-status-${status.tone}`}>
+            <span className="avz-status-dot" />
+            {status.label}
+          </span>
           <span className="avz-spacer" />
           <IconButton label="Re-run (saving the file also re-runs)" onClick={() => vscode.postMessage({ type: 'rerun' })}>
             <RotateCw size={14} />
-          </IconButton>
-          <IconButton label="Stop visualizing" onClick={() => vscode.postMessage({ type: 'stop' })}>
-            <Square size={13} />
-          </IconButton>
-          <IconButton label="AlgoViz settings" onClick={() => vscode.postMessage({ type: 'openSettings' })}>
-            <Settings size={14} />
           </IconButton>
         </div>
 
@@ -265,41 +300,34 @@ export default function SidebarApp() {
           </select>
         </div>
 
-        <div className="avz-scrub">
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0, total - 1)}
-            value={Math.max(0, currentStepIndex)}
-            disabled={!hasTrace}
-            onChange={(e) => {
-              controls.setIsPlaying(false);
-              controls.jumpToStep(Number(e.target.value));
-            }}
-            aria-label="Step"
-            style={{ ['--avz-fill' as string]: `${total > 1 ? (currentStepIndex / (total - 1)) * 100 : 0}%` }}
-          />
-          <span className="avz-counter">
-            {hasTrace ? `${currentStepIndex + 1} / ${total}` : '— / —'}
-          </span>
+        <Timeline
+          index={currentStepIndex}
+          total={total}
+          disabled={!hasTrace}
+          marks={breakpointSteps}
+          onSeek={(i) => {
+            controls.setIsPlaying(false);
+            controls.jumpToStep(i);
+          }}
+        />
+        <div className="avz-meta">
+          <span>{hasTrace ? <>Step <b>{currentStepIndex + 1}</b> of {total}</> : isExecuting ? 'Recording steps…' : 'No steps'}</span>
+          {hasTrace && currentStep.line > 0 && <span>Line <b>{currentStep.line}</b></span>}
+          {breakpoints.size > 0 && (
+            <span className="avz-meta-bp" title="Play stops on breakpoints set in the editor gutter">
+              <span className="avz-bp-dot" /> {breakpoints.size}
+            </span>
+          )}
         </div>
-        {breakpoints.size > 0 && (
-          <div className="avz-hint">Play stops at {breakpoints.size} breakpoint{breakpoints.size === 1 ? '' : 's'} set in the editor gutter.</div>
-        )}
       </div>
 
-      {isExecuting && <div className="avz-banner">Running {run.fileName} and recording each step…</div>}
       {stale && !isExecuting && (
         <div className="avz-banner avz-banner-warn">
           <span>The file changed since this run.</span>
           <button type="button" className="avz-link" onClick={() => vscode.postMessage({ type: 'rerun' })}>Re-run</button>
         </div>
       )}
-      {executionError && !isExecuting && (
-        <div className="avz-banner avz-banner-error" role="alert">
-          <pre>{executionError}</pre>
-        </div>
-      )}
+      {parsedError && !isExecuting && <ErrorCard error={parsedError} />}
       {notice && <div className="avz-banner">{notice}</div>}
 
       {hasTrace && (
@@ -309,7 +337,6 @@ export default function SidebarApp() {
           onClick={() => currentStep.line > 0 && vscode.postMessage({ type: 'revealLine', line: currentStep.line })}
           title="Show this line in the editor"
         >
-          <span className="avz-insight-line">Ln {currentStep.line || '—'}</span>
           <span className="avz-insight-text">{insight}</span>
         </button>
       )}
@@ -449,6 +476,112 @@ function EmptyState({ activeFile }: { activeFile: { fileName: string | null; lan
   );
 }
 
+function Timeline({
+  index,
+  total,
+  disabled,
+  marks,
+  onSeek,
+}: {
+  index: number;
+  total: number;
+  disabled: boolean;
+  marks: number[];
+  onSeek: (index: number) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+  const pct = (i: number) => (total > 1 ? (i / (total - 1)) * 100 : 0);
+  const seekAt = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect || total === 0) return;
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    onSeek(Math.round(ratio * (total - 1)));
+  };
+  return (
+    <div
+      ref={trackRef}
+      className={`avz-timeline ${disabled ? 'is-disabled' : ''}`}
+      role="slider"
+      tabIndex={disabled ? -1 : 0}
+      aria-label="Step"
+      aria-valuemin={1}
+      aria-valuemax={Math.max(1, total)}
+      aria-valuenow={index + 1}
+      onPointerDown={(e) => {
+        if (disabled) return;
+        draggingRef.current = true;
+        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+        seekAt(e.clientX);
+      }}
+      onPointerMove={(e) => draggingRef.current && seekAt(e.clientX)}
+      onPointerUp={() => (draggingRef.current = false)}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : e.key === 'PageUp' ? 10 : e.key === 'PageDown' ? -10 : 0;
+        if (e.key === 'Home') onSeek(0);
+        else if (e.key === 'End') onSeek(total - 1);
+        else if (delta) onSeek(Math.min(total - 1, Math.max(0, index + delta)));
+        else return;
+        e.preventDefault();
+      }}
+    >
+      <div className="avz-timeline-rail" />
+      <div className="avz-timeline-fill" style={{ width: `${pct(Math.max(0, index))}%` }} />
+      {marks.map((m) => (
+        <span key={m} className="avz-timeline-mark" style={{ left: `${pct(m)}%` }} />
+      ))}
+      {!disabled && <span className="avz-timeline-thumb" style={{ left: `${pct(Math.max(0, index))}%` }} />}
+    </div>
+  );
+}
+
+function ErrorCard({ error }: { error: ParsedError }) {
+  return (
+    <div className={`avz-error avz-error-${error.kind}`} role="alert">
+      <div className="avz-error-head">
+        <AlertCircle size={15} />
+        <span>{error.title}</span>
+      </div>
+      <p className="avz-error-summary">{error.summary}</p>
+      {error.kind !== 'tracer' && error.problems.length > 0 && (
+        <ul className="avz-error-list">
+          {error.problems.slice(0, 6).map((p, i) => (
+            <li key={i}>
+              {p.line > 0 ? (
+                <button type="button" className="avz-link" onClick={() => vscode.postMessage({ type: 'revealLine', line: p.line })}>
+                  Line {p.line}
+                </button>
+              ) : (
+                <span className="avz-muted">—</span>
+              )}
+              <span>{p.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="avz-error-actions">
+        {error.kind === 'tracer' && (
+          <button type="button" className="avz-link" onClick={() => vscode.postMessage({ type: 'reportIssue' })}>
+            Report this problem
+          </button>
+        )}
+        {error.kind === 'network' && (
+          <button type="button" className="avz-link" onClick={() => vscode.postMessage({ type: 'openSettings' })}>
+            Open settings
+          </button>
+        )}
+      </div>
+      {error.details && (
+        <details className="avz-error-details">
+          <summary>Compiler output</summary>
+          <pre>{error.details}</pre>
+        </details>
+      )}
+    </div>
+  );
+}
+
 function Section({
   id,
   title,
@@ -584,8 +717,11 @@ function inlineSummary(current: VariableMap, previous: VariableMap | undefined):
     if (Array.isArray(value) && Array.isArray(previous[name]) && value.length === (previous[name] as unknown[]).length) {
       const before = previous[name] as unknown[];
       const idx = value.findIndex((v, i) => !valuesEqual(v, before[i]));
-      const changedCount = value.filter((v, i) => !valuesEqual(v, before[i])).length;
-      parts.push(changedCount === 1 ? `${name}[${idx}] = ${short(value[idx])}` : `${name} = ${preview(value)}`);
+      const changed = value.map((v, i) => (valuesEqual(v, before[i]) ? -1 : i)).filter((i) => i >= 0);
+      const swapped = changed.length === 2 && valuesEqual(value[changed[0]], before[changed[1]]) && valuesEqual(value[changed[1]], before[changed[0]]);
+      if (changed.length === 1) parts.push(`${name}[${idx}] = ${short(value[idx])}`);
+      else if (swapped) parts.push(`swap ${name}[${changed[0]}] ⇄ ${name}[${changed[1]}]`);
+      else parts.push(`${name} = ${preview(value)}`);
     } else if (value !== null && typeof value === 'object') {
       parts.push(`${name} updated`);
     } else {

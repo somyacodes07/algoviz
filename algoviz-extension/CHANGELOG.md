@@ -2,6 +2,21 @@
 
 All notable changes to the **AlgoViz** VS Code extension will be documented in this file.
 
+## [2.1.0] — 2026-11-23
+
+### 🐛 Fixes
+- **C arrays now trace in C++.** Files with plain arrays such as `int arr[10]` failed with an "ambiguous `__to_json`" compiler error, even though they compile normally.
+- **Array parameters show their contents.** In `void sort(int arr[], int n)` the parameter is now drawn as an array of `n` elements instead of a pointer.
+
+### ✨ Improved
+- Errors appear as a short card (title, message, the lines involved) instead of raw compiler output. The full compiler output is still available under "Compiler output".
+- Compile and runtime errors are underlined in your editor and listed in the Problems panel.
+- When the problem is in AlgoViz's own tracing code, the card says your code is fine and links to the issue tracker.
+- New timeline with breakpoint marks, "Step N of M · Line L", and a status pill (Paused, Playing, Finished, Changed, Error).
+- Arrays of up to 16 elements fit the sidebar width without scrolling. Diagram labels use calmer type.
+- Inline values show swaps as `swap arr[7] ⇄ arr[8]`.
+- The Stop and Settings buttons are no longer repeated inside the view (they are in the view's title bar).
+
 ## [2.0.0] — 2026-11-23
 
 The extension no longer opens the AlgoViz website in an editor tab. It now works as part of the editor.

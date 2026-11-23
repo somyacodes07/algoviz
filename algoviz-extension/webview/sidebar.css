@@ -306,27 +306,20 @@ input:focus-visible {
 }
 
 .avz-insight {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: block;
   flex-shrink: 0;
   width: 100%;
-  padding: 6px 10px;
+  padding: 7px 10px 7px 12px;
   border: 0;
   border-bottom: 1px solid var(--avz-border);
+  border-left: 3px solid var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
   text-align: left;
   color: var(--vscode-foreground);
-  background: color-mix(in srgb, var(--vscode-editor-stackFrameHighlightBackground, #ffff0033) 60%, transparent);
+  background: color-mix(in srgb, var(--vscode-editor-stackFrameHighlightBackground, #ffff0033) 45%, transparent);
   cursor: pointer;
 }
 .avz-insight:hover {
   background: var(--vscode-editor-stackFrameHighlightBackground, #ffff0033);
-}
-.avz-insight-line {
-  flex-shrink: 0;
-  font-family: var(--vscode-editor-font-family);
-  font-size: 11px;
-  color: var(--avz-muted);
 }
 .avz-insight-text {
   font-size: 12px;
@@ -607,7 +600,203 @@ kbd {
 .avz-diagrams .bg-slate-50 {
   background-color: var(--vscode-editor-background) !important;
 }
-.avz-diagrams .text-slate-900,
-.avz-diagrams .text-slate-800 {
+
+/* ── Status pill ────────────────────────────────────────────────────────── */
+
+.avz-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 9px;
+  font-size: 10.5px;
+  line-height: 17px;
+  color: var(--avz-muted);
+  background: color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+}
+.avz-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.avz-status-ok .avz-status-dot { color: var(--vscode-testing-iconPassed, #73c991); }
+.avz-status-play { color: var(--vscode-foreground); }
+.avz-status-play .avz-status-dot { color: var(--vscode-progressBar-background); animation: avz-pulse 1s ease-in-out infinite; }
+.avz-status-busy .avz-status-dot { color: var(--vscode-progressBar-background); animation: avz-pulse 0.8s ease-in-out infinite; }
+.avz-status-warn { color: var(--vscode-editorWarning-foreground, #cca700); }
+.avz-status-error { color: var(--vscode-errorForeground); background: color-mix(in srgb, var(--vscode-errorForeground) 14%, transparent); }
+@keyframes avz-pulse {
+  50% { opacity: 0.3; }
+}
+
+/* ── Timeline ───────────────────────────────────────────────────────────── */
+
+.avz-timeline {
+  position: relative;
+  height: 18px;
+  margin: 4px 6px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+.avz-timeline.is-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.avz-timeline:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+.avz-timeline-rail,
+.avz-timeline-fill {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  height: 4px;
+  border-radius: 2px;
+}
+.avz-timeline-rail {
+  right: 0;
+  background: var(--vscode-scrollbarSlider-background);
+}
+.avz-timeline-fill {
+  background: var(--vscode-progressBar-background);
+}
+.avz-timeline-mark {
+  position: absolute;
+  top: 2px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--vscode-debugIcon-breakpointForeground, #e51400);
+  box-shadow: 0 0 0 1px var(--vscode-sideBar-background);
+}
+.avz-timeline-thumb {
+  position: absolute;
+  top: 3px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--vscode-progressBar-background);
+  box-shadow: 0 0 0 2px var(--vscode-sideBar-background);
+  transition: left 0.12s ease-out;
+}
+
+.avz-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 0 2px;
+  font-size: 11px;
+  color: var(--avz-muted);
+  font-variant-numeric: tabular-nums;
+}
+.avz-meta b {
+  font-weight: 600;
   color: var(--vscode-foreground);
+}
+.avz-meta-bp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.avz-bp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vscode-debugIcon-breakpointForeground, #e51400);
+}
+
+/* ── Error card ─────────────────────────────────────────────────────────── */
+
+.avz-error {
+  flex-shrink: 0;
+  margin: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground));
+  border-left-width: 3px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--vscode-errorForeground) 7%, var(--vscode-sideBar-background));
+}
+.avz-error-tracer,
+.avz-error-network {
+  border-color: var(--vscode-inputValidation-warningBorder, var(--vscode-editorWarning-foreground));
+  background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 7%, var(--vscode-sideBar-background));
+}
+.avz-error-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--vscode-errorForeground);
+}
+.avz-error-tracer .avz-error-head,
+.avz-error-network .avz-error-head {
+  color: var(--vscode-editorWarning-foreground, #cca700);
+}
+.avz-error-summary {
+  margin: 4px 0 0;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.avz-error-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.avz-error-list li {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  line-height: 1.4;
+}
+.avz-error-list li > :first-child {
+  flex-shrink: 0;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 11px;
+}
+.avz-error-actions:not(:empty) {
+  margin-top: 6px;
+}
+.avz-error-details {
+  margin-top: 6px;
+}
+.avz-error-details summary {
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--avz-muted);
+}
+.avz-error-details pre {
+  max-height: 200px;
+  margin: 4px 0 0;
+  padding: 6px;
+  overflow: auto;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre;
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+}
+
+/* ── Diagrams: calmer type inside the workbench ─────────────────────────── */
+
+.avz-diagrams .uppercase {
+  text-transform: none;
+}
+.avz-diagrams [class*='tracking-'] {
+  letter-spacing: normal !important;
+}
+.avz-diagrams [class*='text-[9px]'],
+.avz-diagrams [class*='text-[10px]'] {
+  font-size: 10.5px !important;
+}
+.avz-diagrams svg text {
+  font-family: var(--vscode-editor-font-family);
 }
