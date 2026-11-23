@@ -6,7 +6,14 @@
     <title>AlgoViz</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="avz-loading" style="padding:12px 20px;opacity:.7;font-size:12px">Starting AlgoViz…</div></div>
+    <script>
+      // If the app never mounts (script blocked, stale view after an update), say so instead of staying blank.
+      setTimeout(function () {
+        var el = document.querySelector('.avz-loading');
+        if (el) el.textContent = 'AlgoViz could not start in this view. Run "Developer: Reload Window" and open it again.';
+      }, 5000);
+    </script>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

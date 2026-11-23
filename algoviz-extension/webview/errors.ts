@@ -44,7 +44,8 @@ function cleanMessage(message: string) {
 }
 
 export function parseError(raw: string, code: string, errorLine?: number): ParsedError {
-  const text = raw.trim();
+  // The local Clang engine colours its output; strip the escape codes.
+  const text = raw.replace(/\u001b\[[0-9;]*m/g, '').trim();
   const lines = text.split('\n');
   const codeLines = code.split('\n');
 
@@ -64,7 +65,9 @@ export function parseError(raw: string, code: string, errorLine?: number): Parse
     const match = lines[i].match(DIAG);
     if (!match) continue;
     const message = cleanMessage(match[4]);
-    const snippet = lines[i + 1]?.match(SNIPPET)?.[1] ?? '';
+    // GCC prints `  12 |   code`, Clang prints the code line as is.
+    const next = lines[i + 1] ?? '';
+    const snippet = next.match(SNIPPET)?.[1] ?? (DIAG.test(next) || /^\s*[\^~]/.test(next) ? '' : next);
     if (/__to_json|__trace|__json_|__CallScope/.test(message + snippet)) mentionsTracer = true;
     const line = findUserLine(snippet, codeLines);
     if (!problems.some((p) => p.line === line && p.message === message)) problems.push({ line, message });

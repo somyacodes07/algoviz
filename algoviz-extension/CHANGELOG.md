@@ -2,6 +2,36 @@
 
 All notable changes to the **AlgoViz** VS Code extension will be documented in this file.
 
+## [2.3.0] — 2026-11-24
+
+### ✨ New
+- **Program input.** Programs that read with `cin`, `getline` or `prompt()` now ask for input before running. The Input box lists the lines that read input, and the values are remembered per file. Commented-out reads are ignored.
+- **Works offline by default.** C++ now compiles on your computer with the bundled WebAssembly Clang (`algoviz.cppCompiler` now defaults to `wasm`). The remote GCC compiler is still available as `api`.
+- **Native trees, linked lists, graphs, maps, stacks and heaps.** These are now drawn in the editor's style, like arrays already were.
+  - Pointers like `head`, `prev` and `curr` are tagged on a single shared chain instead of drawing one copy per pointer.
+  - BFS/DFS show visited and waiting nodes, plus `dist` values under each node.
+
+### 🐛 Fixes
+- **Loops no longer skip ahead.** Every loop iteration and every `if` check is now its own step (bubble sort of 8 items: 19 → 82 steps), including one-line loop bodies without braces. This applies to both C++ and JavaScript.
+- `int arr[100];` without an initializer is now traced. Big fixed arrays show only the slots in use (the first `n`).
+- Step descriptions and inline values name the field that changed (`q.rear = 3`) instead of "q changed to Object".
+- Compile errors from the local Clang engine are parsed correctly (colour codes removed, lines mapped to your file).
+- C++ programs that loop forever stop after 3000 steps with a message instead of hanging.
+
+## [2.2.0] — 2026-11-23
+
+### ✨ New visualizations
+- Arrays, grids and objects are now drawn in the editor's own style: monospace cells, index labels, and theme colours.
+- Index variables (`i`, `j`, `front`, `rear`, `top`…) appear as markers under the cells they point at and slide when they move.
+- Swapped values glide to their new places, and bars above numeric arrays grow or shrink.
+- Class-based structures such as `class Queue { int data[]; int front, rear; }` are drawn with their fields. Slots outside the live range (before `front`, after `rear`, above `top`) are hatched.
+- Inside member functions, the object's fields are traced as `this`, so a queue or stack class can be followed step by step.
+- Inline values name the changed fields, e.g. `rear = 2`, `data[2] = 30`.
+
+### 🐛 Fixes
+- The view no longer stays blank if it fails to start: it shows a message asking you to reload the window, and any view error is written to the AlgoViz output channel.
+- The "Executed via …" engine banners are no longer shown in Output.
+
 ## [2.1.0] — 2026-11-23
 
 ### 🐛 Fixes

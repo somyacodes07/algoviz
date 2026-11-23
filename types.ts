@@ -102,7 +102,7 @@ export interface ExecutionConfig {
   /** Maximum execution time in ms before timeout (default: 5000) */
   timeoutMs?: number;
   /** Input values for cin simulation */
-  inputValues?: number[];
+  inputValues?: Array<number | string>;
   /** C++ Compiler Strategy override */
   cppCompiler?: 'api' | 'wasm';
 }

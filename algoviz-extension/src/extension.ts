@@ -21,7 +21,7 @@ const SUPPORTED_LANGUAGES: Record<string, 'c++' | 'javascript'> = {
   typescriptreact: 'javascript',
 };
 
-type RunStatus = 'idle' | 'running' | 'ready' | 'error';
+type RunStatus = 'idle' | 'running' | 'ready' | 'error' | 'input';
 
 /** Messages the webview sends to the extension. */
 type WebviewMessage =
@@ -32,6 +32,7 @@ type WebviewMessage =
   | { type: 'openSettings' }
   | { type: 'revealLine'; line: number }
   | { type: 'reportIssue' }
+  | { type: 'webviewError'; message: string }
   | {
       type: 'runState';
       status: RunStatus;
@@ -128,6 +129,8 @@ export function activate(context: vscode.ExtensionContext) {
   register('algoviz.pause', () => provider.post({ type: 'control', action: 'pause' }));
   register('algoviz.stop', () => stopSession());
   register('algoviz.focus', () => provider.reveal(false));
+  // Internal: lets the integration test read the session state.
+  register('algoviz._state', () => (session ? { ...session, uri: session.uri.toString() } : null));
   register('algoviz.openSettings', () =>
     vscode.commands.executeCommand('workbench.action.openSettings', '@ext:somyacodes.algoviz-vscode'),
   );
@@ -255,6 +258,9 @@ function handleMessage(message: WebviewMessage) {
     case 'stop':
       stopSession();
       return;
+    case 'webviewError':
+      output.appendLine(`[view error] ${message.message}`);
+      return;
     case 'reportIssue':
       void vscode.env.openExternal(vscode.Uri.parse('https://github.com/somyacodes07/AlgoViz-copy/issues/new'));
       return;
@@ -268,7 +274,7 @@ function handleMessage(message: WebviewMessage) {
       if (!session) return;
       session.status = message.status;
       if (message.total !== undefined) session.total = message.total;
-      if (message.status === 'error') {
+      if (message.status === 'error' || message.status === 'input') {
         session.line = 0;
         session.inline = undefined;
       }
@@ -385,7 +391,10 @@ function refreshStatusBar() {
     return;
   }
   statusBar.command = 'algoviz.focus';
-  if (session.status === 'running') {
+  if (session.status === 'input') {
+    statusBar.text = `$(keyboard) AlgoViz: ${session.fileName} needs input`;
+    statusBar.tooltip = 'Type the program input in the AlgoViz view, then press Run';
+  } else if (session.status === 'running') {
     statusBar.text = `$(sync~spin) AlgoViz: tracing ${session.fileName}`;
     statusBar.tooltip = 'Running and recording every step';
   } else if (session.status === 'error') {
@@ -412,7 +421,7 @@ function config() {
 
 function readConfig() {
   return {
-    cppCompiler: config().get<'api' | 'wasm'>('cppCompiler', 'api'),
+    cppCompiler: config().get<'api' | 'wasm'>('cppCompiler', 'wasm'),
     speed: config().get<number>('playbackSpeed', 600),
   };
 }

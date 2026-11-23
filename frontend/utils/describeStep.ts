@@ -26,7 +26,10 @@ export function describeStep(current: ExecutionStep, previous: ExecutionStep | u
   if (current.isError) return current.errorMessage || 'Execution stopped with an error.';
   if (!previous) return 'Execution is ready. Step forward to see what changes.';
 
-  const event = (current.events || []).find((item) => item.type !== 'line' && item.type !== 'output');
+  // A write of a whole object says little ("q changed to Object"); the field diff below says more.
+  const event = (current.events || []).find(
+    (item) => item.type !== 'line' && item.type !== 'output' && !(item.type === 'write' && item.after !== null && typeof item.after === 'object'),
+  );
   if (event) {
     if (event.type === 'compare') return `${event.expression || 'Condition'} evaluated to ${event.result ? 'true' : 'false'}.`;
     if (event.type === 'swap' && event.indices) return `${event.variable || 'Values'} swapped indices ${event.indices[0]} and ${event.indices[1]}.`;
@@ -46,6 +49,20 @@ export function describeStep(current: ExecutionStep, previous: ExecutionStep | u
   for (const name of changed) {
     const oldValue = before[name];
     const newValue = after[name];
+    // Objects (q, this, a struct): name the field that changed.
+    if (oldValue && newValue && typeof oldValue === 'object' && typeof newValue === 'object' && !Array.isArray(oldValue) && !Array.isArray(newValue)) {
+      const o = oldValue as Record<string, unknown>;
+      const n = newValue as Record<string, unknown>;
+      const field = Object.keys(n).find((k) => !k.startsWith('__') && !valuesEqual(o[k], n[k]));
+      if (field) {
+        const label = name === 'this' ? field : `${name}.${field}`;
+        if (Array.isArray(o[field]) && Array.isArray(n[field]) && (o[field] as unknown[]).length === (n[field] as unknown[]).length) {
+          const i = (n[field] as unknown[]).findIndex((v, j) => !valuesEqual(v, (o[field] as unknown[])[j]));
+          if (i >= 0) return `${label}[${i}] changed from ${compactValue((o[field] as unknown[])[i])} to ${compactValue((n[field] as unknown[])[i])}.`;
+        }
+        if (typeof n[field] !== 'object' || n[field] === null) return `${label} changed from ${compactValue(o[field])} to ${compactValue(n[field])}.`;
+      }
+    }
     if (Array.isArray(oldValue) && Array.isArray(newValue)) {
       const indices = newValue.map((value, index) =>
         valuesEqual(oldValue[index], value) ? -1 : index,

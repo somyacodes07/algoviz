@@ -1,57 +1,67 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/somyacodes07/AlgoViz-copy/main/public/icon-512.png" alt="AlgoViz Logo" width="120" />
-  <h1>AlgoViz for VS Code</h1>
-  <p><em>Watch your algorithm run, line by line, in the editor you already use.</em></p>
-</div>
+# AlgoViz — see your code run
 
----
+Step through your C++ or JavaScript one line at a time, right in VS Code. The line that runs lights up in your editor, and a side panel draws your arrays, queues, stacks, linked lists, trees and graphs as they change.
 
-AlgoViz adds a **Visualizer** view to VS Code. Write C++ or JavaScript in your normal editor, press **⌘⌥V** (Ctrl+Alt+V), and step through the run: the line that executed is highlighted in your file, the values that changed appear at the end of that line, and the sidebar draws your arrays, trees, linked lists, graphs, stacks, queues, heaps and hash maps as they change.
+![AlgoViz stepping through bubble sort](https://raw.githubusercontent.com/somyacodes07/algoviz/main/algoviz-extension/media/demo.gif)
 
-It works for students tracing their own code and for teachers walking a class through an algorithm.
+It's made for students learning data structures, and for teachers showing an algorithm to a class. There's nothing to set up: no compiler to install, no debugger config, and it works offline.
 
-## How to use
+## Start in 10 seconds
 
-1. Open a `.cpp`, `.c`, `.js`, `.ts`, `.jsx` or `.tsx` file.
-2. Press **⌘⌥V** / **Ctrl+Alt+V**, choose **Visualize Active File** from the editor's Run menu, or click the AlgoViz icon in the Activity Bar.
-3. Step through the run with the sidebar controls, the editor toolbar buttons, or the keyboard.
+1. Open a `.cpp`, `.c`, `.js` or `.ts` file.
+2. Press **⌘⌥V** on macOS or **Ctrl+Alt+V** on Windows/Linux. You can also click the AlgoViz icon in the Activity Bar.
+3. Press **▶** to play, or step with **⌘⌥→ / ⌘⌥←** (Ctrl+Alt on Windows/Linux).
+
+If your program reads input with `cin` or `prompt()`, AlgoViz asks for it first. Type the values, press **Run**, and it remembers them for that file.
+
+## What you see
+
+| | |
+| --- | --- |
+| ![Queue class with front and rear markers](https://raw.githubusercontent.com/somyacodes07/algoviz/main/algoviz-extension/media/screenshot-queue.png) | **Arrays and classes.** Each cell shows its index. Variables like `i`, `j`, `front` and `rear` appear as markers under the cells they point at. Slots a queue or stack isn't using are greyed out. |
+| ![Binary search tree](https://raw.githubusercontent.com/somyacodes07/algoviz/main/algoviz-extension/media/screenshot-bst.png) | **Trees, lists and graphs.** Nodes are drawn the way a textbook draws them. Pointers such as `head`, `prev` and `curr` are tagged on the nodes they point to. In BFS, visited nodes are filled in and queued ones are dashed. |
+
+The panel also explains each step in plain words, for example "arr[3] changed from 9 to 1". It also shows:
+
+- **Variables** and the **Call Stack**, laid out like the Run and Debug view.
+- **Output** up to the current step.
+- A rough **time complexity** estimate, with the lines that run most often.
+
+In the editor itself, the changed values appear at the end of the highlighted line (`swap arr[2] ⇄ arr[3]`). Compile errors are underlined on the right line.
+
+## Keys
 
 | Action | macOS | Windows / Linux |
 | --- | --- | --- |
-| Visualize the active file | ⌘⌥V | Ctrl+Alt+V |
+| Visualize the current file | ⌘⌥V | Ctrl+Alt+V |
 | Step forward / back | ⌘⌥→ / ⌘⌥← | Ctrl+Alt+→ / Ctrl+Alt+← |
 | Play / pause | ⌘⌥P | Ctrl+Alt+P |
-| Run to the cursor's line | ⌘⌥↵ | Ctrl+Alt+Enter |
-| Stop visualizing | ⇧Esc | Shift+Esc |
+| Run to the line with the cursor | ⌘⌥↵ | Ctrl+Alt+Enter |
+| Stop | ⇧Esc | Shift+Esc |
 
-## What you get
+Breakpoints you set in the gutter pause playback. Saving the file runs it again and keeps you on the same step.
 
-- **Editor highlighting**: the executing line, a gutter marker, and the changed values shown inline, like a debugger.
-- **Diagrams for data structures**, detected from your variables and drawn per step.
-- **Variables, Call Stack and Output** sections that follow the current step, styled like the Run and Debug view.
-- **Complexity estimate** with the busiest lines; click a line to jump to it.
-- **Breakpoints**: set them in the editor gutter as usual and playback stops on them.
-- **Re-run on save**: when you edit the file the trace is marked out of date, and saving traces it again on the same step.
-- Program output goes to the **AlgoViz** output channel too.
+## For teachers
 
-### Teaching tip
+Drag the AlgoViz view into the **secondary side bar** or the bottom panel and make it wide. The drawings scale to the space, and the code stays on screen beside them. Use **Run to Cursor** to jump straight to the interesting part of the algorithm.
 
-Drag the Visualizer view into the **secondary side bar** (View → Appearance → Secondary Side Bar) or the bottom panel to give the diagrams more room while the code stays on screen.
+## How your code runs
+
+- **C++** is compiled on your computer by a WebAssembly build of Clang that ships with the extension. Nothing is sent anywhere, and it works offline. The first run takes a couple of seconds while the compiler loads; later runs are almost instant. If you prefer GCC, set `algoviz.cppCompiler` to `api`, which sends your code to Compiler Explorer.
+- **JavaScript and TypeScript** (traced as JavaScript) run in a sandboxed worker inside the view.
+
+AlgoViz traces small, teaching-sized programs. Very long loops stop after a few thousand steps.
 
 ## Settings
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `algoviz.cppCompiler` | `api` | `api` compiles C++ remotely with GCC (needs internet). `wasm` compiles locally with WebAssembly Clang and falls back to the remote compiler. |
+| `algoviz.cppCompiler` | `wasm` | `wasm` compiles locally (offline). `api` uses remote GCC. |
 | `algoviz.rerunOnSave` | `true` | Trace the file again when you save it. |
 | `algoviz.inlineValues` | `true` | Show changed values at the end of the highlighted line. |
-| `algoviz.followExecution` | `true` | Scroll the editor to keep the executing line visible. |
+| `algoviz.followExecution` | `true` | Scroll the editor to keep the running line visible. |
 | `algoviz.playbackSpeed` | `600` | Milliseconds per step while playing. |
 
-## How it runs your code
+## Feedback
 
-JavaScript (and TypeScript, traced as JavaScript) runs in a sandboxed web worker inside the view. C++ is instrumented locally, then compiled with the compiler chosen in `algoviz.cppCompiler`. With the default `api` setting your C++ source is sent to a remote compiler service.
-
-## Contributing
-
-AlgoViz is open source and powered by the [AlgoViz](https://algoviz.somyacodes.in) project. Report bugs or request features in the [issue tracker](https://github.com/somyacodes07/AlgoViz-copy/issues).
+Found a program it draws wrong? [Open an issue](https://github.com/somyacodes07/algoviz/issues) and paste the code. AlgoViz is open source: [github.com/somyacodes07/algoviz](https://github.com/somyacodes07/algoviz).

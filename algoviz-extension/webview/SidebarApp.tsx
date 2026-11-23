@@ -12,14 +12,15 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { useExecutionEngine } from '@/frontend/hooks/useExecutionEngine';
-import StructureVisualizer from '@/frontend/components/StructureVisualizer';
+import Scene from './viz/Scene';
 import { describeStep, valuesEqual } from '@/frontend/utils/describeStep';
 import { prewarmWasmEngines } from '@/backend/sandbox/transpiler/parser';
 import type { ExecutionStep, VariableMap } from '@/types';
 import { vscode, HostMessage } from './vscode';
 import { parseError, ParsedError } from './errors';
+import { countValues, findInputReads, toInputValues } from './input';
 
-type SectionId = 'visual' | 'variables' | 'stack' | 'output' | 'complexity';
+type SectionId = 'input' | 'visual' | 'variables' | 'stack' | 'output' | 'complexity';
 
 interface RunInfo {
   code: string;
@@ -29,9 +30,11 @@ interface RunInfo {
 
 interface PersistedState {
   open: Record<SectionId, boolean>;
+  inputs?: Record<string, string>;
 }
 
 const DEFAULT_OPEN: Record<SectionId, boolean> = {
+  input: true,
   visual: true,
   variables: true,
   stack: false,
@@ -61,8 +64,15 @@ export default function SidebarApp() {
   const [stale, setStale] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [open, setOpen] = useState<Record<SectionId, boolean>>(
-    () => vscode.getState<PersistedState>()?.open ?? DEFAULT_OPEN,
+    () => ({ ...DEFAULT_OPEN, ...vscode.getState<PersistedState>()?.open }),
   );
+  // Program input (stdin for C++, prompt() answers for JS), remembered per file.
+  const [inputs, setInputs] = useState<Record<string, string>>(() => vscode.getState<PersistedState>()?.inputs ?? {});
+  const [awaitingInput, setAwaitingInput] = useState(false);
+  const inputsRef = useRef(inputs);
+  inputsRef.current = inputs;
+  const skipInputRef = useRef(new Set<string>());
+  const inputBoxRef = useRef<HTMLTextAreaElement>(null);
 
   const keepIndexRef = useRef<number | null>(null);
   const runRef = useRef<RunInfo | null>(null);
@@ -80,8 +90,8 @@ export default function SidebarApp() {
   }, []);
 
   useEffect(() => {
-    vscode.setState<PersistedState>({ open });
-  }, [open]);
+    vscode.setState<PersistedState>({ open, inputs });
+  }, [open, inputs]);
 
   const startRun = useCallback(async (message: Extract<HostMessage, { type: 'run' }>) => {
     const c = controlsRef.current;
@@ -92,9 +102,25 @@ export default function SidebarApp() {
     setNotice(null);
     c.setSpeed(message.speed);
     c.clearExecution();
+
+    // A program that reads input waits for it instead of running on empty stdin.
+    const text = inputsRef.current[message.fileName] || '';
+    const needsInput = findInputReads(message.code, message.language).length > 0;
+    if (needsInput && !text.trim() && !skipInputRef.current.has(message.fileName)) {
+      pendingReportRef.current = false;
+      setAwaitingInput(true);
+      setOpen((prev) => ({ ...prev, input: true }));
+      vscode.postMessage({ type: 'runState', status: 'input' });
+      setTimeout(() => inputBoxRef.current?.focus(), 50);
+      return;
+    }
+    setAwaitingInput(false);
     vscode.postMessage({ type: 'runState', status: 'running' });
     pendingReportRef.current = true;
-    await c.handleRun(message.code, message.language, { cppCompiler: message.cppCompiler });
+    await c.handleRun(message.code, message.language, {
+      cppCompiler: message.cppCompiler,
+      inputValues: toInputValues(text, message.language),
+    });
   }, []);
 
   // After a run settles, tell the host how it went (status, total steps, program output).
@@ -102,15 +128,19 @@ export default function SidebarApp() {
     if (!pendingReportRef.current || isExecuting) return;
     pendingReportRef.current = false;
     const last = timeline[timeline.length - 1];
-    const outputLines = (last?.consoleOutput || []).map((log) => log.message);
+    const outputLines = (last?.consoleOutput || [])
+      .map((log) => log.message.replace(/\u001b\[[0-9;]*m/g, ''))
+      .filter((m) => !/^(🌐|⚡) Executed via/.test(m));
     if (executionError) {
       const parsed = parseError(executionError, runRef.current?.code || '', last?.isError && last.line > 0 ? last.line : undefined);
+      const located = parsed.problems.filter((p) => p.line > 0);
       vscode.postMessage({
         type: 'runState',
         status: 'error',
-        error: parsed.summary,
-        problems: parsed.problems.filter((p) => p.line > 0),
-        output: outputLines,
+        // The Output channel gets a clean summary, not raw compiler text with the tracer's code in it.
+        error: located.length ? located.map((p) => `Line ${p.line}: ${p.message}`).join('\n  ') : parsed.summary,
+        problems: located,
+        output: parsed.kind === 'compile' || parsed.kind === 'tracer' ? [] : outputLines,
         total: timeline.length,
       });
     } else {
@@ -174,6 +204,7 @@ export default function SidebarApp() {
           runIdRef.current++;
           pendingReportRef.current = false;
           c.clearExecution();
+          setAwaitingInput(false);
           setRun(null);
           setStale(false);
           setNotice(null);
@@ -186,7 +217,23 @@ export default function SidebarApp() {
   }, [startRun]);
 
   const currentStep = timeline[currentStepIndex] || EMPTY_STEP;
-  const previousStep = timeline[currentStepIndex - 1];
+  // The step before, but with each variable at its last known value: after a call returns,
+  // `q` is compared with how it looked before the call, not with the callee's locals.
+  const previousStep = useMemo(() => {
+    const before = timeline[currentStepIndex - 1];
+    if (!before) return undefined;
+    const known: Record<string, unknown> = { ...before.variables };
+    for (const name of Object.keys(currentStep.variables || {})) {
+      if (name in known) continue;
+      for (let i = currentStepIndex - 2; i >= 0 && i >= currentStepIndex - 400; i--) {
+        if (name in (timeline[i].variables || {})) {
+          known[name] = timeline[i].variables[name];
+          break;
+        }
+      }
+    }
+    return { ...before, variables: known };
+  }, [timeline, currentStepIndex, currentStep]);
   const total = timeline.length;
   const hasTrace = total > 0 && currentStepIndex >= 0;
 
@@ -204,6 +251,7 @@ export default function SidebarApp() {
   }, [run, hasTrace, currentStepIndex, total, currentStep, previousStep, isPlaying]);
 
   const insight = useMemo(() => (hasTrace ? describeStep(currentStep, previousStep) : ''), [hasTrace, currentStep, previousStep]);
+  const reads = useMemo(() => (run ? findInputReads(run.code, run.language) : []), [run]);
   const parsedError = useMemo<ParsedError | null>(() => {
     if (!executionError || !run) return null;
     const last = timeline[timeline.length - 1];
@@ -220,7 +268,9 @@ export default function SidebarApp() {
     return marks.slice(0, 400);
   }, [timeline, breakpoints]);
 
-  const status: { label: string; tone: 'busy' | 'ok' | 'warn' | 'error' | 'play' } = isExecuting
+  const status: { label: string; tone: 'busy' | 'ok' | 'warn' | 'error' | 'play' } = awaitingInput
+    ? { label: 'Needs input', tone: 'warn' }
+    : isExecuting
     ? { label: 'Tracing', tone: 'busy' }
     : parsedError
       ? { label: parsedError.kind === 'compile' ? 'Compile error' : parsedError.kind === 'tracer' ? 'Trace failed' : 'Error', tone: 'error' }
@@ -244,7 +294,8 @@ export default function SidebarApp() {
     return <EmptyState activeFile={activeFile} />;
   }
 
-  const output = currentStep.consoleOutput || [];
+  // Engine banners ("Executed via …") are noise in an IDE; keep real output and warnings.
+  const output = (currentStep.consoleOutput || []).filter((log) => !/^(🌐|⚡) Executed via/.test(log.message));
   const stack = [...(currentStep.callStack || [])].reverse();
 
   return (
@@ -329,6 +380,15 @@ export default function SidebarApp() {
       )}
       {parsedError && !isExecuting && <ErrorCard error={parsedError} />}
       {notice && <div className="avz-banner">{notice}</div>}
+      {awaitingInput && (
+        <div className="avz-ask">
+          <div className="avz-ask-title">{run.fileName} reads input</div>
+          <p>
+            Type what the program should read{run.language === 'c++' ? ' with cin' : ''}, then press <b>Run</b>. Separate
+            values with spaces or new lines.
+          </p>
+        </div>
+      )}
 
       {hasTrace && (
         <button
@@ -342,19 +402,36 @@ export default function SidebarApp() {
       )}
 
       <div className="avz-sections">
+        {(reads.length > 0 || (inputs[run.fileName] || '').trim()) && (
+          <Section id="input" title="Input" open={open.input} onToggle={toggleSection}>
+            <InputBox
+              reads={reads}
+              language={run.language}
+              value={inputs[run.fileName] || ''}
+              awaiting={awaitingInput}
+              boxRef={inputBoxRef}
+              onChange={(text) => setInputs((prev) => ({ ...prev, [run.fileName]: text }))}
+              onRun={() => {
+                skipInputRef.current.delete(run.fileName);
+                vscode.postMessage({ type: 'rerun' });
+              }}
+              onRunWithout={() => {
+                skipInputRef.current.add(run.fileName);
+                vscode.postMessage({ type: 'rerun' });
+              }}
+            />
+          </Section>
+        )}
         <Section id="visual" title="Visualization" open={open.visual} onToggle={toggleSection}>
           {hasTrace ? (
             <div className="avz-diagrams">
-              <StructureVisualizer
+              <Scene
                 variables={currentStep.variables || {}}
                 prevVariables={previousStep?.variables || {}}
                 events={currentStep.events || []}
-                themeColor="blue"
-                currentStepIndex={currentStepIndex}
-                arrayViewType="cells"
                 code={run.code}
-                callDepth={(currentStep.callStack || []).length}
                 line={currentStep.line}
+                stepIndex={currentStepIndex}
               />
             </div>
           ) : (
@@ -472,6 +549,73 @@ function EmptyState({ activeFile }: { activeFile: { fileName: string | null; lan
         Breakpoints you set in the editor gutter pause playback. For teaching, drag this view into the secondary side
         bar or the panel to give the diagrams more room.
       </p>
+    </div>
+  );
+}
+
+function InputBox({
+  reads,
+  language,
+  value,
+  awaiting,
+  boxRef,
+  onChange,
+  onRun,
+  onRunWithout,
+}: {
+  reads: { line: number; what: string }[];
+  language: 'c++' | 'javascript';
+  value: string;
+  awaiting: boolean;
+  boxRef: React.RefObject<HTMLTextAreaElement | null>;
+  onChange: (text: string) => void;
+  onRun: () => void;
+  onRunWithout: () => void;
+}) {
+  const shown = reads.slice(0, 6);
+  const count = countValues(value);
+  return (
+    <div className="avz-input">
+      {shown.length > 0 && (
+        <ul className="avz-reads" aria-label="Where the program reads input">
+          {shown.map((r, i) => (
+            <li key={i}>
+              <button type="button" className="avz-link" onClick={() => vscode.postMessage({ type: 'revealLine', line: r.line })}>
+                Ln {r.line}
+              </button>
+              <code>{r.what}</code>
+            </li>
+          ))}
+          {reads.length > shown.length && <li className="avz-muted">and {reads.length - shown.length} more</li>}
+        </ul>
+      )}
+      <textarea
+        ref={boxRef}
+        className={`avz-textarea ${awaiting ? 'is-awaiting' : ''}`}
+        value={value}
+        spellCheck={false}
+        rows={Math.min(8, Math.max(3, value.split('\n').length + 1))}
+        placeholder={language === 'c++' ? 'e.g.\n5\n10 20 30 40 50' : 'One answer per line for each prompt()'}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            onRun();
+          }
+        }}
+        aria-label="Program input"
+      />
+      <div className="avz-input-actions">
+        <button type="button" className="avz-button avz-button-small" onClick={onRun} title={`Run with this input (${isMac ? '⌘' : 'Ctrl+'}Enter)`}>
+          <Play size={12} /> Run
+        </button>
+        <span className="avz-muted">{count ? `${count} value${count === 1 ? '' : 's'}` : 'No input yet'}</span>
+        {awaiting && (
+          <button type="button" className="avz-link avz-push" onClick={onRunWithout}>
+            Run without input
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -722,6 +866,18 @@ function inlineSummary(current: VariableMap, previous: VariableMap | undefined):
       if (changed.length === 1) parts.push(`${name}[${idx}] = ${short(value[idx])}`);
       else if (swapped) parts.push(`swap ${name}[${changed[0]}] ⇄ ${name}[${changed[1]}]`);
       else parts.push(`${name} = ${preview(value)}`);
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value) && previous[name] && typeof previous[name] === 'object') {
+      // Object fields (this.front, q.rear): name the scalar fields that changed.
+      const before = previous[name] as Record<string, unknown>;
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        if (k.startsWith('__') || valuesEqual(v, before[k])) continue;
+        const prefix = name === 'this' ? '' : `${name}.`;
+        if (Array.isArray(v) && Array.isArray(before[k]) && v.length === (before[k] as unknown[]).length) {
+          const i = v.findIndex((x, j) => !valuesEqual(x, (before[k] as unknown[])[j]));
+          parts.push(`${prefix}${k}[${i}] = ${short(v[i])}`);
+        } else parts.push(`${prefix}${k} = ${short(v)}`);
+        if (parts.length === 3) break;
+      }
     } else if (value !== null && typeof value === 'object') {
       parts.push(`${name} updated`);
     } else {

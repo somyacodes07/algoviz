@@ -1,12 +1,12 @@
 {
   "name": "algoviz-vscode",
-  "displayName": "AlgoViz",
-  "description": "Watch your C++ and JavaScript run step by step in a sidebar, with the executing line highlighted in your own editor.",
-  "version": "2.1.0",
+  "displayName": "AlgoViz \u2014 Code Visualizer for C++ & JavaScript",
+  "description": "Step through C++ and JavaScript line by line and watch arrays, queues, linked lists, trees and graphs change. For students and teachers. Works offline.",
+  "version": "2.3.0",
   "publisher": "somyacodes",
   "repository": {
     "type": "git",
-    "url": "https://github.com/somyacodes07/AlgoViz-copy.git"
+    "url": "https://github.com/somyacodes07/algoviz.git"
   },
   "engines": {
     "vscode": "^1.80.0"
@@ -14,7 +14,7 @@
   "categories": [
     "Education",
     "Visualization",
-    "Other"
+    "Debuggers"
   ],
   "license": "MIT",
   "readme": "README.md",
@@ -237,14 +237,14 @@
         "algoviz.cppCompiler": {
           "type": "string",
           "enum": [
-            "api",
-            "wasm"
+            "wasm",
+            "api"
           ],
           "enumDescriptions": [
-            "Compile remotely with GCC (needs internet).",
-            "Compile locally with in-browser Clang (WebAssembly); falls back to the remote compiler."
+            "Compile on this computer with Clang (WebAssembly). Works offline. Falls back to the remote compiler if it cannot start.",
+            "Compile remotely with GCC on Compiler Explorer (needs internet; your code is sent there)."
           ],
-          "default": "api",
+          "default": "wasm",
           "description": "How C++ files are compiled before tracing."
         },
         "algoviz.rerunOnSave": {
@@ -281,7 +281,9 @@
     "package": "npm run check-types && node esbuild.js --production",
     "check-types": "tsc --noEmit",
     "build:webview": "vite build",
-    "build:vsix": "npx @vscode/vsce package"
+    "build:vsix": "npx @vscode/vsce package",
+    "publish": "vsce publish --no-dependencies",
+    "publish:ovsx": "npx ovsx publish --no-dependencies"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
@@ -300,11 +302,32 @@
   "keywords": [
     "algorithm",
     "visualizer",
+    "visualization",
     "data structures",
-    "education",
+    "dsa",
     "c++",
+    "cpp",
     "javascript",
+    "education",
+    "learning",
+    "teaching",
+    "students",
+    "step through",
     "debugger",
-    "teaching"
-  ]
+    "linked list",
+    "binary tree",
+    "graph",
+    "sorting",
+    "recursion",
+    "bfs"
+  ],
+  "homepage": "https://github.com/somyacodes07/algoviz#readme",
+  "bugs": {
+    "url": "https://github.com/somyacodes07/algoviz/issues"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "pricing": "Free"
 }

@@ -800,3 +800,546 @@ kbd {
 .avz-diagrams svg text {
   font-family: var(--vscode-editor-font-family);
 }
+
+/* ── Native visualizations ──────────────────────────────────────────────── */
+
+.vz-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px 0 4px;
+}
+.vz-empty {
+  padding: 2px 14px;
+  font-size: 12px;
+  color: var(--avz-muted);
+}
+
+.vz-block {
+  min-width: 0;
+}
+.vz-head,
+.vz-object-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+}
+.vz-name {
+  color: var(--vscode-debugTokenExpression-name, #c586c0);
+}
+.vz-owner {
+  color: var(--avz-muted);
+}
+.vz-type {
+  color: var(--avz-muted);
+  font-size: 11px;
+}
+.vz-note {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--avz-muted);
+}
+
+.vz-object {
+  padding: 8px 8px 10px;
+  border: 1px solid var(--avz-border);
+  border-radius: 4px;
+  background: var(--vscode-editor-background);
+}
+.vz-object .vz-block + .vz-block {
+  margin-top: 12px;
+}
+.vz-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+}
+.vz-field {
+  display: inline-flex;
+  gap: 5px;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+.vz-field-name {
+  color: var(--avz-muted);
+}
+.vz-field-value {
+  color: var(--vscode-debugTokenExpression-number, var(--vscode-foreground));
+}
+.vz-field.is-changed {
+  animation: vz-flash 0.9s ease-out;
+}
+
+.vz-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+}
+.vz-track {
+  position: relative;
+  margin: 0 auto 0 0;
+}
+.vz-cells {
+  display: grid;
+  align-items: end;
+}
+
+.vz-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+.vz-slot.is-dead .vz-cell {
+  color: var(--avz-muted);
+  opacity: 0.45;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 4px,
+    color-mix(in srgb, var(--vscode-foreground) 7%, transparent) 4px 5px
+  );
+}
+.vz-slot.is-dead .vz-index {
+  opacity: 0.5;
+}
+
+.vz-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 44px;
+  margin-bottom: 3px;
+}
+.vz-bar {
+  width: 56%;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in srgb, var(--vscode-progressBar-background) 55%, transparent);
+  transition: height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.vz-slot.is-swap .vz-bar {
+  background: var(--vscode-progressBar-background);
+}
+
+.vz-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--vscode-editorWidget-border, var(--avz-border));
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--vscode-foreground);
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+}
+.vz-cell.is-write {
+  border-color: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+  animation: vz-flash 0.9s ease-out;
+}
+.vz-cell.is-read {
+  border-color: var(--vscode-focusBorder);
+  box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
+}
+.vz-index {
+  margin-top: 3px;
+  text-align: center;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 10px;
+  color: var(--avz-muted);
+}
+
+@keyframes vz-flash {
+  from {
+    background-color: var(--vscode-debugView-valueChangedHighlight, rgba(255, 204, 0, 0.45));
+  }
+}
+
+.vz-pointers {
+  position: relative;
+  margin-top: 2px;
+}
+.vz-pointer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  transition: left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.2s;
+  white-space: nowrap;
+}
+.vz-caret {
+  width: 0;
+  height: 0;
+  margin-bottom: 1px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 5px solid var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+}
+.vz-pointer-label {
+  padding: 0 4px;
+  border-radius: 2px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 10.5px;
+  line-height: 14px;
+  color: var(--vscode-foreground);
+  background: color-mix(in srgb, var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00) 22%, transparent);
+}
+.vz-pointer.is-outside .vz-pointer-label {
+  color: var(--avz-muted);
+  background: transparent;
+  border: 1px dashed var(--avz-border);
+}
+
+.vz-grid {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 11px;
+}
+.vz-grid th {
+  padding: 0 3px;
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--avz-muted);
+}
+.vz-grid th.is-active {
+  color: var(--vscode-foreground);
+  background: color-mix(in srgb, var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00) 22%, transparent);
+  border-radius: 2px;
+}
+.vz-grid td {
+  width: var(--cell);
+  height: var(--cell);
+  min-width: var(--cell);
+  text-align: center;
+  border: 1px solid var(--vscode-editorWidget-border, var(--avz-border));
+  border-radius: 2px;
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  font-variant-numeric: tabular-nums;
+}
+.vz-grid td.is-write {
+  border-color: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+  animation: vz-flash 0.9s ease-out;
+}
+.vz-grid td.is-read,
+.vz-grid td.is-cross {
+  border-color: var(--vscode-focusBorder);
+}
+
+.vz-delegate [aria-label='Values in scope'] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-bar,
+  .vz-pointer {
+    transition: none;
+  }
+  .vz-cell.is-write,
+  .vz-grid td.is-write,
+  .vz-field.is-changed {
+    animation: none;
+  }
+}
+
+.avz-crash {
+  padding: 12px 16px;
+  font-size: 12px;
+}
+.avz-crash pre {
+  white-space: pre-wrap;
+  color: var(--vscode-errorForeground);
+}
+
+/* ── Program input ──────────────────────────────────────────────────────── */
+
+.avz-ask {
+  flex-shrink: 0;
+  margin: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--vscode-focusBorder);
+  border-left-width: 3px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--vscode-focusBorder) 8%, var(--vscode-sideBar-background));
+}
+.avz-ask-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.avz-ask p {
+  margin: 0;
+  color: var(--avz-muted);
+}
+.avz-ask b {
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
+.avz-input {
+  padding: 2px 10px 0 22px;
+}
+.avz-reads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+.avz-reads li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.avz-reads code {
+  font-size: 11px;
+  color: var(--vscode-debugTokenExpression-name, var(--vscode-foreground));
+}
+.avz-textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  padding: 4px 6px;
+  border: 1px solid var(--vscode-input-border, var(--avz-border));
+  border-radius: 2px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size, 12px);
+  line-height: 1.45;
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+}
+.avz-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground, var(--avz-muted));
+}
+.avz-textarea:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+  border-color: var(--vscode-focusBorder);
+}
+.avz-textarea.is-awaiting {
+  border-color: var(--vscode-focusBorder);
+}
+.avz-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+.avz-button-small {
+  width: auto;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+.avz-push {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+/* ── Linked structures (trees, lists, graphs, maps, stacks) ─────────────── */
+
+.lk-svg {
+  display: block;
+  overflow: visible;
+  font-family: var(--vscode-editor-font-family);
+}
+.lk-edge {
+  stroke: var(--vscode-editorWidget-border, var(--avz-border));
+  stroke-width: 1.4;
+}
+.lk-arrowhead {
+  fill: var(--vscode-editorWidget-border, var(--avz-border));
+}
+.lk-node-g {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lk-node {
+  fill: var(--vscode-input-background, var(--vscode-editor-background));
+  stroke: var(--vscode-editorWidget-border, var(--avz-border));
+  stroke-width: 1.2;
+  transition: fill 0.2s, stroke 0.2s;
+}
+.lk-node.is-marked {
+  stroke: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+  stroke-width: 2;
+}
+.lk-node.is-new {
+  animation: lk-pop 0.5s ease-out;
+}
+.lk-node.is-visited {
+  fill: color-mix(in srgb, var(--vscode-progressBar-background) 45%, var(--vscode-editor-background));
+}
+.lk-node.is-frontier {
+  stroke: var(--vscode-progressBar-background);
+  stroke-width: 2;
+  stroke-dasharray: 3 2;
+}
+@keyframes lk-pop {
+  from {
+    fill: var(--vscode-debugView-valueChangedHighlight, rgba(255, 204, 0, 0.45));
+  }
+}
+.lk-label {
+  fill: var(--vscode-foreground);
+  font-size: 11px;
+}
+.lk-ptr,
+.lk-weight {
+  fill: var(--avz-muted);
+  font-size: 9.5px;
+}
+.lk-ptr {
+  fill: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #be8700);
+}
+
+.lk-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 2px 0 4px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+}
+.lk-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.lk-box {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--vscode-editorWidget-border, var(--avz-border));
+  border-radius: 3px;
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  white-space: nowrap;
+}
+.lk-box.is-marked {
+  border-color: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+}
+.lk-box.is-new {
+  animation: vz-flash 0.9s ease-out;
+}
+.lk-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 14px;
+}
+.lk-arrow {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  color: var(--avz-muted);
+}
+.lk-null {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  color: var(--avz-muted);
+  font-style: italic;
+}
+
+.lk-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--avz-muted);
+}
+.lk-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.lk-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--vscode-editorWidget-border, var(--avz-border));
+}
+.lk-dot.is-visited {
+  background: color-mix(in srgb, var(--vscode-progressBar-background) 45%, var(--vscode-editor-background));
+}
+.lk-dot.is-frontier {
+  border: 1.5px dashed var(--vscode-progressBar-background);
+}
+
+.lk-map {
+  border-collapse: collapse;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+}
+.lk-map td {
+  padding: 2px 10px 2px 6px;
+  border-bottom: 1px solid var(--avz-border);
+}
+.lk-key {
+  color: var(--vscode-debugTokenExpression-string, var(--vscode-foreground));
+}
+.lk-val {
+  color: var(--vscode-debugTokenExpression-number, var(--vscode-foreground));
+}
+.lk-map tr.is-new td,
+.lk-map tr.is-changed td {
+  animation: vz-flash 0.9s ease-out;
+}
+
+.lk-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 220px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+}
+.lk-stack-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-editorWidget-border, var(--avz-border));
+  border-radius: 3px;
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+}
+.lk-stack-item:first-child {
+  border-color: var(--vscode-debugIcon-breakpointCurrentStackframeForeground, #ffcc00);
+}
+.lk-stack-item.is-new {
+  animation: lk-drop 0.35s ease-out;
+}
+@keyframes lk-drop {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+.lk-top {
+  font-size: 10px;
+  color: var(--avz-muted);
+}
+.lk-more {
+  font-size: 11px;
+  color: var(--avz-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lk-node-g { transition: none; }
+  .lk-node.is-new, .lk-box.is-new, .lk-stack-item.is-new { animation: none; }
+}

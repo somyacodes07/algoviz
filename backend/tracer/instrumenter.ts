@@ -228,6 +228,17 @@ export function instrumentCode(code: string): string {
       // Line Tracking & Call Stack Instrumentation
       const line = acorn.getLineInfo(code, node.start).line;
 
+      // One step at the top of every loop iteration, on the loop's line.
+      const LOOP_TYPES = ['ForStatement', 'WhileStatement', 'DoWhileStatement', 'ForInStatement', 'ForOfStatement'];
+      if (node.type === 'BlockStatement' && parent && LOOP_TYPES.includes(parent.type) && parent.body === node) {
+        const loopLine = acorn.getLineInfo(code, parent.start).line;
+        addPatch(node.start + 1, ` __tracer.setLine(${loopLine}); ${generateTraceCall(loopLine)} `);
+      }
+      // A step on each `if` before its condition is checked.
+      if (node.type === 'IfStatement' && parent && (parent.type === 'BlockStatement' || parent.type === 'Program')) {
+        addPatch(node.start, `__tracer.setLine(${line}); ${generateTraceCall(line)} `);
+      }
+
       // Emit one explicit comparison event for each branch/loop condition.
       // The expression is passed as an argument, so it is evaluated exactly once.
       if (

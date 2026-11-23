@@ -15,3 +15,14 @@ package-lock.json
 **/*.ts
 !dist/**/*.js
 *.vsix
+test/**
+media/demo.gif
+media/screenshot-*.png
+webview-ui/dist/webview/demo.html
+webview-ui/dist/icon-*.png
+webview-ui/dist/llms.txt
+webview-ui/dist/logo.svg
+webview-ui/dist/og-image*.png
+webview-ui/dist/robots.txt
+webview-ui/dist/site.webmanifest
+webview-ui/dist/sitemap.xml

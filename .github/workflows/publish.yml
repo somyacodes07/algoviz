@@ -1,0 +1,94 @@
+# Publishes the AlgoViz VS Code extension to the Visual Studio Marketplace with
+# trusted publishing (OIDC): no Personal Access Token is stored anywhere.
+#
+# Marketplace policy (publisher "somyacodes" → Trusted Publishing):
+#   Repository owner: somyacodes07   Repository: algoviz
+#   Workflow: publish.yml            Environment: marketplace
+#
+# Release: bump "version" in algoviz-extension/package.json, commit, then push a
+# matching tag, e.g.  git tag extension-v2.3.0 && git push origin extension-v2.3.0
+# Or run it by hand from the Actions tab (with "dry run" to only build the VSIX).
+
+name: Publish extension
+
+on:
+  push:
+    tags:
+      - 'extension-v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only build the VSIX, do not publish'
+        type: boolean
+        default: true
+
+concurrency:
+  group: publish-extension
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: marketplace
+    permissions:
+      contents: write # attach the VSIX to the GitHub release
+      id-token: write # OIDC token for Marketplace trusted publishing
+    defaults:
+      run:
+        working-directory: algoviz-extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            algoviz-extension/package-lock.json
+
+      # The webview imports the shared tracer and visualizers from the repo root.
+      - name: Install root dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Install extension dependencies
+        run: npm ci
+
+      - name: Check the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="${GITHUB_REF_NAME#extension-v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
+      - name: Build the webview
+        run: npm run build:webview
+
+      # vscode:prepublish runs the type check and the production esbuild bundle.
+      - name: Package VSIX
+        run: |
+          version=$(node -p "require('./package.json').version")
+          npx --yes @vscode/vsce@4.1.1 package --no-dependencies --out "algoviz-vscode-$version.vsix"
+          echo "VSIX=algoviz-vscode-$version.vsix" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.VSIX }}
+          path: algoviz-extension/${{ env.VSIX }}
+
+      - name: Publish to the Visual Studio Marketplace
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: npx --yes @vscode/vsce@4.1.1 publish --oidc --no-dependencies --packagePath "$VSIX"
+
+      - name: Attach VSIX to a GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "AlgoViz $GITHUB_REF_NAME" --notes "See algoviz-extension/CHANGELOG.md"
+          gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber

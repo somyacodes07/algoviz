@@ -25,6 +25,8 @@ export class CppInstrumenter {
   private pendingParams: string[] | null = null;
   // Array parameters of the current function and the parameter holding their length (`arr` -> `n`).
   private arraySpans = new Map<string, string>();
+  // True inside a non-static member function, where the object's fields are traced as `this`.
+  private inMember = false;
 
   constructor() {}
 
@@ -70,7 +72,10 @@ export class CppInstrumenter {
       const saved = this.scopeStack;
       this.scopeStack = [new Set(saved[0])];
       this.pendingParams = this.functionParams(node);
+      const savedMember = this.inMember;
+      this.inMember = false;
       for (let i = 0; i < node.namedChildCount; i++) this.walk(node.namedChild(i)!);
+      this.inMember = savedMember;
       this.scopeStack = saved;
       this.pendingParams = null;
       return;
@@ -122,8 +127,10 @@ export class CppInstrumenter {
     }
 
     const savedSpans = this.arraySpans;
+    const savedMember = this.inMember;
     if (type === 'function_definition') {
       this.arraySpans = this.arrayParamSpans(node);
+      this.inMember = this.isMemberFunction(node);
       const body = node.childForFieldName('body');
       const declarator = node.childForFieldName('declarator');
       const functionName = declarator?.text.match(/([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\(/)?.[1];
@@ -138,6 +145,38 @@ export class CppInstrumenter {
       this.injectTraceCall(node, startLine);
     }
 
+    const LOOPS = ['for_statement', 'while_statement', 'do_statement', 'for_range_loop'];
+    const parent = node.parent;
+    const isBodyOf = (p: Node | null) => !!p && p.childForFieldName('body')?.startIndex === node.startIndex;
+
+    // One step at the top of every loop iteration, on the loop's own line, so each
+    // turn of `for (j ...)` shows up even when nothing inside it changes.
+    if (isBlock && parent && LOOPS.includes(parent.type) && isBodyOf(parent)) {
+      this.addPatch(node.startIndex + 1, ' ' + this.traceCall(parent.startPosition.row + 1) + ' ');
+    }
+
+    // A step on each `if` before its condition is checked.
+    if (type === 'if_statement' && parent?.type === 'compound_statement') {
+      this.addPatch(node.startIndex, this.traceCall(startLine) + ' ');
+    }
+
+    // Brace-less bodies (`for (...) sum += a[i];`, `if (x) return y;`) get braces and a step.
+    const braceless = ['expression_statement', 'return_statement'].includes(type) && parent && parent.type !== 'compound_statement';
+    if (braceless && parent) {
+      const inLoop = LOOPS.includes(parent.type) && isBodyOf(parent);
+      const inIf = parent.type === 'if_statement' || parent.type === 'else_clause';
+      if (inLoop || inIf) {
+        const head = inLoop ? this.traceCall(parent.startPosition.row + 1) + ' ' : '';
+        if (type === 'return_statement') {
+          this.addPatch(node.startIndex, `{ ${head}${this.traceCall(startLine)} `);
+          this.addPatch(node.endIndex, ' }');
+        } else {
+          this.addPatch(node.startIndex, `{ ${head}`);
+          this.addPatch(node.endIndex, ` ${this.traceCall(startLine)} }`);
+        }
+      }
+    }
+
     // Recurse into children
     for (let i = 0; i < node.namedChildCount; i++) {
       this.walk(node.namedChild(i)!);
@@ -147,6 +186,20 @@ export class CppInstrumenter {
       this.scopeStack.pop();
     }
     this.arraySpans = savedSpans;
+    this.inMember = savedMember;
+  }
+
+  /** In-class or `Class::method` definitions that have an object, so not static ones. */
+  private isMemberFunction(fn: Node): boolean {
+    if (fn.children.some((c) => c.type === 'storage_class_specifier' && c.text === 'static')) return false;
+    if (fn.children.some((c) => c.type === 'friend')) return false;
+    if (fn.parent?.type === 'friend_declaration') return false;
+    if (fn.parent?.type === 'field_declaration_list') return true;
+    const declarator = fn.childForFieldName('declarator');
+    let inner = declarator;
+    while (inner && inner.type !== 'function_declarator') inner = inner.childForFieldName('declarator');
+    const name = inner?.childForFieldName('declarator');
+    return name?.type === 'qualified_identifier';
   }
 
   /**
@@ -281,8 +334,22 @@ export class CppInstrumenter {
         }
       } else if (child.type === 'identifier') {
         this.scopeStack[this.scopeStack.length - 1].add(child.text);
+      } else if (child.type === 'array_declarator' || child.type === 'pointer_declarator' || child.type === 'reference_declarator') {
+        // `int arr[100];` and `Node* head;` without an initializer.
+        const id = this.extractIdentifier(child);
+        if (id) this.scopeStack[this.scopeStack.length - 1].add(id);
       }
     }
+  }
+
+  private traceCall(line: number): string {
+    const vars = this.getCurrentScopeVars();
+    const pairs = vars.map((v) => {
+      const length = this.arraySpans.get(v);
+      return length ? `{"${v}", __json_span(${v}, ${length})}` : `{"${v}", __to_json(${v})}`;
+    });
+    if (this.inMember) pairs.unshift(`{"this", __to_json(*this)}`);
+    return `__trace(${line}, {${pairs.join(', ')}});`;
   }
 
   private injectTraceCall(node: Node, line: number) {
@@ -297,7 +364,9 @@ export class CppInstrumenter {
             })
             .join(', ');
 
-    const traceCall = `__trace(${line}, {${varPairs}});`;
+    const thisPair = this.inMember ? `{"this", __to_json(*this)}` : '';
+    const allPairs = [thisPair, varPairs].filter(Boolean).join(', ');
+    const traceCall = `__trace(${line}, {${allPairs}});`;
 
     if (node.type === 'return_statement') {
       // Inject BEFORE return so the trace actually executes
@@ -345,6 +414,7 @@ export class CppInstrumenter {
       '#include <initializer_list>',
       '#include <utility>',
       '#include <cstring>',
+      '#include <cstdlib>',
       '',
       'void __trace(int line, std::initializer_list<std::pair<std::string, std::string>> vars);',
       '// Forward declarations: every serializer can call every other one.',
@@ -546,6 +616,9 @@ export class CppInstrumenter {
       '',
       '// Trace emitter',
       'void __trace(int line, std::initializer_list<std::pair<std::string, std::string>> vars) {',
+      '    // Endless or huge loops stop here instead of freezing the visualizer.',
+      '    static int __steps = 0;',
+      `    if (++__steps > 3000) { std::cout << ${DQ}\\n[AlgoViz] Stopped after 3000 steps. Try a smaller input.${DQ} << std::endl; std::exit(0); }`,
       `    std::cout << ${DQ}__TRACE__{${BSQ}line${BSQ}: ${DQ} << line << ${DQ}, ${BSQ}variables${BSQ}: {${DQ};`,
       '    bool first = true;',
       '    for (auto& p : vars) {',
