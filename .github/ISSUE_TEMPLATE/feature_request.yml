@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a data structure, view or improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to see?
+      description: What are you trying to learn or teach, and what would make it easier?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example code
+      description: A program where this would help, if you have one.
+      render: cpp
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where?
+      options:
+        - Website
+        - VS Code extension
+        - Both

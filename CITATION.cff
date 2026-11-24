@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: If you use AlgoViz in teaching material or research, please cite it as below.
+title: AlgoViz
+abstract: An interactive visualizer that runs JavaScript and C++ step by step and draws the data structures as they change, on the web and in VS Code.
+type: software
+authors:
+  - given-names: Somyajeet
+    family-names: Singh
+repository-code: https://github.com/somyacodes07/algoviz
+url: https://algoviz.somyacodes.in
+license: MIT
+keywords:
+  - algorithm visualization
+  - data structures
+  - education
+  - c++
+  - javascript

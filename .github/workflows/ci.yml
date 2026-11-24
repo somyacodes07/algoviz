@@ -1,0 +1,48 @@
+# Builds the website and the VS Code extension, and checks the C++ tracer, on every push and pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            algoviz-extension/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
+
+      - name: Check C++ tracer on every template
+        run: npx --yes tsx scripts/check-cpp-tracer.mts
+
+      - name: Install extension dependencies
+        working-directory: algoviz-extension
+        run: npm ci
+
+      - name: Build extension
+        working-directory: algoviz-extension
+        # vsce runs vscode:prepublish: the type check and the production bundle.
+        run: |
+          npm run build:webview
+          npx --yes @vscode/vsce@4.1.1 package --no-dependencies --out algoviz-ci.vsix

@@ -1,0 +1,47 @@
+name: Bug report
+description: Something traced wrong, drew wrong, or broke.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! The code you ran is the most useful part, so please paste it.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Website (algoviz.somyacodes.in)
+        - VS Code extension
+        - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - C++
+        - JavaScript / TypeScript
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The code you ran
+      description: The smallest program that shows the problem. Include the input too if it reads cin or prompt().
+      render: cpp
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: For example, "the queue shows 5 cells but front/rear markers are missing at step 12". Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: VS Code extension version (Extensions view), or browser for the website.
+      placeholder: AlgoViz 2.3.0, VS Code 1.106 / Chrome 142

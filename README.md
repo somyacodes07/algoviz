@@ -13,6 +13,12 @@ Step through your own code in the browser and see every array, tree, graph, heap
   <a href="https://github.com/somyacodes07/algoviz/stargazers"><img src="https://img.shields.io/github/stars/somyacodes07/algoviz?style=for-the-badge&color=facc15&labelColor=0f172a" alt="GitHub stars" /></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/badge/VS_Code-Extension-3b82f6?style=for-the-badge&logo=visualstudiocode" alt="VS Code extension" /></a>
 </p>
+<p>
+  <a href="https://github.com/somyacodes07/algoviz/actions/workflows/ci.yml"><img src="https://github.com/somyacodes07/algoviz/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/visual-studio-marketplace/v/somyacodes.algoviz-vscode?label=marketplace" alt="Marketplace version" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode"><img src="https://img.shields.io/visual-studio-marketplace/i/somyacodes.algoviz-vscode" alt="Installs" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/somyacodes07/algoviz" alt="MIT license" /></a>
+</p>
 
 <img src="assets/demo/workbench.gif" alt="Dijkstra running in the AlgoViz workbench: the graph lights up node by node while distances update under each node" width="100%" />
 
@@ -85,13 +91,17 @@ Step through your own code in the browser and see every array, tree, graph, heap
 | **Templates** | Press `Cmd/Ctrl + K` for 80+ ready-made algorithms in JavaScript and C++: sorting, DP, graphs, trees and more. |
 | **Share and embed** | Share a link that carries your code, or embed the workbench with `?embed=true`. |
 | **Annotations** | Pin notes to specific steps to build a walkthrough. |
-| **VS Code** | Run the visualizer in a split pane next to your file. |
+| **VS Code** | A sidebar that highlights the running line in your own editor, asks for `cin` input, and works offline. |
 
 ## Try it
 
 **In the browser:** open [algoviz.somyacodes.in](https://algoviz.somyacodes.in), pick `index.js` or `main.cpp`, and press **Run**.
 
-**In VS Code:** install [AlgoViz](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode), open a `.js` or `.cpp` file, and run **AlgoViz: Visualize Active File**.
+**In VS Code:** install [AlgoViz](https://marketplace.visualstudio.com/items?itemName=somyacodes.algoviz-vscode), open a `.cpp` or `.js` file, and press **⌘⌥V** (Ctrl+Alt+V on Windows/Linux). The running line lights up in your editor, and the AlgoViz sidebar draws your data structures.
+
+<div align="center">
+  <img src="algoviz-extension/media/demo.gif" alt="AlgoViz in VS Code stepping through bubble sort" width="100%" />
+</div>
 
 **Locally:**
 
@@ -121,7 +131,7 @@ Your code is instrumented to record every variable at every step, run in a sandb
 
 - **Frontend:** React 19, Vite, Monaco Editor, Tailwind CSS, Framer Motion, GSAP and WebGL on the landing page.
 - **JavaScript:** Acorn instrumentation, run in a Web Worker with a step limit.
-- **C++:** Tree-sitter instrumentation, compiled with Wasm Clang in the browser or with Wandbox.
+- **C++:** Tree-sitter instrumentation, compiled with WebAssembly Clang on your machine, or remotely with GCC.
 
 ## Documentation
 
@@ -137,16 +147,19 @@ Your code is instrumented to record every variable at every step, run in a sandb
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome. If a data structure shows up wrong, please [open an issue](https://github.com/somyacodes07/algoviz/issues) with the code you ran; those reports are the fastest way to make detection better.
+Bug reports, ideas and pull requests are welcome. If a data structure shows up wrong, please [open an issue](https://github.com/somyacodes07/algoviz/issues/new/choose) with the code you ran; those reports are the fastest way to make detection better.
 
-1. Fork the repository
-2. Create a branch: `git checkout -b feature/your-idea`
-3. Commit your changes
-4. Open a pull request
+Read the [contributing guide](CONTRIBUTING.md) for setup, the project layout and the checks to run. Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md). To report a security problem, see [SECURITY.md](SECURITY.md).
+
+What changed and when: [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
 AlgoViz is free and open source. If it helped you learn, teach or pass an interview, a ⭐ on this repo helps more people find it, and you can [sponsor the project](https://github.com/sponsors/somyacodes07).
+
+## License
+
+[MIT](LICENSE) © Somyajeet Singh. Teaching with AlgoViz? See [CITATION.cff](CITATION.cff) for how to cite it.
 
 <div align="center">
   <br />

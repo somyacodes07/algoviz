@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/somyacodes07/algoviz/discussions
+    about: Ask how something works or share an idea before opening an issue.
+  - name: Documentation
+    url: https://github.com/somyacodes07/algoviz/tree/main/docs
+    about: Setup guide, C++ engine, architecture and more.
+  - name: Security problem
+    url: https://github.com/somyacodes07/algoviz/security/advisories/new
+    about: Report vulnerabilities privately, not in a public issue.
